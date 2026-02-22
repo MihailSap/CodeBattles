@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: SapeginMihail
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: admin@mail.com
+              - column:
+                  name: login
+                  value: admin
+              - column:
+                  name: role
+                  value: 1
+              - column:
+                  name: password
+                  value: $2a$10$Y8mLog3oiPJvoVsVuu13teANj4Q2/B7Ohp.gCGDMRiuddjOc8qNea

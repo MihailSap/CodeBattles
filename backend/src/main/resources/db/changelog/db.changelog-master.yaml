@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changeset/002-create-refresh-token.yaml
   - include:
       file: db/changelog/changeset/003-update-users.yaml
+  - include:
+      file: db/changelog/changeset/004-create-admin-by-default.yaml

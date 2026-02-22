@@ -1,17 +1,16 @@
 package ru.urfu.backend.service;
 
 import jakarta.security.auth.message.AuthException;
-import ru.urfu.backend.dto.auth.JwtRequest;
+import ru.urfu.backend.dto.auth.LoginRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.model.JwtAuthentication;
 import ru.urfu.backend.model.User;
 
 public interface AuthService {
 
-    boolean isCredentialsValid(JwtRequest authRequest, User user);
+    boolean isCredentialsValid(LoginRequest authRequest, User user);
 
     JwtResponse login(User user) throws AuthException;
 

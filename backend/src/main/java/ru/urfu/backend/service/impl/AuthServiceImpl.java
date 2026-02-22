@@ -7,12 +7,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urfu.backend.dto.auth.JwtRequest;
+import ru.urfu.backend.dto.auth.LoginRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.model.JwtAuthentication;
 import ru.urfu.backend.model.RefreshToken;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
@@ -44,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean isCredentialsValid(JwtRequest authRequest, User user){
+    public boolean isCredentialsValid(LoginRequest authRequest, User user){
         return passwordEncoder.matches(authRequest.password(), user.getPassword());
     }
 
