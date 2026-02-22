@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.urfu.backend.PathsConstants;
-import ru.urfu.backend.model.JwtAuthentication;
 import ru.urfu.backend.service.AuthService;
 
 @RestController
@@ -24,14 +23,14 @@ public class HelloController {
     @PreAuthorize("hasAuthority('USER')")
     @GetMapping("/hello/user")
     public ResponseEntity<String> helloUser() {
-        JwtAuthentication authInfo = authService.getAuthInfo();
-        return ResponseEntity.ok("Hello user " + authInfo.getPrincipal() + "!");
+        String email = authService.getAuthenticatedUserEmail();
+        return ResponseEntity.ok("Hello user " + email + "!");
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/hello/admin")
     public ResponseEntity<String> helloAdmin() {
-        JwtAuthentication authInfo = authService.getAuthInfo();
-        return ResponseEntity.ok("Hello admin " + authInfo.getPrincipal() + "!");
+        String email = authService.getAuthenticatedUserEmail();
+        return ResponseEntity.ok("Hello admin " + email + "!");
     }
 }

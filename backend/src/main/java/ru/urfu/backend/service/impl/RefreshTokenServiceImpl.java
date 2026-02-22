@@ -2,6 +2,7 @@ package ru.urfu.backend.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.model.RefreshToken;
 import ru.urfu.backend.model.User;
@@ -34,11 +35,13 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                         "Ошибка при попытке получения токена пользователя"));
     }
 
+    @Transactional
     @Override
     public RefreshToken save(RefreshToken refreshToken){
         return refreshTokenRepository.save(refreshToken);
     }
 
+    @Transactional
     @Override
     public void delete(RefreshToken refreshToken){
         refreshTokenRepository.delete(refreshToken);

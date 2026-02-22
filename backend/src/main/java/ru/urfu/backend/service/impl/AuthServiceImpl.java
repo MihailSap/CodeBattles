@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.auth.JwtRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
@@ -47,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
         return passwordEncoder.matches(authRequest.password(), user.getPassword());
     }
 
+    @Transactional
     @Override
     public JwtResponse login(User user) throws AuthException {
         String accessTokenBody = jwtProvider.generateAccessToken(user);
@@ -62,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
         return new JwtResponse(accessTokenBody, refreshTokenBody);
     }
 
+    @Transactional
     @Override
     public void logout(String refreshTokenBody) throws RefreshTokenNotFoundException {
         RefreshToken refreshToken = refreshTokenService.getByBody(refreshTokenBody);
@@ -85,6 +88,7 @@ public class AuthServiceImpl implements AuthService {
         return new JwtResponse(null, null);
     }
 
+    @Transactional
     @Override
     public JwtResponse refresh(String refreshToken)
             throws UserNotFoundException, RefreshTokenNotFoundException, InvalidRefreshTokenException {
@@ -106,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public JwtAuthentication getAuthInfo() {
-        return (JwtAuthentication) SecurityContextHolder.getContext().getAuthentication();
+    public String getAuthenticatedUserEmail() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
     }
 }

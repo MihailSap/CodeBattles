@@ -21,5 +21,5 @@ public interface AuthService {
 
     JwtResponse refresh(String refreshToken) throws AuthException, UserNotFoundException, RefreshTokenNotFoundException, InvalidRefreshTokenException;
 
-    JwtAuthentication getAuthInfo();
+    String getAuthenticatedUserEmail();
 }

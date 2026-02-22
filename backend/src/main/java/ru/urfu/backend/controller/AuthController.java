@@ -74,4 +74,11 @@ public class AuthController {
         authService.logout(request.refreshToken());
         return "Вы вышли из аккаунта";
     }
+
+    @GetMapping("/current-user")
+    public UserResponse getCurrentUser() throws UserNotFoundException {
+        String personEmail = authService.getAuthenticatedUserEmail();
+        User user = userService.getByEmail(personEmail);
+        return userMapper.mapToUserResponse(user);
+    }
 }
