@@ -8,15 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
-import ru.urfu.backend.dto.auth.LoginRequest;
-import ru.urfu.backend.dto.auth.JwtResponse;
-import ru.urfu.backend.dto.auth.RefreshJwtRequest;
-import ru.urfu.backend.dto.auth.RegisterRequest;
+import ru.urfu.backend.dto.auth.*;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.exception.customEx.*;
 import ru.urfu.backend.mapper.UserMapper;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
+import ru.urfu.backend.service.EmailService;
 import ru.urfu.backend.service.UserService;
 
 @Tag(name = "Управление аутентификацией")
@@ -27,34 +25,39 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final EmailService emailService;
 
     @Autowired
     public AuthController(
             AuthService authService,
             UserService userService,
-            UserMapper userMapper
+            UserMapper userMapper,
+            EmailService emailService
     ) {
         this.authService = authService;
         this.userService = userService;
         this.userMapper = userMapper;
+        this.emailService = emailService;
     }
 
     @Operation(description = "Регистрация нового пользователя по электронной почте")
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
-    public UserResponse register(@RequestBody RegisterRequest request) throws UserAlreadyExistsException {
+    public UserResponse register(@RequestBody RegisterRequest request)
+            throws UserAlreadyExistsException {
         if(userService.isExistsByEmail(request.email())){
             throw new UserAlreadyExistsException(
                     "Невозможно зарегистрировать пользователя под данным email");
         }
         User user = userService.create(request);
+        emailService.sendEmailConfirmEmail(user.getEmail(), user.getVerificationToken());
         return userMapper.mapToUserResponse(user);
     }
 
     @Operation(description = "Вход пользователя в существующий аккаунт, получение токенов")
     @PostMapping("/login")
     public JwtResponse login(@RequestBody LoginRequest authRequest)
-            throws AuthException, InvalidCredentialsException, UserNotFoundException {
+            throws AuthException, InvalidCredentialsException, UserNotFoundException, AccountNotEnabledException {
         User user = userService.getByEmail(authRequest.email());
         if(authService.isCredentialsValid(authRequest, user)){
             return authService.login(user);
@@ -93,5 +96,34 @@ public class AuthController {
         String personEmail = authService.getAuthenticatedUserEmail();
         User user = userService.getByEmail(personEmail);
         return userMapper.mapToUserResponse(user);
+    }
+
+    @Operation(description = "Подтверждение почты по токену из письма")
+    @PostMapping("/verify-email")
+    public JwtResponse verifyEmail(@RequestParam("token") String token)
+            throws UserNotFoundException, AuthException {
+        User user = userService.getByVerificationToken(token);
+        User enabledUser = userService.enableUser(user);
+        return authService.login(enabledUser);
+    }
+
+    @Operation(description = "Восстановление аккаунта с забытым паролем")
+    @PostMapping("/forgot-password")
+    public String requestForResetPassword(@RequestParam("email") String email)
+            throws UserNotFoundException {
+        User user = userService.getByEmail(email);
+        String token = userService.setPasswordResetToken(user);
+        emailService.sendPasswordResetEmail(email, token);
+        return "Запрос на обновление пароля отправлен на указанный email";
+    }
+
+    @Operation(description = "Смена пароля при восстановлении")
+    @PatchMapping("/reset-password")
+    public String resetPassword(@RequestBody PasswordResetRequest resetPasswordDTO)
+            throws UserNotFoundException {
+        User user = userService.getByPasswordResetToken(resetPasswordDTO.token());
+        userService.setNullPasswordResetToken(user);
+        userService.updatePassword(user, resetPasswordDTO.password());
+        return "Пароль успешно обновлен";
     }
 }

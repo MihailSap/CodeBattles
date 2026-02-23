@@ -17,6 +17,8 @@ import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.service.UserService;
 import ru.urfu.backend.specification.UserSpecification;
 
+import java.util.UUID;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -60,6 +62,18 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
     }
 
+    @Override
+    public User getByVerificationToken(String verificationToken) throws UserNotFoundException {
+        return userRepository.findByVerificationToken(verificationToken)
+                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+    }
+
+    @Override
+    public User getByPasswordResetToken(String token) throws UserNotFoundException {
+        return userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+    }
+
     @Transactional
     @Override
     public User create(RegisterRequest registerRequest) {
@@ -68,6 +82,9 @@ public class UserServiceImpl implements UserService {
         user.setLogin(registerRequest.login());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
         user.setRole(Role.USER);
+
+        String token = UUID.randomUUID().toString();
+        user.setVerificationToken(token);
         return userRepository.save(user);
     }
 
@@ -115,5 +132,25 @@ public class UserServiceImpl implements UserService {
         String newEncodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(newEncodedPassword);
         userRepository.save(user);
+    }
+
+    @Override
+    public User enableUser(User user) {
+        user.setEnabled(true);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void setNullPasswordResetToken(User user){
+        user.setPasswordResetToken(null);
+        userRepository.save(user);
+    }
+
+    @Override
+    public String setPasswordResetToken(User user) {
+        String token = UUID.randomUUID().toString();
+        user.setPasswordResetToken(token);
+        userRepository.save(user);
+        return token;
     }
 }
