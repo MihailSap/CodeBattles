@@ -15,6 +15,10 @@ public interface UserService {
 
     User getById(long id) throws UserNotFoundException;
 
+    User getByVerificationToken(String verificationToken) throws UserNotFoundException;
+
+    User getByPasswordResetToken(String token) throws UserNotFoundException;
+
     User create(RegisterRequest registerRequest);
 
     User makeAdmin(User user);
@@ -28,4 +32,10 @@ public interface UserService {
     User updateLogin(User user, String login);
 
     void updatePassword(User user, String newPassword);
+
+    User enableUser(User user);
+
+    void setNullPasswordResetToken(User user);
+
+    String setPasswordResetToken(User user);
 }

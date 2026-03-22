@@ -14,6 +14,12 @@ public class User extends BaseEntity{
 
     private Role role;
 
+    private boolean enabled;
+
+    private String verificationToken;
+
+    private String passwordResetToken;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
 
@@ -65,5 +71,29 @@ public class User extends BaseEntity{
 
     public void setRefreshToken(RefreshToken refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
+    }
+
+    public String getPasswordResetToken() {
+        return passwordResetToken;
+    }
+
+    public void setPasswordResetToken(String passwordResetToken) {
+        this.passwordResetToken = passwordResetToken;
     }
 }

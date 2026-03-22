@@ -9,14 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.auth.LoginRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
+import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.RefreshToken;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.RefreshTokenService;
 import ru.urfu.backend.service.UserService;
+
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -34,8 +38,7 @@ public class AuthServiceImpl implements AuthService {
             UserService userService,
             JwtProvider jwtProvider,
             RefreshTokenService refreshTokenService,
-            PasswordEncoder passwordEncoder
-    ) {
+            PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
         this.refreshTokenService = refreshTokenService;
@@ -43,7 +46,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean isCredentialsValid(LoginRequest authRequest, User user){
+    public boolean isCredentialsValid(LoginRequest authRequest, User user) throws AccountNotEnabledException {
+        if(!user.isEnabled()){
+            throw new AccountNotEnabledException("Аккаунт не подтвержден");
+        }
         return passwordEncoder.matches(authRequest.password(), user.getPassword());
     }
 

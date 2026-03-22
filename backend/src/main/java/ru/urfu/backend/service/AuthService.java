@@ -3,6 +3,7 @@ package ru.urfu.backend.service;
 import jakarta.security.auth.message.AuthException;
 import ru.urfu.backend.dto.auth.LoginRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
+import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
@@ -10,7 +11,7 @@ import ru.urfu.backend.model.User;
 
 public interface AuthService {
 
-    boolean isCredentialsValid(LoginRequest authRequest, User user);
+    boolean isCredentialsValid(LoginRequest authRequest, User user) throws AccountNotEnabledException;
 
     JwtResponse login(User user) throws AuthException;
 

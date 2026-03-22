@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.urfu.backend.dto.ErrorResponse;
+import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
 import ru.urfu.backend.exception.globalEx.AlreadyExistsException;
 import ru.urfu.backend.exception.globalEx.InvalidException;
 import ru.urfu.backend.exception.globalEx.NotFoundException;
@@ -32,6 +33,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConflictEx(AlreadyExistsException ex) {
         logger.error("AlreadyExistsException: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountNotEnabledException.class)
+    public ResponseEntity<ErrorResponse> handleConflictEx(AccountNotEnabledException ex) {
+        logger.error("AccountNotEnabledException: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

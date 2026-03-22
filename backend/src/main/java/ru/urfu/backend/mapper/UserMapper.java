@@ -8,6 +8,12 @@ import ru.urfu.backend.model.User;
 public class UserMapper {
 
     public UserResponse mapToUserResponse(User user) {
-        return new UserResponse(user.getEmail(), user.getLogin());
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getLogin(),
+                user.getRole(),
+                user.isEnabled()
+        );
     }
 }
