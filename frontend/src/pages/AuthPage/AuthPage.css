@@ -206,7 +206,7 @@
 }
 
 .auth-social {
-  width: min(370px, calc(100% - 60px));
+  width: min(380px, calc(100% - 60px));
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
