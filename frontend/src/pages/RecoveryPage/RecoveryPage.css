@@ -1,0 +1,40 @@
+.recovery-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: var(--bg-color);
+}
+
+.recovery-page__card {
+  width: min(520px, 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(21, 101, 192, 0.2);
+  background-color: var(--auth-form-bg-color);
+  box-shadow: var(--auth-form-shadow);
+  padding: 24px;
+  text-align: center;
+}
+
+.recovery-page__title {
+  color: var(--text-color);
+  font-size: 28px;
+}
+
+.recovery-page__text {
+  margin-top: 10px;
+  color: var(--fade-text-color);
+}
+
+.recovery-page__link {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--primary-color);
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+
+.recovery-page__link:hover {
+  color: var(--hover-primary-color);
+  text-decoration: underline;
+}

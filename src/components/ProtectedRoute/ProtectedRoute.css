@@ -1,0 +1,13 @@
+.route-loader-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.route-loader-text {
+  color: var(--text-color);
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 600;
+}

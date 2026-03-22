@@ -1,0 +1,30 @@
+:root {
+    --bg-color: #FFFFFF;
+    --primary-color: #1565C0;
+    --hover-primary-color: #8ab2e0;
+    --text-color: #292929;
+    --fade-text-color: #66727F;
+    --auth-form-bg-color: #FFFFFF;
+    --gitlab-button-color: #fc6d26;
+    --fade-button-color: #808080;
+    --auth-element-shadow: 0px 0px 5px 0px rgba(21, 101, 192, 1);
+    --auth-form-shadow: 0px 0px 20px 2px rgba(0, 0, 0, 0.3);
+    --auth-submit-button-text-color: #FFFFFF;
+    --auth-input-color: #FFFFFF;
+    --error-bg-input-color: rgba(248, 81, 73, 0.3);
+    --error-border-input-color: rgba(248, 81, 73, 0.5);
+    --error-border-active-input-color: rgba(248, 81, 73, 1);
+    --error-shadow-input-color: 0px 0px 5px 0px rgba(248, 81, 73, 1);
+    --error-text-color: #F85149;
+    --transition-duration: 0.5s;
+    --transition: 0.2s ease;
+}
+
+[data-theme='dark'] {
+    --bg-color: #2A2A40;
+    --primary-color: #1565C0;
+    --text-color: #F5F5F5;
+    --fade-text-color: #C9D1D9;
+    --auth-form-bg-color: #2A2A40;
+    --auth-input-color: #1E1E2F;
+}
