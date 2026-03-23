@@ -23,9 +23,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final UserSpecification userSpecification;
 
     @Autowired
@@ -90,6 +88,20 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
+    public void create(String githubId, String login, String email, String avatar){
+        User newUser = new User();
+        newUser.setGithubId(githubId);
+        newUser.setLogin(login);
+        newUser.setEmail(email);
+        newUser.setEnabled(true);
+        newUser.setPassword("oauth");
+        newUser.setRole(Role.USER);
+        newUser.setAvatarUrl(avatar);
+        userRepository.save(newUser);
+    }
+
+    @Transactional
+    @Override
     public User makeAdmin(User user) {
         user.setRole(Role.ADMIN);
         return userRepository.save(user);
@@ -106,6 +118,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(User user) {
         userRepository.delete(user);
+    }
+
+    @Override
+    public User getByGithubId(String githubId) throws UserNotFoundException {
+        return userRepository.findByGithubId(githubId)
+                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
     }
 
     @Transactional
@@ -152,5 +170,24 @@ public class UserServiceImpl implements UserService {
         user.setPasswordResetToken(token);
         userRepository.save(user);
         return token;
+    }
+
+    @Override
+    public boolean isExistsByGithubId(String githubId) {
+        return userRepository.findByGithubId(githubId).isPresent();
+    }
+
+    @Transactional
+    @Override
+    public void processGithubUser(String githubId, String login, String email, String avatar){
+        if(isExistsByGithubId(githubId)) return;
+        User user;
+        try {
+            user = getByEmail(email);
+            user.setGithubId(githubId);
+            userRepository.save(user);
+        } catch (UserNotFoundException e) {
+            create(githubId, login, email, avatar);
+        }
     }
 }

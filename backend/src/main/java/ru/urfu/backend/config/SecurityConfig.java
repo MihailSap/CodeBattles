@@ -17,6 +17,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.urfu.backend.filter.JwtFilter;
+import ru.urfu.backend.service.impl.GithubOauth2UserService;
+import ru.urfu.backend.service.impl.Oauth2SuccessHandler;
 
 import java.util.List;
 
@@ -30,13 +32,17 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
+    private final Oauth2SuccessHandler oauth2SuccessHandler;
+
     @Autowired
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, Oauth2SuccessHandler oauth2SuccessHandler) {
         this.jwtFilter = jwtFilter;
+        this.oauth2SuccessHandler = oauth2SuccessHandler;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http, GithubOauth2UserService userService) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -44,6 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
+                                "/oauth2/authorization/github",
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/token",
@@ -56,6 +63,12 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterAfter(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(userService)
+                        )
+                        .successHandler(oauth2SuccessHandler)
+                )
                 .build();
     }
 

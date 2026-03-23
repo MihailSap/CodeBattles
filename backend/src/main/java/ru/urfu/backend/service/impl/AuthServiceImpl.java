@@ -15,22 +15,17 @@ import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.RefreshToken;
 import ru.urfu.backend.model.User;
-import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.RefreshTokenService;
 import ru.urfu.backend.service.UserService;
 
-import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
-
-    private final JwtProvider jwtProvider;
-
     private final RefreshTokenService refreshTokenService;
-
+    private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired

@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changeset/004-create-admin-by-default.yaml
   - include:
       file: db/changelog/changeset/005-update-users.yaml
+  - include:
+      file: db/changelog/changeset/006-add-users-github-data.yaml
