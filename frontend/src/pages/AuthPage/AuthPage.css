@@ -100,6 +100,21 @@
   gap: 60px;
 }
 
+.auth-register-success {
+  width: min(540px, 100%);
+  margin: 0;
+  padding: 18px;
+  border-radius: 14px;
+  border: 2px solid var(--success-border);
+  background-color: var(--success-bg);
+  color: var(--success-text-color);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  transition: color var(--transition), background-color var(--transition), border-color var(--transition);
+}
+
 .auth-mode-switch {
   width: min(350px, calc(100% - 40px));
   height: 40px;
@@ -145,13 +160,7 @@
   transition: color var(--transition), text-decoration-color var(--transition);
 }
 
-.auth-mode-switch__option:hover {
-  color: var(--hover-primary-color);
-}
-
-.auth-mode-switch__option--active,
-.auth-mode-switch__option--active:hover {
-  text-decoration: none;
+.auth-mode-switch__option--active {
   color: var(--auth-button-text-color);
 }
 
@@ -251,21 +260,9 @@
   border-color: var(--text-color);
 }
 
-.auth-social__button--github:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] .auth-social__button--github:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
 .auth-social__button--gitlab {
   color: var(--gitlab-button-color);
   border-color: var(--gitlab-button-color);
-}
-
-.auth-social__button--gitlab:hover {
-  background-color: rgba(252, 109, 38, 0.1);
 }
 
 .auth-recovery-text {
@@ -282,10 +279,6 @@
   transition: color var(--transition);
 }
 
-.auth-recovery-link:hover {
-  color: var(--hover-primary-color);
-}
-
 .auth-submit {
   margin-top: 30px;
   padding: 8px 28px;
@@ -297,11 +290,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: background-color var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.auth-submit:hover:enabled {
-  background-color: var(--auth-element-bg-color);
-  color: var(--primary-color);
 }
 
 .auth-submit:disabled {
@@ -323,6 +311,37 @@
   position: absolute;
   top: calc(100% + 14px);
   left: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-mode-switch__option:hover {
+    color: var(--hover-primary-color);
+  }
+
+  .auth-mode-switch__option--active:hover {
+    color: var(--auth-button-text-color);
+  }
+
+  .auth-social__button--github:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  [data-theme="dark"] .auth-social__button--github:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .auth-recovery-link:hover {
+    color: var(--hover-primary-color);
+  }
+
+  .auth-social__button--gitlab:hover {
+    background-color: rgba(252, 109, 38, 0.1);
+  }
+
+  .auth-submit:hover:enabled {
+    background-color: var(--auth-element-bg-color);
+    color: var(--primary-color);
+  }
 }
 
 @media (max-width: 1180px) {
@@ -399,6 +418,10 @@
     gap: 40px;
   }
 
+  .auth-register-success {
+    font-size: 16px;
+  }
+
   .auth-server-error {
     padding: 10px 20px;
     font-size: 12px;
@@ -461,6 +484,11 @@
   .auth-form-card {
     gap: 20px;
     padding: 15px;
+  }
+
+  .auth-register-success {
+    font-size: 14px;
+    padding: 14px;
   }
 
   .auth-server-error {

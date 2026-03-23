@@ -13,6 +13,23 @@ export const authApi = {
   login(payload) {
     return authClient.post('/api/v1/auth/login', payload);
   },
+  verifyEmail(token) {
+    return authClient.post('/api/v1/auth/verify-email', null, {
+      params: {
+        token
+      }
+    });
+  },
+  forgotPassword(email) {
+    return authClient.post('/api/v1/auth/forgot-password', null, {
+      params: {
+        email
+      }
+    });
+  },
+  resetPassword(payload) {
+    return authClient.patch('/api/v1/auth/reset-password', payload);
+  },
   getNewAccessToken(refreshToken) {
     return authClient.post('/api/v1/auth/token', { refreshToken });
   },

@@ -9,7 +9,7 @@
 .not-found-page__bg {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.35)),
     url('../../assets/auth-background-light.png');
   background-size: cover;
@@ -70,7 +70,9 @@
   transition: background-color var(--transition), color var(--transition);
 }
 
-.not-found-page__link:hover {
-  background-color: var(--auth-element-bg-color);
-  color: var(--primary-color);
+@media (hover: hover) and (pointer: fine) {
+  .not-found-page__link:hover {
+    background-color: var(--auth-element-bg-color);
+    color: var(--primary-color);
+  }
 }

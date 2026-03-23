@@ -65,24 +65,56 @@ export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { di
   }
 });
 
-export const registerUser = createAsyncThunk('auth/registerUser', async (payload, { dispatch, rejectWithValue }) => {
+export const registerUser = createAsyncThunk('auth/registerUser', async (payload, { rejectWithValue }) => {
   try {
     await authApi.register(payload);
-    const loginResponse = await authApi.login({ email: payload.email, password: payload.password });
+    tokenStorage.clearTokens();
 
-    tokenStorage.setTokens(loginResponse.data);
+    return null;
+  } catch (error) {
+    tokenStorage.clearTokens();
+
+    return rejectWithValue(extractErrorMessage(error, 'Ошибка регистрации'));
+  }
+});
+
+export const verifyEmailUser = createAsyncThunk('auth/verifyEmailUser', async (token, { dispatch, rejectWithValue }) => {
+  try {
+    const response = await authApi.verifyEmail(token);
+
+    tokenStorage.setTokens(response.data);
 
     const user = await dispatch(fetchCurrentUser()).unwrap();
 
     return {
       user,
       userId: user.id ?? null,
-      tokens: loginResponse.data
+      tokens: response.data
     };
   } catch (error) {
     tokenStorage.clearTokens();
 
-    return rejectWithValue(extractErrorMessage(error, 'Ошибка регистрации'));
+    return rejectWithValue(extractErrorMessage(error, 'Не удалось подтвердить почту'));
+  }
+});
+
+export const requestPasswordReset = createAsyncThunk('auth/requestPasswordReset', async (email, { rejectWithValue }) => {
+  try {
+    const response = await authApi.forgotPassword(email);
+
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(extractErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля'));
+  }
+});
+
+export const resetPasswordByToken = createAsyncThunk('auth/resetPasswordByToken', async (payload, { rejectWithValue }) => {
+  try {
+    const response = await authApi.resetPassword(payload);
+
+    return response.data;
+  } catch (error) {
+    return rejectWithValue(extractErrorMessage(error, 'Не удалось изменить пароль'));
   }
 });
 
@@ -194,16 +226,58 @@ const authSlice = createSlice({
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.userId = action.payload.userId;
-        state.successMessage = 'Аккаунт успешно создан';
+        state.isAuthenticated = false;
+        state.user = null;
+        state.userId = null;
+        state.successMessage = 'Письмо с подтверждением отправлено';
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Ошибка регистрации';
+      })
+      .addCase(verifyEmailUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(verifyEmailUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload.user;
+        state.userId = action.payload.userId;
+        state.successMessage = 'Почта успешно подтверждена';
+      })
+      .addCase(verifyEmailUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Не удалось подтвердить почту';
+      })
+      .addCase(requestPasswordReset.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(requestPasswordReset.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.successMessage = typeof action.payload === 'string' ? action.payload : 'Ссылка для сброса отправлена';
+      })
+      .addCase(requestPasswordReset.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Не удалось отправить ссылку для сброса пароля';
+      })
+      .addCase(resetPasswordByToken.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(resetPasswordByToken.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.successMessage = typeof action.payload === 'string' ? action.payload : 'Пароль изменен';
+      })
+      .addCase(resetPasswordByToken.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Не удалось изменить пароль';
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;

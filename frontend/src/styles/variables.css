@@ -16,6 +16,9 @@
     --error-border-active-input-color: rgba(248, 81, 73, 1);
     --error-shadow-input-color: 0px 0px 5px 0px rgba(248, 81, 73, 1);
     --error-text-color: #F85149;
+    --success-text-color: #1f7a35;
+    --success-bg: rgba(46, 160, 67, 0.18);
+    --success-border: rgba(46, 160, 67, 0.55);
     --transition-duration: 0.5s;
     --transition: 0.2s ease;
 }
@@ -27,4 +30,7 @@
     --fade-text-color: #C9D1D9;
     --auth-form-bg-color: #2A2A40;
     --auth-element-bg-color: #1E1E2F;
+    --success-text-color: #52d273;
+    --success-bg: rgba(82, 210, 115, 0.2);
+    --success-border: rgba(82, 210, 115, 0.6);
 }

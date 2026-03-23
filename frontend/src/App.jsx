@@ -7,6 +7,8 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import MainPage from './pages/MainPage/MainPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 import RecoveryPage from './pages/RecoveryPage/RecoveryPage';
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage/VerifyEmailPage';
 import { initializeAuth } from './store/slices/authSlice';
 
 const App = () => {
@@ -28,6 +30,9 @@ const App = () => {
           <Route path={ROUTES.register} element={<AuthPage />} />
           <Route path={ROUTES.recovery} element={<RecoveryPage />} />
         </Route>
+
+        <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
+        <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
