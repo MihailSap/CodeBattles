@@ -7,6 +7,10 @@ import ru.urfu.backend.model.User;
 
 public interface UserService {
 
+    void create(String githubId, String login, String email, String avatar);
+
+    User create(RegisterRequest registerRequest);
+
     User save(User user);
 
     Page<User> getAll(int page, int size, String filter);
@@ -15,19 +19,11 @@ public interface UserService {
 
     User getById(long id) throws UserNotFoundException;
 
+    User getByGithubId(String githubId) throws UserNotFoundException;
+
     User getByVerificationToken(String verificationToken) throws UserNotFoundException;
 
     User getByPasswordResetToken(String token) throws UserNotFoundException;
-
-    User create(RegisterRequest registerRequest);
-
-    User makeAdmin(User user);
-
-    User makeNotAdmin(User user);
-
-    void delete(User user);
-
-    boolean isExistsByEmail(String email);
 
     User updateLogin(User user, String login);
 
@@ -35,7 +31,19 @@ public interface UserService {
 
     User enableUser(User user);
 
+    User makeAdmin(User user);
+
+    User makeNotAdmin(User user);
+
+    void processGithubUser(String githubId, String login, String email, String avatar);
+
     void setNullPasswordResetToken(User user);
 
     String setPasswordResetToken(User user);
+
+    void delete(User user);
+
+    boolean isExistsByGithubId(String githubId);
+
+    boolean isExistsByEmail(String email);
 }
