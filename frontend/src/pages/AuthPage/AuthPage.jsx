@@ -5,7 +5,8 @@ import { useTheme } from '../../components/ThemeProvider';
 import GitHubIconLight from '../../assets/GitHub-icon-light.svg';
 import GitHubIconDark from '../../assets/GitHub-icon-dark.svg';
 import GitLabIcon from '../../assets/GitLab-icon.svg';
-import logo from '../../assets/logo.svg';
+import logoLight from '../../assets/logo-light.svg';
+import logoDark from '../../assets/logo-dark.svg';
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
@@ -40,7 +41,6 @@ const AuthPage = () => {
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [validationErrors, setValidationErrors] = useState(initialErrors);
-
   const isLoginMode = location.pathname === ROUTES.login;
 
   useEffect(() => {
@@ -94,6 +94,12 @@ const AuthPage = () => {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    dispatch(clearAuthMessages());
+
+    if (isLoginMode) {
+      return;
+    }
+
     setValidationErrors((prev) => ({ ...prev, [name]: "" }));
 
     switch (name) {
@@ -182,7 +188,7 @@ const AuthPage = () => {
 
       <header className="auth-header">
         <Link className="auth-header__logo-link" to={ROUTES.register}>
-          <img className="auth-header__logo" src={logo} alt="CodeBattles" />
+          <img className="auth-header__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
         </Link>
         <div className="auth-header__toggle">
           <ThemeToggle />
@@ -194,116 +200,126 @@ const AuthPage = () => {
         <section className="auth-content__left" />
 
         <section className="auth-content__right">
-          <div className="auth-form-card">
-            <div className="auth-mode-switch">
-              <span className={`auth-mode-switch__thumb ${isLoginMode ? 'auth-mode-switch__thumb--login' : ''}`} />
-              <button
-                className={`auth-mode-switch__option ${!isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
-                type="button"
-                onClick={() => changeMode('register')}
-              >
-                Регистрация
-              </button>
-              <button
-                className={`auth-mode-switch__option ${isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
-                type="button"
-                onClick={() => changeMode('login')}
-              >
-                Вход
-              </button>
+          <div className="auth-form-wrap">
+            <div className="auth-form-card">
+              <div className="auth-mode-switch">
+                <span className={`auth-mode-switch__thumb ${isLoginMode ? 'auth-mode-switch__thumb--login' : ''}`} />
+                <button
+                  className={`auth-mode-switch__option ${!isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
+                  type="button"
+                  onClick={() => changeMode('register')}
+                >
+                  Регистрация
+                </button>
+                <button
+                  className={`auth-mode-switch__option ${isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
+                  type="button"
+                  onClick={() => changeMode('login')}
+                >
+                  Вход
+                </button>
+              </div>
+
+              <form className="auth-form" onSubmit={handleSubmit}>
+                <div className='auth-form-inputs'>
+                  {!isLoginMode && (
+                    <div className="auth-input-group">
+                      <input
+                        className={`auth-input ${getFieldError('login') ? 'auth-input--error' : ''}`}
+                        name="login"
+                        type="text"
+                        placeholder="Придумайте логин"
+                        value={form.login}
+                        onChange={handleChange}
+                        maxLength={50}
+                        onBlur={handleBlur}
+                        autoComplete="username"
+                      />
+                      {getFieldError('login') && <p className="auth-input-error">{getFieldError('login')}</p>}
+                    </div>
+                  )}
+
+                  <div className="auth-input-group">
+                    <input
+                      className={`auth-input ${getFieldError('email') ? 'auth-input--error' : ''}`}
+                      name="email"
+                      type="email"
+                      placeholder="Введите Ваш email"
+                      value={form.email}
+                      onChange={handleChange}
+                      maxLength={255}
+                      onBlur={handleBlur}
+                      autoComplete="email"
+                    />
+                    {getFieldError('email') && <p className="auth-input-error">{getFieldError('email')}</p>}
+                  </div>
+
+                  <div className="auth-input-group">
+                    <input
+                      className={`auth-input ${getFieldError('password') ? 'auth-input--error' : ''}`}
+                      name="password"
+                      type="password"
+                      placeholder={isLoginMode ? 'Введите пароль' : 'Придумайте пароль'}
+                      value={form.password}
+                      onChange={handleChange}
+                      maxLength={50}
+                      onBlur={handleBlur}
+                      autoComplete={isLoginMode ? 'current-password' : 'new-password'}
+                    />
+                    {getFieldError('password') && <p className="auth-input-error">{getFieldError('password')}</p>}
+                  </div>
+
+                  {!isLoginMode && (
+                    <div className="auth-input-group">
+                      <input
+                        className={`auth-input ${getFieldError('confirmPassword') ? 'auth-input--error' : ''}`}
+                        name="confirmPassword"
+                        type="password"
+                        placeholder="Повторите пароль"
+                        value={form.confirmPassword}
+                        onChange={handleChange}
+                        maxLength={50}
+                        onBlur={handleBlur}
+                        autoComplete="new-password"
+                      />
+                      {getFieldError('confirmPassword') && (
+                        <p className="auth-input-error">{getFieldError('confirmPassword')}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="auth-social">
+                  <button className="auth-social__button auth-social__button--github" type="button">
+                    <span>Продолжить с GitHub</span>
+                    <img src={isDark ? GitHubIconDark : GitHubIconLight} alt="GitHub" />
+                  </button>
+                  <button className="auth-social__button auth-social__button--gitlab" type="button">
+                    <span>Продолжить с GitLab</span>
+                    <img src={GitLabIcon} alt="GitLab" />
+                  </button>
+                </div>
+
+                {isLoginMode && (
+                  <p className="auth-recovery-text">
+                    Забыли пароль?{' '}
+                    <Link className="auth-recovery-link" to={ROUTES.recovery}>Восстановить</Link>
+                  </p>
+                )}
+
+                <button className="auth-submit" type="submit" disabled={isSubmitDisabled}>
+                  {!isLoading && (isLoginMode ? 'Войти' : 'Зарегистрироваться')}
+                  {isLoading && (isLoginMode ? 'Вход...' : 'Регистрация...')}
+                </button>
+              </form>
             </div>
 
-            <form className="auth-form" onSubmit={handleSubmit}>
-              <div className='auth-form-inputs'>
-                {!isLoginMode && (
-                  <div className="auth-input-group">
-                    <input
-                      className={`auth-input ${getFieldError('login') ? 'auth-input--error' : ''}`}
-                      name="login"
-                      type="text"
-                      placeholder="Придумайте логин"
-                      value={form.login}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      autoComplete="username"
-                    />
-                    {getFieldError('login') && <p className="auth-input-error">{getFieldError('login')}</p>}
-                  </div>
-                )}
-
-                <div className="auth-input-group">
-                  <input
-                    className={`auth-input ${getFieldError('email') ? 'auth-input--error' : ''}`}
-                    name="email"
-                    type="email"
-                    placeholder="Введите Ваш email"
-                    value={form.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    autoComplete="email"
-                  />
-                  {getFieldError('email') && <p className="auth-input-error">{getFieldError('email')}</p>}
-                </div>
-
-                <div className="auth-input-group">
-                  <input
-                    className={`auth-input ${getFieldError('password') ? 'auth-input--error' : ''}`}
-                    name="password"
-                    type="password"
-                    placeholder={isLoginMode ? 'Введите пароль' : 'Придумайте пароль'}
-                    value={form.password}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    autoComplete={isLoginMode ? 'current-password' : 'new-password'}
-                  />
-                  {getFieldError('password') && <p className="auth-input-error">{getFieldError('password')}</p>}
-                </div>
-
-                {!isLoginMode && (
-                  <div className="auth-input-group">
-                    <input
-                      className={`auth-input ${getFieldError('confirmPassword') ? 'auth-input--error' : ''}`}
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Повторите пароль"
-                      value={form.confirmPassword}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      autoComplete="new-password"
-                    />
-                    {getFieldError('confirmPassword') && (
-                      <p className="auth-input-error">{getFieldError('confirmPassword')}</p>
-                    )}
-                  </div>
-                )}
+            {error && (
+              <div className="auth-server-error">
+                {error}
               </div>
-
-              <div className="auth-social">
-                <button className="auth-social__button auth-social__button--github" type="button">
-                  <span>Продолжить с GitHub</span>
-                  <img src={isDark ? GitHubIconDark : GitHubIconLight} alt="GitHub" />
-                </button>
-                <button className="auth-social__button auth-social__button--gitlab" type="button">
-                  <span>Продолжить с GitLab</span>
-                  <img src={GitLabIcon} alt="GitLab" />
-                </button>
-              </div>
-
-              {isLoginMode && (
-                <p className="auth-recovery-text">
-                  Забыли пароль?{' '}
-                  <Link className="auth-recovery-link" to={ROUTES.recovery}>Восстановить</Link>
-                </p>
-              )}
-
-              <button className="auth-submit" type="submit" disabled={isSubmitDisabled}>
-                {!isLoading && (isLoginMode ? 'Войти' : 'Зарегистрироваться')}
-                {isLoading && (isLoginMode ? 'Вход...' : 'Регистрация...')}
-              </button>
-            </form>
+            )}
           </div>
-
-          {error && <div className="auth-server-error">{error}</div>}
         </section>
       </div>
     </div>

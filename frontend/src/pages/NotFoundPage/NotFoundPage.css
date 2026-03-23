@@ -62,13 +62,15 @@
 
 .not-found-page__link {
   font-size: clamp(16px, 2vw, 20px);
+  border: 2px solid var(--primary-color);
   border-radius: 10px;
-  padding: 10px 30px;
+  padding: 8px 28px;
   background-color: var(--primary-color);
   color: var(--auth-form-bg-color);
-  transition: background-color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 .not-found-page__link:hover {
-  background-color: var(--hover-primary-color);
+  background-color: var(--auth-element-bg-color);
+  color: var(--primary-color);
 }
