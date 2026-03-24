@@ -48,8 +48,10 @@ public class Oauth2SuccessHandler implements AuthenticationSuccessHandler {
 
         try {
             JwtResponse jwtResponse = authService.login(user);
-            response.setContentType("application/json");
-            response.getWriter().write(jsonMapper.mapToJson(jwtResponse));
+            String redirectUrl = "http://localhost:3000/login"
+                    + "?accessToken=" + jwtResponse.accessToken()
+                    + "&refreshToken=" + jwtResponse.refreshToken();
+            response.sendRedirect(redirectUrl);
         } catch (AuthException e) {
             throw new RuntimeException(e);
         }
