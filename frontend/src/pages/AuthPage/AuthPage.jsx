@@ -8,10 +8,12 @@ import GitLabIcon from '../../assets/GitLab-icon.svg';
 import logoLight from '../../assets/logo-light.svg';
 import logoDark from '../../assets/logo-dark.svg';
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle';
+import { API_BASE_URL } from '../../constants/api';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
-import { clearAuthMessages, loginUser, registerUser } from '../../store/slices/authSlice';
+import { clearAuthMessages, fetchCurrentUser, loginUser, registerUser } from '../../store/slices/authSlice';
 import { validateLogin, validateEmail, validatePassword, validateConfirmPassword } from '../../utils/auth';
+import { tokenStorage } from '../../utils/tokenStorage';
 import './AuthPage.css';
 
 const initialForm = {
@@ -71,12 +73,56 @@ const AuthPage = () => {
     };
   }, [navigate, registrationCompleted]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get('accessToken')?.trim();
+    const refreshToken = params.get('refreshToken')?.trim();
+
+    if (!accessToken || !refreshToken) {
+      return;
+    }
+
+    let isActive = true;
+
+    const finalizeOAuth = async () => {
+      tokenStorage.setTokens({ accessToken, refreshToken });
+
+      try {
+        await dispatch(fetchCurrentUser()).unwrap();
+
+        if (!isActive) {
+          return;
+        }
+
+        navigate(ROUTES.home, { replace: true });
+      } catch {
+        tokenStorage.clearTokens();
+
+        if (!isActive) {
+          return;
+        }
+
+        navigate(ROUTES.login, { replace: true });
+      }
+    };
+
+    finalizeOAuth();
+
+    return () => {
+      isActive = false;
+    };
+  }, [dispatch, location.search, navigate]);
+
   const changeMode = (mode) => {
     const nextRoute = mode === 'login' ? ROUTES.login : ROUTES.register;
 
     if (location.pathname !== nextRoute) {
       navigate(nextRoute);
     }
+  };
+
+  const handleGitHubAuth = () => {
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/github`;
   };
 
   const sanitizeValue = (name, value) => {
@@ -309,7 +355,11 @@ const AuthPage = () => {
                     </div>
 
                     <div className="auth-social">
-                      <button className="auth-social__button auth-social__button--github" type="button">
+                      <button
+                        className="auth-social__button auth-social__button--github"
+                        type="button"
+                        onClick={handleGitHubAuth}
+                      >
                         <span>Продолжить с GitHub</span>
                         <img src={isDark ? GitHubIconDark : GitHubIconLight} alt="GitHub" />
                       </button>
