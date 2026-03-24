@@ -1,3 +1,48 @@
 spring:
   application:
     name: backend
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    enabled: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            scope:
+              - user:email
+              - read:user
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_ADDRESS}
+    password: ${EMAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+app:
+  public-url: ${APP_PUBLIC_URL}
+
+jwt:
+  secret:
+    access: ${JWT_SECRET_ACCESS}
+    refresh: ${JWT_SECRET_REFRESH}

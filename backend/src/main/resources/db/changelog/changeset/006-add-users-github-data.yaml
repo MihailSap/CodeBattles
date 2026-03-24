@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: github_id
+                  type: VARCHAR(250)
+              - column:
+                  name: avatar_url
+                  type: VARCHAR(250)

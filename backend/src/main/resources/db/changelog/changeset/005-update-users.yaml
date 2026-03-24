@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: verification_token
+                  type: VARCHAR(250)
+              - column:
+                  name: password_reset_token
+                  type: VARCHAR(250)
