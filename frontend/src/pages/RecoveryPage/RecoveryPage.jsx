@@ -64,7 +64,7 @@ const RecoveryPage = () => {
     event.preventDefault();
     setSubmitted(true);
 
-    if (!validateEmail(email)) {
+    if (validateEmail(email) !== '') {
       return;
     }
 

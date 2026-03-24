@@ -1,16 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
 import { userApi } from '../../api/userApi';
+import { getApiErrorMessage } from '../../utils/apiErrors';
 import { tokenStorage } from '../../utils/tokenStorage';
-
-const extractErrorMessage = (error, fallback) => {
-  return (
-    error?.response?.data?.message ||
-    error?.response?.data?.error ||
-    error?.message ||
-    fallback
-  );
-};
 
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
   try {
@@ -18,7 +10,7 @@ export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async 
 
     return response.data;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось получить данные пользователя'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось получить данные пользователя', 'currentUser'));
   }
 });
 
@@ -61,7 +53,7 @@ export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { di
   } catch (error) {
     tokenStorage.clearTokens();
 
-    return rejectWithValue(extractErrorMessage(error, 'Ошибка входа'));
+    return rejectWithValue(getApiErrorMessage(error, 'Ошибка входа', 'login'));
   }
 });
 
@@ -74,7 +66,7 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (payload
   } catch (error) {
     tokenStorage.clearTokens();
 
-    return rejectWithValue(extractErrorMessage(error, 'Ошибка регистрации'));
+    return rejectWithValue(getApiErrorMessage(error, 'Ошибка регистрации', 'register'));
   }
 });
 
@@ -94,7 +86,7 @@ export const verifyEmailUser = createAsyncThunk('auth/verifyEmailUser', async (t
   } catch (error) {
     tokenStorage.clearTokens();
 
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось подтвердить почту'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось подтвердить почту', 'verifyEmail'));
   }
 });
 
@@ -104,7 +96,7 @@ export const requestPasswordReset = createAsyncThunk('auth/requestPasswordReset'
 
     return response.data;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля', 'forgotPassword'));
   }
 });
 
@@ -114,7 +106,7 @@ export const resetPasswordByToken = createAsyncThunk('auth/resetPasswordByToken'
 
     return response.data;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось изменить пароль'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось изменить пароль', 'resetPassword'));
   }
 });
 
@@ -145,7 +137,7 @@ export const updateUserLogin = createAsyncThunk('auth/updateUserLogin', async (n
 
     return response.data;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось обновить логин'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить логин', 'updateLogin'));
   }
 });
 
@@ -161,7 +153,7 @@ export const updateUserPassword = createAsyncThunk('auth/updateUserPassword', as
 
     return response.data;
   } catch (error) {
-    return rejectWithValue(extractErrorMessage(error, 'Не удалось обновить пароль'));
+    return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить пароль', 'updatePassword'));
   }
 });
 
