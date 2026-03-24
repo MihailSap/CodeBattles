@@ -4,6 +4,7 @@ import jakarta.security.auth.message.AuthException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -20,15 +21,16 @@ import java.io.IOException;
 @Component
 public class Oauth2SuccessHandler implements AuthenticationSuccessHandler {
 
+    @Value("${app.public-url}")
+    private String publicUrl;
+
     private final UserService userService;
-    private final JsonMapper jsonMapper;
     private final AuthService authService;
 
     @Autowired
     public Oauth2SuccessHandler(
-            UserService userService, JsonMapper jsonMapper, AuthService authService) {
+            UserService userService, AuthService authService) {
         this.userService = userService;
-        this.jsonMapper = jsonMapper;
         this.authService = authService;
     }
 
@@ -48,9 +50,8 @@ public class Oauth2SuccessHandler implements AuthenticationSuccessHandler {
 
         try {
             JwtResponse jwtResponse = authService.login(user);
-            String redirectUrl = "http://localhost:3000/login"
-                    + "?accessToken=" + jwtResponse.accessToken()
-                    + "&refreshToken=" + jwtResponse.refreshToken();
+            String redirectUrl = "%s/login?accessToken=%s&refreshToken=%s".formatted(
+                    publicUrl, jwtResponse.accessToken(), jwtResponse.refreshToken());
             response.sendRedirect(redirectUrl);
         } catch (AuthException e) {
             throw new RuntimeException(e);
