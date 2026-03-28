@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import { ROUTES } from './constants/routes';
 import AuthPage from './pages/AuthPage/AuthPage';
+import AdminPage from './pages/AdminPage/AdminPage';
 import MainPage from './pages/MainPage/MainPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 import RecoveryPage from './pages/RecoveryPage/RecoveryPage';
@@ -23,6 +24,10 @@ const App = () => {
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path={ROUTES.home} element={<MainPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute onlyAdmin />}>
+          <Route path={ROUTES.admin} element={<AdminPage />} />
         </Route>
 
         <Route element={<ProtectedRoute onlyUnauthorized />}>

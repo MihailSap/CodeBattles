@@ -1,36 +1,37 @@
 :root {
-    --bg-color: #FFFFFF;
-    --primary-color: #1565C0;
-    --hover-primary-color: #8ab2e0;
-    --text-color: #292929;
-    --fade-text-color: #66727F;
-    --auth-form-bg-color: #FFFFFF;
-    --gitlab-button-color: #fc6d26;
-    --fade-button-color: #808080;
-    --auth-element-shadow: 0px 0px 5px 0px rgba(21, 101, 192, 1);
+    --bg-color: rgb(255, 255, 255);
+    --primary-color: rgb(21, 101, 192);
+    --hover-primary-color: rgb(21, 101, 192, 0.5);
+    --text-color: rgb(41, 41, 41);
+    --fade-text-color: rgb(102, 114, 127);
+    --auth-form-bg-color: rgb(255, 255, 255);
+    --gitlab-button-color: rgb(252, 109, 38);
+    --fade-button-color: rgb(128, 128, 128);
+    --auth-element-shadow: 0px 0px 5px 0px rgba(21, 101, 192);
     --auth-form-shadow: 0px 0px 20px 2px rgba(0, 0, 0, 0.3);
-    --auth-button-text-color: #FFFFFF;
-    --auth-element-bg-color: #FFFFFF;
+    --auth-button-text-color: rgb(255, 255, 255);
+    --auth-element-bg-color: rgb(255, 255, 255);
     --error-bg-input-color: rgba(248, 81, 73, 0.3);
     --error-border-input-color: rgba(248, 81, 73, 0.5);
-    --error-border-active-input-color: rgba(248, 81, 73, 1);
-    --error-shadow-input-color: 0px 0px 5px 0px rgba(248, 81, 73, 1);
-    --error-text-color: #F85149;
-    --success-text-color: #1f7a35;
+    --error-border-active-input-color: rgba(248, 81, 73);
+    --error-shadow-input-color: 0px 0px 5px 0px rgba(248, 81, 73);
+    --error-text-color: rgb(248, 81, 73);
+    --success-text-color: rgb(31, 122, 53);
     --success-bg: rgba(46, 160, 67, 0.18);
     --success-border: rgba(46, 160, 67, 0.55);
+    --section-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.25);
     --transition-duration: 0.5s;
     --transition: 0.2s ease;
 }
 
 [data-theme='dark'] {
-    --bg-color: #2A2A40;
-    --primary-color: #1565C0;
-    --text-color: #F5F5F5;
-    --fade-text-color: #C9D1D9;
-    --auth-form-bg-color: #2A2A40;
-    --auth-element-bg-color: #1E1E2F;
-    --success-text-color: #52d273;
+    --bg-color: rgb(42, 42, 64);
+    --primary-color: rgb(21, 101, 192);
+    --text-color: rgb(245, 245, 245);
+    --fade-text-color: rgb(201, 209, 217);
+    --auth-form-bg-color: rgb(42, 42, 64);
+    --auth-element-bg-color: rgb(30, 30, 47);
+    --success-text-color: rgb(82, 210, 115);
     --success-bg: rgba(82, 210, 115, 0.2);
     --success-border: rgba(82, 210, 115, 0.6);
 }

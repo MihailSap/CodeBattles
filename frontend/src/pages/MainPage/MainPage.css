@@ -8,6 +8,10 @@
 }
 
 .main-page__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
   width: min(420px, 100%);
   border: 1px solid rgba(21, 101, 192, 0.25);
   border-radius: 14px;
@@ -27,6 +31,18 @@
   margin-bottom: 8px;
 }
 
+.main-page__admin-link {
+  margin-top: 8px;
+  display: inline-flex;
+  color: var(--primary-color);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+
 .main-page__button {
   margin-top: 8px;
   border: none;
@@ -40,6 +56,10 @@
 
 .main-page__button:hover:enabled {
   background-color: var(--hover-primary-color);
+}
+
+.main-page__admin-link:hover {
+  text-decoration-color: var(--primary-color);
 }
 
 .main-page__button:disabled {

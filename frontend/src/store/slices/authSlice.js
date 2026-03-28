@@ -4,6 +4,25 @@ import { userApi } from '../../api/userApi';
 import { getApiErrorMessage } from '../../utils/apiErrors';
 import { tokenStorage } from '../../utils/tokenStorage';
 
+const EMPTY_USER = {
+  id: null,
+  email: '',
+  login: '',
+  role: null,
+  enabled: false
+};
+
+const normalizeUser = (user) => {
+  if (!user || typeof user !== 'object') {
+    return { ...EMPTY_USER };
+  }
+
+  return {
+    ...EMPTY_USER,
+    ...user
+  };
+};
+
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
   try {
     const response = await userApi.getCurrentUser();
@@ -19,15 +38,15 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { di
   const refreshToken = tokenStorage.getRefreshToken();
 
   if (!accessToken && !refreshToken) {
-    return { user: null, userId: null, isAuthenticated: false };
+    return { user: normalizeUser(), userId: null, isAuthenticated: false };
   }
 
   try {
     const user = await dispatch(fetchCurrentUser()).unwrap();
 
     return {
-      user,
-      userId: user.id ?? null,
+      user: normalizeUser(user),
+      userId: user?.id ?? null,
       isAuthenticated: true
     };
   } catch (errorMessage) {
@@ -46,8 +65,8 @@ export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { di
     const user = await dispatch(fetchCurrentUser()).unwrap();
 
     return {
-      user,
-      userId: user.id ?? null,
+      user: normalizeUser(user),
+      userId: user?.id ?? null,
       tokens: response.data
     };
   } catch (error) {
@@ -79,8 +98,8 @@ export const verifyEmailUser = createAsyncThunk('auth/verifyEmailUser', async (t
     const user = await dispatch(fetchCurrentUser()).unwrap();
 
     return {
-      user,
-      userId: user.id ?? null,
+      user: normalizeUser(user),
+      userId: user?.id ?? null,
       tokens: response.data
     };
   } catch (error) {
@@ -158,7 +177,7 @@ export const updateUserPassword = createAsyncThunk('auth/updateUserPassword', as
 });
 
 const initialState = {
-  user: null,
+  user: normalizeUser(),
   userId: null,
   isAuthenticated: false,
   isInitialized: false,
@@ -193,7 +212,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isInitialized = true;
         state.isAuthenticated = false;
-        state.user = null;
+        state.user = normalizeUser();
         state.userId = null;
         state.error = action.payload || 'Сессия недействительна';
       })
@@ -221,7 +240,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
+        state.user = normalizeUser();
         state.userId = null;
         state.successMessage = 'Письмо с подтверждением отправлено';
       })
@@ -272,9 +291,9 @@ const authSlice = createSlice({
         state.error = action.payload || 'Не удалось изменить пароль';
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.user = normalizeUser(action.payload);
         state.isAuthenticated = true;
-        state.userId = action.payload?.id || state.userId;
+        state.userId = action.payload?.id ?? state.userId;
       })
       .addCase(fetchCurrentUser.rejected, (state, action) => {
         state.error = action.payload || 'Не удалось получить пользователя';
@@ -285,7 +304,7 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
+        state.user = normalizeUser();
         state.userId = null;
         state.successMessage = null;
         state.error = null;
@@ -293,7 +312,7 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state) => {
         state.isLoading = false;
         state.isAuthenticated = false;
-        state.user = null;
+        state.user = normalizeUser();
         state.userId = null;
       })
       .addCase(updateUserLogin.pending, (state) => {
@@ -303,8 +322,8 @@ const authSlice = createSlice({
       })
       .addCase(updateUserLogin.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
-        state.userId = action.payload?.id || state.userId;
+        state.user = normalizeUser(action.payload);
+        state.userId = action.payload?.id ?? state.userId;
         state.successMessage = 'Логин успешно обновлен';
       })
       .addCase(updateUserLogin.rejected, (state, action) => {

@@ -4,8 +4,9 @@ import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import './ProtectedRoute.css';
 
-const ProtectedRoute = ({ onlyUnauthorized = false }) => {
-  const { isInitialized, isAuthenticated } = useAuth();
+const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
+  const { isInitialized, isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
 
   if (!isInitialized) {
     return (
@@ -21,6 +22,10 @@ const ProtectedRoute = ({ onlyUnauthorized = false }) => {
 
   if (!onlyUnauthorized && !isAuthenticated) {
     return <Navigate to={ROUTES.login} replace />;
+  }
+
+  if (onlyAdmin && !isAdmin) {
+    return <Navigate to={ROUTES.home} replace />;
   }
 
   return <Outlet />;
