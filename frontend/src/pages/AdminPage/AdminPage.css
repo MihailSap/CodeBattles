@@ -11,9 +11,9 @@
     width: min(1480px, 100%);
     margin: 0 auto;
     border: 2px solid var(--hover-primary-color);
-    border-radius: 18px;
-    box-shadow: var(--auth-element-shadow);
-    background-color: var(--auth-form-bg-color);
+    border-radius: 20px;
+    box-shadow: var(--element-shadow);
+    background-color: var(--form-bg-color);
     padding: 16px 18px;
     display: flex;
     align-items: flex-start;
@@ -29,7 +29,7 @@
 
 .admin-header__title {
     color: var(--text-color);
-    font-size: clamp(20px, 2.4vw, 34px);
+    font-size: clamp(22px, 2.4vw, 34px);
     line-height: 1.15;
     font-weight: 700;
 }
@@ -71,29 +71,20 @@
 
 .admin-header__links-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
-.admin-header__link {
-    border-radius: 10px;
-    padding: 10px 30px;
-    color: var(--primary-color);
-    background-color: var(--auth-element-bg-color);
-    border: 2px solid var(--primary-color);
-    font-weight: 700;
-    min-width: fit-content;
-    transition: background-color var(--transition), color var(--transition);
-}
-
-.admin-header__logout {
+.admin-header__logout, .admin-header__link {
     border-radius: 10px;
     border: 2px solid var(--primary-color);
     background-color: var(--primary-color);
-    color: var(--auth-button-text-color);
+    color: var(--white-text-color);
     font-weight: 700;
-    padding: 10px 30px;
+    padding: 8px 30px;
     min-width: fit-content;
+    width: 100%;
     cursor: pointer;
     transition: background-color var(--transition), border-color var(--transition), color var(--transition);
 }
@@ -111,12 +102,12 @@
 
 @media (hover: hover) and (pointer: fine) {
     .admin-header__link:hover {
-        color: var(--auth-button-text-color);
+        color: var(--white-text-color);
         background-color: var(--primary-color);
     }
 
-    .admin-header__logout:hover:enabled {
-        background-color: var(--auth-form-bg-color);
+    .admin-header__logout:hover:enabled, .admin-header__link:hover {
+        background-color: var(--form-bg-color);
         color: var(--primary-color);
     }
 
@@ -140,6 +131,7 @@
     .admin-header {
         flex-direction: column;
         align-items: center;
+        padding: 14px;
     }
 
     .admin-header__title-block {
@@ -150,27 +142,19 @@
         justify-content: center;
         order: -1;
     }
+
+    .admin-header__links-container {
+        flex-direction: row;
+    }
+
+    .admin-header__logout, .admin-header__link {
+        padding: 8px 20px;
+    }
 }
 
-@media (max-width: 500px) {
-    .admin-header {
-        padding: 14px;
-        border-radius: 14px;
-    }
-
+@media (max-width: 380px) {
     .admin-header__actions {
         flex-direction: column;
-    }
-
-    .admin-header__actions .theme-toggle {
-        grid-column: span 2;
-        justify-self: start;
-    }
-
-    .admin-header__link,
-    .admin-header__logout {
-        text-align: center;
-        width: 100%;
     }
 }
 

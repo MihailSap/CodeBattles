@@ -11,8 +11,8 @@
   margin: auto;
   padding: 32px 28px;
   border-radius: 20px;
-  background-color: var(--auth-form-bg-color);
-  box-shadow: var(--auth-form-shadow);
+  background-color: var(--form-bg-color);
+  box-shadow: var(--form-shadow);
   position: relative;
   z-index: 1;
   text-align: center;

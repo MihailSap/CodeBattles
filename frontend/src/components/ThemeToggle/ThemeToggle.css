@@ -4,8 +4,8 @@
   border-radius: 100px;
   border: 2px solid var(--primary-color);
   padding: 2px;
-  background: var(--auth-element-bg-color);
-  box-shadow: var(--auth-element-shadow);
+  background: var(--element-bg-color);
+  box-shadow: var(--element-shadow);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -51,7 +51,7 @@
 }
 
 .theme-toggle--light .theme-toggle__icon--sun, .theme-toggle--dark .theme-toggle__icon--moon {
-  color: var(--auth-button-text-color);
+  color: var(--white-text-color);
 }
 
 @media (max-width: 500px) {

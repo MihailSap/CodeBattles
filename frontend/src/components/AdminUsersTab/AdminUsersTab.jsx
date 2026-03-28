@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Spinner from '../Spinner/Spinner';
 import ConfirmActionModal from '../ConfirmActionModal/ConfirmActionModal';
 import { userApi } from '../../api/userApi';
@@ -18,7 +18,6 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const [error, setError] = useState('');
   const [confirmState, setConfirmState] = useState(null);
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
-  const prevSearchRef = useRef(debouncedSearch);
 
   const loadUsers = useCallback(
     async (targetPage, filter) => {
@@ -57,6 +56,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setDebouncedSearch(searchInput.trim());
+      setPage(0);
     }, SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timeoutId);
@@ -64,14 +64,6 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
   useEffect(() => {
     if (!isActive) {
-      return;
-    }
-
-    const searchChanged = prevSearchRef.current !== debouncedSearch;
-    prevSearchRef.current = debouncedSearch;
-
-    if (searchChanged && page !== 0) {
-      setPage(0);
       return;
     }
 

@@ -27,8 +27,8 @@
   width: min(640px, 100%);
   border-radius: 20px;
   padding: clamp(20px, 4vw, 40px);
-  background-color: var(--auth-form-bg-color);
-  box-shadow: var(--auth-form-shadow);
+  background-color: var(--form-bg-color);
+  box-shadow: var(--form-shadow);
   text-align: center;
 }
 
@@ -66,13 +66,13 @@
   border-radius: 10px;
   padding: 8px 28px;
   background-color: var(--primary-color);
-  color: var(--auth-form-bg-color);
+  color: var(--form-bg-color);
   transition: background-color var(--transition), color var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .not-found-page__link:hover {
-    background-color: var(--auth-element-bg-color);
+    background-color: var(--element-bg-color);
     color: var(--primary-color);
   }
 }
