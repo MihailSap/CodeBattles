@@ -27,7 +27,7 @@
 }
 
 .auth-header {
-  width: min(1740px, 100%);
+  width: min(1920px, 100%);
   margin: 0 auto;
   padding: 5px 0;
   display: grid;
@@ -59,7 +59,7 @@
 }
 
 .auth-content {
-  width: min(1740px, 100%);
+  width: min(1920px, 100%);
   margin: 0 auto;
   padding: 14px 0;
   flex: 1;
@@ -92,8 +92,8 @@
   justify-content: space-between;
   padding: 30px;
   border-radius: 20px;
-  background-color: var(--auth-form-bg-color);
-  box-shadow: var(--auth-form-shadow);
+  background-color: var(--form-bg-color);
+  box-shadow: var(--form-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -121,8 +121,8 @@
   border-radius: 15px;
   border: 2px solid var(--primary-color);
   padding: 3px;
-  box-shadow: var(--auth-element-shadow);
-  background: var(--auth-element-bg-color);
+  box-shadow: var(--element-shadow);
+  background: var(--element-bg-color);
   position: relative;
   display: flex;
   align-items: center;
@@ -161,7 +161,7 @@
 }
 
 .auth-mode-switch__option--active {
-  color: var(--auth-button-text-color);
+  color: var(--white-text-color);
 }
 
 .auth-form {
@@ -194,9 +194,9 @@
   padding: 10px;
   font-weight: 500;
   font-size: 14px;
-  background-color: var(--auth-element-bg-color);
+  background-color: var(--element-bg-color);
   color: var(--text-color);
-  box-shadow: var(--auth-element-shadow);
+  box-shadow: var(--element-shadow);
   transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
 }
 
@@ -285,7 +285,7 @@
   border-radius: 10px;
   border: 2px solid var(--primary-color);
   background-color: var(--primary-color);
-  color: var(--auth-button-text-color);
+  color: var(--white-text-color);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -319,7 +319,7 @@
   }
 
   .auth-mode-switch__option--active:hover {
-    color: var(--auth-button-text-color);
+    color: var(--white-text-color);
   }
 
   .auth-social__button--github:hover {
@@ -339,7 +339,7 @@
   }
 
   .auth-submit:hover:enabled {
-    background-color: var(--auth-element-bg-color);
+    background-color: var(--element-bg-color);
     color: var(--primary-color);
   }
 }

@@ -1,0 +1,191 @@
+.profile-page__section--skills {
+  grid-area: skills;
+}
+
+.profile-page__skills-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-page__skill-group {
+  padding: 5px 0;
+}
+
+.profile-page__skill-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-page__skill-title {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-color);
+  line-height: 120%;
+}
+
+.profile-page__clear-button {
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+
+.profile-page__skills-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.profile-page__empty {
+  color: var(--primary-color);
+  font-size: 16px;
+  line-height: 120%;
+}
+
+.profile-page__skill-tag {
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  background: var(--primary-color);
+  color: var(--white-text-color);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 120%;
+}
+
+.profile-page__skill-tag--editable {
+  cursor: pointer;
+}
+
+.profile-page__skills-popup-wrap {
+  position: relative;
+}
+
+.profile-page__add-skill-button {
+  border-radius: 5px;
+  padding: 4px 9px;
+  background: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.profile-page__skills-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(320px, calc(100vw - 24px));
+  max-height: 240px;
+  overflow: auto;
+  background: var(--element-bg-color);
+  border: 1px solid var(--primary-color);
+  box-shadow: var(--modal-shadow);
+  border-radius: 10px;
+  padding: 10px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profile-page__skills-popup--top {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.profile-page__skills-popup--mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: auto;
+  z-index: 60;
+}
+
+.profile-page__skills-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-color);
+  padding: 3px 2px;
+}
+
+.profile-page__skills-popup::-webkit-scrollbar {
+  width: 10px;
+}
+
+.profile-page__skills-popup::-webkit-scrollbar-track {
+  background: transparent;
+  border: 1px solid var(--scroll-color);
+  border-radius: 10px;
+}
+
+.profile-page__skills-popup::-webkit-scrollbar-thumb {
+  background: var(--scroll-color);
+  border-radius: 10px;
+}
+
+.profile-page__skills-popup {
+  scrollbar-color: var(--scroll-color) transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-page__clear-button:hover {
+    color: var(--hover-primary-color);
+    text-decoration-color: var(--hover-primary-color);
+  }
+
+  .profile-page__add-skill-button:hover {
+    color: var(--hover-primary-color);
+    border-color: var(--hover-primary-color);
+  }
+}
+
+@media (max-width: 500px) {
+  .profile-page__skill-group {
+    padding: 2.5px 0;
+  }
+
+  .profile-page__skills-list {
+    margin-top: 5px;
+  }
+
+  .profile-page__skill-title {
+    font-size: 14px;
+  }
+
+  .profile-page__skill-tag {
+    font-size: 12px;
+  }
+
+  .profile-page__clear-button {
+    font-size: 14px;
+  }
+
+  .profile-page__empty {
+    font-size: 14px;
+  }
+
+  .profile-page__skills-popup {
+    width: min(250px, calc(100vw - 24px));
+  }
+}

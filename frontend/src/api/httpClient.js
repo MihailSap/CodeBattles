@@ -68,8 +68,7 @@ httpClient.interceptors.response.use(
 
     const status = error.response?.status;
 
-    // const shouldRefreshByStatus = status === 401;
-    const shouldRefreshByStatus = status === 403;
+    const shouldRefreshByStatus = status === 401;
 
     if (!shouldRefreshByStatus) {
       return Promise.reject(error);
