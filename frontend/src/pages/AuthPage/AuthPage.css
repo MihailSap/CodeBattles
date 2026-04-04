@@ -27,7 +27,7 @@
 }
 
 .auth-header {
-  width: min(1740px, 100%);
+  width: min(1920px, 100%);
   margin: 0 auto;
   padding: 5px 0;
   display: grid;
@@ -59,7 +59,7 @@
 }
 
 .auth-content {
-  width: min(1740px, 100%);
+  width: min(1920px, 100%);
   margin: 0 auto;
   padding: 14px 0;
   flex: 1;

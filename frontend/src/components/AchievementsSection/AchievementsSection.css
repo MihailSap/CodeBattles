@@ -1,0 +1,165 @@
+.profile-page__section--achievements {
+  grid-area: achievements;
+}
+
+.profile-page__achievements-body {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.profile-page__achievements-list {
+  height: 350px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-content: flex-start;
+  padding-right: 8px;
+}
+
+.profile-page__achievements-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  width: 100%;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 18px;
+  height: 350px;
+}
+
+.profile-page__achievement-item {
+  width: calc(50% - 10px);
+  min-width: 220px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+}
+
+.profile-page__achievement-image {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.profile-page__achievement-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.profile-page__achievement-name {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+
+.profile-page__achievement-description {
+  font-weight: 500;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.profile-page__achievement-item--received .profile-page__achievement-name {
+  color: var(--primary-color);
+}
+
+.profile-page__achievement-item--received .profile-page__achievement-description {
+  color: var(--achievement-description-color);
+}
+
+.profile-page__achievement-item--not-received .profile-page__achievement-name {
+  color: var(--achievement-description-color);
+}
+
+.profile-page__achievement-item--not-received .profile-page__achievement-description {
+  color: var(--not-received-achievement-description-color);
+}
+
+.profile-page__achievement-item--not-received .profile-page__achievement-image {
+  opacity: 0.7;
+  filter: grayscale(1);
+}
+
+.profile-page__achievement-check {
+  display: inline-flex;
+  align-items: center;
+}
+
+.profile-page__achievement-check svg {
+  width: 20px;
+  height: 20px;
+  color: var(--success-text-color);
+}
+
+.profile-page__achievements-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.profile-page__achievements-list::-webkit-scrollbar-track {
+  background: transparent;
+  border: 1px solid var(--scroll-color);
+  border-radius: 10px;
+}
+
+.profile-page__achievements-list::-webkit-scrollbar-thumb {
+  background: var(--scroll-color);
+  border-radius: 10px;
+}
+
+.profile-page__achievements-list {
+  scrollbar-color: var(--scroll-color) transparent;
+}
+
+@media (max-width: 1200px) {
+  .profile-page__achievement-item {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .profile-page__achievements-list {
+    gap: 10px;
+  }
+
+  .profile-page__achievements-empty {
+    font-size: 14px;
+    height: 200px;
+  }
+
+  .profile-page__achievement-item {
+    gap: 10px;
+    padding: 5px;
+  }
+
+  .profile-page__achievement-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .profile-page__achievement-name {
+    font-size: 14px;
+    gap: 5px;
+  }
+
+  .profile-page__achievement-check svg {
+    height: 15px;
+    width: 15px;
+  }
+
+  .profile-page__achievement-description {
+    font-size: 12px;
+  }
+}

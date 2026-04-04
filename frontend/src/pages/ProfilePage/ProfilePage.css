@@ -1,0 +1,302 @@
+.profile-page {
+  min-height: 100vh;
+  background: var(--element-bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-page__content {
+  width: 100%;
+  max-width: 1920px;
+  flex: 1;
+  margin: 0 auto;
+}
+
+.profile-page__loader {
+  min-height: calc(100vh - 86px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-page__grid {
+  width: 100%;
+  padding: 40px;
+
+  /**/
+  display: flex;
+  /**/
+
+  /* 
+  display: grid;
+  grid-template-columns: 1.25fr 2fr;
+  grid-template-areas:
+    "profile statistics"
+    "skills achievements";
+  */
+
+  gap: 40px;
+}
+
+/**/
+.profile-page__grid-left,
+.profile-page__grid-right {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.profile-page__grid-left {
+  width: 38%;
+}
+
+.profile-page__grid-right {
+  width: 62%;
+}
+/**/
+
+.profile-page__section {
+  border-radius: 10px;
+  box-shadow: var(--section-shadow);
+  background: var(--form-bg-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-page__section-head {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-page__section-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.profile-page__section-title {
+  text-align: center;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.profile-page__edit-button {
+  border: none;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-page__edit-button img {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+.profile-page__section-body {
+  margin-top: 20px;
+  flex: 1;
+  min-height: 0;
+}
+
+.profile-page__actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.profile-page__action {
+  padding: 0.5px 40px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.profile-page__action svg {
+  width: 35px;
+  height: 35px;
+}
+
+.profile-page__action--save {
+  color: var(--white-text-color);
+  background: var(--success-text-color);
+  border-color: var(--success-text-color);
+}
+
+.profile-page__action--cancel {
+  color: var(--white-text-color);
+  background: var(--error-text-color);
+  border-color: var(--error-text-color);
+}
+
+.profile-page__action:disabled,
+.profile-page__edit-button:disabled,
+.profile-page__avatar-action:disabled,
+.profile-page__add-skill-button:disabled,
+.profile-page__clear-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.profile-page__action:focus-visible,
+.profile-page__edit-button:focus-visible,
+.profile-page__avatar-action:focus-visible,
+.profile-page__add-skill-button:focus-visible,
+.profile-page__clear-button:focus-visible,
+.profile-page__settings-button:focus-visible,
+.profile-page__skill-tag--editable:focus-visible,
+.profile-page__name-input:focus-visible,
+.profile-page__skills-option input:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.profile-page__settings-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  background: var(--element-bg-color);
+  box-shadow: var(--modal-shadow);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 110;
+  transition: background-color var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.profile-page__settings-button img {
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-page__action--save:hover {
+    background: var(--element-bg-color);
+    color: var(--success-text-color);
+  }
+
+  .profile-page__action--cancel:hover {
+    background: var(--element-bg-color);
+    color: var(--error-text-color);
+  }
+
+  .profile-page__settings-button:hover {
+    background: var(--bg-color);
+  }
+}
+
+@media (max-width: 1440px) {
+  .profile-page__grid {
+    padding: 28px;
+    gap: 28px;
+  }
+
+  /**/
+  .profile-page__grid-left,
+  .profile-page__grid-right {
+    gap: 28px;
+  }
+  /**/
+}
+
+@media (max-width: 1200px) {
+  .profile-page__grid {
+    /**/
+    flex-direction: column;
+    /**/
+
+    /*
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "profile"
+      "skills"
+      "statistics"
+      "achievements";
+    */
+  }
+
+  /**/
+  .profile-page__grid-left,
+  .profile-page__grid-right {
+    width: 100%;
+  }
+  /**/
+}
+
+@media (max-width: 500px) {
+  .profile-page__grid {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  /**/
+  .profile-page__grid-left,
+  .profile-page__grid-right {
+    gap: 20px;
+  }
+  /**/
+
+  .profile-page__section-title {
+    font-size: 18px;
+  }
+
+  .profile-page__section-body {
+    margin-top: 15px;
+  }
+
+  .profile-page__section-title-wrap {
+    gap: 5px;
+  }
+
+  .profile-page__edit-button img {
+    width: 16px;
+    height: 16px;
+  }
+
+  .profile-page__actions {
+    gap: 10px;
+  }
+
+  .profile-page__action {
+    padding: 0.5px 20px;
+  }
+
+  .profile-page__action svg {
+    height: 25px;
+    width: 25px;
+  }
+
+  .profile-page__settings-button {
+    right: 14px;
+    bottom: 14px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .profile-page__settings-button img {
+    width: 22px;
+    height: 22px;
+  }
+}

@@ -1,7 +1,6 @@
 .admin-users {
-  border: 2px solid var(--hover-primary-color);
   border-radius: 20px;
-  box-shadow: var(--element-shadow);
+  box-shadow: var(--section-shadow);
   background-color: var(--form-bg-color);
   padding: 16px;
   display: flex;
@@ -39,7 +38,6 @@
   color: var(--text-color);
   font-size: 15px;
   padding: 10px 12px;
-  box-shadow: var(--element-shadow);
   transition: border-color var(--transition), box-shadow var(--transition);
 }
 

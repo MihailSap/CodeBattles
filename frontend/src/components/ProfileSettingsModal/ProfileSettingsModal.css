@@ -1,0 +1,404 @@
+.profile-settings-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.profile-settings-modal {
+  width: min(1120px, 100%);
+  max-height: min(100vh - 250px, 920px);
+  overflow: auto;
+  border: 2px solid var(--primary-color);
+  border-radius: 25px;
+  box-shadow: var(--modal-shadow);
+  background-color: var(--bg-color);
+  padding: 30px 40px;
+}
+
+.profile-settings-modal__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-settings-modal__title {
+  margin: 0;
+  text-align: center;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.profile-settings-modal__close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: none;
+  background: transparent;
+  color: var(--error-text-color);
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.profile-settings-modal__close svg {
+  width: 100%;
+  height: 100%;
+}
+
+.profile-settings-modal__grid {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 40px;
+  row-gap: 30px;
+}
+
+.profile-settings-modal__section {
+  border-radius: 10px;
+  box-shadow: var(--section-shadow);
+  padding: 20px;
+  background: var(--element-bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-settings-modal__section--accounts {
+  grid-column: 1 / -1;
+}
+
+.profile-settings-modal__section-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 24px;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.profile-settings-modal__security-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-settings-modal__inputs {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-settings-modal__input-group {
+  position: relative;
+}
+
+.profile-settings-modal__input {
+  width: 100%;
+  border: 2px solid var(--green-border-input-color);
+  box-shadow: var(--green-shadow-input);
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-color);
+  background: var(--element-bg-color);
+  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+}
+
+.profile-settings-modal__input::placeholder {
+  color: var(--fade-text-color);
+}
+
+.profile-settings-modal__input:focus {
+  outline: none;
+  border-color: var(--green-border-active-input-color);
+}
+
+.profile-settings-modal__input--error {
+  background-color: var(--error-bg-input-color);
+  border-color: var(--error-border-input-color);
+  box-shadow: var(--error-shadow-input-color);
+}
+
+.profile-settings-modal__input--error:focus {
+  border-color: var(--error-border-active-input-color);
+}
+
+.profile-settings-modal__input-error {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--error-text-color);
+}
+
+.profile-settings-modal__action-button {
+  border-radius: 10px;
+  border: 2px solid var(--success-text-color);
+  background: var(--success-text-color);
+  color: var(--white-text-color);
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.profile-settings-modal__action-button--reset {
+  align-self: center;
+  margin-top: 30px;
+  padding: 1px 45px;
+}
+
+.profile-settings-modal__action-button--reset svg {
+  width: 35px;
+  height: 35px;
+}
+
+.profile-settings-modal__action-button--link {
+  display: flex;
+  margin: 20px auto 0;
+  padding: 5px 20px;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.profile-settings-modal__action-button:disabled,
+.profile-settings-modal__unlink-button:disabled,
+.profile-settings-modal__close:disabled,
+.profile-settings-modal__checkbox-row input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.profile-settings-modal__notifications {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-settings-modal__checkbox-row {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profile-settings-modal__checkbox-row input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.profile-settings-modal__checkbox-row span {
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.profile-settings-modal__accounts-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.profile-settings-modal__account {
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.profile-settings-modal__account--github {
+  background: var(--github-bg);
+}
+
+.profile-settings-modal__account--gitlab {
+  background: var(--gitlab-bg);
+}
+
+.profile-settings-modal__account-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 24px;
+  text-align: center;
+  color: var(--white-text-color);
+}
+
+.profile-settings-modal__account-row {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profile-settings-modal__account-login {
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--white-text-color);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-settings-modal__unlink-button {
+  border: none;
+  padding: 0;
+  width: 25px;
+  height: 25px;
+  background: transparent;
+  color: var(--error-text-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.profile-settings-modal__unlink-button svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .profile-settings-modal__action-button:hover:enabled {
+    background: var(--transition);
+    color: var(--success-text-color);
+    border-color: var(--success-text-color);
+  }
+}
+
+@media (max-width: 800px) {
+  .profile-settings-modal {
+    padding: 24px;
+  }
+
+  .profile-settings-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-settings-modal__section--accounts {
+    grid-column: auto;
+  }
+
+  .profile-settings-modal__accounts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .profile-settings-modal__overlay {
+    padding: 12px;
+  }
+
+  .profile-settings-modal {
+    padding: 18px;
+    max-height: 80vh;
+  }
+
+  .profile-settings-modal__title,
+  .profile-settings-modal__section-title,
+  .profile-settings-modal__account-title {
+    font-size: 18px;
+  }
+
+  .profile-settings-modal__close {
+    width: 20px;
+    height: 20px;
+  }
+
+  .profile-settings-modal__grid {
+    margin-top: 20px;
+    gap: 20px;
+  }
+
+  .profile-settings-modal__section {
+    padding: 15px;
+  }
+
+  .profile-settings-modal__security-form {
+    margin-top: 15px;
+  }
+
+  .profile-settings-modal__inputs {
+    gap: 15px;
+  }
+
+  .profile-settings-modal__input {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .profile-settings-modal__input-error {
+    font-size: 12px;
+  }
+
+  .profile-settings-modal__action-button--reset {
+    padding: 1px 30px;
+    margin-top: 20px;
+  }
+
+  .profile-settings-modal__action-button--reset svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .profile-settings-modal__notifications {
+    margin-top: 15px;
+    gap: 8px;
+  }
+
+  .profile-settings-modal__checkbox-row {
+    padding: 5px;
+    gap: 10px;
+  }
+
+  .profile-settings-modal__checkbox-row input {
+    width: 18px;
+    height: 18px;
+  }
+
+  .profile-settings-modal__checkbox-row span {
+    font-size: 14px;
+  }
+
+  .profile-settings-modal__accounts-grid {
+    margin-top: 15px;
+    gap: 15px;
+  }
+
+  .profile-settings-modal__account {
+    padding: 15px;
+  }
+
+  .profile-settings-modal__action-button--link {
+    margin-top: 15px;
+    padding: 5px 15px;
+    font-size: 14px;
+  }
+
+  .profile-settings-modal__account-row {
+    margin-top: 15px;
+  }
+
+  .profile-settings-modal__account-login {
+    font-size: 16px;
+  }
+
+  .profile-settings-modal__unlink-button {
+    width: 20px;
+    height: 20px;
+  }
+}

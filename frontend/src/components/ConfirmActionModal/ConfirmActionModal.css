@@ -11,10 +11,10 @@
 
 .confirm-modal {
   width: min(460px, 100%);
-  border-radius: 16px;
-  border: 2px solid var(--hover-primary-color);
-  background-color: var(--form-bg-color);
-  box-shadow: var(--form-shadow);
+  border-radius: 25px;
+  border: 2px solid var(--primary-color);
+  background-color: var(--bg-color);
+  box-shadow: var(--modal-shadow);
   padding: 20px;
   display: flex;
   flex-direction: column;

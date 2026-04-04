@@ -10,6 +10,8 @@ import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../ThemeProvider';
 import BellIcon from '../../assets/bell-icon.svg';
 import AvatarIcon from '../../assets/avatar-icon.svg';
+import AdminIcon from '../../assets/admin-icon.svg';
+import ExitIcon from '../../assets/exit-icon.svg';
 import './Header.css';
 
 const NAV_LINKS = [
@@ -32,7 +34,6 @@ const Header = () => {
   const logoSrc = theme === 'dark' ? logoDark : logoLight;
 
   const displayLogin = user?.login || 'Пользователь';
-  const displayEmail = user?.email || '—';
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -67,66 +68,62 @@ const Header = () => {
 
   return (
     <header className="header">
-      <div className="header__left">
-        <Link className="header__logo-link" to={ROUTES.home} aria-label="На главную">
-          <img className="header__logo" src={logoSrc} alt="CodeBattles" />
-        </Link>
-      </div>
+      <div className="header__content">
+        <div className="header__left">
+          <Link className="header__logo-link" to={ROUTES.home} aria-label="На главную">
+            <img className="header__logo" src={logoSrc} alt="CodeBattles" />
+          </Link>
+        </div>
 
-      <nav className="header__center" aria-label="Навигация по сайту">
-        {NAV_LINKS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === ROUTES.home}
-            className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="header__center" aria-label="Навигация по сайту">
+          {NAV_LINKS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === ROUTES.home}
+              className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
 
-      <div className="header__right">
-        <button className="header__icon-button" type="button" aria-label="Уведомления">
-          <img className="header__icon-image" src={BellIcon} alt="Уведомления" />
-          {hasUnreadNotifications && <span className="header__notification-dot" aria-hidden="true" />}
-        </button>
-
-        <div className="header__avatar-wrap" ref={menuRef}>
-          <button
-            className="header__avatar-button"
-            type="button"
-            aria-label="Меню пользователя"
-            aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen((prevState) => !prevState)}
-          >
-            <img className="header__avatar-image" src={user?.avatarImage ? user.avatarImage : AvatarIcon} alt={`Аватар ${displayLogin}`} />
+        <div className="header__right">
+          <button className="header__icon-button" type="button" aria-label="Уведомления">
+            <img className="header__icon-image" src={BellIcon} alt="Уведомления" />
+            {hasUnreadNotifications && <span className="header__notification-dot" aria-hidden="true" />}
           </button>
 
-          <div className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`} role="menu" aria-hidden={!isMenuOpen}>
-              <div className="header__menu-user">
-                <p className="header__menu-login">{displayLogin}</p>
-                <p className="header__menu-email">{displayEmail}</p>
-              </div>
+          <div className="header__avatar-wrap" ref={menuRef}>
+            <button
+              className="header__avatar-button"
+              type="button"
+              aria-label="Меню пользователя"
+              aria-expanded={isMenuOpen}
+              onClick={() => setIsMenuOpen((prevState) => !prevState)}
+            >
+              <img className="header__avatar-image" src={user?.avatarPath || user?.avatarImage || AvatarIcon} alt={`Аватар ${displayLogin}`} />
+            </button>
 
+            <div className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`} role="menu" aria-hidden={!isMenuOpen}>
               <div className="header__menu-theme">
                 <ThemeToggle />
               </div>
-
-              {isAdmin && (
-                <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)}>
-                  Админ-панель
-                </Link>
-              )}
-
               <Link className="header__menu-link" to={ROUTES.profile} onClick={() => setIsMenuOpen(false)}>
-                Личный кабинет
+                <img className="header__menu-icon" src={AvatarIcon} alt="Личный кабинет" title='Личный кабинет' />
               </Link>
 
-              <button className="header__menu-link" type="button" onClick={handleLogout} disabled={isLoading}>
-                Выход
+              <button className="header__menu-link header__menu-link--logout" type="button" onClick={handleLogout} disabled={isLoading}>
+                <img className="header__menu-icon" src={ExitIcon} alt="Выход" title='Выход' />
               </button>
+
+              {isAdmin && (
+                <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)} >
+                  <img className="header__menu-icon" src={AdminIcon} alt="Админ панель" title='Админ панель' />
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
