@@ -26,26 +26,14 @@ export const SKILL_GROUPS = [
     ]
   },
   {
-    key: 'databases',
-    title: 'Базы данных:',
-    options: ['PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'Microsoft SQL Server', 'Oracle', 'Cassandra']
-  },
-  {
     key: 'tools',
     title: 'Инструменты и технологии:',
     options: ['Docker', 'Kubernetes', 'Git', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Terraform', 'Ansible', 'Prometheus', 'Grafana', 'Elastic Stack (ELK)']
   },
-  {
-    key: 'platforms',
-    title: 'Платформы и облака:',
-    options: ['AWS', 'Azure', 'Google Cloud Platform', 'Heroku', 'Vercel', 'Netlify']
-  }
 ];
 
 export const MOCK_USER_SKILLS = {
   languages: ['TypeScript', 'JavaScript', 'Java'],
   frameworks: ['React', 'Spring (Boot)', 'Node.js'],
-  databases: ['PostgreSQL', 'Redis'],
-  tools: ['Git', 'Docker', 'GitHub Actions'],
-  platforms: ['Vercel', 'AWS']
+  tools: ['Git', 'Docker', 'GitHub Actions']
 };

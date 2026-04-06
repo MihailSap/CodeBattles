@@ -14,6 +14,10 @@
   position: relative;
   width: 150px;
   height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
 }
 
@@ -25,36 +29,37 @@
   border: 1px solid rgba(21, 101, 192, 0.2);
 }
 
+.profile-page__avatar--editable {
+  width: 75%;
+  height: 75%;
+}
+
 .profile-page__avatar-actions {
-  position: absolute;
+  width: 75%;
   inset: 0;
-  border-radius: 100px;
-  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 42.5px;
 }
 
 .profile-page__avatar-action {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 5px;
+  background: transparent;
   transition: background-color var(--transition);
 }
 
-.profile-page__avatar-action--danger {
-  background: rgba(255, 77, 79, 0.3);
-}
-
-.profile-page__avatar-action--accent {
-  background: rgba(245, 197, 66, 0.3);
+.profile-page__avatar-action img {
+  width: 100%;
+  height: auto;
 }
 
 .profile-page__user-info {
@@ -109,11 +114,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .profile-page__avatar-action--danger:hover {
-    background: rgba(255, 77, 79, 0.5);
+    background: rgba(255, 77, 79, 0.25);
   }
 
   .profile-page__avatar-action--accent:hover {
-    background: rgba(245, 197, 66, 0.5);
+    background: rgba(21, 192, 89, 0.25);
   }
 }
 
@@ -135,6 +140,20 @@
   .profile-page__avatar-wrap {
     width: 120px;
     height: 120px;
+  }
+
+  .profile-page__avatar--editable {
+    width: 70%;
+    height: 70%;
+  }
+
+  .profile-page__avatar-actions {
+    width: 70%;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
   }
 
   .profile-page__label {

@@ -28,7 +28,7 @@ export const userApi = {
   updateLogin(userId, newLogin) {
     return httpClient.patch(`/api/v1/users/${userId}/login`, { newLogin });
   },
-  updatePassword(userId, newPassword) {
+  updatePassword(userId, currentPassword, newPassword) {
     return httpClient.patch(`/api/v1/users/${userId}/password`, { newPassword });
   }
 };

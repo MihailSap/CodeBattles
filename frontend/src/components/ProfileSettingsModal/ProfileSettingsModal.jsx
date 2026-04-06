@@ -7,6 +7,7 @@ import { CrossIcon, RefreshCycleIcon } from '../Icons/Icons';
 import './ProfileSettingsModal.css';
 
 const initialPasswordForm = {
+  currentPassword: '',
   password: '',
   confirmPassword: ''
 };
@@ -81,6 +82,19 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -189,10 +203,12 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     return Boolean(
       passwordForm.password &&
       passwordForm.confirmPassword &&
+      passwordForm.currentPassword &&
       !passwordErrors.password &&
-      !passwordErrors.confirmPassword
+      !passwordErrors.confirmPassword &&
+      passwordForm.password === passwordForm.confirmPassword
     );
-  }, [passwordErrors.confirmPassword, passwordErrors.password, passwordForm.confirmPassword, passwordForm.password]);
+  }, [passwordErrors.confirmPassword, passwordErrors.password, passwordForm.confirmPassword, passwordForm.password, passwordForm.currentPassword]);
 
   const handlePasswordSubmit = async (event) => {
     event.preventDefault();
@@ -205,7 +221,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     setIsPasswordSubmitting(true);
 
     try {
-      await profileSettingsApi.updatePassword(userId, passwordForm.password);
+      await profileSettingsApi.updatePassword(userId, passwordForm.currentPassword,passwordForm.password);
       showSnackbar('Пароль успешно обновлён', 'success');
       setPasswordForm(initialPasswordForm);
       setPasswordErrors(initialPasswordErrors);
@@ -312,6 +328,19 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
 
             <form className="profile-settings-modal__security-form" onSubmit={handlePasswordSubmit}>
               <div className="profile-settings-modal__inputs">
+                <div className="profile-settings-modal__input-group">
+                  <input
+                    className='profile-settings-modal__input'
+                    type="password"
+                    name="currentPassword"
+                    placeholder="Введите текущий пароль"
+                    value={passwordForm.currentPassword}
+                    maxLength={50}
+                    onChange={handlePasswordChange}
+                    autoComplete="new-password"
+                    disabled={isFormDisabled}
+                  />
+                </div>
                 <div className="profile-settings-modal__input-group">
                   <input
                     className={`profile-settings-modal__input ${getPasswordFieldError('password') ? 'profile-settings-modal__input--error' : ''}`}

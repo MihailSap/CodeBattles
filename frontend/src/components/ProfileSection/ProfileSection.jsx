@@ -1,6 +1,8 @@
 import editIcon from '../../assets/edit-icon.svg';
 import avatarPlaceholder from '../../assets/avatar-icon.svg';
-import { ChangeIcon, CheckIcon, CrossIcon, DeleteIcon } from '../Icons/Icons';
+import DeleteIcon from '../../assets/delete-icon.svg';
+import UploadIcon from '../../assets/upload-icon.svg';
+import { CheckIcon, CrossIcon } from '../Icons/Icons';
 import './ProfileSection.css';
 
 const ProfileSection = ({
@@ -41,7 +43,6 @@ const ProfileSection = ({
 
       <div className="profile-page__section-body profile-page__profile-body">
         <div className="profile-page__avatar-wrap">
-          <img className="profile-page__avatar" src={profileAvatar} alt="Аватар пользователя" />
           {canEditProfile && isProfileEditMode && (
             <div className="profile-page__avatar-actions">
               {profileDraft.avatarPath && (
@@ -52,7 +53,7 @@ const ProfileSection = ({
                   disabled={isActionBlocked}
                   aria-label="Удалить аватар"
                 >
-                  <DeleteIcon />
+                  <img src={DeleteIcon} alt="Удалить аватар"/>
                 </button>
               )}
               <button
@@ -62,11 +63,12 @@ const ProfileSection = ({
                 disabled={isActionBlocked}
                 aria-label="Загрузить аватар"
               >
-                <ChangeIcon />
+                <img src={UploadIcon} alt="Загрузить аватар"/>
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={onAvatarUpload} hidden />
             </div>
           )}
+          <img className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')} src={profileAvatar} alt="Аватар пользователя" />
         </div>
 
         <div className="profile-page__user-info">

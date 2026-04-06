@@ -11,7 +11,7 @@
 
 .profile-settings-modal {
   width: min(1120px, 100%);
-  max-height: min(100vh - 250px, 920px);
+  max-height: min(100vh - 200px, 920px);
   overflow: auto;
   border: 2px solid var(--primary-color);
   border-radius: 25px;
@@ -73,6 +73,10 @@
   flex-direction: column;
 }
 
+[data-theme="dark"] .profile-settings-modal__section--security {
+  box-shadow: var(--green-form-shadow);
+}
+
 .profile-settings-modal__section--accounts {
   grid-column: 1 / -1;
 }
@@ -83,6 +87,10 @@
   font-size: 24px;
   text-align: center;
   color: var(--text-color);
+}
+
+.profile-settings-modal__section--security .profile-settings-modal__section-title {
+  color: var(--success-text-color);
 }
 
 .profile-settings-modal__security-form {

@@ -27,12 +27,12 @@ const getKey = (userId) => {
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 export const profileSettingsApi = {
-  async updatePassword(userId, newPassword) {
+  async updatePassword(userId, currentPassword, newPassword) {
     if (userId === null || userId === undefined) {
       throw new Error('Не удалось определить ID пользователя');
     }
 
-    const response = await userApi.updatePassword(userId, newPassword);
+    const response = await userApi.updatePassword(userId, currentPassword, newPassword);
     return response.data;
   },
 

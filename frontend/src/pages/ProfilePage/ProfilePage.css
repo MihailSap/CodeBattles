@@ -24,22 +24,21 @@
   padding: 40px;
 
   /**/
-  display: flex;
+  /* display: flex; */
   /**/
-
-  /* 
+  
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-areas:
     "profile statistics"
     "skills achievements";
-  */
+ 
 
   gap: 40px;
 }
 
 /**/
-.profile-page__grid-left,
+/* .profile-page__grid-left,
 .profile-page__grid-right {
   display: flex;
   flex-direction: column;
@@ -52,7 +51,7 @@
 
 .profile-page__grid-right {
   width: 62%;
-}
+} */
 /**/
 
 .profile-page__section {
@@ -174,7 +173,7 @@
   height: 56px;
   border-radius: 50%;
   border: 2px solid var(--primary-color);
-  background: var(--element-bg-color);
+  background: var(--bg-color);
   box-shadow: var(--modal-shadow);
   cursor: pointer;
   display: inline-flex;
@@ -214,34 +213,34 @@
   }
 
   /**/
-  .profile-page__grid-left,
+  /* .profile-page__grid-left,
   .profile-page__grid-right {
     gap: 28px;
-  }
+  } */
   /**/
 }
 
 @media (max-width: 1200px) {
   .profile-page__grid {
     /**/
-    flex-direction: column;
+    /* flex-direction: column; */
     /**/
 
-    /*
+    
     grid-template-columns: 1fr;
     grid-template-areas:
       "profile"
       "skills"
       "statistics"
       "achievements";
-    */
+   
   }
 
   /**/
-  .profile-page__grid-left,
+  /* .profile-page__grid-left,
   .profile-page__grid-right {
     width: 100%;
-  }
+  } */
   /**/
 }
 
@@ -252,10 +251,10 @@
   }
 
   /**/
-  .profile-page__grid-left,
+  /* .profile-page__grid-left,
   .profile-page__grid-right {
     gap: 20px;
-  }
+  } */
   /**/
 
   .profile-page__section-title {

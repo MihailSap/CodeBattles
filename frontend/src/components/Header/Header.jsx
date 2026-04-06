@@ -114,15 +114,15 @@ const Header = () => {
                 <img className="header__menu-icon" src={AvatarIcon} alt="Личный кабинет" title='Личный кабинет' />
               </Link>
 
-              <button className="header__menu-link header__menu-link--logout" type="button" onClick={handleLogout} disabled={isLoading}>
-                <img className="header__menu-icon" src={ExitIcon} alt="Выход" title='Выход' />
-              </button>
-
               {isAdmin && (
                 <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)} >
                   <img className="header__menu-icon" src={AdminIcon} alt="Админ панель" title='Админ панель' />
                 </Link>
               )}
+
+              <button className="header__menu-link header__menu-link--logout" type="button" onClick={handleLogout} disabled={isLoading}>
+                <img className="header__menu-icon" src={ExitIcon} alt="Выход" title='Выход' />
+              </button>
             </div>
           </div>
         </div>

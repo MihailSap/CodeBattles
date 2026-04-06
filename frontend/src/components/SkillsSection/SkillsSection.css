@@ -56,14 +56,15 @@
 }
 
 .profile-page__skill-tag {
-  border: none;
+  border: 1px solid var(--primary-color);
   border-radius: 5px;
-  padding: 5px 10px;
+  padding: 4px 9px;
   background: var(--primary-color);
   color: var(--white-text-color);
   font-size: 14px;
   font-weight: 400;
   line-height: 120%;
+  transition: background-color var(--transition), border-color var(--transition);
 }
 
 .profile-page__skill-tag--editable {
@@ -157,6 +158,11 @@
   .profile-page__add-skill-button:hover {
     color: var(--hover-primary-color);
     border-color: var(--hover-primary-color);
+  }
+
+  .profile-page__skill-tag--editable:hover {
+    background: var(--skill-tag-hover-color);
+    border-color: var(--skill-tag-border-hover-color);
   }
 }
 

@@ -61,7 +61,7 @@ const SkillsSection = ({
 
               <div className="profile-page__skills-list">
                 {group.selected.length === 0 && !(canEditProfile && isSkillsEditMode) ? (
-                  <span className="profile-page__empty">Не задано</span>
+                  <span className="profile-page__empty">Не указано</span>
                 ) : (
                   group.selected.map((skillName) => (
                     <button

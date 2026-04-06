@@ -265,7 +265,7 @@ const ProfilePage = () => {
 
   const visibleAchievements = useMemo(() => {
     if (canEditProfile) {
-      return orderedAchievements;
+      return orderedAchievements.filter((achievement) => achievement.visible || receivedAchievementIdSet.has(achievement.id));
     }
 
     return orderedAchievements.filter((achievement) => receivedAchievementIdSet.has(achievement.id));
@@ -473,7 +473,7 @@ const ProfilePage = () => {
           </div>
         ) : (
           <div className="profile-page__grid">
-            <div className="profile-page__grid-left">
+            {/* <div className="profile-page__grid-left"> */}
               <ProfileSection
                 canEditProfile={canEditProfile}
                 fileInputRef={fileInputRef}
@@ -507,9 +507,9 @@ const ProfilePage = () => {
                 skillsByGroup={skillsByGroup}
                 skillsDraftByGroup={skillsDraftByGroup}
               />
-            </div>
+            {/* </div> */}
 
-            <div className="profile-page__grid-right">
+            {/* <div className="profile-page__grid-right"> */}
               <StatisticsSection
                 acceptedDecisionsPercent={acceptedDecisionsPercent}
                 getPercentClass={getPercentClass}
@@ -523,7 +523,7 @@ const ProfilePage = () => {
                 receivedAchievementIdSet={receivedAchievementIdSet}
               />
             </div>
-          </div>
+          // </div>
         )}
       </main>
 
