@@ -1,32 +1,23 @@
-.profile-page__section--skills {
-  grid-area: skills;
-}
-
-.profile-page__skills-body {
+.project-skills-selector {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
 }
 
-.profile-page__skill-group {
-  padding: 5px 0;
-}
-
-.profile-page__skill-group-head {
+.project-skills-selector__head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.profile-page__skill-title {
+.project-skills-selector__title {
+  color: var(--primary-color);
   font-size: 16px;
-  font-weight: 400;
-  color: var(--text-color);
-  line-height: 120%;
+  font-weight: 500;
 }
 
-.profile-page__clear-button {
+.project-skills-selector__clear {
   border: none;
   background: transparent;
   color: var(--primary-color);
@@ -36,26 +27,29 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: color var(--transition), text-decoration-color var(--transition);
+  transition: color var(--transition), text-decoration-color var(--transition), opacity var(--transition);
 }
 
-.profile-page__skills-list {
-  margin-top: 10px;
+.project-skills-selector__clear:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.project-skills-selector__list {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   position: relative;
 }
 
-.profile-page__empty {
+.project-skills-selector__empty {
   color: var(--primary-color);
-  font-size: 16px;
-  line-height: 120%;
+  font-size: 14px;
+  line-height: 1.2;
 }
 
-.profile-page__skill-tag {
+.project-skills-selector__tag {
   border: none;
   border-radius: 5px;
   padding: 5px 10px;
@@ -63,19 +57,21 @@
   color: var(--white-text-color);
   font-size: 14px;
   font-weight: 400;
-  line-height: 120%;
-  transition: background-color var(--transition);
-}
-
-.profile-page__skill-tag--editable {
+  line-height: 1.2;
   cursor: pointer;
+  transition: background-color var(--transition), opacity var(--transition);
 }
 
-.profile-page__skills-popup-wrap {
+.project-skills-selector__tag:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.project-skills-selector__popup-wrap {
   position: relative;
 }
 
-.profile-page__add-skill-button {
+.project-skills-selector__add {
   border-radius: 5px;
   padding: 4px 9px;
   background: var(--element-bg-color);
@@ -85,42 +81,56 @@
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition);
+  transition: color var(--transition), border-color var(--transition), opacity var(--transition);
 }
 
-.profile-page__skills-popup {
+.project-create-modal .project-skills-selector__add {
+  background: var(--bg-color);
+}
+
+.project-skills-selector__add:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.project-skills-selector__popup {
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
   width: min(320px, calc(100vw - 24px));
   max-height: 240px;
   overflow: auto;
-  background: var(--element-bg-color);
+  background: var(--bg-color);
   border: 1px solid var(--primary-color);
   box-shadow: var(--modal-shadow);
   border-radius: 10px;
   padding: 10px;
-  z-index: 30;
+  z-index: 80;
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.profile-page__skills-popup--top {
+.project-skills-selector__popup--top {
   top: auto;
   bottom: calc(100% + 8px);
 }
 
-.profile-page__skills-popup--mobile {
+.project-skills-selector__popup--right {
+  left: auto;
+  right: 0;
+}
+
+.project-skills-selector__popup--mobile {
   position: fixed;
   top: 0;
   left: 0;
   right: auto;
   bottom: auto;
-  z-index: 60;
+  z-index: 90;
 }
 
-.profile-page__skills-option {
+.project-skills-selector__option {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -130,71 +140,64 @@
   padding: 3px 2px;
 }
 
-.profile-page__skills-popup::-webkit-scrollbar {
+.project-skills-selector__popup::-webkit-scrollbar {
   width: 10px;
 }
 
-.profile-page__skills-popup::-webkit-scrollbar-track {
+.project-skills-selector__popup::-webkit-scrollbar-track {
   background: transparent;
   border: 1px solid var(--scroll-color);
   border-radius: 10px;
 }
 
-.profile-page__skills-popup::-webkit-scrollbar-thumb {
+.project-skills-selector__popup::-webkit-scrollbar-thumb {
   background: var(--scroll-color);
   border-radius: 10px;
 }
 
-.profile-page__skills-popup {
+.project-skills-selector__popup {
   scrollbar-color: var(--scroll-color) transparent;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .profile-page__clear-button:hover {
+  .project-skills-selector__clear:hover:enabled {
     color: var(--hover-primary-color);
     text-decoration-color: var(--hover-primary-color);
   }
 
-  .profile-page__add-skill-button:hover {
+  .project-skills-selector__add:hover:enabled {
     color: var(--hover-primary-color);
     border-color: var(--hover-primary-color);
   }
 
-  .profile-page__skill-tag--editable:hover {
+  .project-skills-selector__tag:hover:enabled {
     background: var(--skill-tag-hover-color);
   }
 }
 
 @media (max-width: 500px) {
-  .profile-page__skill-group {
-    padding: 2.5px 0;
+  .project-skills-selector {
+    gap: 5px;
   }
 
-  .profile-page__skills-list {
-    margin-top: 5px;
-  }
-
-  .profile-page__skill-title {
+  .project-skills-selector__title {
     font-size: 14px;
   }
 
-  .profile-page__skill-tag {
+  .project-skills-selector__clear {
+    font-size: 14px;
+  }
+
+  .project-skills-selector__empty,
+  .project-skills-selector__tag {
     font-size: 12px;
   }
 
-  .profile-page__clear-button {
-    font-size: 14px;
-  }
-
-  .profile-page__empty {
-    font-size: 14px;
-  }
-
-  .profile-page__skills-popup {
+  .project-skills-selector__popup {
     width: min(250px, calc(100vw - 24px));
   }
 
-  .profile-page__skills-option {
+  .project-skills-selector__option {
     font-size: 12px;
   }
 }

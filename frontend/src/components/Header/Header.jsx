@@ -8,10 +8,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../store/slices/authSlice';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { useTheme } from '../ThemeProvider';
-import BellIcon from '../../assets/bell-icon.svg';
-import AvatarIcon from '../../assets/avatar-icon.svg';
-import AdminIcon from '../../assets/admin-icon.svg';
-import ExitIcon from '../../assets/exit-icon.svg';
+import { BellIcon, AvatarIcon, AdminIcon, ExitIcon } from '../Icons/Icons';
 import './Header.css';
 
 const NAV_LINKS = [
@@ -31,7 +28,6 @@ const Header = () => {
 
   const isAdmin = user?.role === 'ADMIN';
   const hasUnreadNotifications = Boolean(user?.hasUnreadNotifications || user?.unreadNotificationsCount);
-  const logoSrc = theme === 'dark' ? logoDark : logoLight;
 
   const displayLogin = user?.login || 'Пользователь';
 
@@ -71,7 +67,7 @@ const Header = () => {
       <div className="header__content">
         <div className="header__left">
           <Link className="header__logo-link" to={ROUTES.home} aria-label="На главную">
-            <img className="header__logo" src={logoSrc} alt="CodeBattles" />
+            <img className="header__logo" src={theme === 'dark' ? logoDark : logoLight} alt="CodeBattles" />
           </Link>
         </div>
 
@@ -91,7 +87,7 @@ const Header = () => {
 
         <div className="header__right">
           <button className="header__icon-button" type="button" aria-label="Уведомления">
-            <img className="header__icon-image" src={BellIcon} alt="Уведомления" />
+            <BellIcon />
             {hasUnreadNotifications && <span className="header__notification-dot" aria-hidden="true" />}
           </button>
 
@@ -103,25 +99,28 @@ const Header = () => {
               aria-expanded={isMenuOpen}
               onClick={() => setIsMenuOpen((prevState) => !prevState)}
             >
-              <img className="header__avatar-image" src={user?.avatarPath || user?.avatarImage || AvatarIcon} alt={`Аватар ${displayLogin}`} />
+              {user?.avatarPath ?
+                <img className="header__avatar-image" src={user?.avatarPath} alt={`Аватар ${displayLogin}`} />
+                : <AvatarIcon />
+              }
             </button>
 
             <div className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`} role="menu" aria-hidden={!isMenuOpen}>
               <div className="header__menu-theme">
                 <ThemeToggle />
               </div>
-              <Link className="header__menu-link" to={ROUTES.profile} onClick={() => setIsMenuOpen(false)}>
-                <img className="header__menu-icon" src={AvatarIcon} alt="Личный кабинет" title='Личный кабинет' />
+              <Link className="header__menu-link" to={ROUTES.profile} onClick={() => setIsMenuOpen(false)} title='Личный кабинет'>
+                <AvatarIcon />
               </Link>
 
               {isAdmin && (
-                <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)} >
-                  <img className="header__menu-icon" src={AdminIcon} alt="Админ панель" title='Админ панель' />
+                <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)} title='Админ панель'>
+                  <AdminIcon />
                 </Link>
               )}
 
               <button className="header__menu-link header__menu-link--logout" type="button" onClick={handleLogout} disabled={isLoading}>
-                <img className="header__menu-icon" src={ExitIcon} alt="Выход" title='Выход' />
+                <ExitIcon />
               </button>
             </div>
           </div>

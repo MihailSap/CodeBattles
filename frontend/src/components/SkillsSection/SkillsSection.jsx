@@ -1,5 +1,4 @@
-import editIcon from '../../assets/edit-icon.svg';
-import { CheckIcon, CrossIcon } from '../Icons/Icons';
+import { CheckIcon, CrossIcon, PencilIcon } from '../Icons/Icons';
 import './SkillsSection.css';
 
 const SkillsSection = ({
@@ -32,7 +31,7 @@ const SkillsSection = ({
               disabled={isActionBlocked}
               aria-label="Редактировать стек"
             >
-              <img src={editIcon} alt="" width="20" height="20" />
+              <PencilIcon />
             </button>
           )}
         </div>

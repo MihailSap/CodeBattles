@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { profileApi } from '../../api/profileApi';
-import settingsIcon from '../../assets/settings-icon.svg';
+import { SettingsIcon } from '../../components/Icons/Icons';
 import AchievementsSection from '../../components/AchievementsSection/AchievementsSection';
 import Header from '../../components/Header/Header';
 import ProfileSection from '../../components/ProfileSection/ProfileSection';
@@ -534,7 +534,7 @@ const ProfilePage = () => {
           onClick={() => setIsSettingsModalOpen(true)}
           aria-label="Открыть настройки профиля"
         >
-          <img src={settingsIcon} alt="" width="26" height="26" />
+          <SettingsIcon />
         </button>
       )}
 

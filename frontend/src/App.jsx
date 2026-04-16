@@ -7,9 +7,13 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import MainPage from './pages/MainPage/MainPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
+import ProjectInviteJoinPage from './pages/ProjectInviteJoinPage/ProjectInviteJoinPage';
+import ProjectPage from './pages/ProjectPage/ProjectPage';
+import ProjectsPage from './pages/ProjectsPage/ProjectsPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import RecoveryPage from './pages/RecoveryPage/RecoveryPage';
 import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage';
+import TaskCreatePage from './pages/TaskCreatePage/TaskCreatePage';
 import VerifyEmailPage from './pages/VerifyEmailPage/VerifyEmailPage';
 import { initializeAuth } from './store/slices/authSlice';
 
@@ -25,6 +29,9 @@ const App = () => {
       <Routes>
         <Route element={<ProtectedRoute />}>
           <Route path={ROUTES.home} element={<MainPage />} />
+          <Route path={ROUTES.projects} element={<ProjectsPage />} />
+          <Route path={ROUTES.projectById} element={<ProjectPage />} />
+          <Route path={ROUTES.projectTaskCreate} element={<TaskCreatePage />} />
           <Route path={ROUTES.profile} element={<ProfilePage />} />
           <Route path={ROUTES.profileByUserId} element={<ProfilePage />} />
         </Route>
@@ -41,6 +48,7 @@ const App = () => {
 
         <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
+        <Route path={ROUTES.projectJoinByToken} element={<ProjectInviteJoinPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -1,10 +1,11 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Spinner from '../Spinner/Spinner';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import './ProtectedRoute.css';
 
 const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
+  const location = useLocation();
   const { isInitialized, isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
 
@@ -21,7 +22,7 @@ const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
   }
 
   if (!onlyUnauthorized && !isAuthenticated) {
-    return <Navigate to={ROUTES.login} replace />;
+    return <Navigate to={ROUTES.login} replace state={{ from: `${location.pathname}${location.search}` }} />;
   }
 
   if (onlyAdmin && !isAdmin) {

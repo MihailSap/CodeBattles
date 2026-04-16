@@ -1,8 +1,7 @@
-import editIcon from '../../assets/edit-icon.svg';
-import avatarPlaceholder from '../../assets/avatar-icon.svg';
+import { AvatarIcon } from '../../components/Icons/Icons';
 import DeleteIcon from '../../assets/delete-icon.svg';
 import UploadIcon from '../../assets/upload-icon.svg';
-import { CheckIcon, CrossIcon } from '../Icons/Icons';
+import { CheckIcon, CrossIcon, PencilIcon } from '../Icons/Icons';
 import './ProfileSection.css';
 
 const ProfileSection = ({
@@ -20,8 +19,6 @@ const ProfileSection = ({
   profileDraft,
   formatRegistrationDate
 }) => {
-  const profileAvatar = profileDraft.avatarPath || avatarPlaceholder;
-
   return (
     <section className="profile-page__section profile-page__section--profile">
       <div className="profile-page__section-head">
@@ -35,7 +32,7 @@ const ProfileSection = ({
               disabled={isActionBlocked}
               aria-label="Редактировать профиль"
             >
-              <img src={editIcon} alt="" width="20" height="20" />
+              <PencilIcon />
             </button>
           )}
         </div>
@@ -53,7 +50,7 @@ const ProfileSection = ({
                   disabled={isActionBlocked}
                   aria-label="Удалить аватар"
                 >
-                  <img src={DeleteIcon} alt="Удалить аватар"/>
+                  <img src={DeleteIcon} alt="Удалить аватар" />
                 </button>
               )}
               <button
@@ -63,12 +60,18 @@ const ProfileSection = ({
                 disabled={isActionBlocked}
                 aria-label="Загрузить аватар"
               >
-                <img src={UploadIcon} alt="Загрузить аватар"/>
+                <img src={UploadIcon} alt="Загрузить аватар" />
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={onAvatarUpload} hidden />
             </div>
           )}
-          <img className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')} src={profileAvatar} alt="Аватар пользователя" />
+          {profileDraft.avatarPath ?
+            <img className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')} src={profileDraft.avatarPath} alt="Аватар пользователя" />
+            :
+            <div className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')}>
+              <AvatarIcon />
+            </div>
+          }
         </div>
 
         <div className="profile-page__user-info">

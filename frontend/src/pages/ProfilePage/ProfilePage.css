@@ -74,7 +74,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 5px;
 }
 
 .profile-page__section-title {
@@ -86,9 +86,10 @@
 
 .profile-page__edit-button {
   border: none;
-  width: 20px;
-  height: 20px;
+  width: 25px;
+  height: 25px;
   background: transparent;
+  color: var(--primary-color);
   cursor: pointer;
   padding: 0;
   display: inline-flex;
@@ -96,10 +97,10 @@
   justify-content: center;
 }
 
-.profile-page__edit-button img {
+.profile-page__edit-button svg {
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 100%;
+  height: auto;
 }
 
 .profile-page__section-body {
@@ -173,6 +174,7 @@
   height: 56px;
   border-radius: 50%;
   border: 2px solid var(--primary-color);
+  color: var(--primary-color);
   background: var(--bg-color);
   box-shadow: var(--modal-shadow);
   cursor: pointer;
@@ -181,13 +183,13 @@
   justify-content: center;
   padding: 0;
   z-index: 110;
-  transition: background-color var(--transition), border-color var(--transition), transform var(--transition);
+  transition: background-color var(--transition), border-color var(--transition), transform var(--transition), color var(--transition);
 }
 
-.profile-page__settings-button img {
+.profile-page__settings-button svg {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -266,12 +268,12 @@
   }
 
   .profile-page__section-title-wrap {
-    gap: 5px;
+    gap: 2.5px;
   }
 
-  .profile-page__edit-button img {
-    width: 16px;
-    height: 16px;
+  .profile-page__edit-button {
+    width: 20px;
+    height: 20px;
   }
 
   .profile-page__actions {

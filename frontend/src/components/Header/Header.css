@@ -63,13 +63,14 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 5px;
 }
 
-.header__icon-button {
+.header__icon-button,
+.header__avatar-button {
   width: 50px;
   height: 50px;
-  padding: 5px;
+  padding: 7px;
   border: none;
   border-radius: 50%;
   background-color: transparent;
@@ -77,8 +78,12 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  position: relative;
+  overflow: hidden;
   transition: background-color var(--transition);
+}
+
+.header__icon-button {
+  position: relative;
 }
 
 .header__icon-image {
@@ -104,26 +109,12 @@
   position: relative;
 }
 
-.header__avatar-button {
-  width: 50px;
-  height: 50px;
-  padding: 7px;
-  border: none;
-  border-radius: 50%;
-  background-color: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  transition: background-color var(--transition);
-}
-
-.header__avatar-image {
+.header__avatar-button svg,
+.header__icon-button svg {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  color: var(--primary-color);
+  display: block;
 }
 
 .header__menu {
@@ -173,7 +164,9 @@
   border-radius: 10px;
   background-color: transparent;
   color: var(--primary-color);
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
   transition: background-color var(--transition), color var(--transition);
 }
@@ -182,6 +175,7 @@
   color: var(--error-text-color);
 }
 
+.header__menu-link svg,
 .header__menu-icon {
   width: 100%;
   height: 100%;
@@ -203,21 +197,11 @@
   .header__icon-button:hover,
   .header__avatar-button:hover,
   .header__menu-link:hover {
-    background-color: rgba(21, 101, 192, 0.1);
-  }
-
-  [data-theme="dark"] .header__icon-button:hover,
-  [data-theme="dark"] .header__avatar-button:hover,
-  [data-theme="dark"] .header__menu-link:hover {
-    background-color: rgba(21, 101, 192, 0.2);
+    background-color: var(--header-button-hover-bg);
   }
 
   .header__menu-link--logout:hover {
-    background-color: rgba(248, 81, 73, 0.1);
-  }
-
-  [data-theme="dark"] .header__menu-link--logout:hover {
-    background-color: rgba(248, 81, 73, 0.2);
+    background-color: var(--heder-exit-button-hover-bg);
   }
 }
 

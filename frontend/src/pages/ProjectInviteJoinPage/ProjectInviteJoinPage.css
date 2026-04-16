@@ -1,0 +1,7 @@
+.project-invite-page {
+  min-height: 100vh;
+  background: var(--element-bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

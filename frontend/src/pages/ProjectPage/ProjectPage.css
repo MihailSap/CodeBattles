@@ -1,0 +1,835 @@
+.project-page {
+  min-height: 100vh;
+  background: var(--element-bg-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.project-page__loader {
+  min-height: calc(100vh - 86px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-page__content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px 20px;
+}
+
+.section-card {
+  border-radius: 10px;
+  box-shadow: var(--section-shadow);
+  background: var(--form-bg-color);
+  padding: 15px;
+}
+
+.project-page__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.project-page__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.project-page__title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-page__title {
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.project-page__private-icon {
+  width: 25px;
+  height: 25px;
+  transition: filter var(--transition);
+}
+
+[data-theme="dark"] .project-page__private-icon {
+  filter: invert(1);
+}
+
+.project-page__role-tag,
+.project-page__participant-role {
+  padding: 6px 15px;
+  border-radius: 7px;
+  background: var(--primary-color);
+  color: var(--white-text-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-page__organization {
+  margin-top: 15px;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.project-page__description {
+  margin-top: 15px;
+  color: var(--text-color);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.project-page__description-toggle {
+  margin-left: 6px;
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 16px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.project-page__repository {
+  max-width: fit-content;
+  margin-top: 15px;
+  color: var(--primary-color);
+  font-weight: 400;
+  font-size: 20px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+  transition: color var(--transition);
+}
+
+.project-page__stack-list {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.project-page__stack-tag {
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  background: var(--primary-color);
+  color: var(--white-text-color);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.project-page__metrics {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.project-page__metric-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-color);
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.project-page__metric-item img {
+  width: 19px;
+  height: 19px;
+  transition: filter var(--transition);
+}
+
+[data-theme="dark"] .project-page__metric-item img {
+  filter: invert(1);
+}
+
+.project-page__tabs-wrap {
+  margin-top: 10px;
+  border-bottom: 2px solid var(--primary-color);
+  padding: 10px 10px 0;
+}
+
+.project-page__tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(var(--tabs-count), 1fr);
+  position: relative;
+}
+
+.project-page__tabs-slider {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--tabs-count));
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: 7px 7px 0 0;
+  transition: transform var(--transition);
+}
+
+.project-page__tab {
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 20px;
+  font-weight: 600;
+  padding: 5px 15px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: color var(--transition);
+}
+
+.project-page__tab--active {
+  color: var(--white-text-color);
+}
+
+.project-page__controls {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 5px 0;
+}
+
+.project-page__controls-left,
+.project-page__controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.project-page__mode-switch {
+  width: 300px;
+  border-radius: 7px;
+  background: var(--element-bg-color);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.project-page__mode-thumb {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--primary-color);
+  transition: transform var(--transition);
+}
+
+.project-page__mode-thumb--mine {
+  transform: translateX(100%);
+}
+
+.project-page__mode-button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 5px 15px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.project-page__mode-button--active {
+  color: var(--white-text-color);
+}
+
+.project-page__my-tasks,
+.project-page__participants-count {
+  color: var(--text-color);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.project-page__search-field {
+  border-radius: 7px;
+  border: 2px solid var(--hover-primary-color);
+  padding: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--element-bg-color);
+  transition: border-color var(--transition);
+}
+
+.project-page__search-field:focus-within {
+  border-color: var(--primary-color);
+}
+
+.project-page__search-field svg {
+  width: 19px;
+  height: 19px;
+  color: var(--primary-color);
+}
+
+.project-page__search-field input {
+  border: none;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+  width: 180px;
+}
+
+.project-page__search-field input::placeholder {
+  color: var(--project-input-placeholder-color);
+}
+
+.project-page__search-field input:focus {
+  outline: none;
+}
+
+.project-page__action-button {
+  padding: 5px 15px;
+  border: 2px solid;
+  border-radius: 7px;
+  color: var(--white-text-color);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.project-page__action-button--success {
+  border-color: var(--success-text-color);
+  background: var(--success-text-color);
+}
+
+.project-page__action-button--primary {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+}
+
+.project-page__action-button--danger {
+  border-color: var(--error-text-color);
+  background: var(--error-text-color);
+}
+
+.project-page__table-section {
+  margin-top: 10px;
+  padding: 0;
+}
+
+.project-page__table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--project-table-border-color);
+  transition: background-color var(--transition);
+}
+
+.project-page__table-row:last-child {
+  border-bottom: none;
+}
+
+.project-page__table-row--head {
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.project-page__task-name {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-page__task-status {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-page__task-status--in_progress,
+.project-page__task-status--rework {
+  color: var(--yellow-value-color);
+}
+
+.project-page__task-status--in_review {
+  color: var(--purple-value-color);
+}
+
+.project-page__task-status--done {
+  color: var(--success-text-color);
+}
+
+.project-page__assignees {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-page__assignee-avatar,
+.project-page__assignee-avatar img,
+.project-page__assignee-avatar svg {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  color: var(--primary-color);
+}
+
+.project-page__assignee-avatar img {
+  border: 1px solid var(--primary-color);
+}
+
+.project-page__assignee-more {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-page__deadline {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-page__deadline--error {
+  color: var(--error-text-color);
+}
+
+.project-page__deadline--warning {
+  color: var(--yellow-value-color);
+}
+
+.project-page__deadline--success {
+  color: var(--success-text-color);
+}
+
+.project-page__participants-list {
+  margin-top: 10px;
+  padding: 0;
+}
+
+.project-page__participant-row {
+  padding: 15px;
+  border-bottom: 1px solid var(--project-table-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.project-page__participant-row:last-child {
+  border-bottom: none;
+}
+
+.project-page__participant-main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.project-page__participant-avatar,
+.project-page__participant-avatar img,
+.project-page__participant-avatar svg {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--primary-color);
+}
+
+.project-page__participant-avatar img {
+  border: 1px solid var(--primary-color);
+}
+
+.project-page__participant-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.project-page__participant-name,
+.project-page__participant-login {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.project-page__participant-name {
+  color: var(--text-color);
+}
+
+.project-page__participant-login {
+  color: var(--subtext-color);
+}
+
+.project-page__settings {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.project-page__settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.project-page__settings-field>label,
+.project-page__settings-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.project-page__settings-input {
+  width: 100%;
+  padding: 13px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--project-settings-input-border-color);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-color);
+  background: var(--element-bg-color);
+  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+}
+
+.project-page__settings-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.project-page__settings-input--error {
+  border-color: var(--error-border-input-color);
+  box-shadow: var(--error-shadow-input-color);
+  background-color: var(--error-bg-input-color);
+}
+
+.project-page__settings-input--error:focus {
+  border-color: var(--error-border-active-input-color);
+}
+
+.project-page__settings-textarea {
+  width: 100%;
+  min-height: 100px;
+  max-height: 100px;
+  resize: none;
+  overflow: auto;
+  font-family: inherit;
+}
+
+.project-page__settings-error {
+  color: var(--error-text-color);
+  font-size: 14px;
+}
+
+.project-page__privacy-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.project-page__privacy-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--primary-color);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.project-page__privacy-item input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary-color);
+}
+
+.project-page__ai-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.project-page__ai-check input {
+  accent-color: var(--primary-color);
+}
+
+.project-page__settings-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.project-page__settings-action {
+  padding: 0.5px 40px;
+  border-radius: 10px;
+  border: 2px solid;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition);
+}
+
+.project-page__settings-action svg {
+  width: 35px;
+  height: 35px;
+}
+
+.project-page__settings-action--save {
+  color: var(--white-text-color);
+  background: var(--success-text-color);
+  border-color: var(--success-text-color);
+}
+
+.project-page__settings-action--cancel {
+  color: var(--white-text-color);
+  background: var(--error-text-color);
+  border-color: var(--error-text-color);
+}
+
+.project-page__settings-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.project-page__empty-state,
+.project-page__list-empty {
+  margin-top: 5px;
+  color: var(--fade-text-color);
+  font-size: 16px;
+  text-align: center;
+}
+
+.project-page__list-empty {
+  padding: 15px 10px;
+}
+
+.project-page__sentinel {
+  width: 100%;
+  height: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+  .project-page__repository:hover,
+  .project-page__description-toggle:hover {
+    color: var(--hover-primary-color);
+  }
+
+  .project-page__action-button:hover {
+    background: var(--bg-color);
+  }
+
+  .project-page__action-button--success:hover {
+    color: var(--success-text-color);
+  }
+
+  .project-page__action-button--primary:hover {
+    color: var(--primary-color);
+  }
+
+  .project-page__action-button--danger:hover {
+    color: var(--error-text-color);
+  }
+
+  .project-page__table-row:hover {
+    background-color: var(--header-button-hover-bg);
+    cursor: pointer;
+  }
+
+  .project-page__table-row--head:hover {
+    background-color: unset;
+    cursor: unset;
+  }
+
+  .project-page__settings-action--save:hover:enabled {
+    background: var(--element-bg-color);
+    color: var(--success-text-color);
+  }
+
+  .project-page__settings-action--cancel:hover:enabled {
+    background: var(--element-bg-color);
+    color: var(--error-text-color);
+  }
+}
+
+@media (max-width: 1100px) {
+  .project-page__table-row {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .project-page__content {
+    padding: 20px 12px 12px;
+  }
+
+  .project-page__tab {
+    font-size: 16px;
+  }
+
+  .project-page__my-tasks,
+  .project-page__participants-count {
+    font-size: 18px;
+  }
+
+  .project-page__task-name,
+  .project-page__task-status,
+  .project-page__deadline,
+  .project-page__assignee-more {
+    font-size: 14px;
+  }
+
+  .project-page__controls-right,
+  .project-page__controls-left {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .project-page__title {
+    font-size: 20px;
+  }
+
+  .project-page__role-tag {
+    font-size: 12px;
+  }
+
+  .project-page__organization {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+
+  .project-page__description {
+    margin-top: 10px;
+  }
+
+  .project-page__metric-item,
+  .project-page__description,
+  .project-page__description-toggle {
+    font-size: 14px;
+  }
+
+  .project-page__repository {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  .project-page__stack-list {
+    margin-top: 10px;
+  }
+
+  .project-page__stack-tag {
+    font-size: 12px;
+  }
+
+  .project-page__metrics {
+    margin-top: 10px;
+    gap: 10px;
+  }
+
+  .project-page__tabs-wrap {
+    padding: 5px 5px 0;
+  }
+
+  .project-page__tabs {
+    width: 100%;
+  }
+
+  .project-page__tab {
+    font-size: 14px;
+    padding: 5px 10px;
+  }
+
+  .project-page__mode-switch {
+    width: 100%;
+  }
+
+  .project-page__mode-button {
+    font-size: 14px;
+    padding: 5px 10px;
+  }
+
+  .project-page__search-field {
+    width: 100%;
+    padding: 2.5px;
+  }
+
+  .project-page__search-field input {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  .project-page__action-button {
+    width: 100%;
+    padding: 5px 10px;
+    font-size: 14px;
+  }
+
+  .project-page__table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .project-page__table-row {
+    min-width: 640px;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    font-size: 14px;
+  }
+
+  .project-page__participants-count {
+    font-size: 16px;
+  }
+
+  .project-page__participant-name,
+  .project-page__participant-login,
+  .project-page__settings-field>label,
+  .project-page__settings-title,
+  .project-page__ai-check,
+  .project-page__settings-error {
+    font-size: 14px;
+  }
+
+  .project-page__participant-role {
+    font-size: 12px;
+  }
+
+  .project-page__settings {
+    gap: 15px;
+  }
+
+ .project-page__settings-input {
+  font-size: 12px;
+  padding: 8px 7px;
+ }
+
+ .project-page__privacy-item {
+  font-size: 12px;
+ }
+
+ .project-page__settings-action {
+  padding: 0.5px 20px;
+ }
+
+ .project-page__settings-action svg {
+  height: 25px;
+  width: 25px;
+ }
+}
