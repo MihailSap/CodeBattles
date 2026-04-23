@@ -6,8 +6,11 @@ import { tokenStorage } from '../../utils/tokenStorage';
 
 const EMPTY_USER = {
   id: null,
+  name: '',
   email: '',
   login: '',
+  registeredAt: '',
+  avatarPath: '',
   role: null,
   enabled: false
 };
@@ -193,6 +196,12 @@ const authSlice = createSlice({
     clearAuthMessages(state) {
       state.error = null;
       state.successMessage = null;
+    },
+    patchAuthUser(state, action) {
+      state.user = normalizeUser({
+        ...state.user,
+        ...action.payload
+      });
     }
   },
   extraReducers: (builder) => {
@@ -346,6 +355,6 @@ const authSlice = createSlice({
   }
 });
 
-export const { clearAuthMessages } = authSlice.actions;
+export const { clearAuthMessages, patchAuthUser } = authSlice.actions;
 
 export default authSlice.reducer;

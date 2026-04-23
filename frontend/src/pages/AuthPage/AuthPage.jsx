@@ -44,6 +44,7 @@ const AuthPage = () => {
   const [validationErrors, setValidationErrors] = useState(initialErrors);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
+  const postLoginRedirect = location.state?.from || ROUTES.home;
 
   useEffect(() => {
     dispatch(clearAuthMessages());
@@ -206,7 +207,7 @@ const AuthPage = () => {
     const result = await dispatch(action);
 
     if (loginUser.fulfilled.match(result)) {
-      navigate(ROUTES.home, { replace: true });
+      navigate(postLoginRedirect, { replace: true });
     }
 
     if (registerUser.fulfilled.match(result)) {

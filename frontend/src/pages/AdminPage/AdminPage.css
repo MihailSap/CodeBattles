@@ -1,6 +1,6 @@
 .admin-page {
     min-height: 100vh;
-    background-color: var(--bg-color);
+    background-color: var(--element-bg-color);
     padding: 18px 24px 28px;
     display: flex;
     flex-direction: column;
@@ -10,9 +10,8 @@
 .admin-header {
     width: min(1480px, 100%);
     margin: 0 auto;
-    border: 2px solid var(--hover-primary-color);
     border-radius: 20px;
-    box-shadow: var(--element-shadow);
+    box-shadow: var(--section-shadow);
     background-color: var(--form-bg-color);
     padding: 16px 18px;
     display: flex;
@@ -67,6 +66,10 @@
     justify-content: flex-end;
     gap: 12px;
     flex-wrap: wrap;
+}
+
+.admin-header__actions .theme-toggle {
+    box-shadow: unset;
 }
 
 .admin-header__links-container {

@@ -1,0 +1,39 @@
+export const SKILL_GROUPS = [
+  {
+    key: 'languages',
+    title: 'Языки программирования:',
+    options: ['C#', 'Java', 'Python', 'JavaScript', 'TypeScript', 'Go', 'Rust', 'C++', 'C', 'PHP', 'Ruby', 'Swift', 'Kotlin', 'Scala', 'Dart', 'SQL']
+  },
+  {
+    key: 'frameworks',
+    title: 'Фреймворки и библиотеки:',
+    options: [
+      '.NET (Core / Framework)',
+      'ASP.NET Core',
+      'Entity Framework Core',
+      'React',
+      'Angular',
+      'Vue.js',
+      'Spring (Boot)',
+      'Django',
+      'Flask',
+      'Express.js',
+      'Node.js',
+      'Ruby on Rails',
+      'Laravel',
+      'Flutter',
+      'SwiftUI'
+    ]
+  },
+  {
+    key: 'tools',
+    title: 'Инструменты и технологии:',
+    options: ['Docker', 'Kubernetes', 'Git', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Terraform', 'Ansible', 'Prometheus', 'Grafana', 'Elastic Stack (ELK)']
+  },
+];
+
+export const MOCK_USER_SKILLS = {
+  languages: ['TypeScript', 'JavaScript', 'Java'],
+  frameworks: ['React', 'Spring (Boot)', 'Node.js'],
+  tools: ['Git', 'Docker', 'GitHub Actions']
+};

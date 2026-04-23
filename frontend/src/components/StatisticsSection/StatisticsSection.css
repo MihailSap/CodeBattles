@@ -1,0 +1,118 @@
+.profile-page__section--statistics {
+  grid-area: statistics;
+}
+
+.profile-page__statistics-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 17.6px;
+}
+
+.profile-page__statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: clamp(5px, 1.3vw, 24px);
+}
+
+.profile-page__stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 5px;
+}
+
+.profile-page__stat-title {
+  text-align: center;
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 120%;
+}
+
+.profile-page__stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 5px;
+}
+
+.profile-page__stars-row svg {
+  width: 30px;
+  height: 30px;
+  color: var(--star-color);
+}
+
+.profile-page__accepted-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.profile-page__accepted-percent {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 120%;
+}
+
+.profile-page__accepted-percent--error {
+  color: var(--error-text-color);
+}
+
+.profile-page__accepted-percent--warning {
+  color: var(--warning-text-color);
+}
+
+.profile-page__accepted-percent--success {
+  color: var(--success-text-color);
+}
+
+@media (max-width: 1440px) {
+  .profile-page__statistics-body {
+    padding: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .profile-page__statistics-body {
+    gap: 10px;
+  }
+
+  .profile-page__statistics-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .profile-page__stat-card {
+    gap: 5px;
+    padding: 2.5px;
+  }
+
+  .profile-page__stat-title {
+    font-size: 14px;
+  }
+
+  .profile-page__stars-row {
+    gap: 5px;
+    padding: 2.5px;
+  }
+
+  .profile-page__stars-row svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .profile-page__accepted-block {
+    gap: 7.5px;
+  }
+
+  .profile-page__accepted-percent {
+    font-size: 18px;
+  }
+}
