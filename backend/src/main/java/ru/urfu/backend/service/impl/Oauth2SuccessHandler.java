@@ -11,7 +11,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.auth.JwtResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.mapper.JsonMapper;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.UserService;

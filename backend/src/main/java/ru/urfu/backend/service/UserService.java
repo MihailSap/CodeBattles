@@ -2,8 +2,11 @@ package ru.urfu.backend.service;
 
 import org.springframework.data.domain.Page;
 import ru.urfu.backend.dto.auth.RegisterRequest;
+import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.User;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -32,6 +35,8 @@ public interface UserService {
     User enableUser(User user);
 
     User makeAdmin(User user);
+
+    void updateStack(User user, List<StackRequest> stackRequests);
 
     User makeNotAdmin(User user);
 

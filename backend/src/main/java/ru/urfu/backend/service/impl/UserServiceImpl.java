@@ -10,13 +10,20 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.auth.RegisterRequest;
+import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.model.Role;
+import ru.urfu.backend.model.Stack;
+import ru.urfu.backend.model.UserStack;
+import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.repository.StackRepository;
 import ru.urfu.backend.repository.UserRepository;
+import ru.urfu.backend.repository.UserStackRepository;
+import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.service.UserService;
 import ru.urfu.backend.specification.UserSpecification;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -25,16 +32,22 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSpecification userSpecification;
+    private final StackService stackService;
+    private final UserStackRepository userStackRepository;
 
     @Autowired
     public UserServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            UserSpecification userSpecification
+            UserSpecification userSpecification,
+            StackService stackService,
+            UserStackRepository userStackRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSpecification = userSpecification;
+        this.stackService = stackService;
+        this.userStackRepository = userStackRepository;
     }
 
     @Override
@@ -150,6 +163,19 @@ public class UserServiceImpl implements UserService {
         String newEncodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(newEncodedPassword);
         userRepository.save(user);
+    }
+
+    @Transactional
+    @Override
+    public void updateStack(User user, List<StackRequest> stackRequests){
+        for(StackRequest stackRequest : stackRequests){
+            Stack stack = stackService.getOrCreate(stackRequest.title(), stackRequest.type());
+
+            UserStack userStack = new UserStack();
+            userStack.setStack(stack);
+            userStack.setUser(user);
+            userStackRepository.save(userStack);
+        }
     }
 
     @Override

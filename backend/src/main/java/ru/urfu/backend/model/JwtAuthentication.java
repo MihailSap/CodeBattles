@@ -2,6 +2,7 @@ package ru.urfu.backend.model;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import ru.urfu.backend.model.enums.Role;
 
 import java.util.Collection;
 import java.util.List;

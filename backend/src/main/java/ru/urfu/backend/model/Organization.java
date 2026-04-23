@@ -1,0 +1,82 @@
+package ru.urfu.backend.model;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import ru.urfu.backend.model.enums.OrganizationRole;
+
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "organization")
+public class Organization extends BaseEntity {
+
+    private String title;
+
+    private String description;
+
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserOrganization> members = new HashSet<>();
+
+    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Project> projects = new HashSet<>();
+
+    public Organization() {}
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
+    }
+
+    public Set<UserOrganization> getMembers() {
+        return members;
+    }
+
+    public void setMembers(Set<UserOrganization> members) {
+        this.members = members;
+    }
+
+    public void addMember(User user, Boolean isAdmin, OrganizationRole role) {
+        UserOrganization link = new UserOrganization();
+        link.setUser(user);
+        link.setOrganization(this);
+        link.setAdmin(isAdmin);
+        link.setOrganizationRole(role);
+
+        members.add(link);
+        user.getOrganizations().add(link);
+    }
+
+    public void removeMember(User user) {
+        members.removeIf(link -> {
+            if (link.getUser().getId().equals(user.getId())) {
+                user.getOrganizations().remove(link);
+                link.setUser(null);
+                link.setOrganization(null);
+                return true;
+            }
+            return false;
+        });
+    }
+}

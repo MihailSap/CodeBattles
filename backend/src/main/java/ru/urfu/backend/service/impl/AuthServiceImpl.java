@@ -113,4 +113,10 @@ public class AuthServiceImpl implements AuthService {
     public String getAuthenticatedUserEmail() {
         return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
     }
+
+    @Override
+    public User getAuthenticatedUser() throws UserNotFoundException {
+        String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        return userService.getByEmail(email);
+    }
 }

@@ -11,3 +11,21 @@ databaseChangeLog:
       file: db/changelog/changeset/005-update-users.yaml
   - include:
       file: db/changelog/changeset/006-add-users-github-data.yaml
+  - include:
+      file: db/changelog/changeset/007-create-organization.yaml
+  - include:
+      file: db/changelog/changeset/008-create-project.yaml
+  - include:
+      file: db/changelog/changeset/009-create-user-organization.yaml
+  - include:
+      file: db/changelog/changeset/010-create-task.yaml
+  - include:
+      file: db/changelog/changeset/011-create-review.yaml
+  - include:
+      file: db/changelog/changeset/012-update-data.yaml
+  - include:
+      file: db/changelog/changeset/013-create-user-project.yaml
+  - include:
+      file: db/changelog/changeset/014-create-stack.yaml
+  - include:
+      file: db/changelog/changeset/015-add-foreign-keys.yaml

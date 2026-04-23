@@ -2,6 +2,9 @@ spring:
   application:
     name: backend
 
+  config:
+    import: classpath:stack.yaml
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${SPRING_DATASOURCE_URL}

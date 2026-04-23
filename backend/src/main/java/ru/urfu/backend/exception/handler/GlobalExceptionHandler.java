@@ -11,6 +11,7 @@ import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
 import ru.urfu.backend.exception.globalEx.AlreadyExistsException;
 import ru.urfu.backend.exception.globalEx.InvalidException;
 import ru.urfu.backend.exception.globalEx.NotFoundException;
+import ru.urfu.backend.utils.ExceptionUtils;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,30 +21,35 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidException.class)
     public ResponseEntity<ErrorResponse> handleInvalidException(InvalidException ex) {
         logger.error("InvalidException: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(ex.getMessage()));
+        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundEx(NotFoundException ex) {
         logger.error("NotFoundException: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getMessage()));
+        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleConflictEx(AlreadyExistsException ex) {
         logger.error("AlreadyExistsException: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(ex.getMessage()));
+        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(AccountNotEnabledException.class)
     public ResponseEntity<ErrorResponse> handleConflictEx(AccountNotEnabledException ex) {
         logger.error("AccountNotEnabledException: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(ex.getMessage()));
+        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         logger.error("Exception: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(ex.getMessage()));
+        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

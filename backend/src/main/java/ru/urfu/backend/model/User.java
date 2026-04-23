@@ -1,6 +1,10 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.enums.Role;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -14,7 +18,7 @@ public class User extends BaseEntity{
 
     private Role role;
 
-    private boolean enabled;
+    private Boolean enabled;
 
     private String verificationToken;
 
@@ -26,6 +30,21 @@ public class User extends BaseEntity{
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Review> reviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserOrganization> organizations = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserProject> projects = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserStack> stacks = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserTask> tasks = new HashSet<>();
 
     public User(String login, String email, String password, Role roles) {
         this.login = login;
@@ -115,5 +134,53 @@ public class User extends BaseEntity{
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public Set<UserOrganization> getOrganizations() {
+        return organizations;
+    }
+
+    public void setOrganizations(Set<UserOrganization> organizations) {
+        this.organizations = organizations;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Set<UserProject> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<UserProject> projects) {
+        this.projects = projects;
+    }
+
+    public Set<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(Set<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public Set<UserStack> getStacks() {
+        return stacks;
+    }
+
+    public void setStacks(Set<UserStack> stacks) {
+        this.stacks = stacks;
+    }
+
+    public Set<UserTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<UserTask> tasks) {
+        this.tasks = tasks;
     }
 }
