@@ -7,6 +7,8 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import AdminPage from './pages/AdminPage/AdminPage';
 import MainPage from './pages/MainPage/MainPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
+import OrganizationInviteJoinPage from './pages/OrganizationInviteJoinPage/OrganizationInviteJoinPage';
+import OrganizationPage from './pages/OrganizationPage/OrganizationPage';
 import ProjectInviteJoinPage from './pages/ProjectInviteJoinPage/ProjectInviteJoinPage';
 import ProjectPage from './pages/ProjectPage/ProjectPage';
 import ProjectsPage from './pages/ProjectsPage/ProjectsPage';
@@ -31,6 +33,7 @@ const App = () => {
           <Route path={ROUTES.home} element={<MainPage />} />
           <Route path={ROUTES.projects} element={<ProjectsPage />} />
           <Route path={ROUTES.projectById} element={<ProjectPage />} />
+          <Route path={ROUTES.organizationById} element={<OrganizationPage />} />
           <Route path={ROUTES.projectTaskCreate} element={<TaskCreatePage />} />
           <Route path={ROUTES.profile} element={<ProfilePage />} />
           <Route path={ROUTES.profileByUserId} element={<ProfilePage />} />
@@ -49,6 +52,7 @@ const App = () => {
         <Route path={ROUTES.verifyEmail} element={<VerifyEmailPage />} />
         <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
         <Route path={ROUTES.projectJoinByToken} element={<ProjectInviteJoinPage />} />
+        <Route path={ROUTES.organizationJoinByToken} element={<OrganizationInviteJoinPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

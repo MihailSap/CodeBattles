@@ -1,0 +1,90 @@
+.project-card {
+  width: 100%;
+  border-radius: 15px;
+  border: 2px solid var(--primary-color);
+  box-shadow: var(--element-shadow);
+  background: var(--element-bg-color);
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.project-card__title-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.project-card__title {
+  color: var(--primary-color);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.project-card__privacy {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.project-card__role {
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.project-card__role--owner {
+  color: var(--yellow-value-color);
+}
+
+.project-card__role--member {
+  color: var(--dark-purple-value-color);
+}
+
+.project-card__role--guest {
+  color: var(--gray-value-color);
+}
+
+.project-card__tasks {
+  color: var(--text-color);
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project-card:hover {
+    transform: scale(1.02);
+  }
+}
+
+@media (max-width: 500px) {
+  .project-card {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .project-card__title,
+  .project-card__role,
+  .project-card__tasks {
+    font-size: 16px;
+    width: fit-content;
+  }
+
+  .project-card__privacy {
+    width: 16px;
+    height: 16px;
+  }
+}

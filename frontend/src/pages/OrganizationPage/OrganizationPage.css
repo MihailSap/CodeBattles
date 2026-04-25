@@ -1,0 +1,146 @@
+@import '../ProjectPage/ProjectPage.css';
+
+.organization-page__logo {
+  margin-top: 15px;
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  object-fit: cover;
+}
+
+.organization-page__project-tasks {
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.organization-page__participants-switch {
+  width: 470px;
+}
+
+.organization-page__request-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.organization-page__request-button {
+  padding: 0.5px 20px;
+  border-radius: 7px;
+  border: 2px solid;
+  background: transparent;
+  color: var(--white-text-color);
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.organization-page__request-button svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+}
+
+.organization-page__request-button--reject {
+  background-color: var(--error-text-color);
+  border-color: var(--error-text-color);
+}
+
+.organization-page__request-button--accept {
+  background-color: var(--success-text-color);
+  border-color: var(--success-text-color);
+}
+
+.organization-page__settings-logo-wrap {
+  width: 200px;
+  height: 200px;
+  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  overflow: hidden;
+  position: relative;
+}
+
+.organization-page__settings-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.organization-page__settings-logo-upload {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 5px;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition);
+}
+
+.organization-page__settings-logo-upload img {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .organization-page__request-button:hover {
+    background: var(--bg-color);
+  }
+
+  .organization-page__request-button--accept:hover {
+    color: var(--success-text-color);
+  }
+
+  .organization-page__request-button--reject:hover {
+    color: var(--error-text-color);
+  }
+
+  .organization-page__settings-logo-upload:hover {
+    background-color: var(--header-button-hover-bg);
+  }
+}
+
+@media (max-width: 750px) {
+  .organization-page__participants-switch {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .organization-page__logo,
+  .organization-page__settings-logo-wrap {
+    width: 170px;
+    height: 170px;
+  }
+
+  .organization-page__project-tasks {
+    font-size: 14px;
+  }
+
+  .organization-page__request-button {
+    padding: 0.5px 15px;
+  }
+
+  .organization-page__request-button svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .organization-page__settings-logo-upload {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 350px) {
+  .organization-page__request-actions {
+    flex-direction: column;
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import privateIcon from '../../assets/private-icon.svg';
 import participantsCountIcon from '../../assets/participants-count-icon.svg';
 import tasksCountIcon from '../../assets/tasks-count-icon.svg';
@@ -49,6 +49,8 @@ const ProjectPage = () => {
   const [isInviteSubmitting, setInviteSubmitting] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
+  const [isLeaveSubmitting, setLeaveSubmitting] = useState(false);
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
   const [settingsDraft, setSettingsDraft] = useState(null);
   const [settingsTouched, setSettingsTouched] = useState({ name: false, repositoryUrl: false });
@@ -232,21 +234,6 @@ const ProjectPage = () => {
     }
   };
 
-  const handleLeaveProject = async () => {
-    try {
-      await projectsApi.leaveProject(project.id, Number(userId));
-      navigate(ROUTES.projects, {
-        replace: true,
-        state: {
-          snackbarMessage: 'Вы вышли из проекта',
-          snackbarType: 'success'
-        }
-      });
-    } catch {
-      setSnackbar({ message: 'Не удалось выйти из проекта', type: 'error' });
-    }
-  };
-
   const handleSaveSettings = async () => {
     setSettingsTouched({ name: true, repositoryUrl: true });
 
@@ -286,6 +273,26 @@ const ProjectPage = () => {
       }
     } finally {
       setSettingsSubmitting(false);
+    }
+  };
+
+  const handleLeaveProject = async () => {
+    setLeaveSubmitting(true);
+
+    try {
+      await projectsApi.leaveProject(project.id, Number(userId));
+      navigate(ROUTES.projects, {
+        replace: true,
+        state: {
+          snackbarMessage: 'Вы вышли из проекта',
+          snackbarType: 'success'
+        }
+      });
+    } catch {
+      setSnackbar({ message: 'Не удалось выйти из проекта', type: 'error' });
+    } finally {
+      setLeaveSubmitting(false);
+      setLeaveModalOpen(false);
     }
   };
 
@@ -496,7 +503,7 @@ const ProjectPage = () => {
                     Пригласить
                   </button>
                 ) : project.canSeeTasks && (
-                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={handleLeaveProject}>
+                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setLeaveModalOpen(true)}>
                     Выйти из проекта
                   </button>
                 )}
@@ -505,7 +512,7 @@ const ProjectPage = () => {
 
             <section className="section-card project-page__participants-list">
               {visibleParticipants.map((participant) => (
-                <div key={participant.id} className="project-page__participant-row">
+                <Link key={participant.id} className="project-page__participant-row" to={`${ROUTES.profile}/${participant.id}`}>
                   <div className="project-page__participant-main">
                     <span className="project-page__participant-avatar">
                       {participant.avatar ? <img src={participant.avatar} alt={participant.fullName} /> : <AvatarIcon />}
@@ -515,9 +522,8 @@ const ProjectPage = () => {
                       <span className="project-page__participant-login">@{participant.login}</span>
                     </span>
                   </div>
-
                   <span className="project-page__participant-role">{PROJECT_MEMBER_ROLE_LABELS[participant.role]}</span>
-                </div>
+                </Link>
               ))}
 
               {hasMoreParticipants && <div ref={participantsSentinelRef} className="project-page__sentinel" />}
@@ -652,6 +658,17 @@ const ProjectPage = () => {
       />
 
       <ConfirmActionModal
+        isOpen={isLeaveModalOpen}
+        title="Выход из проекта"
+        description="Вы выйдите из проекта"
+        confirmLabel="Выйти"
+        onCancel={() => setLeaveModalOpen(false)}
+        onConfirm={handleLeaveProject}
+        isSubmitting={isLeaveSubmitting}
+        isDeleteAction
+      />
+
+      <ConfirmActionModal
         isOpen={isDeleteModalOpen}
         title="Удаление проекта"
         description="Проект и связанные задачи будут удалены без возможности восстановления"
@@ -659,6 +676,7 @@ const ProjectPage = () => {
         onCancel={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteProject}
         isSubmitting={isDeleteSubmitting}
+        isDeleteAction
       />
     </div>
   );

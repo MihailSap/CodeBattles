@@ -278,6 +278,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
         onCancel={closeConfirm}
         onConfirm={handleConfirmAction}
         isSubmitting={isSubmittingAction}
+        isDeleteAction={confirmState?.type === 'delete'}
       />
     </section>
   );

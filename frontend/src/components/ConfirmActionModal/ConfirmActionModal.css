@@ -39,7 +39,7 @@
   margin-top: 10px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -63,10 +63,28 @@
   cursor: not-allowed;
 }
 
+.confirm-modal__button--confirm-delete {
+  border-color: var(--error-text-color);
+  background-color: var(--error-text-color);
+}
+
+.confirm-modal__button--confirm-success {
+  border-color: var(--success-text-color);
+  background-color: var(--success-text-color);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .confirm-modal__button:hover:enabled {
     background-color: var(--element-bg-color);
     color: var(--primary-color);
+  }
+
+  .confirm-modal__button--confirm-delete:hover:enabled {
+    color: var(--error-text-color);
+  }
+
+  .confirm-modal__button--confirm-success:hover:enabled {
+    color: var(--success-text-color);
   }
 }
 

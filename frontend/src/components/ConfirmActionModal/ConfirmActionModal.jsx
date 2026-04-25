@@ -1,6 +1,6 @@
 import './ConfirmActionModal.css';
 
-const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel, onConfirm, isSubmitting }) => {
+const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel, onConfirm, isSubmitting, isDeleteAction }) => {
   if (!isOpen) {
     return null;
   }
@@ -20,7 +20,12 @@ const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel
           <button className="confirm-modal__button confirm-modal__button--cancel" type="button" onClick={onCancel} disabled={isSubmitting}>
             Отмена
           </button>
-          <button className="confirm-modal__button confirm-modal__button--confirm" type="button" onClick={onConfirm} disabled={isSubmitting}>
+          <button
+            className={`confirm-modal__button confirm-modal__button--confirm ${isDeleteAction ? 'confirm-modal__button--confirm-delete' : 'confirm-modal__button--confirm-success'}`}
+            type="button"
+            onClick={onConfirm}
+            disabled={isSubmitting}
+          >
             {confirmLabel}
           </button>
         </div>

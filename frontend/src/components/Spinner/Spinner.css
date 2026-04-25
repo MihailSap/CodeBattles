@@ -7,6 +7,14 @@
   animation: spinner-rotate 0.8s linear infinite;
 }
 
+@media (max-width: 500px) {
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+  }
+}
+
 @media (max-width: 380px) {
   .spinner {
     width: 50px;

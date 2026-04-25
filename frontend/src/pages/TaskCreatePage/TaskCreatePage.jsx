@@ -23,6 +23,20 @@ const initialState = {
   assigneeIds: []
 };
 
+const isPastDateTime = (value) => {
+  if (!value) {
+    return false;
+  }
+
+  const parsed = new Date(value).getTime();
+
+  if (Number.isNaN(parsed)) {
+    return true;
+  }
+
+  return parsed < Date.now();
+};
+
 const TaskCreatePage = () => {
   const { userId } = useAuth();
   const { projectId } = useParams();
@@ -92,12 +106,12 @@ const TaskCreatePage = () => {
       return 'Выберите дедлайн';
     }
 
-    if (new Date(form.deadline).getTime() < nowMin.getTime()) {
+    if (isPastDateTime(form.deadline)) {
       return 'Дедлайн не может быть в прошлом';
     }
 
     return '';
-  }, [form.deadline, nowMin]);
+  }, [form.deadline]);
 
   const showDeadlineError = touched.deadline || touched.submitted;
   const isValid = !nameError && !deadlineError;
@@ -106,6 +120,15 @@ const TaskCreatePage = () => {
     event.preventDefault();
 
     setTouched({ name: true, deadline: true, submitted: true });
+
+    if (!form.deadline) {
+      return;
+    }
+
+    if (isPastDateTime(form.deadline)) {
+      setSnackbar({ message: 'Дедлайн не может быть в прошлом', type: 'error' });
+      return;
+    }
 
     if (!isValid) {
       return;

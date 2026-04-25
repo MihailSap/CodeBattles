@@ -63,19 +63,32 @@
 
 .project-page__role-tag,
 .project-page__participant-role {
-  padding: 6px 15px;
   border-radius: 7px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
   font-size: 14px;
   font-weight: 600;
+}
+
+.project-page__role-tag {
+  padding: 4px 15px;
+  background: var(--element-bg-color);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.project-page__participant-role {
+  padding: 6px 15px;
+  background: var(--primary-color);
+  color: var(--white-text-color);
+  max-width: fit-content;
 }
 
 .project-page__organization {
   margin-top: 15px;
   color: var(--text-color);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 20px;
+  font-style: italic;
+  opacity: 0.6;
 }
 
 .project-page__description {
@@ -267,7 +280,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--element-bg-color);
+  background: var(--bg-color);
   transition: border-color var(--transition);
 }
 
@@ -427,6 +440,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  transition: background-color var(--transition);
 }
 
 .project-page__participant-row:last-child {
@@ -648,7 +662,8 @@
     color: var(--error-text-color);
   }
 
-  .project-page__table-row:hover {
+  .project-page__table-row:hover,
+  .project-page__participant-row:hover {
     background-color: var(--header-button-hover-bg);
     cursor: pointer;
   }
@@ -695,7 +710,9 @@
   .project-page__assignee-more {
     font-size: 14px;
   }
+}
 
+@media (max-width: 750px) {
   .project-page__controls-right,
   .project-page__controls-left {
     width: 100%;
@@ -789,7 +806,7 @@
   }
 
   .project-page__table-row {
-    min-width: 640px;
+    min-width: 840px;
     grid-template-columns: 2fr 1fr 1fr 1fr;
     font-size: 14px;
   }
@@ -815,21 +832,21 @@
     gap: 15px;
   }
 
- .project-page__settings-input {
-  font-size: 12px;
-  padding: 8px 7px;
- }
+  .project-page__settings-input {
+    font-size: 12px;
+    padding: 8px 7px;
+  }
 
- .project-page__privacy-item {
-  font-size: 12px;
- }
+  .project-page__privacy-item {
+    font-size: 12px;
+  }
 
- .project-page__settings-action {
-  padding: 0.5px 20px;
- }
+  .project-page__settings-action {
+    padding: 0.5px 20px;
+  }
 
- .project-page__settings-action svg {
-  height: 25px;
-  width: 25px;
- }
+  .project-page__settings-action svg {
+    height: 25px;
+    width: 25px;
+  }
 }

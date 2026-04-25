@@ -3,7 +3,8 @@
   background-color: var(--element-bg-color);
   box-shadow: var(--header-shadow);
   border-bottom: 2px solid var(--primary-color);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 
