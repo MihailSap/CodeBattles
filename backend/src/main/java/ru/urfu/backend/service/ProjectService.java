@@ -6,11 +6,16 @@ import ru.urfu.backend.dto.project.ProjectUpdateRequest;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.model.UserProject;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 
 import java.util.List;
 
 public interface ProjectService {
+
+    List<Project> getPublicProjects();
+
+    UserProject getUserProject(User user, Project project);
 
     List<User> getUsersByProject(Project project);
 

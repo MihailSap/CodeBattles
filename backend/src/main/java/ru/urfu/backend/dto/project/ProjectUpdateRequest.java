@@ -1,10 +1,12 @@
 package ru.urfu.backend.dto.project;
 
+import java.util.List;
+
 public record ProjectUpdateRequest(
         String name,
         String description,
         String repositoryUrl,
-        String stack,
+        List<String> stack,
         Boolean isPrivate,
         Boolean aiReviewEnable
 ) {

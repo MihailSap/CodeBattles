@@ -17,6 +17,10 @@ public class Organization extends BaseEntity {
 
     private String description;
 
+    private String logo;
+
+    private String link;
+
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserOrganization> members = new HashSet<>();
 
@@ -78,5 +82,21 @@ public class Organization extends BaseEntity {
             }
             return false;
         });
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 }

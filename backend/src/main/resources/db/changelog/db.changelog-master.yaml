@@ -29,3 +29,9 @@ databaseChangeLog:
       file: db/changelog/changeset/014-create-stack.yaml
   - include:
       file: db/changelog/changeset/015-add-foreign-keys.yaml
+  - include:
+      file: db/changelog/changeset/016-create-project-stack.yaml
+  - include:
+      file: db/changelog/changeset/017-create-user-task.yaml
+  - include:
+      file: db/changelog/changeset/018-add-last-activity-at.yaml

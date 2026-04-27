@@ -16,6 +16,8 @@ public class User extends BaseEntity{
 
     private String password;
 
+    private String fullName;
+
     private Role role;
 
     private Boolean enabled;
@@ -182,5 +184,13 @@ public class User extends BaseEntity{
 
     public void setTasks(Set<UserTask> tasks) {
         this.tasks = tasks;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 }

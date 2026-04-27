@@ -3,13 +3,12 @@ package ru.urfu.backend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urfu.backend.dto.organization.OrganizationCreateRequest;
-import ru.urfu.backend.dto.organization.OrganizationUpdateDataRequest;
-import ru.urfu.backend.dto.organization.UserOrganizationRequest;
+import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
+import ru.urfu.backend.model.enums.OrganizationRole;
 import ru.urfu.backend.repository.OrganizationRepository;
 import ru.urfu.backend.repository.UserOrganizationRepository;
 import ru.urfu.backend.service.OrganizationService;
@@ -34,36 +33,23 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.userService = userService;
     }
 
-    @Override
     @Transactional
-    public Organization create(OrganizationCreateRequest request) throws UserNotFoundException {
-        User owner = userService.getById(request.adminId());
+    @Override
+    public Organization create(CreateOrganizationRequestDto request, User user){
         Organization organization = new Organization();
-        organization.setTitle(request.title());
+        organization.setTitle(request.name());
         organization.setDescription(request.description());
-        organizationRepository.save(organization);
+        organization.setLogo(request.logo());
+        organization.setLink(request.link());
 
         UserOrganization userOrganization = new UserOrganization();
         userOrganization.setOrganization(organization);
-        userOrganization.setUser(owner);
+        userOrganization.setUser(user);
         userOrganization.setAdmin(true);
-        userOrganization.setOrganizationRole(request.role());
+        userOrganization.setOrganizationRole(OrganizationRole.TEAM_LEAD); //FIXME: Убрать заглушку
         userOrganizationRepository.save(userOrganization);
 
-        List<UserOrganizationRequest> memberRequests = request.members();
-        if(memberRequests != null && !memberRequests.isEmpty()){
-            for(UserOrganizationRequest memberRequest : memberRequests){
-                User member = userService.getById(memberRequest.userId());
-                UserOrganization memberOrganization = new UserOrganization();
-                memberOrganization.setOrganization(organization);
-                memberOrganization.setUser(member);
-                memberOrganization.setAdmin(memberRequest.isAdmin());
-                memberOrganization.setOrganizationRole(memberRequest.role());
-                userOrganizationRepository.save(memberOrganization);
-            }
-        }
-
-        return organization;
+        return organizationRepository.save(organization);
     }
 
     @Override
@@ -72,21 +58,8 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
 
     @Override
-    public Organization getById(Long id) {
-        return organizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
-    }
-
-    @Override
-    public Organization getByTitle(String title) {
-        return organizationRepository.findByTitle(title)
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
-    }
-
-    @Override
-    @Transactional
-    public Organization updateData(Organization organization, OrganizationUpdateDataRequest request){
-        String title = request.title();
+    public Organization update(UpdateOrganizationRequest request, Organization organization) {
+        String title = request.name();
         if(title != null && !title.isEmpty()){
             organization.setTitle(title);
         }
@@ -96,7 +69,28 @@ public class OrganizationServiceImpl implements OrganizationService {
             organization.setDescription(description);
         }
 
+        String link = request.link();
+        if(link != null && !link.isEmpty()){
+            organization.setLink(link);
+        }
+
+        String logoUrl = request.logoUrl();
+        if(logoUrl != null && !logoUrl.isEmpty()){
+            organization.setLogo(logoUrl);
+        }
+
         return organizationRepository.save(organization);
+    }
+
+    @Override
+    public Organization getById(Long id) {
+        return organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Organization not found"));
+    }
+
+    @Override
+    public List<Organization> getByUser(User user) {
+        return organizationRepository.findByMembers_User(user);
     }
 
     @Override

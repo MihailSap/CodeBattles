@@ -5,5 +5,6 @@ public enum StackType {
     DATABASES,
     FRAMEWORKS,
     LANGUAGES,
-    TOOLS
+    TOOLS,
+    OTHER
 }

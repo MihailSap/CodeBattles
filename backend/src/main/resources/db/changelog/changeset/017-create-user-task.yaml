@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 17-create-user-task
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: user_task
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: task_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: user_task
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_task_user
+
+        - addForeignKeyConstraint:
+            baseTableName: user_task
+            baseColumnNames: task_id
+            referencedTableName: task
+            referencedColumnNames: id
+            constraintName: fk_user_task_task

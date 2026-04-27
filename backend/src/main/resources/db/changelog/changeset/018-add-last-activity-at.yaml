@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 18-add-last-activity-at
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: organization
+            columns:
+              - column:
+                  name: logo
+                  type: VARCHAR(500)
+        - addColumn:
+            tableName: organization
+            columns:
+              - column:
+                  name: link
+                  type: VARCHAR(500)
+        - addColumn:
+            tableName: project
+            columns:
+              - column:
+                  name: last_activity_at
+                  type: TIMESTAMP
+        - dropColumn:
+            tableName: project
+            columns:
+              - name: stack
+                type: TEXT
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)

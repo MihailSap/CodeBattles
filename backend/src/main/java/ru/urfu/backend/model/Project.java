@@ -3,6 +3,7 @@ package ru.urfu.backend.model;
 import jakarta.persistence.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,11 +17,11 @@ public class Project extends BaseEntity {
 
     private String repositoryUrl;
 
-    private String stack;
-
     private Boolean isPrivate;
 
     private Boolean aiReviewEnabled;
+
+    private LocalDateTime lastActivityAt;
 
     @ManyToOne
     @JoinColumn(name = "organization_id")
@@ -31,6 +32,9 @@ public class Project extends BaseEntity {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> tasks = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProjectStack> stacks = new HashSet<>();
 
     public Project() {}
 
@@ -48,14 +52,6 @@ public class Project extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getStack() {
-        return stack;
-    }
-
-    public void setStack(String stack) {
-        this.stack = stack;
     }
 
     public Boolean getPrivate() {
@@ -106,5 +102,29 @@ public class Project extends BaseEntity {
 
         users.add(userProject);
         user.getProjects().add(userProject);
+    }
+
+    public Set<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<Task> tasks) {
+        this.tasks = tasks;
+    }
+
+    public Set<ProjectStack> getStacks() {
+        return stacks;
+    }
+
+    public void setStacks(Set<ProjectStack> stacks) {
+        this.stacks = stacks;
+    }
+
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 }

@@ -2,7 +2,7 @@ package ru.urfu.backend.dto.project;
 
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 
-public record ProjectShortResponse(
+public record ProjectListItemDto(
         Long id,
         String name,
         String description,

@@ -10,14 +10,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.project.ProjectCreateRequest;
 import ru.urfu.backend.dto.project.ProjectUpdateRequest;
-import ru.urfu.backend.model.Organization;
-import ru.urfu.backend.model.Project;
-import ru.urfu.backend.model.User;
-import ru.urfu.backend.model.UserProject;
+import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.StackType;
 import ru.urfu.backend.repository.ProjectRepository;
+import ru.urfu.backend.repository.ProjectStackRepository;
 import ru.urfu.backend.repository.UserProjectRepository;
 import ru.urfu.backend.service.ProjectService;
+import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.specification.ProjectSpecification;
 
 import java.util.ArrayList;
@@ -31,12 +31,32 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectSpecification projectSpecification;
     private final UserProjectRepository userProjectRepository;
+    private final StackService stackService;
+    private final ProjectStackRepository projectStackRepository;
 
     @Autowired
-    public ProjectServiceImpl(ProjectRepository projectRepository, ProjectSpecification projectSpecification, UserProjectRepository userProjectRepository) {
+    public ProjectServiceImpl(ProjectRepository projectRepository, ProjectSpecification projectSpecification, UserProjectRepository userProjectRepository, StackService stackService, ProjectStackRepository projectStackRepository) {
         this.projectRepository = projectRepository;
         this.projectSpecification = projectSpecification;
         this.userProjectRepository = userProjectRepository;
+        this.stackService = stackService;
+        this.projectStackRepository = projectStackRepository;
+    }
+
+    @Override
+    public List<Project> getPublicProjects() {
+        List<Project> projects = projectRepository.findAll();
+        for (Project project : projects) {
+            if(Boolean.FALSE.equals(project.getPrivate())){
+                projects.add(project);
+            }
+        }
+        return projects;
+    }
+
+    public UserProject getUserProject(User user, Project project){
+        return userProjectRepository.findByUserAndProject(user, project)
+                .orElseThrow(() -> new RuntimeException("Связь между данными User и Project не найдена"));
     }
 
     @Override
@@ -47,9 +67,18 @@ public class ProjectServiceImpl implements ProjectService {
         project.setTitle(request.name());
         project.setDescription(request.description());
         project.setRepositoryUrl(request.repositoryUrl());
-        project.setStack(request.stack());
         project.setPrivate(request.isPrivate());
         project.setAiReviewEnabled(request.aiReviewEnabled());
+
+        List<String> stackTitles = request.stack();
+        for(String stackTitle : stackTitles){
+            Stack stack = stackService.getOrCreate(stackTitle, StackType.OTHER);
+            ProjectStack projectStack = new ProjectStack();
+            projectStack.setStack(stack);
+            projectStack.setProject(project);
+            projectStackRepository.save(projectStack);
+        }
+
         return projectRepository.save(project);
     }
 
@@ -60,10 +89,19 @@ public class ProjectServiceImpl implements ProjectService {
         project.setTitle(request.name());
         project.setDescription(request.description());
         project.setRepositoryUrl(request.repositoryUrl());
-        project.setStack(request.stack());
         project.setPrivate(request.isPrivate());
         project.setAiReviewEnabled(request.aiReviewEnabled());
         project.addUser(user, ProjectMemberRole.OWNER);
+
+        List<String> stackTitles = request.stack();
+        for(String stackTitle : stackTitles){
+            Stack stack = stackService.getOrCreate(stackTitle, StackType.OTHER);
+            ProjectStack projectStack = new ProjectStack();
+            projectStack.setStack(stack);
+            projectStack.setProject(project);
+            projectStackRepository.save(projectStack);
+        }
+
         return projectRepository.save(project);
     }
 
@@ -134,18 +172,29 @@ public class ProjectServiceImpl implements ProjectService {
         if(repositoryUrl != null && !repositoryUrl.isEmpty()){
             project.setRepositoryUrl(repositoryUrl);
         }
-        String stack = request.stack();
-        if(stack != null && !stack.isEmpty()){
-            project.setStack(stack);
+
+        //TODO: реализовать удаление старого стека!!!
+        List<String> stackTitles = request.stack();
+        if(stackTitles != null && !stackTitles.isEmpty()){
+            for(String stackTitle : stackTitles){
+                Stack stackObj = stackService.getOrCreate(stackTitle, StackType.OTHER);
+                ProjectStack projectStack = new ProjectStack();
+                projectStack.setStack(stackObj);
+                projectStack.setProject(project);
+                projectStackRepository.save(projectStack);
+            }
         }
+
         Boolean isPrivate = request.isPrivate();
         if(isPrivate != null){
             project.setPrivate(isPrivate);
         }
+
         Boolean aiReviewEnable = request.aiReviewEnable();
         if(aiReviewEnable != null){
             project.setAiReviewEnabled(aiReviewEnable);
         }
+
         return projectRepository.save(project);
     }
 

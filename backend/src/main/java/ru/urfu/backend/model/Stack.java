@@ -18,6 +18,9 @@ public class Stack extends BaseEntity{
     @OneToMany(mappedBy = "stack", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserStack> users = new HashSet<>();
 
+    @OneToMany(mappedBy = "stack", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProjectStack> projects = new HashSet<>();
+
     public String getTitle() {
         return title;
     }
@@ -40,5 +43,13 @@ public class Stack extends BaseEntity{
 
     public void setUsers(Set<UserStack> users) {
         this.users = users;
+    }
+
+    public Set<ProjectStack> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<ProjectStack> projects) {
+        this.projects = projects;
     }
 }
