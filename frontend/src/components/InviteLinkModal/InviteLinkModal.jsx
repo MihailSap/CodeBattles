@@ -4,6 +4,20 @@ import DateTimePicker from '../DateTimePicker/DateTimePicker';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import './InviteLinkModal.css';
 
+const isInvalidOrPastDateTime = (value) => {
+  if (!value) {
+    return true;
+  }
+
+  const parsed = new Date(value).getTime();
+
+  if (Number.isNaN(parsed)) {
+    return true;
+  }
+
+  return parsed <= Date.now();
+};
+
 const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitting }) => {
   const [expiresAt, setExpiresAt] = useState('');
   const [reusable, setReusable] = useState(false);
@@ -16,10 +30,11 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
 
   const generate = async () => {
     if (!expiresAt) {
+      setLocalError('Выберите срок действия ссылки');
       return;
     }
 
-    if (new Date(expiresAt).getTime() <= Date.now()) {
+    if (isInvalidOrPastDateTime(expiresAt)) {
       setLocalError('Срок действия ссылки должен быть в будущем');
       return;
     }

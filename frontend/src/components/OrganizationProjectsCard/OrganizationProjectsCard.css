@@ -1,0 +1,95 @@
+.organization-projects-card {
+  background: var(--form-bg-color);
+  padding: 15px 30px;
+  border-radius: 20px;
+  box-shadow: var(--section-shadow);
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.organization-projects-card__title {
+  color: var(--text-color);
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.organization-projects-card__projects {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  width: 100%;
+  flex: 1;
+  align-content: start;
+}
+
+.organization-projects-card__empty {
+  margin-top: 20px;
+  min-height: 147.5px;
+  color: var(--primary-color);
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.organization-projects-card__create {
+  margin: auto auto 0;
+  margin-top: 20px;
+  border-radius: 10px;
+  border: 2px solid var(--primary-color);
+  padding: 10px 30px;
+  background: var(--primary-color);
+  color: var(--white-text-color);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.organization-projects-card__create--stub {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .organization-projects-card__create:hover {
+    background: var(--bg-color);
+    color: var(--primary-color);
+  }
+}
+
+@media (max-width: 500px) {
+  .organization-projects-card {
+    padding: 15px;
+  }
+
+  .organization-projects-card__title {
+    font-size: 20px;
+  }
+
+  .organization-projects-card__projects {
+    margin-top: 15px;
+    padding: 5px;
+    max-height: 347.5px;
+    overflow-y: auto;
+  }
+
+  .organization-projects-card__empty {
+    margin-top: 15px;
+    min-height: 225px;
+    font-size: 16px;
+  }
+
+  .organization-projects-card__create {
+    margin-top: 15px;
+    padding: 5px 15px;
+    font-size: 14px;
+  }
+}

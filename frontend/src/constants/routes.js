@@ -5,6 +5,8 @@ export const ROUTES = {
   projectById: '/projects/:projectId',
   projectTaskCreate: '/projects/:projectId/tasks/create',
   projectJoinByToken: '/projects/join/:token',
+  organizationById: '/organizations/:organizationId',
+  organizationJoinByToken: '/organizations/join/:token',
   reviews: '/reviews',
   leaderboard: '/leaderboard',
   profile: '/profile',

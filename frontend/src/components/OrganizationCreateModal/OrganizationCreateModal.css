@@ -1,0 +1,316 @@
+.organization-create-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.organization-create-modal {
+  width: min(1000px, 100%);
+  max-height: min(100vh - 80px, 920px);
+  overflow: auto;
+  border-radius: 25px;
+  border: 2px solid var(--primary-color);
+  box-shadow: var(--modal-shadow);
+  background-color: var(--element-bg-color);
+  padding: 40px;
+}
+
+.organization-create-modal__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.organization-create-modal__title {
+  grid-column: 2;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.organization-create-modal__close {
+  grid-column: 3;
+  justify-self: end;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--error-text-color);
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.organization-create-modal__close svg {
+  width: 100%;
+  height: 100%;
+}
+
+.organization-create-modal__form {
+  margin-top: 30px;
+}
+
+.organization-create-modal__main {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.organization-create-modal__left {
+  flex: 0 0 auto;
+}
+
+.organization-create-modal__logo-box {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+  border: 2px solid var(--hover-primary-color);
+  box-shadow: var(--element-shadow);
+  background-color: var(--bg-color);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.organization-create-modal__logo-actions {
+  position: absolute;
+  inset: 0;
+  padding: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.organization-create-modal__icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 5px;
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.organization-create-modal__icon-btn img {
+  width: 100%;
+  height: 100%;
+}
+
+.organization-create-modal__icon-btn--delete:hover {
+  background: rgba(255, 77, 79, 0.25);
+}
+
+.organization-create-modal__icon-btn--upload:hover {
+  background: rgba(21, 192, 89, 0.25);
+}
+
+.organization-create-modal__logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.organization-create-modal__logo-placeholder {
+  color: var(--fade-text-color);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.organization-create-modal__right {
+  flex: 1 1 430px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.organization-create-modal__field {
+  width: 100%;
+}
+
+.organization-create-modal__input {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid var(--hover-primary-color);
+  padding: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: var(--element-shadow);
+  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+}
+
+.organization-create-modal__input::placeholder {
+  color: var(--fade-text-color);
+}
+
+.organization-create-modal__input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.organization-create-modal__input--error {
+  background-color: var(--error-bg-input-color);
+  border-color: var(--error-border-input-color);
+  box-shadow: var(--error-shadow-input-color);
+}
+
+.organization-create-modal__input--error:focus {
+  border-color: var(--error-border-active-input-color);
+}
+
+.organization-create-modal__textarea {
+  min-height: 100px;
+  max-height: 100px;
+  resize: none;
+  overflow: auto;
+  font-family: inherit;
+}
+
+.organization-create-modal__error {
+  position: absolute;
+  margin-top: 1px;
+  margin-left: 2px;
+  font-size: 13px;
+  color: var(--error-text-color);
+}
+
+.organization-create-modal__submit {
+  margin: 30px auto 0;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 2px solid var(--success-text-color);
+  padding: 0.5px 40px;
+  background: var(--success-text-color);
+  color: var(--white-text-color);
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition);
+}
+
+.organization-create-modal__submit svg {
+  width: 35px;
+  height: 35px;
+}
+
+.organization-create-modal__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .organization-create-modal__close:hover {
+    color: var(--error-border-active-input-color);
+  }
+
+  .organization-create-modal__submit:hover:enabled {
+    background: var(--bg-color);
+    color: var(--success-text-color);
+  }
+}
+
+@media (max-width: 900px) {
+  .organization-create-modal {
+    padding: 28px;
+  }
+}
+
+@media (max-width: 700px) {
+  .organization-create-modal__main {
+    flex-direction: column;
+  }
+
+  .organization-create-modal__left {
+    display: flex;
+    justify-content: center;
+    flex: none;
+    width: 100%;
+  }
+
+  .organization-create-modal__right {
+    width: 100%;
+    flex: none;
+  }
+}
+
+@media (max-width: 500px) {
+  .organization-create-modal {
+    padding: 20px;
+  }
+
+  .organization-create-modal__title {
+    font-size: 20px;
+  }
+
+  .organization-create-modal__field {
+    margin-bottom: 3px;
+  }
+
+  .organization-create-modal__close {
+    height: 25px;
+    width: 25px;
+  }
+
+  .organization-create-modal__form {
+    margin-top: 20px;
+  }
+
+  .organization-create-modal__main {
+    gap: 15px;
+  }
+
+  .organization-create-modal__logo-box {
+    width: 125px;
+    height: 125px;
+  }
+
+  .organization-create-modal__icon-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .organization-create-modal__logo-placeholder {
+    font-size: 12px;
+  }
+
+  .organization-create-modal__right {
+    gap: 15px;
+  }
+
+  .organization-create-modal__input,
+  .organization-create-modal__textarea {
+    font-size: 12px;
+  }
+
+  .organization-create-modal__input {
+    height: unset;
+    padding: 8px;
+  }
+
+  .organization-create-modal__error {
+    font-size: 11px;
+    margin-top: 0px;
+  }
+
+  .organization-create-modal__submit {
+    margin-top: 5px;
+    padding: 0.5px 30px;
+  }
+
+  .organization-create-modal__submit svg {
+    height: 30px;
+    width: 30px;
+  }
+}
