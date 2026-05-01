@@ -7,7 +7,7 @@ import { CheckIcon } from '../../components/Icons/Icons';
 import Header from '../../components/Header/Header';
 import Snackbar from '../../components/Snackbar/Snackbar';
 import Spinner from '../../components/Spinner/Spinner';
-import { TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS } from '../../constants/project';
+import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import { validateTaskName } from '../../utils/projectValidation';
@@ -20,7 +20,8 @@ const initialState = {
   evaluationCriteria: '',
   deadline: '',
   reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
-  assigneeIds: []
+  assigneeIds: [],
+  reviewerIds: []
 };
 
 const isPastDateTime = (value) => {
@@ -44,6 +45,7 @@ const TaskCreatePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [project, setProject] = useState(null);
+  const [organizationParticipants, setOrganizationParticipants] = useState([]);
   const [form, setForm] = useState(initialState);
   const [touched, setTouched] = useState({ name: false, deadline: false, submitted: false });
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
@@ -67,6 +69,21 @@ const TaskCreatePage = () => {
         }
 
         setProject(result);
+
+        if (result.organizationId && result.privacy === PROJECT_PRIVACY.PUBLIC) {
+          try {
+            const organization = await projectsApi.getOrganizationById(result.organizationId, Number(userId));
+            if (isMounted) {
+              setOrganizationParticipants(organization.participants || []);
+            }
+          } catch {
+            if (isMounted) {
+              setOrganizationParticipants([]);
+            }
+          }
+        } else if (isMounted) {
+          setOrganizationParticipants([]);
+        }
       } catch {
         if (isMounted) {
           navigate(ROUTES.projects, { replace: true });
@@ -115,6 +132,49 @@ const TaskCreatePage = () => {
 
   const showDeadlineError = touched.deadline || touched.submitted;
   const isValid = !nameError && !deadlineError;
+  const isManualReviewers = form.reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+
+  const reviewersSource = useMemo(() => {
+    if (!project) {
+      return [];
+    }
+
+    if (!project.organizationId) {
+      return project.participants;
+    }
+
+    if (project.privacy === PROJECT_PRIVACY.PUBLIC) {
+      return organizationParticipants;
+    }
+
+    return project.participants;
+  }, [organizationParticipants, project]);
+
+  const availableAssignees = useMemo(
+    () => project?.participants.filter((participant) => !form.reviewerIds.includes(participant.id)) || [],
+    [form.reviewerIds, project]
+  );
+
+  const availableReviewers = useMemo(
+    () => reviewersSource.filter((participant) => !form.assigneeIds.includes(participant.id)),
+    [form.assigneeIds, reviewersSource]
+  );
+
+  useEffect(() => {
+    if (!isManualReviewers) {
+      if (form.reviewerIds.length > 0) {
+        setForm((prev) => ({ ...prev, reviewerIds: [] }));
+      }
+      return;
+    }
+
+    const availableReviewerIds = new Set(availableReviewers.map((participant) => participant.id));
+    const nextReviewerIds = form.reviewerIds.filter((id) => availableReviewerIds.has(id));
+
+    if (nextReviewerIds.length !== form.reviewerIds.length) {
+      setForm((prev) => ({ ...prev, reviewerIds: nextReviewerIds }));
+    }
+  }, [availableReviewers, form.reviewerIds, isManualReviewers]);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -136,6 +196,11 @@ const TaskCreatePage = () => {
 
     if (form.assigneeIds.length === 0) {
       setSnackbar({ message: 'Выберите хотя бы одного исполнителя', type: 'error' });
+      return;
+    }
+
+    if (isManualReviewers && form.reviewerIds.length === 0) {
+      setSnackbar({ message: 'Выберите хотя бы одного ревьюера', type: 'error' });
       return;
     }
 
@@ -266,9 +331,21 @@ const TaskCreatePage = () => {
             </div>
           </div>
 
+          {isManualReviewers && (
+            <div className="task-create-page__block">
+              <AssigneesSelector
+                title="Ревьюеры"
+                users={availableReviewers}
+                selectedUserIds={form.reviewerIds}
+                onChange={(reviewerIds) => setForm((prev) => ({ ...prev, reviewerIds }))}
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
+
           <div className="task-create-page__block">
             <AssigneesSelector
-              users={project.participants}
+              users={availableAssignees}
               selectedUserIds={form.assigneeIds}
               onChange={(assigneeIds) => setForm((prev) => ({ ...prev, assigneeIds }))}
               disabled={isSubmitting}

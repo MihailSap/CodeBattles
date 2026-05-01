@@ -5,6 +5,7 @@ import projectsCountIcon from '../../assets/projects-count-icon.svg';
 import uploadIcon from '../../assets/upload-icon.svg';
 import { projectsApi } from '../../api/projectsApi';
 import ConfirmActionModal from '../../components/ConfirmActionModal/ConfirmActionModal';
+import EntityTabs from '../../components/EntityTabs/EntityTabs';
 import { AvatarIcon, CheckIcon, CrossIcon, SearchIcon } from '../../components/Icons/Icons';
 import Header from '../../components/Header/Header';
 import InviteLinkModal from '../../components/InviteLinkModal/InviteLinkModal';
@@ -157,8 +158,6 @@ const OrganizationPage = () => {
 
     return baseTabs;
   }, [isOwner]);
-
-  const activeTabIndex = availableTabs.findIndex((tab) => tab.key === activeTab);
 
   const projectsSource = useMemo(() => {
     if (!organization) {
@@ -447,7 +446,7 @@ const OrganizationPage = () => {
 
           {description && (
             <p className="project-page__description">
-              <span>Описание организации: </span>
+              <span className="project-page__description-label">Описание организации: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
                 <button className="project-page__description-toggle" type="button" onClick={() => setShowFullDescription((prev) => !prev)}>
@@ -475,26 +474,7 @@ const OrganizationPage = () => {
           </div>
         </section>
 
-        <div className="project-page__tabs-wrap">
-          <div className="project-page__tabs" style={{ '--tabs-count': availableTabs.length }}>
-            <span
-              className="project-page__tabs-slider"
-              style={{ transform: `translateX(${Math.max(0, activeTabIndex) * 100}%)` }}
-              aria-hidden="true"
-            />
-
-            {availableTabs.map((tab) => (
-              <button
-                key={tab.key}
-                className={`project-page__tab ${activeTab === tab.key ? 'project-page__tab--active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
 
         {activeTab === 'projects' && (
           <>

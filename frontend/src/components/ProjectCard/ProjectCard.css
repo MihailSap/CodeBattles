@@ -39,6 +39,10 @@
   flex-shrink: 0;
 }
 
+[data-theme="dark"] .project-card__privacy {
+  filter: invert(1);
+}
+
 .project-card__role {
   font-size: 20px;
   font-weight: 600;

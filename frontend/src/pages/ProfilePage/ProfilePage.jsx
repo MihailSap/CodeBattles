@@ -117,7 +117,15 @@ const ProfilePage = () => {
   const [receivedAchievementIds, setReceivedAchievementIds] = useState([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
-  const { openedSkillsPopup, popupDirection, popupMaxHeight, mobilePopupPosition, closeSkillsPopup, openSkillsPopup } =
+  const {
+    openedSkillsPopup,
+    popupDirection,
+    popupHorizontalAlign,
+    popupMaxHeight,
+    mobilePopupPosition,
+    closeSkillsPopup,
+    openSkillsPopup
+  } =
     useSkillsPopup();
   const normalizedRouteUserId = routeUserId ? String(routeUserId) : '';
   const isOwnProfile = !normalizedRouteUserId || normalizedRouteUserId === String(userId ?? '');
@@ -503,6 +511,7 @@ const ProfilePage = () => {
                 onToggleSkill={toggleSkill}
                 openedSkillsPopup={openedSkillsPopup}
                 popupDirection={popupDirection}
+                popupHorizontalAlign={popupHorizontalAlign}
                 popupMaxHeight={popupMaxHeight}
                 skillsByGroup={skillsByGroup}
                 skillsDraftByGroup={skillsDraftByGroup}

@@ -48,6 +48,8 @@
     --green-button-shadow: 0px 0px 5px 0px rgba(21, 192, 89, 0.25);
     --primary-button-shadow: 0px 0px 5px 0px rgba(21, 101, 192, 0.25);
     --not-active-arrow-button-color: rgba(201, 209, 217);
+    --review-section-header-bg-color: rgba(21, 101, 192, 0.2);
+    --review-element-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 1);
     --transition-duration: 0.5s;
     --transition: 0.2s ease;
 }

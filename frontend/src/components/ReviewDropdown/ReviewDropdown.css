@@ -1,0 +1,137 @@
+.review-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.review-dropdown__label {
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.review-dropdown__trigger {
+  min-width: 100px;
+  padding: 5px;
+  border-radius: 7px;
+  border: 2px solid var(--hover-primary-color);
+  background: var(--bg-color);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.review-dropdown__trigger--open,
+.review-dropdown__trigger:focus-visible {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.review-dropdown__value {
+  text-align: left;
+}
+
+.review-dropdown__value--placeholder {
+  color: var(--project-input-placeholder-color);
+}
+
+.review-dropdown__icon {
+  width: 14px;
+  height: 14px;
+  color: var(--primary-color);
+  display: inline-flex;
+  transition: transform var(--transition);
+}
+
+.review-dropdown__icon--open {
+  transform: rotate(180deg);
+}
+
+.review-dropdown__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.review-dropdown__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid var(--hover-primary-color);
+  background: var(--form-bg-color);
+  box-shadow: var(--section-shadow);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.review-dropdown__option {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.review-dropdown__option-check {
+  width: 14px;
+  height: 14px;
+  color: var(--primary-color);
+}
+
+.review-dropdown__option-check svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .review-dropdown__option:hover {
+    background: var(--header-button-hover-bg);
+  }
+}
+
+@media (max-width: 500px) {
+  .review-dropdown {
+    width: 100%;
+  }
+
+  .review-dropdown__label {
+    font-size: 14px;
+  }
+
+  .review-dropdown__trigger {
+    min-width: 0;
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .review-dropdown__icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .review-dropdown__option {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .review-dropdown__option-check {
+    width: 12px;
+    height: 12px;
+  }
+}
