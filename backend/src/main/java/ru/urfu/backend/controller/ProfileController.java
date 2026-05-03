@@ -1,6 +1,8 @@
 package ru.urfu.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +14,7 @@ import ru.urfu.backend.mapper.UserMapper;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
 
+@Tag(name = "Управление профилем")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping(PathsConstants.ROOT + PathsConstants.PROFILE)
@@ -26,6 +29,7 @@ public class ProfileController {
         this.userMapper = userMapper;
     }
 
+    @Operation(description = "Получение профиля текущего пользователя")
     @GetMapping("/me")
     public UserResponse getCurrentUserProfile() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();

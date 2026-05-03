@@ -232,6 +232,7 @@ public class ProjectController {
         return taskMapper.mapToProjectTaskDto(task);
     }
 
+    @Operation(description = "Создание invite запроса")
     @PostMapping("/{projectId}/invites")
     public ProjectInviteResponse createInviteLink(
             @PathVariable("projectId") Long projectId, @RequestBody ProjectInviteRequest request) throws UserNotFoundException {
@@ -245,6 +246,7 @@ public class ProjectController {
         return projectInviteMapper.mapToProjectInviteResponse(projectInvite);
     }
 
+    @Operation(description = "Вступление пользователя в проект")
     @PostMapping("/{projectId}/join")
     public ProjectJoinedResponse join(@PathVariable("projectId") Long projectId) throws UserNotFoundException {
         Project project = projectService.getById(projectId);
@@ -262,6 +264,7 @@ public class ProjectController {
         return new ProjectJoinedResponse(true, project.getId());
     }
 
+    @Operation(description = "Получение публичных проектов")
     @GetMapping("/public/search")
     public List<ProjectListItemDto> getPublicProjects() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();

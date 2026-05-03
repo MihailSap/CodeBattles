@@ -1,5 +1,8 @@
 package ru.urfu.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
@@ -19,6 +22,8 @@ import ru.urfu.backend.service.ProjectService;
 
 import java.time.LocalDateTime;
 
+@Tag(name = "Управление заявками на вступление в проект")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping(PathsConstants.ROOT + PathsConstants.PROJECT_INVITES)
 public class ProjectInvitesController {
@@ -38,6 +43,7 @@ public class ProjectInvitesController {
         this.organizationService = organizationService;
     }
 
+    @Operation(description = "Проверка invite запроса по токену")
     @GetMapping("/{token}")
     public ProjectInviteResponse getInviteByToken(@PathVariable("token") String token){
         ProjectInvite projectInvite = projectInviteService.getByToken(token);
@@ -47,6 +53,7 @@ public class ProjectInvitesController {
         return projectInviteMapper.mapToProjectInviteResponse(projectInvite);
     }
 
+    @Operation(description = "Вступление в проект по токену")
     @PostMapping("/{token}/join")
     public ProjectJoinedResponse join(@PathVariable("token") String token) throws UserNotFoundException {
         ProjectInvite projectInvite = projectInviteService.getByToken(token);
