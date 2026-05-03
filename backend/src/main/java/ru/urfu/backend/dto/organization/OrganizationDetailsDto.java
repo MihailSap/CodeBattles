@@ -1,8 +1,6 @@
 package ru.urfu.backend.dto.organization;
 
-import ru.urfu.backend.dto.project.ProjectListItemDto;
-import ru.urfu.backend.dto.project.ProjectParticipantDto;
-import ru.urfu.backend.model.enums.OrganizationRole;
+import ru.urfu.backend.dto.project.ProjectItemResponse;
 
 import java.util.List;
 
@@ -13,9 +11,9 @@ public record OrganizationDetailsDto(
     String link,
     String logoUrl,
     Long ownerId,
-    OrganizationRole role,
-    List<ProjectParticipantDto> participants,
-    List<ProjectListItemDto> projects,
+    String viewerRole,
+    List<OrganizationParticipantResponse> participants,
+    List<ProjectItemResponse> projects,
     List<OrganizationJoinRequest> joinRequests
 ) {
 }

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record ProjectCreateRequest(
-        Long ownerId,
+        Long organizationId,
         @NotBlank(message = "Название не должно быть пустым")
         @Size(min = 1, max = 100, message = "Название должно иметь длину от 1 до 100")
         String name,

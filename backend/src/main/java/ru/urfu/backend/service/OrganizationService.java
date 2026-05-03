@@ -1,13 +1,15 @@
 package ru.urfu.backend.service;
 
 import ru.urfu.backend.dto.organization.*;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.model.UserOrganization;
 
 import java.util.List;
 
 public interface OrganizationService {
+
+    UserOrganization getUserOrganization(User user, Organization organization);
 
     List<Organization> getAll();
 
@@ -19,9 +21,21 @@ public interface OrganizationService {
 
     Organization update(UpdateOrganizationRequest request, Organization organization);
 
-    Organization addUser(Organization organization, UserOrganizationRequest request) throws UserNotFoundException;
+    boolean isUserAdminInOrganization(User user, Organization organization);
 
-    Organization removeUser(Organization organization, User user);
+    void delete(Organization organization);
 
-    void delete(Long id);
+    boolean isOrganizationContainsUser(Organization organization, User user);
+
+    Organization addUser(Organization organization, User user);
+
+    boolean isOrganizationContainsJoinRequest(Organization organization, User user);
+
+    void approveJoinRequest(Organization organization, User user);
+
+    UserOrganization createOrganizationJoinRequest(Organization organization, User user);
+
+    boolean isOrganizationJoinRequestExists(Organization organization, User user);
+
+    void removeUserOrganization(Organization organization, User user);
 }

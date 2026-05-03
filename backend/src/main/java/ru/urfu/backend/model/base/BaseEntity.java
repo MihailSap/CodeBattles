@@ -1,4 +1,4 @@
-package ru.urfu.backend.model;
+package ru.urfu.backend.model.base;
 
 import jakarta.persistence.*;
 

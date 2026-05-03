@@ -5,5 +5,7 @@ import ru.urfu.backend.model.enums.StackType;
 
 public interface StackService {
 
-    Stack getOrCreate(String title, StackType type);
+    Stack getOrCreate(String title);
+
+    Stack getOrUpdate(String title, StackType type);
 }

@@ -1,6 +1,7 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.ReviewType;
 import ru.urfu.backend.model.enums.TaskStatus;
 

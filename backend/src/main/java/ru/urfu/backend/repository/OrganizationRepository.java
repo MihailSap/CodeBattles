@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
-    Optional<Organization> findByTitle(String title);
+    boolean existsByTitle(String title);
 
     List<Organization> findByMembers_User(User user);
 }

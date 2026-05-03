@@ -1,6 +1,7 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 
 import java.time.LocalDateTime;
@@ -54,7 +55,7 @@ public class Project extends BaseEntity {
         this.description = description;
     }
 
-    public Boolean getPrivate() {
+    public Boolean getIsPrivate() {
         return isPrivate;
     }
 

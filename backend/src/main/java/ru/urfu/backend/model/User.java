@@ -1,14 +1,16 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.Role;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity{
+public class User extends BaseEntity {
 
     private String login;
 
@@ -29,6 +31,8 @@ public class User extends BaseEntity{
     private String githubId;
 
     private String avatarUrl;
+
+    private LocalDateTime registeredAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
@@ -192,5 +196,13 @@ public class User extends BaseEntity{
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public LocalDateTime getRegisteredAt() {
+        return registeredAt;
+    }
+
+    public void setRegisteredAt(LocalDateTime registeredAt) {
+        this.registeredAt = registeredAt;
     }
 }

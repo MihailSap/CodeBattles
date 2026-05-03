@@ -15,6 +15,24 @@ import java.util.Set;
 @Component
 public class ProjectMapper {
 
+    public List<ProjectParticipantDto> mapToProjectParticipantDtos(List<UserProject> userProjects) {
+        List<ProjectParticipantDto> projectParticipants = new ArrayList<>();
+        for (UserProject userProject : userProjects) {
+            ProjectParticipantDto projectParticipantDto = mapToProjectParticipantDto(userProject);
+            projectParticipants.add(projectParticipantDto);
+        }
+        return projectParticipants;
+    }
+
+    public List<ProjectParticipantDto> mapToProjectParticipantDtos(Set<UserProject> userProjects) {
+        List<ProjectParticipantDto> projectParticipants = new ArrayList<>();
+        for (UserProject userProject : userProjects) {
+            ProjectParticipantDto projectParticipantDto = mapToProjectParticipantDto(userProject);
+            projectParticipants.add(projectParticipantDto);
+        }
+        return projectParticipants;
+    }
+
     public ProjectParticipantDto mapToProjectParticipantDto(UserProject userProject) {
         User participant = userProject.getUser();
         return new ProjectParticipantDto(
@@ -27,9 +45,9 @@ public class ProjectMapper {
         );
     }
 
-    public List<ProjectListItemDto> mapToProjectListItemDtos(List<Project> projects) {
+    public List<ProjectListItemDto> mapToProjectListItemDtos(List<UserProject> userProjects) {
         List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
-        for (Project project : projects) {
+        for (UserProject project : userProjects) {
             ProjectListItemDto projectListItemDto = mapToProjectListItemDto(project);
             projectListItemDtos.add(projectListItemDto);
         }
@@ -42,7 +60,7 @@ public class ProjectMapper {
                 project.getId(),
                 project.getTitle(),
                 project.getDescription(),
-                project.getPrivate(),
+                project.getIsPrivate(),
                 project.getOrganization().getId(),
                 project.getOrganization().getTitle(),
                 userProject.getProjectMemberRole(),
@@ -54,7 +72,6 @@ public class ProjectMapper {
 
     private int getTasksCount(Set<Task> tasks) {
         if(tasks == null) return 0;
-
         int count = 0;
         for(Task task : tasks) {
             if(!TaskStatus.DONE.equals(task.getStatus())) count++;
@@ -73,13 +90,32 @@ public class ProjectMapper {
                 project.getId(),
                 project.getTitle(),
                 project.getDescription(),
-                project.getPrivate(),
+                project.getIsPrivate(),
                 project.getOrganization().getId(),
                 project.getOrganization().getTitle(),
-                ProjectMemberRole.GUEST, // FIXME: Убрать заглушку
+                ProjectMemberRole.GUEST,
                 getUsersCount(project.getUsers()),
                 getTasksCount(project.getTasks()),
                 project.getLastActivityAt().toString()
+        );
+    }
+
+    public ProjectDetailsDto mapToProjectDetailsDto(Project project){
+        return new ProjectDetailsDto(
+                project.getId(),
+                project.getOrganization().getId(),
+                project.getOrganization().getTitle(),
+                project.getTitle(),
+                project.getDescription(),
+                mapStacks(project.getStacks()),
+                project.getIsPrivate(),
+                project.getAiReviewEnabled(),
+                project.getRepositoryUrl(),
+                project.getLastActivityAt().toString(),
+                ProjectMemberRole.GUEST,
+                false,
+                mapParticipantsId(project.getUsers()),
+                List.of()
         );
     }
 
@@ -91,12 +127,12 @@ public class ProjectMapper {
                 project.getTitle(),
                 project.getDescription(),
                 mapStacks(project.getStacks()),
-                project.getPrivate(),
+                project.getIsPrivate(),
                 project.getAiReviewEnabled(),
                 project.getRepositoryUrl(),
                 project.getLastActivityAt().toString(),
                 userProject.getProjectMemberRole(),
-                true, //FIXME
+                true,
                 mapParticipantsId(project.getUsers()),
                 mapTaskIds(project.getTasks())
         );

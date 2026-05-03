@@ -35,3 +35,11 @@ databaseChangeLog:
       file: db/changelog/changeset/017-create-user-task.yaml
   - include:
       file: db/changelog/changeset/018-add-last-activity-at.yaml
+  - include:
+      file: db/changelog/changeset/019-update-data.yaml
+  - include:
+      file: db/changelog/changeset/020-update-data.yaml
+  - include:
+      file: db/changelog/changeset/021-create-project-invite.yaml
+  - include:
+      file: db/changelog/changeset/022-create-organization-invite.yaml

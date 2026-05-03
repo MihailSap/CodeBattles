@@ -12,7 +12,6 @@ import ru.urfu.backend.dto.project.ProjectCreateRequest;
 import ru.urfu.backend.dto.project.ProjectUpdateRequest;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
-import ru.urfu.backend.model.enums.StackType;
 import ru.urfu.backend.repository.ProjectRepository;
 import ru.urfu.backend.repository.ProjectStackRepository;
 import ru.urfu.backend.repository.UserProjectRepository;
@@ -47,45 +46,57 @@ public class ProjectServiceImpl implements ProjectService {
     public List<Project> getPublicProjects() {
         List<Project> projects = projectRepository.findAll();
         for (Project project : projects) {
-            if(Boolean.FALSE.equals(project.getPrivate())){
+            if(Boolean.FALSE.equals(project.getIsPrivate())){
                 projects.add(project);
             }
         }
         return projects;
     }
 
+    @Override
     public UserProject getUserProject(User user, Project project){
         return userProjectRepository.findByUserAndProject(user, project)
                 .orElseThrow(() -> new RuntimeException("Связь между данными User и Project не найдена"));
     }
 
     @Override
+    public boolean isUserInProject(Project project, User user) {
+        Optional<UserProject> userProjectOptional = userProjectRepository.findByUserAndProject(user, project);
+        return userProjectOptional.isPresent();
+    }
+
+    @Override
+    public boolean isUserMemberOfProject(Project project, User user) {
+        Optional<UserProject> userProjectOptional = userProjectRepository.findByUserAndProject(user, project);
+        return userProjectOptional.isPresent()
+                && (!ProjectMemberRole.OWNER.equals(userProjectOptional.get().getProjectMemberRole())
+                    || ProjectMemberRole.MEMBER.equals(userProjectOptional.get().getProjectMemberRole()));
+    }
+
+    @Override
+    public boolean isUserOwnerInProject(Project project, User user) {
+        Optional<UserProject> userProjectOptional = userProjectRepository.findByUserAndProject(user, project);
+        return userProjectOptional.isPresent()
+                && ProjectMemberRole.OWNER.equals(userProjectOptional.get().getProjectMemberRole());
+    }
+
+    @Override
     @Transactional
-    public Project create(ProjectCreateRequest request, Organization organization){
+    public Project create(ProjectCreateRequest request, User user, Organization organization){
         Project project = new Project();
         project.setOrganization(organization);
-        project.setTitle(request.name());
-        project.setDescription(request.description());
-        project.setRepositoryUrl(request.repositoryUrl());
-        project.setPrivate(request.isPrivate());
-        project.setAiReviewEnabled(request.aiReviewEnabled());
-
-        List<String> stackTitles = request.stack();
-        for(String stackTitle : stackTitles){
-            Stack stack = stackService.getOrCreate(stackTitle, StackType.OTHER);
-            ProjectStack projectStack = new ProjectStack();
-            projectStack.setStack(stack);
-            projectStack.setProject(project);
-            projectStackRepository.save(projectStack);
-        }
-
-        return projectRepository.save(project);
+        return create(request, user, project);
     }
 
     @Override
     @Transactional
     public Project create(ProjectCreateRequest request, User user){
         Project project = new Project();
+        return create(request, user, project);
+    }
+
+    @Transactional
+    public Project create(ProjectCreateRequest request, User user, Project project){
         project.setTitle(request.name());
         project.setDescription(request.description());
         project.setRepositoryUrl(request.repositoryUrl());
@@ -95,7 +106,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         List<String> stackTitles = request.stack();
         for(String stackTitle : stackTitles){
-            Stack stack = stackService.getOrCreate(stackTitle, StackType.OTHER);
+            Stack stack = stackService.getOrCreate(stackTitle);
             ProjectStack projectStack = new ProjectStack();
             projectStack.setStack(stack);
             projectStack.setProject(project);
@@ -173,11 +184,11 @@ public class ProjectServiceImpl implements ProjectService {
             project.setRepositoryUrl(repositoryUrl);
         }
 
-        //TODO: реализовать удаление старого стека!!!
         List<String> stackTitles = request.stack();
         if(stackTitles != null && !stackTitles.isEmpty()){
+            project.getStacks().clear();
             for(String stackTitle : stackTitles){
-                Stack stackObj = stackService.getOrCreate(stackTitle, StackType.OTHER);
+                Stack stackObj = stackService.getOrCreate(stackTitle);
                 ProjectStack projectStack = new ProjectStack();
                 projectStack.setStack(stackObj);
                 projectStack.setProject(project);
@@ -236,14 +247,5 @@ public class ProjectServiceImpl implements ProjectService {
     public void removeUserFromProject(User user, Project project){
         Optional<UserProject> userProject = userProjectRepository.findByUserAndProject(user, project);
         userProject.ifPresent(userProjectRepository::delete);
-    }
-
-    @Override
-    public boolean isOwner(Project project, User user){
-       return project.getUsers().stream()
-                .anyMatch(up ->
-                        up.getUser().getId().equals(user.getId()) &&
-                                up.getProjectMemberRole() == ProjectMemberRole.OWNER
-                );
     }
 }

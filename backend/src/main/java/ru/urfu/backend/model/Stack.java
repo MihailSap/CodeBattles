@@ -1,6 +1,7 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.StackType;
 
 import java.util.HashSet;
@@ -8,7 +9,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "stack")
-public class Stack extends BaseEntity{
+public class Stack extends BaseEntity {
 
     private String title;
 

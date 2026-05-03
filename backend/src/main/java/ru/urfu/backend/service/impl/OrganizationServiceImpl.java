@@ -4,33 +4,47 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.organization.*;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Organization;
+import ru.urfu.backend.model.OrganizationInvite;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
-import ru.urfu.backend.model.enums.OrganizationRole;
 import ru.urfu.backend.repository.OrganizationRepository;
 import ru.urfu.backend.repository.UserOrganizationRepository;
 import ru.urfu.backend.service.OrganizationService;
-import ru.urfu.backend.service.UserService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrganizationServiceImpl implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final UserOrganizationRepository userOrganizationRepository;
-    private final UserService userService;
 
     @Autowired
     public OrganizationServiceImpl(
             OrganizationRepository organizationRepository,
-            UserOrganizationRepository userOrganizationRepository,
-            UserService userService) {
+            UserOrganizationRepository userOrganizationRepository) {
         this.organizationRepository = organizationRepository;
         this.userOrganizationRepository = userOrganizationRepository;
-        this.userService = userService;
+    }
+
+    @Override
+    public boolean isUserAdminInOrganization(User user, Organization organization){
+        UserOrganization userOrganization = getUserOrganization(user, organization);
+        return userOrganization.getAdmin();
+    }
+
+    @Override
+    public boolean isOrganizationContainsUser(Organization organization, User user) {
+        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && userOrganization.get().getEnabled();
+    }
+
+    @Override
+    public boolean isOrganizationContainsJoinRequest(Organization organization, User user) {
+        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && userOrganization.get().getEnabled();
     }
 
     @Transactional
@@ -46,7 +60,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         userOrganization.setOrganization(organization);
         userOrganization.setUser(user);
         userOrganization.setAdmin(true);
-        userOrganization.setOrganizationRole(OrganizationRole.TEAM_LEAD); //FIXME: Убрать заглушку
         userOrganizationRepository.save(userOrganization);
 
         return organizationRepository.save(organization);
@@ -61,6 +74,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     public Organization update(UpdateOrganizationRequest request, Organization organization) {
         String title = request.name();
         if(title != null && !title.isEmpty()){
+            if(organizationRepository.existsByTitle(title)){
+                throw new RuntimeException("409 ORGANIZATION_NAME_CONFLICT");
+            }
             organization.setTitle(title);
         }
 
@@ -85,7 +101,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public Organization getById(Long id) {
         return organizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Organization not found"));
+                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_NOT_FOUND"));
     }
 
     @Override
@@ -93,41 +109,52 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.findByMembers_User(user);
     }
 
+    @Transactional
+    @Override
+    public UserOrganization createOrganizationJoinRequest(Organization organization, User user){
+        UserOrganization userOrganization = new UserOrganization();
+        userOrganization.setOrganization(organization);
+        userOrganization.setUser(user);
+        return userOrganizationRepository.save(userOrganization);
+    }
+
+    @Override
+    public boolean isOrganizationJoinRequestExists(Organization organization, User user){
+        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent();
+    }
+
+    @Transactional
+    @Override
+    public void removeUserOrganization(Organization organization, User user){
+        UserOrganization userOrganization = getUserOrganization(user, organization);
+        userOrganizationRepository.delete(userOrganization);
+    }
+
+    @Transactional
+    @Override
+    public void approveJoinRequest(Organization organization, User user){
+        UserOrganization userOrganization = getUserOrganization(user, organization);
+        userOrganization.setEnabled(true);
+        userOrganizationRepository.save(userOrganization);
+    }
+
     @Override
     @Transactional
-    public Organization addUser(Organization organization, UserOrganizationRequest request) throws UserNotFoundException {
-        User user = userService.getById(request.userId());
-        boolean exists = organization.getMembers().stream()
-                .anyMatch(link -> link.getUser().getId().equals(request.userId()));
-
-        if (exists) {
-            throw new RuntimeException("User already in organization");
-        }
-
-        organization.addMember(user, request.isAdmin(), request.role());
-
+    public Organization addUser(Organization organization, User user) {
+        organization.addMember(user, false);
         return organizationRepository.save(organization);
     }
 
     @Override
     @Transactional
-    public Organization removeUser(Organization organization, User user){
-        boolean exists = organization.getMembers().stream()
-                .anyMatch(link -> link.getUser().getId().equals(user.getId()));
-
-        if (!exists) {
-            throw new RuntimeException("User not in organization");
-        }
-
-        organization.removeMember(user);
-
-        return organizationRepository.save(organization);
-    }
-
-    @Override
-    @Transactional
-    public void delete(Long id){
-        Organization organization = getById(id);
+    public void delete(Organization organization){
         organizationRepository.delete(organization);
+    }
+
+    @Override
+    public UserOrganization getUserOrganization(User user, Organization organization){
+        return userOrganizationRepository.findByUserAndOrganization(user, organization)
+                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND"));
     }
 }

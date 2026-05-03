@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-create-project-invite
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: project_invite
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: TEXT
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+              - column:
+                  name: reusable
+                  type: BOOLEAN
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: project_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: project_invite
+            baseColumnNames: project_id
+            referencedTableName: project
+            referencedColumnNames: id
+            constraintName: fk_project_invite_project
+            onDelete: CASCADE

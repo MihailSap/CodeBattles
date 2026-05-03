@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import ru.urfu.backend.model.base.BaseEntity;
 
 @Entity(name = "review")
 public class Review extends BaseEntity {

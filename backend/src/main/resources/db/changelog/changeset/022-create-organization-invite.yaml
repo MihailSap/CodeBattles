@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-organization-invite-table
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: organization_invite
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: TEXT
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+              - column:
+                  name: reusable
+                  type: BOOLEAN
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: organization_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: organization_invite
+            baseColumnNames: organization_id
+            referencedTableName: organization
+            referencedColumnNames: id
+            constraintName: fk_org_invite_org
+            onDelete: CASCADE

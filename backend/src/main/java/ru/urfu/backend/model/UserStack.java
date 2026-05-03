@@ -1,10 +1,11 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 
 @Entity
 @Table(name = "user_stack")
-public class UserStack extends BaseEntity{
+public class UserStack extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

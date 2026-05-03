@@ -1,6 +1,7 @@
 package ru.urfu.backend.mapper;
 
 import org.springframework.stereotype.Component;
+import ru.urfu.backend.dto.auth.CurrentUserResponse;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.User;
@@ -13,6 +14,19 @@ import java.util.Set;
 
 @Component
 public class UserMapper {
+
+    public CurrentUserResponse mapToCurrentUserResponse(User user){
+        return new CurrentUserResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getLogin(),
+                user.getRegisteredAt().toString(),
+                user.getAvatarUrl(),
+                user.getRole(),
+                user.isEnabled()
+        );
+    }
 
     public UserResponse mapToUserResponse(User user) {
         List<String> clouds = new ArrayList<>();

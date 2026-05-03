@@ -1,12 +1,13 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
-import ru.urfu.backend.model.enums.OrganizationRole;
-import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.base.BaseEntity;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_organization")
-public class UserOrganization extends BaseEntity{
+public class UserOrganization extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -16,12 +17,11 @@ public class UserOrganization extends BaseEntity{
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
-    @Enumerated(EnumType.STRING)
-    private OrganizationRole organizationRole;
-
     private Boolean isAdmin = false;
 
     private Boolean isEnabled = false;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     public UserOrganization() {}
 
@@ -41,14 +41,6 @@ public class UserOrganization extends BaseEntity{
         this.organization = organization;
     }
 
-    public OrganizationRole getOrganizationRole() {
-        return organizationRole;
-    }
-
-    public void setOrganizationRole(OrganizationRole organizationRole) {
-        this.organizationRole = organizationRole;
-    }
-
     public Boolean getAdmin() {
         return isAdmin;
     }
@@ -63,5 +55,13 @@ public class UserOrganization extends BaseEntity{
 
     public void setEnabled(Boolean enabled) {
         isEnabled = enabled;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

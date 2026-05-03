@@ -20,10 +20,27 @@ public class StackServiceImpl implements StackService {
     }
 
     @Override
-    public Stack getOrCreate(String title, StackType type) {
+    public Stack getOrCreate(String title) {
         Optional<Stack> stack = stackRepository.findByTitle(title);
         if(stack.isPresent()) {
             return stack.get();
+        }
+
+        Stack newStack = new Stack();
+        newStack.setTitle(title);
+        newStack.setType(StackType.OTHER);
+        return stackRepository.save(newStack);
+    }
+
+    @Override
+    public Stack getOrUpdate(String title, StackType type) {
+        Optional<Stack> optionalStack = stackRepository.findByTitle(title);
+        if(optionalStack.isPresent()) {
+            Stack stack = optionalStack.get();
+            if(StackType.OTHER.equals(stack.getType())) {
+                stack.setType(type);
+                return stackRepository.save(stack);
+            }
         }
 
         Stack newStack = new Stack();

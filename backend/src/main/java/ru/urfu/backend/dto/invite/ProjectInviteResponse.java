@@ -1,6 +1,6 @@
 package ru.urfu.backend.dto.invite;
 
-public record InviteResponse(
+public record ProjectInviteResponse(
     String token,
     String link,
     Long projectId,

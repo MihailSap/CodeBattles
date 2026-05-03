@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getByEmail(String email) throws UserNotFoundException {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("403 FORBIDDEN"));
     }
 
     @Override
@@ -169,7 +169,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateStack(User user, List<StackRequest> stackRequests){
         for(StackRequest stackRequest : stackRequests){
-            Stack stack = stackService.getOrCreate(stackRequest.title(), stackRequest.type());
+            Stack stack = stackService.getOrUpdate(stackRequest.title(), stackRequest.type());
 
             UserStack userStack = new UserStack();
             userStack.setStack(stack);

@@ -92,10 +92,9 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @Operation(description = "Получение авторизованного пользователя")
     @GetMapping("/current-user")
-    public UserResponse getCurrentUser() throws UserNotFoundException {
-        String personEmail = authService.getAuthenticatedUserEmail();
-        User user = userService.getByEmail(personEmail);
-        return userMapper.mapToUserResponse(user);
+    public CurrentUserResponse getCurrentUser() throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        return userMapper.mapToCurrentUserResponse(user);
     }
 
     @Operation(description = "Подтверждение почты по токену из письма")

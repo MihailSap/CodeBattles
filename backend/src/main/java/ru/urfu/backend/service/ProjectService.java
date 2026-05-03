@@ -19,10 +19,6 @@ public interface ProjectService {
 
     List<User> getUsersByProject(Project project);
 
-    Project create(ProjectCreateRequest request, Organization organization);
-
-    Project create(ProjectCreateRequest request, User user);
-
     Page<Project> getAll(int page, int size, String search, String privacy, Long organizationId, String membership);
 
     List<Project> getAll();
@@ -35,11 +31,11 @@ public interface ProjectService {
 
     List<Project> getByUser(User user);
 
+    Project create(ProjectCreateRequest request, User user, Organization organization);
+
+    Project create(ProjectCreateRequest request, User user);
+
     Project update(ProjectUpdateRequest request, Project project);
-
-    void delete(Long id);
-
-    void removeUserFromProject(User user, Project project);
 
     boolean isProjectExist(String title, Organization organization);
 
@@ -47,5 +43,13 @@ public interface ProjectService {
 
     void addUserToProject(User user, Project project, ProjectMemberRole role);
 
-    boolean isOwner(Project project, User user);
+    void removeUserFromProject(User user, Project project);
+
+    boolean isUserOwnerInProject(Project project, User user);
+
+    boolean isUserInProject(Project project, User user);
+
+    boolean isUserMemberOfProject(Project project, User user);
+
+    void delete(Long id);
 }

@@ -4,7 +4,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import ru.urfu.backend.model.enums.OrganizationRole;
+import ru.urfu.backend.model.base.BaseEntity;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -61,12 +61,11 @@ public class Organization extends BaseEntity {
         this.members = members;
     }
 
-    public void addMember(User user, Boolean isAdmin, OrganizationRole role) {
+    public void addMember(User user, Boolean isAdmin) {
         UserOrganization link = new UserOrganization();
         link.setUser(user);
         link.setOrganization(this);
         link.setAdmin(isAdmin);
-        link.setOrganizationRole(role);
 
         members.add(link);
         user.getOrganizations().add(link);
