@@ -373,26 +373,26 @@ const mockState = {
     }
   ],
   tasks: [
-    { id: 5001, projectId: 1001, name: 'Сверстать главную страницу проекта', description: 'Сделать адаптивную вёрстку блока общей информации.', requirements: 'Pixel-perfect, mobile-first', evaluationCriteria: 'Все состояния покрыты', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(1, 18, 0), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [57, 11] },
+    { id: 5001, projectId: 1001, name: 'Сверстать главную страницу проекта', description: 'Сделать адаптивную вёрстку блока общей информации.', requirements: 'Pixel-perfect, mobile-first', evaluationCriteria: 'Все состояния покрыты', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(1, 18, 0), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [57, 11], reviewerIds: [12, 14] },
     { id: 5002, projectId: 1001, name: 'Подключить redux-состояние фильтров', description: 'Слайс + селекторы + мемоизация', requirements: 'Избежать лишних ререндеров', evaluationCriteria: 'Стабильные селекторы', status: TASK_STATUS.REWORK, deadline: makeDate(2, 12, 0), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [12] },
     { id: 5003, projectId: 1001, name: 'Реализовать табы страницы проекта', description: 'С анимированным активным индикатором', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_REVIEW, deadline: makeDate(4, 14, 30), reviewType: TASK_REVIEW_TYPE.AI_ONLY, assigneeIds: [14, 16] },
     { id: 5004, projectId: 1001, name: 'Оптимизировать рендер таблицы задач', description: 'Добавить батчинг и виртуализацию при необходимости', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(5, 16, 0), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [20] },
-    { id: 5005, projectId: 1001, name: 'Сделать модальное окно приглашений', description: 'С копированием ссылки', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(3, 11, 30), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [57, 12, 16] },
+    { id: 5005, projectId: 1001, name: 'Сделать модальное окно приглашений', description: 'С копированием ссылки', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(3, 11, 30), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [57, 12, 16], reviewerIds: [11, 14] },
     { id: 5006, projectId: 1002, name: 'Собрать палитру компонентов', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(6, 19, 0), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [16] },
     { id: 5007, projectId: 1002, name: 'Протестировать контрастность', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(9, 10, 0), reviewType: TASK_REVIEW_TYPE.AI_ONLY, assigneeIds: [18, 57] },
     { id: 5008, projectId: 1003, name: 'Добавить аудит действий', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_REVIEW, deadline: makeDate(1, 15, 0), reviewType: TASK_REVIEW_TYPE.AUTO_ORGANIZATION, assigneeIds: [12, 57] },
-    { id: 5009, projectId: 1003, name: 'Ролевой доступ в настройках', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(2, 17, 45), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [11] },
+    { id: 5009, projectId: 1003, name: 'Ролевой доступ в настройках', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(2, 17, 45), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [11], reviewerIds: [12, 14] },
     { id: 5010, projectId: 1003, name: 'Скрыть приватные поля для гостей', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(3, 18, 15), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [14, 57] },
     { id: 5011, projectId: 1003, name: 'Добавить smoke-тест авторизации', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(7, 12, 30), reviewType: TASK_REVIEW_TYPE.AI_ONLY, assigneeIds: [12] },
     { id: 5012, projectId: 1004, name: 'Нарисовать график активности', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(5, 9, 0), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [19, 15] },
     { id: 5013, projectId: 1005, name: 'Скрипт авто-сборки артефактов', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_REVIEW, deadline: makeDate(10, 13, 0), reviewType: TASK_REVIEW_TYPE.AUTO_ORGANIZATION, assigneeIds: [15] },
-    { id: 5014, projectId: 1005, name: 'Мониторинг загрузки раннеров', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(11, 16, 40), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [17, 21] },
+    { id: 5014, projectId: 1005, name: 'Мониторинг загрузки раннеров', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(11, 16, 40), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [17, 21], reviewerIds: [15, 19] },
     { id: 5015, projectId: 1005, name: 'Улучшить шаблон релизов', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(15, 15, 20), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [19] },
     { id: 5016, projectId: 1007, name: 'Сделать hero-секцию с анимацией', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(3, 19, 30), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [57, 16] },
     { id: 5017, projectId: 1007, name: 'Проставить микроразметку', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_REVIEW, deadline: makeDate(6, 13, 0), reviewType: TASK_REVIEW_TYPE.AI_ONLY, assigneeIds: [28] },
     { id: 5018, projectId: 1008, name: 'Синхронизировать токены dark/light', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(4, 18, 0), reviewType: TASK_REVIEW_TYPE.AUTO_ORGANIZATION, assigneeIds: [22, 57] },
     { id: 5019, projectId: 1009, name: 'Добавить OpenAPI контракт', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(2, 15, 45), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [12] },
-    { id: 5020, projectId: 1009, name: 'Реализовать ретраи интеграций', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(7, 11, 0), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [26, 27] },
+    { id: 5020, projectId: 1009, name: 'Реализовать ретраи интеграций', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.DONE, deadline: makeDate(7, 11, 0), reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds: [26, 27], reviewerIds: [12, 57] },
     { id: 5021, projectId: 1010, name: 'Оптимизировать аудит-очереди', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_REVIEW, deadline: makeDate(8, 17, 20), reviewType: TASK_REVIEW_TYPE.AUTO_ORGANIZATION, assigneeIds: [26] },
     { id: 5022, projectId: 1011, name: 'Описать паттерн модульности', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.IN_PROGRESS, deadline: makeDate(9, 20, 0), reviewType: TASK_REVIEW_TYPE.AI_ONLY, assigneeIds: [57] },
     { id: 5023, projectId: 1012, name: 'Собрать каталог карточек', description: '', requirements: '', evaluationCriteria: '', status: TASK_STATUS.REWORK, deadline: makeDate(5, 16, 30), reviewType: TASK_REVIEW_TYPE.AUTO_PROJECT, assigneeIds: [22, 24] }
@@ -455,6 +455,88 @@ const isProjectNameUnique = (projectName, organizationId, excludedProjectId = nu
 };
 
 const getProjectTasks = (projectId) => mockState.tasks.filter((task) => task.projectId === projectId);
+const getTaskById = (taskId) => mockState.tasks.find((task) => task.id === Number(taskId)) || null;
+
+const materializeTask = (task, project, viewerId) => {
+  const viewerRole = getProjectRoleForViewer(project, viewerId);
+  const reviewerParticipants = !project.organizationId || project.privacy === PROJECT_PRIVACY.PRIVATE
+    ? project.participants
+    : (organizationMembers[project.organizationId] || []).map((memberId) => ({
+        userId: memberId,
+        role: getOrganizationRoleForUser(project.organizationId, memberId) || PROJECT_MEMBER_ROLE.MEMBER
+      }));
+
+  return {
+    id: task.id,
+    projectId: project.id,
+    organizationId: project.organizationId,
+    projectName: project.name,
+    projectPrivacy: project.privacy,
+    name: task.name,
+    description: task.description || '',
+    requirements: task.requirements || '',
+    evaluationCriteria: task.evaluationCriteria || '',
+    status: task.status,
+    deadline: task.deadline,
+    reviewType: task.reviewType || TASK_REVIEW_TYPE.AUTO_PROJECT,
+    reviewerIds: clone(task.reviewerIds || []),
+    assigneeIds: clone(task.assigneeIds || []),
+    assignees: (task.assigneeIds || [])
+      .map((assigneeId) => {
+        const user = getUserById(assigneeId);
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          login: user.login,
+          fullName: user.fullName,
+          avatar: user.avatar
+        };
+      })
+      .filter(Boolean),
+    availableReviewers: reviewerParticipants
+      .map((participant) => {
+        const user = getUserById(participant.userId);
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          login: user.login,
+          fullName: user.fullName,
+          avatar: user.avatar,
+          role: participant.role
+        };
+      })
+      .filter(Boolean),
+    availableAssignees: project.participants
+      .map((participant) => {
+        const user = getUserById(participant.userId);
+
+        if (!user) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          login: user.login,
+          fullName: user.fullName,
+          avatar: user.avatar,
+          role: participant.role
+        };
+      })
+      .filter(Boolean),
+    viewerRole,
+    canManageSettings:
+      viewerRole === PROJECT_MEMBER_ROLE.OWNER &&
+      (task.status === TASK_STATUS.IN_PROGRESS || task.status === TASK_STATUS.REWORK)
+  };
+};
 
 const getProjectForViewer = (projectId, viewerId) => {
   const project = mockState.projects.find((item) => item.id === Number(projectId));
@@ -831,6 +913,45 @@ export const projectsApi = {
     return withDelay(materializeProject(project, viewerRole, canSeeTasks));
   },
 
+  async getTaskById(taskId, viewerId) {
+    const task = getTaskById(taskId);
+
+    if (!task) {
+      const error = new Error('Задача не найдена');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const project = mockState.projects.find((item) => item.id === task.projectId);
+
+    if (!project) {
+      const error = new Error('Проект не найден');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const participant = getProjectParticipant(project, viewerId);
+
+    if (!participant) {
+      const error = new Error('Недостаточно прав для просмотра задачи');
+      error.status = 403;
+      error.code = ACCESS_ERROR_CODE.FORBIDDEN_TASK_PROJECT_MEMBER;
+      error.projectId = project.id;
+      error.projectPrivacy = project.privacy;
+      return withDelayReject(error);
+    }
+
+    if (participant.role !== PROJECT_MEMBER_ROLE.OWNER && !task.assigneeIds.includes(viewerId)) {
+      const error = new Error('Недостаточно прав для просмотра задачи');
+      error.status = 403;
+      error.code = ACCESS_ERROR_CODE.FORBIDDEN_TASK_ASSIGNEE;
+      error.projectId = project.id;
+      return withDelayReject(error);
+    }
+
+    return withDelay(materializeTask(task, project, viewerId));
+  },
+
   async createProject(payload) {
     const normalizedName = payload.name?.trim() || '';
 
@@ -901,6 +1022,101 @@ export const projectsApi = {
       reason: 'NOT_IMPLEMENTED',
       taskId: nextTaskId
     });
+  },
+
+  async updateTask(taskId, payload, viewerId) {
+    const taskIndex = mockState.tasks.findIndex((task) => task.id === Number(taskId));
+
+    if (taskIndex < 0) {
+      const error = new Error('Задача не найдена');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const currentTask = mockState.tasks[taskIndex];
+    const project = mockState.projects.find((item) => item.id === currentTask.projectId);
+
+    if (!project) {
+      const error = new Error('Проект не найден');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const participant = getProjectParticipant(project, viewerId);
+
+    if (!participant || participant.role !== PROJECT_MEMBER_ROLE.OWNER) {
+      const error = new Error('Недостаточно прав для изменения задачи');
+      error.status = 403;
+      return withDelayReject(error);
+    }
+
+    if (currentTask.status !== TASK_STATUS.IN_PROGRESS && currentTask.status !== TASK_STATUS.REWORK) {
+      const error = new Error('Изменение этой задачи недоступно в текущем статусе');
+      error.status = 400;
+      return withDelayReject(error);
+    }
+
+    const isRework = currentTask.status === TASK_STATUS.REWORK;
+    const normalizedName = payload.name?.trim() || '';
+
+    if (!isRework && (!normalizedName || normalizedName.length > 100)) {
+      const error = new Error('Название задачи должно быть от 1 до 100 символов');
+      error.status = 400;
+      return withDelayReject(error);
+    }
+
+    const nextTask = {
+      ...currentTask,
+      requirements: payload.requirements ?? currentTask.requirements,
+      evaluationCriteria: payload.evaluationCriteria ?? currentTask.evaluationCriteria,
+      reviewType: payload.reviewType ?? currentTask.reviewType,
+      reviewerIds: clone(payload.reviewerIds || currentTask.reviewerIds || [])
+    };
+
+    if (!isRework) {
+      nextTask.name = normalizedName;
+      nextTask.description = payload.description ?? currentTask.description;
+      nextTask.deadline = payload.deadline ?? currentTask.deadline;
+      nextTask.assigneeIds = clone(payload.assigneeIds || []);
+    }
+
+    mockState.tasks[taskIndex] = nextTask;
+    updateProjectLastActivity(project.id);
+
+    return withDelay(clone(nextTask));
+  },
+
+  async deleteTask(taskId, viewerId) {
+    const taskIndex = mockState.tasks.findIndex((task) => task.id === Number(taskId));
+
+    if (taskIndex < 0) {
+      const error = new Error('Задача не найдена');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const task = mockState.tasks[taskIndex];
+    const projectIndex = mockState.projects.findIndex((item) => item.id === task.projectId);
+
+    if (projectIndex < 0) {
+      const error = new Error('Проект не найден');
+      error.status = 404;
+      return withDelayReject(error);
+    }
+
+    const participant = getProjectParticipant(mockState.projects[projectIndex], viewerId);
+
+    if (!participant || participant.role !== PROJECT_MEMBER_ROLE.OWNER) {
+      const error = new Error('Недостаточно прав для удаления задачи');
+      error.status = 403;
+      return withDelayReject(error);
+    }
+
+    mockState.tasks.splice(taskIndex, 1);
+    mockState.projects[projectIndex].taskIds = mockState.projects[projectIndex].taskIds.filter((id) => id !== task.id);
+    updateProjectLastActivity(mockState.projects[projectIndex].id);
+
+    return withDelay({ deleted: true });
   },
 
   async leaveProject(projectId, userId) {

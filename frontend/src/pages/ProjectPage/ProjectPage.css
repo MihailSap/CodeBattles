@@ -91,6 +91,10 @@
   opacity: 0.6;
 }
 
+.project-page__description-label {
+  font-weight: 500;
+}
+
 .project-page__description {
   margin-top: 15px;
   color: var(--text-color);
@@ -721,6 +725,10 @@
 }
 
 @media (max-width: 500px) {
+  .projects-page__content {
+    padding: 20px;
+  }
+
   .project-page__title {
     font-size: 20px;
   }

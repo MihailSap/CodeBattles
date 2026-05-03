@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { CheckIcon, CrossIcon, PencilIcon } from '../Icons/Icons';
 import './SkillsSection.css';
 
@@ -14,6 +15,7 @@ const SkillsSection = ({
   onToggleSkill,
   openedSkillsPopup,
   popupDirection,
+  popupHorizontalAlign,
   popupMaxHeight,
   skillsByGroup,
   skillsDraftByGroup
@@ -91,41 +93,40 @@ const SkillsSection = ({
                       +
                     </button>
 
-                    {isPopupOpen && (
-                      <div
-                        id={popupId}
-                        className={`profile-page__skills-popup ${popupDirection === 'up' ? 'profile-page__skills-popup--top' : ''} ${mobilePopupPosition ? 'profile-page__skills-popup--mobile' : ''}`}
-                        data-skills-popup="true"
-                        role="dialog"
-                        aria-label={`Выбор навыков: ${group.title}`}
-                        style={
-                          mobilePopupPosition
-                            ? {
-                                top: `${mobilePopupPosition.top}px`,
-                                left: `${mobilePopupPosition.left}px`,
-                                width: `${mobilePopupPosition.width}px`,
-                                maxHeight: `${popupMaxHeight}px`
-                              }
-                            : { maxHeight: `${popupMaxHeight}px` }
-                        }
-                      >
-                        {group.orderedOptions.map((skillName) => {
-                          const isChecked = group.selected.includes(skillName);
+                    {isPopupOpen &&
+                      mobilePopupPosition &&
+                      createPortal(
+                        <div
+                          id={popupId}
+                          className={`profile-page__skills-popup profile-page__skills-popup--portal ${popupDirection === 'up' ? 'profile-page__skills-popup--top' : ''} ${popupHorizontalAlign === 'right' ? 'profile-page__skills-popup--right' : ''}`}
+                          data-skills-popup="true"
+                          role="dialog"
+                          aria-label={`Выбор навыков: ${group.title}`}
+                          style={{
+                            top: `${mobilePopupPosition.top}px`,
+                            left: `${mobilePopupPosition.left}px`,
+                            width: `${mobilePopupPosition.width}px`,
+                            maxHeight: `${popupMaxHeight}px`
+                          }}
+                        >
+                          {group.orderedOptions.map((skillName) => {
+                            const isChecked = group.selected.includes(skillName);
 
-                          return (
-                            <label key={skillName} className="profile-page__skills-option">
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => onToggleSkill(group.key, skillName)}
-                                disabled={isActionBlocked}
-                              />
-                              <span>{skillName}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
+                            return (
+                              <label key={skillName} className="profile-page__skills-option">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => onToggleSkill(group.key, skillName)}
+                                  disabled={isActionBlocked}
+                                />
+                                <span>{skillName}</span>
+                              </label>
+                            );
+                          })}
+                        </div>,
+                        document.body
+                      )}
                   </div>
                 )}
               </div>

@@ -1,0 +1,171 @@
+@import '../ProjectPage/ProjectPage.css';
+
+.task-page__offset-section {
+  margin-top: 15px;
+}
+
+.task-page__assignees-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.task-page__assignees-list {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.task-page__assignee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.task-page__assignee-avatar,
+.task-page__assignee-avatar img,
+.task-page__assignee-avatar svg {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--primary-color);
+}
+
+.task-page__assignee-avatar img {
+  border: 1px solid var(--primary-color);
+  width: 100%;
+  height: 100%;
+}
+
+.task-page__assignee-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-page__assignee-name,
+.task-page__assignee-login {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.task-page__assignee-name {
+  color: var(--primary-color);
+}
+
+.task-page__assignee-login {
+  color: var(--subtext-color);
+}
+
+.task-page__solution {
+  margin-top: 10px;
+}
+
+.task-page__review-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.task-page__review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-page__review-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-color);
+  font-size: 14px;
+  width: fit-content;
+}
+
+.task-page__review-item input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+}
+
+.task-page .react-datepicker-wrapper,
+.task-page .react-datepicker__input-container {
+  width: 100%;
+}
+
+.task-page .project-page__settings .date-time-picker__input {
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--project-settings-input-border-color);
+  padding: 13px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-color);
+  background: var(--element-bg-color);
+  box-shadow: none;
+}
+
+.task-page .project-page__settings .date-time-picker__input:focus {
+  border-color: var(--primary-color);
+}
+
+.task-page .project-page__settings .date-time-picker__input--error {
+  border-color: var(--error-border-input-color);
+  box-shadow: var(--error-shadow-input-color);
+  background-color: var(--error-bg-input-color);
+}
+
+.task-page .project-page__settings .date-time-picker__input--error:focus {
+  border-color: var(--error-border-active-input-color);
+}
+
+@media (max-width: 500px) {
+  .task-page__assignees-wrap {
+    gap: 10px;
+  }
+
+  .task-page__assignees-wrap h3 {
+    font-size: 14px;
+  }
+
+  .task-page__assignees-list {
+    gap: 15px;
+  }
+
+  .task-page__assignee-item {
+    gap: 10px;
+  }
+
+  .task-page__assignee-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .task-page__assignee-meta {
+    gap: 5px;
+  }
+
+  .task-page__assignee-name,
+  .task-page__assignee-login {
+    font-size: 14px;
+  }
+
+  .task-page .project-page__settings .date-time-picker__input {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .task-page__review-title {
+    font-size: 14px;
+  }
+
+  .task-page__review-list {
+    gap: 5px;
+  }
+
+  .task-page__review-item {
+    font-size: 12px;
+    gap: 5px;
+  }
+}

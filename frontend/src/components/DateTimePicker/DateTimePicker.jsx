@@ -39,7 +39,7 @@ const roundUpToInterval = (date, intervalMinutes) => {
   return rounded;
 };
 
-const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = false, onBlur }) => {
+const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = false, onBlur, disabled = false }) => {
   const intervalMinutes = 5;
   const selectedDate = useMemo(() => {
     if (!value) {
@@ -107,6 +107,7 @@ const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = 
       showPopperArrow={false}
       autoComplete="off"
       onBlur={onBlur}
+      disabled={disabled}
     />
   );
 };

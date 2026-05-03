@@ -8,7 +8,8 @@ const POPUP_WIDTH = 420;
 const POPUP_MAX_HEIGHT = 320;
 const VIEWPORT_PADDING = 12;
 
-const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false }) => {
+const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false, title = 'Исполнители' }) => {
+  const rootRef = useRef(null);
   const popupRef = useRef(null);
   const triggerRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -41,39 +42,40 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false 
   const { visibleItems, hasMore, sentinelRef } = useVisibleItems(availableUsers, USERS_CHUNK_SIZE);
 
   const recalculatePopupPosition = useCallback(() => {
+    const rootElement = rootRef.current;
     const triggerElement = triggerRef.current;
 
-    if (!triggerElement) {
+    if (!rootElement || !triggerElement) {
       return;
     }
 
+    const rootRect = rootElement.getBoundingClientRect();
     const triggerRect = triggerElement.getBoundingClientRect();
     const width = Math.min(POPUP_WIDTH, window.innerWidth - VIEWPORT_PADDING * 2);
-    const left = Math.min(
+    const leftInViewport = Math.min(
       window.innerWidth - width - VIEWPORT_PADDING,
-      Math.max(VIEWPORT_PADDING, triggerRect.left)
+      Math.max(VIEWPORT_PADDING, triggerRect.left + triggerRect.width - width)
     );
+    const left = leftInViewport + triggerRect.width / 2;
 
     const spaceBelow = window.innerHeight - triggerRect.bottom - VIEWPORT_PADDING;
     const spaceAbove = triggerRect.top - VIEWPORT_PADDING;
     const shouldOpenUp = spaceBelow < 220 && spaceAbove > spaceBelow;
     const availableHeight = shouldOpenUp ? spaceAbove - 8 : spaceBelow - 8;
     const maxHeight = Math.max(120, Math.min(POPUP_MAX_HEIGHT, availableHeight));
-    const top = Math.max(VIEWPORT_PADDING, triggerRect.bottom + 8);
-    const bottom = Math.max(VIEWPORT_PADDING, window.innerHeight - triggerRect.top + 8);
 
     setIsPopupOpenUp(shouldOpenUp);
     setPopupStyle(
       shouldOpenUp
         ? {
             top: 'auto',
-            bottom: `${bottom}px`,
+            bottom: `${rootRect.bottom - triggerRect.top + 8}px`,
             left: `${left}px`,
             width: `${width}px`,
             maxHeight: `${maxHeight}px`
           }
         : {
-            top: `${top}px`,
+            top: `${triggerRect.bottom - rootRect.top + 8}px`,
             bottom: 'auto',
             left: `${left}px`,
             width: `${width}px`,
@@ -152,9 +154,22 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false 
     onChange([...selectedUserIds, userId]);
   };
 
+  const clearAll = () => {
+    if (disabled || selectedUserIds.length === 0) {
+      return;
+    }
+
+    onChange([]);
+  };
+
   return (
-    <div className="assignees-selector">
-      <h3 className="assignees-selector__title">Исполнители</h3>
+    <div className="assignees-selector" ref={rootRef}>
+      <div className="assignees-selector__head">
+        <h3 className="assignees-selector__title">{title}</h3>
+        <button className="assignees-selector__clear" type="button" onClick={clearAll} disabled={disabled || selectedUserIds.length === 0}>
+          Очистить все
+        </button>
+      </div>
 
       <div className="assignees-selector__selected-list">
         {selectedUsers.map((user) => (
@@ -181,7 +196,7 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false 
           ref={popupRef}
           className={`assignees-selector__popup ${isPopupOpenUp ? 'assignees-selector__popup--top' : ''}`}
           role="dialog"
-          aria-label="Выбор исполнителей"
+          aria-label={`Выбор: ${title.toLowerCase()}`}
           style={popupStyle}
         >
           <input

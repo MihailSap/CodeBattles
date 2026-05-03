@@ -6,6 +6,7 @@ import tasksCountIcon from '../../assets/tasks-count-icon.svg';
 import lastActivityIcon from '../../assets/last-activity-icon.svg';
 import { projectsApi } from '../../api/projectsApi';
 import ConfirmActionModal from '../../components/ConfirmActionModal/ConfirmActionModal';
+import EntityTabs from '../../components/EntityTabs/EntityTabs';
 import { AvatarIcon, CheckIcon, CrossIcon, SearchIcon } from '../../components/Icons/Icons';
 import Header from '../../components/Header/Header';
 import InviteLinkModal from '../../components/InviteLinkModal/InviteLinkModal';
@@ -200,8 +201,6 @@ const ProjectPage = () => {
     return baseTabs;
   }, [isOwner]);
 
-  const activeTabIndex = availableTabs.findIndex((tab) => tab.key === activeTab);
-
   const settingsNameError = useMemo(() => validateProjectName(settingsDraft?.name || ''), [settingsDraft?.name]);
   const settingsRepositoryError = useMemo(() => validateRepositoryUrl(settingsDraft?.repositoryUrl || ''), [settingsDraft?.repositoryUrl]);
   const settingsFormInvalid = Boolean(settingsNameError || settingsRepositoryError);
@@ -354,7 +353,7 @@ const ProjectPage = () => {
 
           {description && (
             <p className="project-page__description">
-              <span>Описание проекта: </span>
+              <span className="project-page__description-label">Описание проекта: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
                 <button className="project-page__description-toggle" type="button" onClick={() => setShowFullDescription((prev) => !prev)}>
@@ -394,26 +393,7 @@ const ProjectPage = () => {
           </div>
         </section>
 
-        <div className="project-page__tabs-wrap">
-          <div className="project-page__tabs" style={{ '--tabs-count': availableTabs.length }}>
-            <span
-              className="project-page__tabs-slider"
-              style={{ transform: `translateX(${Math.max(0, activeTabIndex) * 100}%)` }}
-              aria-hidden="true"
-            />
-
-            {availableTabs.map((tab) => (
-              <button
-                key={tab.key}
-                className={`project-page__tab ${activeTab === tab.key ? 'project-page__tab--active' : ''}`}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
 
         {activeTab === 'tasks' && (
           <>
@@ -468,7 +448,12 @@ const ProjectPage = () => {
                 </div>
 
                 {visibleTasks.map((task) => (
-                  <div key={task.id} className="project-page__table-row">
+                  <div
+                    key={task.id}
+                    className="project-page__table-row"
+                    onClick={() => navigate(ROUTES.projectTaskById.replace(':projectId', project.id).replace(':taskId', task.id))}
+                    role="presentation"
+                  >
                     <span className="project-page__task-name" title={task.name}>{truncateText(task.name, 50)}</span>
                     <span className={`project-page__task-status project-page__task-status--${task.status.toLowerCase()}`}>{TASK_STATUS_LABELS[task.status]}</span>
                     <span className="project-page__assignees">
@@ -583,6 +568,7 @@ const ProjectPage = () => {
                   titleClassName="project-page__settings-title"
                   value={settingsDraft.stack}
                   onChange={(stack) => setSettingsDraft((prev) => ({ ...prev, stack }))}
+                  forceOpenUp
                 />
               </div>
 

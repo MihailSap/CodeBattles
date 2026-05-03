@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SKILL_GROUPS } from '../../constants/profileSkills';
-import { useSkillsPopup } from '../../hooks/useSkillsPopup';
 import './ProjectSkillsSelector.css';
 
 const allSkills = SKILL_GROUPS.flatMap((group) => group.options);
-
 const uniqueSkills = [...new Set(allSkills)].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+
+const POPUP_WIDTH = 420;
+const POPUP_MAX_HEIGHT = 320;
+const POPUP_VIEWPORT_PADDING = 12;
+const POPUP_GAP = 8;
+const POPUP_MIN_WIDTH = 210;
+const POPUP_MIN_HEIGHT = 160;
 
 const ProjectSkillsSelector = ({
   value,
@@ -18,9 +24,10 @@ const ProjectSkillsSelector = ({
   disabled = false,
   emptyLabel = 'Не указано'
 }) => {
-  const { openedSkillsPopup, popupDirection, popupMaxHeight, mobilePopupPosition, openSkillsPopup } = useSkillsPopup();
-  const [alignRight, setAlignRight] = useState(false);
-  const [desktopPopupWidth, setDesktopPopupWidth] = useState(320);
+  const [isOpen, setIsOpen] = useState(false);
+  const [popupStyle, setPopupStyle] = useState({});
+  const rootRef = useRef(null);
+  const popupRef = useRef(null);
   const triggerRef = useRef(null);
 
   const selected = useMemo(
@@ -31,7 +38,6 @@ const ProjectSkillsSelector = ({
   const orderedOptions = useMemo(() => {
     const selectedSet = new Set(selected);
     const unselected = uniqueSkills.filter((skill) => !selectedSet.has(skill));
-
     return [...unselected, ...selected];
   }, [selected]);
 
@@ -56,60 +62,134 @@ const ProjectSkillsSelector = ({
     onChange([]);
   };
 
-  const recalculateDesktopPopupPosition = useCallback(() => {
+  const recalculatePopupPosition = useCallback(() => {
+    const rootElement = rootRef.current;
     const triggerElement = triggerRef.current;
 
-    if (!triggerElement) {
+    if (!rootElement || !triggerElement) {
       return;
     }
 
-    const viewportPadding = 12;
     const triggerRect = triggerElement.getBoundingClientRect();
-    const boundaryElement = boundarySelector ? triggerElement.closest(boundarySelector) : null;
+    const boundaryElement =
+      (boundarySelector ? triggerElement.closest(boundarySelector) : null) ||
+      triggerElement.closest('.project-create-modal') ||
+      triggerElement.closest('.task-create-page__content') ||
+      triggerElement.closest('form');
     const boundaryRect = boundaryElement?.getBoundingClientRect();
 
-    const maxAllowedWidth = boundaryRect
-      ? Math.max(220, Math.floor(boundaryRect.width) - 24)
-      : window.innerWidth - viewportPadding * 2;
-    const popupWidth = Math.min(320, maxAllowedWidth);
-    const rightLimit = boundaryRect ? boundaryRect.right - 12 : window.innerWidth - viewportPadding;
-    const shouldAlignRight = triggerRect.left + popupWidth > rightLimit;
+    const minLeft = boundaryRect ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.left + POPUP_VIEWPORT_PADDING) : POPUP_VIEWPORT_PADDING;
+    const maxRight = boundaryRect
+      ? Math.min(window.innerWidth - POPUP_VIEWPORT_PADDING, boundaryRect.right - POPUP_VIEWPORT_PADDING)
+      : window.innerWidth - POPUP_VIEWPORT_PADDING;
+    const minTop = boundaryRect ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.top + POPUP_VIEWPORT_PADDING) : POPUP_VIEWPORT_PADDING;
+    const maxBottom = boundaryRect
+      ? Math.min(window.innerHeight - POPUP_VIEWPORT_PADDING, boundaryRect.bottom - POPUP_VIEWPORT_PADDING)
+      : window.innerHeight - POPUP_VIEWPORT_PADDING;
 
-    setAlignRight((previousState) => (previousState === shouldAlignRight ? previousState : shouldAlignRight));
-    setDesktopPopupWidth((previousState) => (previousState === popupWidth ? previousState : popupWidth));
-  }, [boundarySelector]);
+    const availableWidth = Math.max(POPUP_MIN_WIDTH, maxRight - minLeft);
+    const popupWidth = Math.min(POPUP_WIDTH, availableWidth);
+
+    const spaceRight = maxRight - triggerRect.left;
+    const spaceLeft = triggerRect.right - minLeft;
+    const canOpenRight = spaceRight >= popupWidth;
+    const canOpenLeft = spaceLeft >= popupWidth;
+
+    let left = triggerRect.left;
+
+    if (!canOpenRight && canOpenLeft) {
+      left = triggerRect.right - popupWidth;
+    } else if (!canOpenRight && !canOpenLeft) {
+      left = minLeft + (availableWidth - popupWidth) / 2;
+    }
+
+    left = Math.min(maxRight - popupWidth, Math.max(minLeft, left));
+
+    const spaceDown = maxBottom - triggerRect.bottom - POPUP_GAP;
+    const spaceUp = triggerRect.top - minTop - POPUP_GAP;
+    const openUpBySpace = spaceDown < POPUP_MIN_HEIGHT && spaceUp > spaceDown;
+    const shouldOpenUp = forceOpenUp ? spaceUp > 0 : openUpBySpace;
+    const sideSpace = shouldOpenUp ? spaceUp : spaceDown;
+    const oppositeSideSpace = shouldOpenUp ? spaceDown : spaceUp;
+    const popupMaxHeight = Math.min(POPUP_MAX_HEIGHT, Math.max(POPUP_MIN_HEIGHT, Math.max(0, sideSpace)));
+
+    let top = shouldOpenUp ? triggerRect.top - POPUP_GAP - popupMaxHeight : triggerRect.bottom + POPUP_GAP;
+    if (shouldOpenUp && top < minTop && oppositeSideSpace > sideSpace) {
+      const fallbackHeight = Math.min(POPUP_MAX_HEIGHT, Math.max(POPUP_MIN_HEIGHT, Math.max(0, oppositeSideSpace)));
+      top = triggerRect.bottom + POPUP_GAP;
+      top = Math.min(maxBottom - fallbackHeight, Math.max(minTop, top));
+      setPopupStyle({
+        top: `${top + window.scrollY}px`,
+        left: `${left + window.scrollX}px`,
+        width: `${popupWidth}px`,
+        maxHeight: `${fallbackHeight}px`
+      });
+      return;
+    }
+
+    top = Math.min(maxBottom - popupMaxHeight, Math.max(minTop, top));
+
+    setPopupStyle({
+      top: `${top + window.scrollY}px`,
+      left: `${left + window.scrollX}px`,
+      width: `${popupWidth}px`,
+      maxHeight: `${popupMaxHeight}px`
+    });
+  }, [boundarySelector, forceOpenUp]);
 
   const handleOpenPopup = (event) => {
     triggerRef.current = event.currentTarget;
-    recalculateDesktopPopupPosition();
-    openSkillsPopup('project-stack', event);
+    setIsOpen((previousState) => {
+      const nextState = !previousState;
+
+      if (nextState) {
+        window.requestAnimationFrame(() => {
+          recalculatePopupPosition();
+        });
+      }
+
+      return nextState;
+    });
   };
 
   useEffect(() => {
-    if (openedSkillsPopup !== 'project-stack') {
+    if (!isOpen) {
       return undefined;
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      recalculateDesktopPopupPosition();
+      recalculatePopupPosition();
     });
 
-    const handleViewportChange = () => {
-      recalculateDesktopPopupPosition();
+    const handleOutsideClick = (event) => {
+      const isInsidePopup = popupRef.current?.contains(event.target);
+      const isTrigger = triggerRef.current?.contains(event.target);
+
+      if (!isInsidePopup && !isTrigger) {
+        setIsOpen(false);
+      }
     };
 
-    window.addEventListener('resize', handleViewportChange);
-    window.addEventListener('scroll', handleViewportChange, true);
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', recalculatePopupPosition);
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', handleViewportChange);
-      window.removeEventListener('scroll', handleViewportChange, true);
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', recalculatePopupPosition);
     };
-  }, [openedSkillsPopup, recalculateDesktopPopupPosition, selected]);
+  }, [isOpen, recalculatePopupPosition, selected]);
 
   return (
-    <div className="project-skills-selector">
+    <div className="project-skills-selector" ref={rootRef}>
       <div className="project-skills-selector__head">
         <h3 className={titleClassName}>{title}</h3>
         {withClear && (
@@ -136,43 +216,37 @@ const ProjectSkillsSelector = ({
             onClick={handleOpenPopup}
             data-skills-add="true"
             aria-haspopup="dialog"
-            aria-expanded={openedSkillsPopup === 'project-stack'}
+            aria-expanded={isOpen}
             aria-controls="project-stack-options"
             disabled={disabled}
           >
             +
           </button>
 
-          {openedSkillsPopup === 'project-stack' && (
-            <div
-              id="project-stack-options"
-              className={`project-skills-selector__popup ${popupDirection === 'up' || forceOpenUp ? 'project-skills-selector__popup--top' : ''} ${alignRight ? 'project-skills-selector__popup--right' : ''} ${mobilePopupPosition ? 'project-skills-selector__popup--mobile' : ''}`}
-              role="dialog"
-              aria-label="Выбор стека"
-              data-skills-popup="true"
-              style={
-                mobilePopupPosition
-                  ? {
-                      top: `${mobilePopupPosition.top}px`,
-                      left: `${mobilePopupPosition.left}px`,
-                      width: `${mobilePopupPosition.width}px`,
-                      maxHeight: `${popupMaxHeight}px`
-                    }
-                  : { maxHeight: `${popupMaxHeight}px`, width: `${desktopPopupWidth}px` }
-              }
-            >
-              {orderedOptions.map((skillName) => {
-                const isChecked = selected.includes(skillName);
+          {isOpen &&
+            createPortal(
+              <div
+                ref={popupRef}
+                id="project-stack-options"
+                className="project-skills-selector__popup project-skills-selector__popup--portal"
+                role="dialog"
+                aria-label="Выбор стека"
+                data-skills-popup="true"
+                style={popupStyle}
+              >
+                {orderedOptions.map((skillName) => {
+                  const isChecked = selected.includes(skillName);
 
-                return (
-                  <label className="project-skills-selector__option" key={skillName}>
-                    <input type="checkbox" checked={isChecked} onChange={() => toggleSkill(skillName)} disabled={disabled} />
-                    <span>{skillName}</span>
-                  </label>
-                );
-              })}
-            </div>
-          )}
+                  return (
+                    <label className="project-skills-selector__option" key={skillName}>
+                      <input type="checkbox" checked={isChecked} onChange={() => toggleSkill(skillName)} disabled={disabled} />
+                      <span>{skillName}</span>
+                    </label>
+                  );
+                })}
+              </div>,
+              document.body
+            )}
         </div>
       </div>
     </div>
