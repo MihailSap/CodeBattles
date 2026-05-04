@@ -30,6 +30,7 @@ import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -68,6 +69,9 @@ public class OrganizationController {
     @PostMapping
     public ResponseEntity<CreatedResponse> create(@RequestBody CreateOrganizationRequestDto request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
+        if(organizationService.isOrganizationExistsByTitle(request.name())){
+            throw new RuntimeException("409 ORGANIZATION_NAME_CONFLICT");
+        }
         Organization organization = organizationService.create(request, user);
         return ResponseEntity.status(201).body(new CreatedResponse(organization.getId()));
     }
@@ -77,11 +81,15 @@ public class OrganizationController {
     public OrganizationDetailsDto getOrganizationById(@PathVariable("organizationId") Long organizationId) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
-        if(Role.ADMIN.equals(user.getRole())
-                && organizationService.isOrganizationContainsUser(organization, user)) {
+        if(!organizationService.isOrganizationContainsUser(organization, user)) {
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
-        return organizationMapper.mapToOrganizationDetailsDto(organization);
+        String viewerRole = "GUEST";
+        if(organizationService.isOrganizationContainsUser(organization, user)) {
+            UserOrganization userOrganization = organizationService.getUserOrganization(user, organization);
+            viewerRole = userOrganization.getAdmin() ? "OWNER" : "MEMBER";
+        }
+        return organizationMapper.mapToOrganizationDetailsDto(organization, viewerRole);
     }
 
     @Operation(description = "Обновление организации по id")
@@ -94,7 +102,12 @@ public class OrganizationController {
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
         Organization updatedOrganization = organizationService.update(request, organization);
-        return organizationMapper.mapToOrganizationDetailsDto(updatedOrganization);
+        String viewerRole = "GUEST";
+        if(organizationService.isOrganizationContainsUser(organization, user)) {
+            UserOrganization userOrganization = organizationService.getUserOrganization(user, organization);
+            viewerRole = userOrganization.getAdmin() ? "OWNER" : "MEMBER";
+        }
+        return organizationMapper.mapToOrganizationDetailsDto(updatedOrganization, viewerRole);
     }
 
     @Operation(description = "Удаление организации по id")
@@ -152,7 +165,7 @@ public class OrganizationController {
         if(!organizationService.isUserAdminInOrganization(currentUser, organization)){
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
-        if(organizationService.isOrganizationJoinRequestExists(organization, user)){
+        if(!organizationService.isOrganizationJoinRequestExists(organization, user)){
             throw new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
         }
 
@@ -171,7 +184,7 @@ public class OrganizationController {
         if(!organizationService.isUserAdminInOrganization(currentUser, organization)){
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
-        if(organizationService.isOrganizationJoinRequestExists(organization, user)){
+        if(!organizationService.isOrganizationJoinRequestExists(organization, user)){
             throw new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
         }
 
@@ -189,9 +202,9 @@ public class OrganizationController {
         if(!organizationService.isUserAdminInOrganization(user, organization)){
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
-        if(organizationService.isOrganizationContainsUser(organization, user)){
-            throw new RuntimeException("409 ALREADY_MEMBER");
-        }
+//        if(organizationService.isOrganizationContainsUser(organization, user)){
+//            throw new RuntimeException("409 ALREADY_MEMBER");
+//        }
 
         OrganizationInvite organizationInvite = organizationInviteService.create(requestDto, organization);
         return ResponseEntity.status(201).body(organizationInviteMapper.mapToOrganizationInviteDto(organizationInvite));
@@ -221,6 +234,26 @@ public class OrganizationController {
         }
         organizationService.createOrganizationJoinRequest(organization, user);
         organizationService.approveJoinRequest(organization, user);
+        organizationInviteService.deleteOrganizationInvite(token);
         return new OrganizationInviteJoinResponseDto(true, organization.getId());
+    }
+
+    @Operation(description = "Получение организаций для вступления")
+    @GetMapping("/search")
+    public List<OrganizationListShortItemDto> getOrganizationForInvite() throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        List<Organization> organizations = organizationService.getAll();
+        List<OrganizationListShortItemDto> organizationListItemDtos = new ArrayList<>();
+        for(Organization organization : organizations){
+            if(organizationService.isOrganizationContainsUser(organization, user)){
+                continue;
+            }
+            if(organizationService.isOrganizationContainsJoinRequest(organization, user)){
+                organizationListItemDtos.add(organizationMapper.mapToOrganizationListShortItemDto(organization, true));
+            } else {
+                organizationListItemDtos.add(organizationMapper.mapToOrganizationListShortItemDto(organization, false));
+            }
+        }
+        return organizationListItemDtos;
     }
 }

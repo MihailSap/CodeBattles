@@ -2,10 +2,7 @@ package ru.urfu.backend.mapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.urfu.backend.dto.organization.OrganizationDetailsDto;
-import ru.urfu.backend.dto.organization.OrganizationJoinRequest;
-import ru.urfu.backend.dto.organization.OrganizationListItemDto;
-import ru.urfu.backend.dto.organization.OrganizationParticipantResponse;
+import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.dto.project.ProjectItemResponse;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.Project;
@@ -27,7 +24,7 @@ public class OrganizationMapper {
         this.projectMapper = projectMapper;
     }
 
-    public OrganizationDetailsDto mapToOrganizationDetailsDto(Organization organization) {
+    public OrganizationDetailsDto mapToOrganizationDetailsDto(Organization organization, String viewerRole) {
         return new OrganizationDetailsDto(
                 organization.getId(),
                 organization.getTitle(),
@@ -35,7 +32,7 @@ public class OrganizationMapper {
                 organization.getLink(),
                 organization.getLogo(),
                 getAdminId(organization),
-                "OWNER", //FIXME
+                viewerRole,
                 getParticipants(organization),
                 getProjects(organization),
                 getJoinRequests(organization)
@@ -116,6 +113,19 @@ public class OrganizationMapper {
             organizationListItemDtos.add(mapToOrganizationListItemDto(organization));
         }
         return organizationListItemDtos;
+    }
+
+    public OrganizationListShortItemDto mapToOrganizationListShortItemDto(Organization organization, Boolean hasPendingRequest) {
+        return new OrganizationListShortItemDto(
+                organization.getId(),
+                organization.getLogo(),
+                organization.getTitle(),
+                organization.getLink(),
+                organization.getDescription(),
+                getMembersCount(organization),
+                getProjectsCount(organization),
+                hasPendingRequest
+        );
     }
 
     public OrganizationListItemDto mapToOrganizationListItemDto(UserOrganization userOrganization) {

@@ -9,4 +9,6 @@ public interface OrganizationInviteService {
     OrganizationInvite getOrganizationInviteByToken(String token);
 
     OrganizationInvite create(GenerateOrganizationInviteRequestDto request, Organization organization);
+
+    void deleteOrganizationInvite(String token);
 }

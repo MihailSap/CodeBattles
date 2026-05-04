@@ -66,6 +66,7 @@ public class Organization extends BaseEntity {
         link.setUser(user);
         link.setOrganization(this);
         link.setAdmin(isAdmin);
+        link.setEnabled(true);
 
         members.add(link);
         user.getOrganizations().add(link);

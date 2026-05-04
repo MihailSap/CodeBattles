@@ -38,4 +38,6 @@ public interface OrganizationService {
     boolean isOrganizationJoinRequestExists(Organization organization, User user);
 
     void removeUserOrganization(Organization organization, User user);
+
+    boolean isOrganizationExistsByTitle(String title);
 }

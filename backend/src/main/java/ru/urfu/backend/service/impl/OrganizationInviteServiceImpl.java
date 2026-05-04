@@ -25,7 +25,7 @@ public class OrganizationInviteServiceImpl implements OrganizationInviteService 
     @Override
     public OrganizationInvite getOrganizationInviteByToken(String token) {
         return organizationInviteRepository.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("No organization invite found"));
+                .orElseThrow(() -> new RuntimeException("400 INVALID_INVITE"));
     }
 
     @Transactional
@@ -37,5 +37,11 @@ public class OrganizationInviteServiceImpl implements OrganizationInviteService 
         organizationInvite.setReusable(request.reusable());
         organizationInvite.setExpiresAt(LocalDateTime.parse(request.expiresAt()));
         return organizationInviteRepository.save(organizationInvite);
+    }
+
+    @Transactional
+    public void deleteOrganizationInvite(String token){
+        OrganizationInvite organizationInvite = getOrganizationInviteByToken(token);
+        organizationInviteRepository.delete(organizationInvite);
     }
 }

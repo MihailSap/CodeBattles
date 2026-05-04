@@ -49,7 +49,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         logger.error("Exception: {}", ex.getMessage(), ex);
-        ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
+        ErrorResponse response = ExceptionUtils.create("status", 1, ex.getMessage(), "path");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleException(RuntimeException ex) {
+        logger.error("Exception: {}", ex.getMessage(), ex);
+
+        String message = ex.getMessage();
+        ErrorResponse response = ExceptionUtils.create("status", 500, message, "path");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }

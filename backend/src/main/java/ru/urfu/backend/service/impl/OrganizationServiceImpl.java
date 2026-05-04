@@ -31,20 +31,20 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Override
     public boolean isUserAdminInOrganization(User user, Organization organization){
-        UserOrganization userOrganization = getUserOrganization(user, organization);
-        return userOrganization.getAdmin();
+        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getAdmin());
     }
 
     @Override
     public boolean isOrganizationContainsUser(Organization organization, User user) {
         Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && userOrganization.get().getEnabled();
+        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getEnabled());
     }
 
     @Override
     public boolean isOrganizationContainsJoinRequest(Organization organization, User user) {
         Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && userOrganization.get().getEnabled();
+        return userOrganization.isPresent() && Boolean.FALSE.equals(userOrganization.get().getEnabled());
     }
 
     @Transactional
@@ -55,12 +55,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setDescription(request.description());
         organization.setLogo(request.logo());
         organization.setLink(request.link());
-
-        UserOrganization userOrganization = new UserOrganization();
-        userOrganization.setOrganization(organization);
-        userOrganization.setUser(user);
-        userOrganization.setAdmin(true);
-        userOrganizationRepository.save(userOrganization);
+        organization.addMember(user, true);
 
         return organizationRepository.save(organization);
     }
@@ -129,6 +124,11 @@ public class OrganizationServiceImpl implements OrganizationService {
     public void removeUserOrganization(Organization organization, User user){
         UserOrganization userOrganization = getUserOrganization(user, organization);
         userOrganizationRepository.delete(userOrganization);
+    }
+
+    @Override
+    public boolean isOrganizationExistsByTitle(String title) {
+        return organizationRepository.existsByTitle(title);
     }
 
     @Transactional

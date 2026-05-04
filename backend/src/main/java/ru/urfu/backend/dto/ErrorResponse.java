@@ -7,8 +7,8 @@ import java.time.Instant;
 @Schema(name = "Ответ, содержащий информацию об ошибке")
 public record ErrorResponse(
         Instant timestamp,
-        Integer status,
-        String code,
+        Integer code,
+        String status,
         String message,
         String path) {
 }
