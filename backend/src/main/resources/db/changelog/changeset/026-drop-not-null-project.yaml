@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-drop-not-null-project-organization-id
+      author: SapeginMihail
+      changes:
+        - dropNotNullConstraint:
+            tableName: project
+            columnName: organization_id
+            columnDataType: BIGINT

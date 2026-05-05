@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-add-requirements
+      author: your_name
+      changes:
+        - addColumn:
+            tableName: task
+            columns:
+              - column:
+                  name: requirements
+                  type: TEXT

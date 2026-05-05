@@ -102,18 +102,21 @@ public class ProjectServiceImpl implements ProjectService {
         project.setRepositoryUrl(request.repositoryUrl());
         project.setPrivate(request.isPrivate());
         project.setAiReviewEnabled(request.aiReviewEnabled());
-        project.addUser(user, ProjectMemberRole.OWNER);
+
+        Project savedProject = projectRepository.save(project);
+
+        savedProject.addUser(user, ProjectMemberRole.OWNER);
 
         List<String> stackTitles = request.stack();
         for(String stackTitle : stackTitles){
             Stack stack = stackService.getOrCreate(stackTitle);
             ProjectStack projectStack = new ProjectStack();
             projectStack.setStack(stack);
-            projectStack.setProject(project);
+            projectStack.setProject(savedProject);
             projectStackRepository.save(projectStack);
         }
 
-        return projectRepository.save(project);
+        return projectRepository.save(savedProject);
     }
 
     @Override
@@ -192,7 +195,8 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectStack projectStack = new ProjectStack();
                 projectStack.setStack(stackObj);
                 projectStack.setProject(project);
-                projectStackRepository.save(projectStack);
+//                projectStackRepository.save(projectStack);
+                project.getStacks().add(projectStack);
             }
         }
 

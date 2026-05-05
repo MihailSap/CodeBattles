@@ -16,12 +16,13 @@ import java.util.Set;
 public class UserMapper {
 
     public CurrentUserResponse mapToCurrentUserResponse(User user){
+
         return new CurrentUserResponse(
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
                 user.getLogin(),
-                user.getRegisteredAt().toString(),
+                user.getRegisteredAt() == null ? null : user.getRegisteredAt().toString(),
                 user.getAvatarUrl(),
                 user.getRole(),
                 user.isEnabled()

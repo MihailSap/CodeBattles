@@ -62,7 +62,7 @@ public class ProjectController {
     }
 
     @Operation(description = "Получение проектов текущего пользователя")
-    @GetMapping("/my")
+    @GetMapping
     public List<ProjectListItemDto> getProjects(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Boolean isPrivate,
@@ -122,7 +122,7 @@ public class ProjectController {
         if(projectService.isProjectExist(projectCreateRequest.name(), organization)){
             throw new RuntimeException("409 PROJECT_NAME_CONFLICT");
         }
-        if(organizationService.isUserAdminInOrganization(user, organization)){
+        if(!organizationService.isUserAdminInOrganization(user, organization)){
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
         Project project = projectService.create(projectCreateRequest, user, organization);
@@ -134,7 +134,6 @@ public class ProjectController {
     public ProjectDetailsDto getProjectById(@PathVariable("projectId") Long projectId) throws UserNotFoundException {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
-        UserProject userProject = projectService.getUserProject(user, project);
 
         if(project.getIsPrivate() && !projectService.isUserInProject(project, user)){
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
@@ -145,12 +144,11 @@ public class ProjectController {
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
 
-        if(!project.getIsPrivate()
-                && organization != null
-                && !organizationService.isOrganizationContainsUser(organization, user)){
+        if(!project.getIsPrivate() && !projectService.isUserMemberOfProject(project, user)){
             return projectMapper.mapToProjectDetailsDto(project);
         }
 
+        UserProject userProject = projectService.getUserProject(user, project);
         return projectMapper.mapToProjectDetailsDto(project, userProject);
     }
 
@@ -181,7 +179,6 @@ public class ProjectController {
         }
 
         projectService.delete(projectId);
-
         return new DeletedResponse(true);
     }
 
@@ -251,7 +248,7 @@ public class ProjectController {
     public ProjectJoinedResponse join(@PathVariable("projectId") Long projectId) throws UserNotFoundException {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
-        if(Boolean.FALSE.equals(project.getIsPrivate())){
+        if(Boolean.TRUE.equals(project.getIsPrivate())){
             throw new RuntimeException("403 PROJECT_NOT_PUBLIC");
         }
         if(projectService.isUserInProject(project, user)){

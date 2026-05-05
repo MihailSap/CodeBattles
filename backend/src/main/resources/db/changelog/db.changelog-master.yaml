@@ -49,3 +49,9 @@ databaseChangeLog:
       file: db/changelog/changeset/024-drop-project-member-role.yaml
   - include:
       file: db/changelog/changeset/025-rename-repository-url.yaml
+  - include:
+      file: db/changelog/changeset/026-drop-not-null-project.yaml
+  - include:
+      file: db/changelog/changeset/027-add-project-id-to-task.yaml
+  - include:
+      file: db/changelog/changeset/028-add-requirements-to-task.yaml
