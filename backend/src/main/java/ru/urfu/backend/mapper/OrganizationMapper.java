@@ -107,14 +107,6 @@ public class OrganizationMapper {
         return null;
     }
 
-    public List<OrganizationListItemDto> mapToOrganizationListDto(Set<UserOrganization> userOrganizations) {
-        List<OrganizationListItemDto> organizationListItemDtos = new ArrayList<>();
-        for (UserOrganization organization : userOrganizations) {
-            organizationListItemDtos.add(mapToOrganizationListItemDto(organization));
-        }
-        return organizationListItemDtos;
-    }
-
     public OrganizationListShortItemDto mapToOrganizationListShortItemDto(Organization organization, Boolean hasPendingRequest) {
         return new OrganizationListShortItemDto(
                 organization.getId(),
@@ -128,8 +120,8 @@ public class OrganizationMapper {
         );
     }
 
-    public OrganizationListItemDto mapToOrganizationListItemDto(UserOrganization userOrganization) {
-        Organization organization = userOrganization.getOrganization();
+
+    public OrganizationListItemDto mapToOrganizationListItemDto(Organization organization, Boolean isAdmin, Boolean isEnabled) {
         return new OrganizationListItemDto(
                 organization.getId(),
                 organization.getLogo(),
@@ -138,8 +130,8 @@ public class OrganizationMapper {
                 organization.getDescription(),
                 getMembersCount(organization),
                 getProjectsCount(organization),
-                userOrganization.getAdmin(),
-                !userOrganization.getEnabled()
+                isAdmin,
+                !isEnabled
         );
     }
 

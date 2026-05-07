@@ -12,12 +12,16 @@ import ru.urfu.backend.dto.project.ProjectCreateRequest;
 import ru.urfu.backend.dto.project.ProjectUpdateRequest;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.ProjectMembershipFilter;
+import ru.urfu.backend.model.enums.ProjectPrivacy;
 import ru.urfu.backend.repository.ProjectRepository;
 import ru.urfu.backend.repository.ProjectStackRepository;
 import ru.urfu.backend.repository.UserProjectRepository;
 import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.specification.ProjectSpecification;
+import ru.urfu.backend.specification.PublicProjectSpecification;
+import ru.urfu.backend.specification.UserProjectSpecification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +36,110 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserProjectRepository userProjectRepository;
     private final StackService stackService;
     private final ProjectStackRepository projectStackRepository;
+    private final UserProjectSpecification userProjectSpecification;
+    private final PublicProjectSpecification publicProjectSpecification;
 
     @Autowired
-    public ProjectServiceImpl(ProjectRepository projectRepository, ProjectSpecification projectSpecification, UserProjectRepository userProjectRepository, StackService stackService, ProjectStackRepository projectStackRepository) {
+    public ProjectServiceImpl(ProjectRepository projectRepository, ProjectSpecification projectSpecification, UserProjectRepository userProjectRepository, StackService stackService, ProjectStackRepository projectStackRepository, UserProjectSpecification userProjectSpecification, PublicProjectSpecification publicProjectSpecification) {
         this.projectRepository = projectRepository;
         this.projectSpecification = projectSpecification;
         this.userProjectRepository = userProjectRepository;
         this.stackService = stackService;
         this.projectStackRepository = projectStackRepository;
+        this.userProjectSpecification = userProjectSpecification;
+        this.publicProjectSpecification = publicProjectSpecification;
+    }
+
+    @Override
+    public Page<Project> getPublicProjectsForSearch(
+            int page,
+            int size,
+            Sort sort,
+            String q,
+            User currentUser
+    ) {
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Project> spec =
+                publicProjectSpecification.publicProjects(
+                        currentUser.getId(),
+                        q
+                );
+
+        return projectRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public Page<Project> searchPublicProjects(String q, int page, int size, User user) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Order.desc("lastActivityAt"),
+                        Sort.Order.desc("id")
+                )
+        );
+
+        Specification<Project> spec =
+                publicProjectSpecification.search(q, user);
+
+        return projectRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public Page<UserProject> getParticipants(
+            Project project,
+            int page,
+            int size,
+            Sort sort,
+            String search,
+            ProjectMemberRole role,
+            List<Long> excludeSelectedIds
+    ) {
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<UserProject> specification =
+                userProjectSpecification.withFilters(
+                        project,
+                        search,
+                        role,
+                        excludeSelectedIds
+                );
+
+        return userProjectRepository.findAll(specification, pageable);
+    }
+
+    @Override
+    public ProjectMemberRole getProjectMemberRole(User user, Project project){
+        Optional<UserProject> userProject = userProjectRepository.findByUserAndProject(user, project);
+        if(userProject.isEmpty()) return ProjectMemberRole.GUEST;
+        return userProject.get().getProjectMemberRole();
+    }
+
+    @Override
+    public Page<Project> getAll(
+            int page,
+            int size,
+            Sort sort,
+            String search,
+            ProjectPrivacy privacy,
+            Long organizationId,
+            ProjectMembershipFilter membership,
+            User currentUser
+    ) {
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<Project> spec = projectSpecification.withFilters(
+                search,
+                privacy,
+                organizationId,
+                membership,
+                currentUser != null ? currentUser.getId() : null
+        );
+
+        return projectRepository.findAll(spec, pageable);
     }
 
     @Override
@@ -120,33 +220,6 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Page<Project> getAll(
-            int page,
-            int size,
-            String search,
-            String privacy,
-            Long organizationId,
-            String membership
-    ) {
-        Sort sort = Sort.by(
-                Sort.Order.desc("lastActivityAt"),
-                Sort.Order.desc("id")
-        );
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Specification<Project> spec =
-                projectSpecification.withFilters(search, privacy, organizationId);
-
-        return projectRepository.findAll(spec, pageable);
-    }
-
-    @Override
-    public List<Project> getAll(){
-        return projectRepository.findAll();
-    }
-
-    @Override
     public Project getById(Long id){
         return projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -195,7 +268,6 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectStack projectStack = new ProjectStack();
                 projectStack.setStack(stackObj);
                 projectStack.setProject(project);
-//                projectStackRepository.save(projectStack);
                 project.getStacks().add(projectStack);
             }
         }
@@ -221,6 +293,16 @@ public class ProjectServiceImpl implements ProjectService {
             users.add(userProject.getUser());
         }
         return users;
+    }
+
+    @Override
+    public Page<Project> getAll(int page, int size, String search, String privacy, Long organizationId, String membership) {
+        return null;
+    }
+
+    @Override
+    public List<Project> getAll() {
+        return List.of();
     }
 
     @Override

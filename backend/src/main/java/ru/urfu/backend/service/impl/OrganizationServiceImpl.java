@@ -1,16 +1,22 @@
 package ru.urfu.backend.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.model.Organization;
-import ru.urfu.backend.model.OrganizationInvite;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.repository.OrganizationRepository;
 import ru.urfu.backend.repository.UserOrganizationRepository;
 import ru.urfu.backend.service.OrganizationService;
+import ru.urfu.backend.specification.OrganizationSpecification;
+import ru.urfu.backend.specification.UserOrganizationSpecification;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,13 +26,49 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final UserOrganizationRepository userOrganizationRepository;
+    private final UserOrganizationSpecification userOrganizationSpecification;
+    private final OrganizationSpecification organizationSpecification;
 
     @Autowired
     public OrganizationServiceImpl(
             OrganizationRepository organizationRepository,
-            UserOrganizationRepository userOrganizationRepository) {
+            UserOrganizationRepository userOrganizationRepository,
+            UserOrganizationSpecification userOrganizationSpecification, OrganizationSpecification organizationSpecification) {
         this.organizationRepository = organizationRepository;
         this.userOrganizationRepository = userOrganizationRepository;
+        this.userOrganizationSpecification = userOrganizationSpecification;
+        this.organizationSpecification = organizationSpecification;
+    }
+
+    @Override
+    public Page<Organization> searchForJoin(User user, String q, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Order.asc("title"),
+                        Sort.Order.asc("id")
+                )
+        );
+
+        Specification<Organization> spec =
+                organizationSpecification.searchForJoin(user.getId(), q);
+
+        return organizationRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public Page<UserOrganization> getMyOrganizations(User user, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        Specification<UserOrganization> spec =
+                userOrganizationSpecification.byUser(user);
+
+        return userOrganizationRepository.findAll(spec, pageable);
     }
 
     @Override

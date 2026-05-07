@@ -3,13 +3,18 @@ package ru.urfu.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.CreatedResponse;
 import ru.urfu.backend.dto.DeletedResponse;
 import ru.urfu.backend.dto.LeftResponse;
+import ru.urfu.backend.dto.PageResponse;
 import ru.urfu.backend.dto.invite.ProjectInviteRequest;
 import ru.urfu.backend.dto.invite.ProjectInviteResponse;
 import ru.urfu.backend.dto.project.*;
@@ -20,6 +25,8 @@ import ru.urfu.backend.mapper.ProjectMapper;
 import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.ProjectMembershipFilter;
+import ru.urfu.backend.model.enums.ProjectPrivacy;
 import ru.urfu.backend.service.*;
 
 import java.util.ArrayList;
@@ -61,49 +68,124 @@ public class ProjectController {
         this.projectInviteMapper = projectInviteMapper;
     }
 
-    @Operation(description = "Получение проектов текущего пользователя")
     @GetMapping
-    public List<ProjectListItemDto> getProjects(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Boolean isPrivate,
+    public PageResponse<ProjectListItemDto> getProjects(
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) ProjectPrivacy privacy,
             @RequestParam(required = false) Long organizationId,
-            @RequestParam(required = false) ProjectMemberRole membership
+            @RequestParam(required = false) ProjectMembershipFilter membership
     ) throws UserNotFoundException {
-        User user = authService.getAuthenticatedUser();
-        List<UserProject> userProjects = new ArrayList<>();
-        for (UserProject userProject : user.getProjects()) {
-            Project project = userProject.getProject();
-            if((name != null && name.equals(project.getTitle()))
-                || (isPrivate != null && !isPrivate.equals(project.getIsPrivate()))
-                || (organizationId != null && !organizationId.equals(project.getOrganization().getId()))
-                || (membership != null && !membership.equals(userProject.getProjectMemberRole()))){
-                continue;
-            }
-            userProjects.add(userProject);
-        }
-        return projectMapper.mapToProjectListItemDtos(userProjects);
+        User currentUser = authService.getAuthenticatedUser();
+        Sort parsedSort = parseSort(sort);
+
+        Page<Project> projects = projectService.getAll(
+                page,
+                size,
+                parsedSort,
+                search,
+                privacy,
+                organizationId,
+                membership,
+                currentUser
+        );
+
+        Page<ProjectListItemDto> dtoPage = projects.map(project ->
+                projectMapper.mapToProjectListItemDto(
+                        project, projectService.getProjectMemberRole(currentUser, project)
+                )
+        );
+
+        return PageResponse.of(dtoPage, List.of(sort == null ? "lastActivityAt,desc" : sort));
     }
 
     @Operation(description = "Получение участников проекта по id")
     @GetMapping("/{projectId}/participants")
-    public List<ProjectParticipantDto> getParticipants(
+    public PageResponse<ProjectParticipantDto> getParticipants(
             @PathVariable("projectId") Long projectId,
-            @RequestParam(required = false) String fullName,
-            @RequestParam(required = false) String login,
-            @RequestParam(required = false) ProjectMemberRole role
-    ){
+            @RequestParam(defaultValue = "0")
+            @Min(0)
+            int page,
+            @RequestParam(defaultValue = "10")
+            @Min(1)
+            @Max(100)
+            int size,
+            @RequestParam(required = false)
+            String sort,
+            @RequestParam(required = false)
+            String search,
+            @RequestParam(required = false)
+            ProjectMemberRole role,
+            @RequestParam(required = false)
+            List<Long> excludeSelectedIds
+    ) {
+
         Project project = projectService.getById(projectId);
-        List<UserProject> userProjects = new ArrayList<>();
-        for(UserProject userProject : project.getUsers()){
-            User user = userProject.getUser();
-            if((fullName != null && !fullName.equals(user.getFullName()))
-                || (login != null && !login.equals(user.getLogin()))
-                || (role != null && !role.equals(userProject.getProjectMemberRole()))){
-                continue;
-            }
-            userProjects.add(userProject);
+
+        Sort parsedSort = parseParticipantsSort(sort);
+
+        Page<UserProject> participants =
+                projectService.getParticipants(
+                        project,
+                        page,
+                        size,
+                        parsedSort,
+                        search,
+                        role,
+                        excludeSelectedIds
+                );
+
+        Page<ProjectParticipantDto> dtoPage =
+                participants.map(projectMapper::mapToProjectParticipantDto);
+
+        return PageResponse.of(
+                dtoPage,
+                List.of(
+                        sort == null
+                                ? "role,asc;fullName,asc"
+                                : sort
+                )
+        );
+    }
+
+    private Sort parseParticipantsSort(String sortParam) {
+
+        if (sortParam == null || sortParam.isBlank()) {
+
+            return Sort.by(
+                    Sort.Order.asc("user.fullName")
+            );
         }
-        return projectMapper.mapToProjectParticipantDtos(userProjects);
+
+        String[] parts = sortParam.split(",");
+
+        String field = parts[0].trim();
+
+        String direction =
+                parts.length > 1
+                        ? parts[1].trim()
+                        : "asc";
+
+        if ("fullName".equals(field)) {
+            field = "user.fullName";
+        }
+
+        if ("login".equals(field)) {
+            field = "user.login";
+        }
+
+        if ("role".equals(field)) {
+            field = "projectMemberRole";
+        }
+
+        return Sort.by(
+                new Sort.Order(
+                        Sort.Direction.fromString(direction),
+                        field
+                )
+        );
     }
 
     @Operation(description = "Создание проекта")
@@ -261,19 +343,96 @@ public class ProjectController {
         return new ProjectJoinedResponse(true, project.getId());
     }
 
-    @Operation(description = "Получение публичных проектов")
+    @Operation(description = "Поиск публичных проектов для вступления")
     @GetMapping("/public/search")
-    public List<ProjectListItemDto> getPublicProjects() throws UserNotFoundException {
+    public PageResponse<ProjectListItemDto> searchPublicProjects(
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) String sort
+    ) throws UserNotFoundException {
+
         User user = authService.getAuthenticatedUser();
-        List<Project> projects = projectService.getPublicProjects();
-        List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
-        for(Project project : projects){
-            if(projectService.isUserMemberOfProject(project, user)){
-                continue;
-            }
-            ProjectListItemDto projectListItemDto = projectMapper.mapToProjectListItemDto(project);
-            projectListItemDtos.add(projectListItemDto);
+        Sort parsedSort = parseSort(sort);
+
+        Page<Project> projects =
+                projectService.getPublicProjectsForSearch(
+                        page,
+                        size,
+                        parsedSort,
+                        q,
+                        user
+                );
+
+        Page<ProjectListItemDto> dtoPage =
+                projects.map(project ->
+                        projectMapper.mapToProjectListItemDto(
+                                project,
+                                projectService.getProjectMemberRole(user, project)
+                        )
+                );
+
+        return PageResponse.of(
+                dtoPage,
+                List.of(sort == null ? "lastActivityAt,desc" : sort)
+        );
+    }
+
+//    @Operation(description = "Поиск публичных проектов для вступления")
+//    @GetMapping("/public/search")
+//    public PageResponse<ProjectListItemDto> searchPublicProjects(
+//            @RequestParam(required = false) String q,
+//            @RequestParam(defaultValue = "0") @Min(0) int page,
+//            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size
+//    ) throws UserNotFoundException {
+//        User user = authService.getAuthenticatedUser();
+//
+//        Page<Project> projects =
+//                projectService.searchPublicProjects(q, page, size, user);
+//
+//        Page<ProjectListItemDto> dtoPage =
+//                projects.map(project ->
+//                        projectMapper.mapToProjectListItemDto(
+//                                project,
+//                                projectService.getProjectMemberRole(user, project)
+//                        )
+//                );
+//
+//        return PageResponse.of(dtoPage, List.of("lastActivityAt,desc"));
+//    }
+
+//    @Operation(description = "Получение публичных проектов")
+//    @GetMapping("/public/search")
+//    public List<ProjectListItemDto> getPublicProjects() throws UserNotFoundException {
+//        User user = authService.getAuthenticatedUser();
+//        List<Project> projects = projectService.getPublicProjects();
+//        List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
+//        for(Project project : projects){
+//            if(projectService.isUserMemberOfProject(project, user)){
+//                continue;
+//            }
+//            ProjectListItemDto projectListItemDto = projectMapper.mapToProjectListItemDto(project);
+//            projectListItemDtos.add(projectListItemDto);
+//        }
+//        return projectListItemDtos;
+//    }
+
+    private Sort parseSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return Sort.by(
+                    Sort.Order.desc("lastActivityAt"),
+                    Sort.Order.desc("id")
+            );
         }
-        return projectListItemDtos;
+
+        String[] parts = sortParam.split(",");
+        String field = parts[0].trim();
+        String direction = parts.length > 1 ? parts[1].trim() : "asc";
+
+        if ("name".equals(field)) {
+            field = "title";
+        }
+
+        return Sort.by(new Sort.Order(Sort.Direction.fromString(direction), field));
     }
 }

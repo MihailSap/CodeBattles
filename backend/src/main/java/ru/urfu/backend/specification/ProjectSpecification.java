@@ -1,40 +1,113 @@
 package ru.urfu.backend.specification;
 
-import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.model.Project;
+import ru.urfu.backend.model.UserProject;
+import ru.urfu.backend.model.enums.ProjectMembershipFilter;
+import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.ProjectPrivacy;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class ProjectSpecification {
 
     public Specification<Project> withFilters(
             String search,
-            String privacy,
-            Long organizationId
+            ProjectPrivacy privacy,
+            Long organizationId,
+            ProjectMembershipFilter membership,
+            Long currentUserId
     ) {
         return (root, query, cb) -> {
 
-            var predicates = cb.conjunction();
+            query.distinct(true);
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            Join<Project, UserProject> userProjectJoin =
+                    root.join("users", JoinType.INNER);
+
+            predicates.add(
+                    cb.equal(
+                            userProjectJoin.get("user").get("id"),
+                            currentUserId
+                    )
+            );
 
             if (search != null && !search.isBlank()) {
-                String pattern = "%" + search.trim().toLowerCase() + "%";
-                Expression<String> title = cb.lower(root.get("title"));
-                predicates = cb.and(predicates, cb.like(title, pattern));
+
+                predicates.add(
+                        cb.like(
+                                cb.lower(root.get("title")),
+                                "%" + search.toLowerCase() + "%"
+                        )
+                );
             }
 
             if (privacy != null) {
-                boolean isPrivate = privacy.equalsIgnoreCase("PRIVATE");
-                predicates = cb.and(predicates,
-                        cb.equal(root.get("isPrivate"), isPrivate));
+
+                boolean isPrivate =
+                        privacy == ProjectPrivacy.PRIVATE;
+
+                predicates.add(
+                        cb.equal(
+                                root.get("isPrivate"),
+                                isPrivate
+                        )
+                );
             }
 
             if (organizationId != null) {
-                predicates = cb.and(predicates,
-                        cb.equal(root.get("organization").get("id"), organizationId));
+
+                predicates.add(
+                        cb.equal(
+                                root.get("organization").get("id"),
+                                organizationId
+                        )
+                );
             }
 
-            return predicates;
+            if (membership != null
+                    && membership != ProjectMembershipFilter.ALL) {
+
+                if (membership == ProjectMembershipFilter.OWNER) {
+
+                    predicates.add(
+                            cb.equal(
+                                    userProjectJoin.get("projectMemberRole"),
+                                    ProjectMemberRole.OWNER
+                            )
+                    );
+                }
+
+                else if (membership == ProjectMembershipFilter.MEMBER) {
+
+                    predicates.add(
+                            cb.equal(
+                                    userProjectJoin.get("projectMemberRole"),
+                                    ProjectMemberRole.MEMBER
+                            )
+                    );
+                }
+
+                else if (membership == ProjectMembershipFilter.GUEST) {
+
+                    predicates.add(
+                            cb.equal(
+                                    userProjectJoin.get("projectMemberRole"),
+                                    ProjectMemberRole.GUEST
+                            )
+                    );
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

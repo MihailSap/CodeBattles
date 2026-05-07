@@ -1,5 +1,6 @@
 package ru.urfu.backend.service;
 
+import org.springframework.data.domain.Page;
 import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
@@ -40,4 +41,8 @@ public interface OrganizationService {
     void removeUserOrganization(Organization organization, User user);
 
     boolean isOrganizationExistsByTitle(String title);
+
+    Page<UserOrganization> getMyOrganizations(User user, int page, int size);
+
+    Page<Organization> searchForJoin(User user, String q, int page, int size);
 }

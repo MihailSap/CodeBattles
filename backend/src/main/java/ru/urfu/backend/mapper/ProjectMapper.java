@@ -47,18 +47,7 @@ public class ProjectMapper {
         );
     }
 
-    public List<ProjectListItemDto> mapToProjectListItemDtos(List<UserProject> userProjects) {
-        if(userProjects == null) return List.of();
-        List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
-        for (UserProject project : userProjects) {
-            ProjectListItemDto projectListItemDto = mapToProjectListItemDto(project);
-            projectListItemDtos.add(projectListItemDto);
-        }
-        return projectListItemDtos;
-    }
-
-    public ProjectListItemDto mapToProjectListItemDto(UserProject userProject){
-        Project project = userProject.getProject();
+    public ProjectListItemDto mapToProjectListItemDto(Project project, ProjectMemberRole projectMemberRole){
         return new ProjectListItemDto(
                 project.getId(),
                 project.getTitle(),
@@ -66,7 +55,7 @@ public class ProjectMapper {
                 project.getIsPrivate(),
                 project.getOrganization() == null ? null : project.getOrganization().getId(),
                 project.getOrganization() == null ? null : project.getOrganization().getTitle(),
-                userProject.getProjectMemberRole(),
+                projectMemberRole,
                 getUsersCount(project.getUsers()),
                 getTasksCount(project.getTasks()),
                 project.getLastActivityAt() == null ? "" : project.getLastActivityAt().toString()
@@ -86,21 +75,6 @@ public class ProjectMapper {
     private int getUsersCount(Set<UserProject> userProjects) {
         if(userProjects == null) return 0;
         return userProjects.size();
-    }
-
-    public ProjectListItemDto mapToProjectListItemDto(Project project){
-        return new ProjectListItemDto(
-                project.getId(),
-                project.getTitle(),
-                project.getDescription(),
-                project.getIsPrivate(),
-                project.getOrganization().getId(),
-                project.getOrganization().getTitle(),
-                ProjectMemberRole.GUEST,
-                getUsersCount(project.getUsers()),
-                getTasksCount(project.getTasks()),
-                project.getLastActivityAt().toString()
-        );
     }
 
     public ProjectDetailsDto mapToProjectDetailsDto(Project project){
