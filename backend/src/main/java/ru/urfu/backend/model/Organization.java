@@ -61,29 +61,6 @@ public class Organization extends BaseEntity {
         this.members = members;
     }
 
-    public void addMember(User user, Boolean isAdmin) {
-        UserOrganization link = new UserOrganization();
-        link.setUser(user);
-        link.setOrganization(this);
-        link.setAdmin(isAdmin);
-        link.setEnabled(true);
-
-        members.add(link);
-        user.getOrganizations().add(link);
-    }
-
-    public void removeMember(User user) {
-        members.removeIf(link -> {
-            if (link.getUser().getId().equals(user.getId())) {
-                user.getOrganizations().remove(link);
-                link.setUser(null);
-                link.setOrganization(null);
-                return true;
-            }
-            return false;
-        });
-    }
-
     public String getLogo() {
         return logo;
     }

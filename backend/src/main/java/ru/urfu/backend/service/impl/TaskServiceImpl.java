@@ -14,8 +14,6 @@ import ru.urfu.backend.repository.UserTaskRepository;
 import ru.urfu.backend.service.TaskService;
 import ru.urfu.backend.service.UserService;
 
-import java.util.List;
-
 @Service
 public class TaskServiceImpl implements TaskService {
 
@@ -24,38 +22,21 @@ public class TaskServiceImpl implements TaskService {
     private final UserService userService;
 
     @Autowired
-    public TaskServiceImpl(UserTaskRepository userTaskRepository, TaskRepository taskRepository, UserService userService) {
+    public TaskServiceImpl(
+            UserTaskRepository userTaskRepository,
+            TaskRepository taskRepository,
+            UserService userService
+    ) {
         this.userTaskRepository = userTaskRepository;
         this.taskRepository = taskRepository;
         this.userService = userService;
     }
-
-    public Task create(TaskCreateRequest request){
-        Task task = new Task();
-        task.setTitle(request.name());
-        task.setDescription(request.description());
-        return taskRepository.save(task);
-    }
-
-    public List<Task> getAll(){
-        return taskRepository.findAll();
-    }
+    @Transactional(readOnly = true)
 
     @Override
     public Task getById(Long id){
         return taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
-    }
-
-    @Override
-    public Task getByTitle(String title){
-        return taskRepository.findByTitle(title)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
-    }
-
-    @Override
-    public List<Task> getByProject(Project project){
-        return taskRepository.findByProject(project);
     }
 
     @Transactional

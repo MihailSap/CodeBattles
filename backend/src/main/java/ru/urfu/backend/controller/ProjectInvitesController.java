@@ -67,8 +67,8 @@ public class ProjectInvitesController {
         }
 
         Organization organization = project.getOrganization();
-        if(organization != null && organizationService.isOrganizationContainsUser(organization, user)){
-            organizationService.addUser(organization, user);
+        if(organization != null && !organizationService.isUserExistsInOrganization(organization, user)){
+            organizationService.addUser(organization, user, false);
         }
 
         projectService.addUserToProject(user, project, ProjectMemberRole.MEMBER);

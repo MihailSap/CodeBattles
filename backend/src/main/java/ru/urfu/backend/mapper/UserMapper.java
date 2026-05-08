@@ -16,7 +16,6 @@ import java.util.Set;
 public class UserMapper {
 
     public CurrentUserResponse mapToCurrentUserResponse(User user){
-
         return new CurrentUserResponse(
                 user.getId(),
                 user.getFullName(),

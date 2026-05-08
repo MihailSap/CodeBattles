@@ -15,16 +15,6 @@ import java.util.Set;
 @Component
 public class ProjectMapper {
 
-    public List<ProjectParticipantDto> mapToProjectParticipantDtos(List<UserProject> userProjects) {
-        if(userProjects == null) return List.of();
-        List<ProjectParticipantDto> projectParticipants = new ArrayList<>();
-        for (UserProject userProject : userProjects) {
-            ProjectParticipantDto projectParticipantDto = mapToProjectParticipantDto(userProject);
-            projectParticipants.add(projectParticipantDto);
-        }
-        return projectParticipants;
-    }
-
     public List<ProjectParticipantDto> mapToProjectParticipantDtos(Set<UserProject> userProjects) {
         if(userProjects == null) return List.of();
         List<ProjectParticipantDto> projectParticipants = new ArrayList<>();

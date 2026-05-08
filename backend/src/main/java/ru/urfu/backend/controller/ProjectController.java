@@ -121,11 +121,8 @@ public class ProjectController {
             @RequestParam(required = false)
             List<Long> excludeSelectedIds
     ) {
-
         Project project = projectService.getById(projectId);
-
         Sort parsedSort = parseParticipantsSort(sort);
-
         Page<UserProject> participants =
                 projectService.getParticipants(
                         project,
@@ -137,55 +134,8 @@ public class ProjectController {
                         excludeSelectedIds
                 );
 
-        Page<ProjectParticipantDto> dtoPage =
-                participants.map(projectMapper::mapToProjectParticipantDto);
-
-        return PageResponse.of(
-                dtoPage,
-                List.of(
-                        sort == null
-                                ? "role,asc;fullName,asc"
-                                : sort
-                )
-        );
-    }
-
-    private Sort parseParticipantsSort(String sortParam) {
-
-        if (sortParam == null || sortParam.isBlank()) {
-
-            return Sort.by(
-                    Sort.Order.asc("user.fullName")
-            );
-        }
-
-        String[] parts = sortParam.split(",");
-
-        String field = parts[0].trim();
-
-        String direction =
-                parts.length > 1
-                        ? parts[1].trim()
-                        : "asc";
-
-        if ("fullName".equals(field)) {
-            field = "user.fullName";
-        }
-
-        if ("login".equals(field)) {
-            field = "user.login";
-        }
-
-        if ("role".equals(field)) {
-            field = "projectMemberRole";
-        }
-
-        return Sort.by(
-                new Sort.Order(
-                        Sort.Direction.fromString(direction),
-                        field
-                )
-        );
+        Page<ProjectParticipantDto> dtoPage = participants.map(projectMapper::mapToProjectParticipantDto);
+        return PageResponse.of(dtoPage, List.of(sort == null ? "role,asc;fullName,asc" : sort));
     }
 
     @Operation(description = "Создание проекта")
@@ -222,7 +172,7 @@ public class ProjectController {
         }
 
         Organization organization = project.getOrganization();
-        if(organization != null && !organizationService.isOrganizationContainsUser(organization, user)){
+        if(organization != null && !organizationService.isUserExistsInOrganization(organization, user)){
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
 
@@ -279,7 +229,6 @@ public class ProjectController {
         return new LeftResponse(true);
     }
 
-    //FIXME: Пагинация
     @Operation(description = "Получение задач проекта по id")
     @GetMapping("/{projectId}/tasks")
     public List<ProjectTaskDto> getProjectTasks(@PathVariable("projectId") Long projectId){
@@ -378,45 +327,6 @@ public class ProjectController {
         );
     }
 
-//    @Operation(description = "Поиск публичных проектов для вступления")
-//    @GetMapping("/public/search")
-//    public PageResponse<ProjectListItemDto> searchPublicProjects(
-//            @RequestParam(required = false) String q,
-//            @RequestParam(defaultValue = "0") @Min(0) int page,
-//            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size
-//    ) throws UserNotFoundException {
-//        User user = authService.getAuthenticatedUser();
-//
-//        Page<Project> projects =
-//                projectService.searchPublicProjects(q, page, size, user);
-//
-//        Page<ProjectListItemDto> dtoPage =
-//                projects.map(project ->
-//                        projectMapper.mapToProjectListItemDto(
-//                                project,
-//                                projectService.getProjectMemberRole(user, project)
-//                        )
-//                );
-//
-//        return PageResponse.of(dtoPage, List.of("lastActivityAt,desc"));
-//    }
-
-//    @Operation(description = "Получение публичных проектов")
-//    @GetMapping("/public/search")
-//    public List<ProjectListItemDto> getPublicProjects() throws UserNotFoundException {
-//        User user = authService.getAuthenticatedUser();
-//        List<Project> projects = projectService.getPublicProjects();
-//        List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
-//        for(Project project : projects){
-//            if(projectService.isUserMemberOfProject(project, user)){
-//                continue;
-//            }
-//            ProjectListItemDto projectListItemDto = projectMapper.mapToProjectListItemDto(project);
-//            projectListItemDtos.add(projectListItemDto);
-//        }
-//        return projectListItemDtos;
-//    }
-
     private Sort parseSort(String sortParam) {
         if (sortParam == null || sortParam.isBlank()) {
             return Sort.by(
@@ -431,6 +341,33 @@ public class ProjectController {
 
         if ("name".equals(field)) {
             field = "title";
+        }
+
+        return Sort.by(new Sort.Order(Sort.Direction.fromString(direction), field));
+    }
+
+    private Sort parseParticipantsSort(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return Sort.by(
+                    Sort.Order.asc("user.fullName")
+            );
+        }
+
+        String[] parts = sortParam.split(",");
+        String field = parts[0].trim();
+        String direction =
+                parts.length > 1
+                        ? parts[1].trim()
+                        : "asc";
+
+        if ("fullName".equals(field)) {
+            field = "user.fullName";
+        }
+        if ("login".equals(field)) {
+            field = "user.login";
+        }
+        if ("role".equals(field)) {
+            field = "projectMemberRole";
         }
 
         return Sort.by(new Sort.Order(Sort.Direction.fromString(direction), field));

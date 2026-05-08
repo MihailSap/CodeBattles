@@ -40,6 +40,14 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.organizationSpecification = organizationSpecification;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public UserOrganization getUserOrganization(User user, Organization organization){
+        return userOrganizationRepository.findByUserAndOrganization(user, organization)
+                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND"));
+    }
+
+    @Transactional(readOnly = true)
     @Override
     public Page<Organization> searchForJoin(User user, String q, int page, int size) {
         Pageable pageable = PageRequest.of(
@@ -57,6 +65,14 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.findAll(spec, pageable);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Organization getById(Long id) {
+        return organizationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_NOT_FOUND"));
+    }
+
+    @Transactional(readOnly = true)
     @Override
     public Page<UserOrganization> getMyOrganizations(User user, int page, int size) {
         Pageable pageable = PageRequest.of(
@@ -71,24 +87,6 @@ public class OrganizationServiceImpl implements OrganizationService {
         return userOrganizationRepository.findAll(spec, pageable);
     }
 
-    @Override
-    public boolean isUserAdminInOrganization(User user, Organization organization){
-        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getAdmin());
-    }
-
-    @Override
-    public boolean isOrganizationContainsUser(Organization organization, User user) {
-        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getEnabled());
-    }
-
-    @Override
-    public boolean isOrganizationContainsJoinRequest(Organization organization, User user) {
-        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && Boolean.FALSE.equals(userOrganization.get().getEnabled());
-    }
-
     @Transactional
     @Override
     public Organization create(CreateOrganizationRequestDto request, User user){
@@ -97,16 +95,47 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setDescription(request.description());
         organization.setLogo(request.logo());
         organization.setLink(request.link());
-        organization.addMember(user, true);
+        organizationRepository.save(organization);
 
-        return organizationRepository.save(organization);
+        return addUser(organization, user, true);
     }
 
+    @Transactional
     @Override
-    public List<Organization> getAll() {
-        return organizationRepository.findAll();
+    public UserOrganization createOrganizationJoinRequest(Organization organization, User user){
+        UserOrganization userOrganization = new UserOrganization();
+        userOrganization.setOrganization(organization);
+        userOrganization.setUser(user);
+        return userOrganizationRepository.save(userOrganization);
     }
 
+    @Transactional
+    @Override
+    public void removeUserOrganization(Organization organization, User user){
+        UserOrganization userOrganization = getUserOrganization(user, organization);
+        userOrganizationRepository.delete(userOrganization);
+    }
+
+    @Transactional
+    @Override
+    public void approveJoinRequest(Organization organization, User user){
+        UserOrganization userOrganization = getUserOrganization(user, organization);
+        userOrganization.setEnabled(true);
+        userOrganizationRepository.save(userOrganization);
+    }
+
+    @Transactional
+    @Override
+    public Organization addUser(Organization organization, User user, boolean isAdmin) {
+        UserOrganization userOrganization = new UserOrganization();
+        userOrganization.setOrganization(organization);
+        userOrganization.setUser(user);
+        userOrganization.setAdmin(isAdmin);
+        userOrganization.setEnabled(true);
+        return userOrganizationRepository.save(userOrganization).getOrganization();
+    }
+
+    @Transactional
     @Override
     public Organization update(UpdateOrganizationRequest request, Organization organization) {
         String title = request.name();
@@ -135,68 +164,39 @@ public class OrganizationServiceImpl implements OrganizationService {
         return organizationRepository.save(organization);
     }
 
-    @Override
-    public Organization getById(Long id) {
-        return organizationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_NOT_FOUND"));
-    }
-
-    @Override
-    public List<Organization> getByUser(User user) {
-        return organizationRepository.findByMembers_User(user);
-    }
-
     @Transactional
     @Override
-    public UserOrganization createOrganizationJoinRequest(Organization organization, User user){
-        UserOrganization userOrganization = new UserOrganization();
-        userOrganization.setOrganization(organization);
-        userOrganization.setUser(user);
-        return userOrganizationRepository.save(userOrganization);
+    public void delete(Organization organization){
+        organizationRepository.delete(organization);
     }
 
-    @Override
-    public boolean isOrganizationJoinRequestExists(Organization organization, User user){
-        Optional<UserOrganization> userOrganization = userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent();
-    }
-
-    @Transactional
-    @Override
-    public void removeUserOrganization(Organization organization, User user){
-        UserOrganization userOrganization = getUserOrganization(user, organization);
-        userOrganizationRepository.delete(userOrganization);
-    }
-
+    @Transactional(readOnly = true)
     @Override
     public boolean isOrganizationExistsByTitle(String title) {
         return organizationRepository.existsByTitle(title);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     @Override
-    public void approveJoinRequest(Organization organization, User user){
-        UserOrganization userOrganization = getUserOrganization(user, organization);
-        userOrganization.setEnabled(true);
-        userOrganizationRepository.save(userOrganization);
+    public boolean isOrganizationContainsPendingJoinRequest(Organization organization, User user) {
+        Optional<UserOrganization> userOrganization =
+                userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && Boolean.FALSE.equals(userOrganization.get().getEnabled());
     }
 
+    @Transactional(readOnly = true)
     @Override
-    @Transactional
-    public Organization addUser(Organization organization, User user) {
-        organization.addMember(user, false);
-        return organizationRepository.save(organization);
+    public boolean isUserAdminInOrganization(User user, Organization organization){
+        Optional<UserOrganization> userOrganization =
+                userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getAdmin());
     }
 
+    @Transactional(readOnly = true)
     @Override
-    @Transactional
-    public void delete(Organization organization){
-        organizationRepository.delete(organization);
-    }
-
-    @Override
-    public UserOrganization getUserOrganization(User user, Organization organization){
-        return userOrganizationRepository.findByUserAndOrganization(user, organization)
-                .orElseThrow(() -> new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND"));
+    public boolean isUserExistsInOrganization(Organization organization, User user) {
+        Optional<UserOrganization> userOrganization =
+                userOrganizationRepository.findByUserAndOrganization(user, organization);
+        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getEnabled());
     }
 }
