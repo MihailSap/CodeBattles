@@ -38,18 +38,65 @@ public class ProjectMapper {
     }
 
     public ProjectListItemDto mapToProjectListItemDto(Project project, ProjectMemberRole projectMemberRole){
+        Organization organization = project.getOrganization();
         return new ProjectListItemDto(
                 project.getId(),
                 project.getTitle(),
                 project.getDescription(),
                 project.getIsPrivate(),
-                project.getOrganization() == null ? null : project.getOrganization().getId(),
-                project.getOrganization() == null ? null : project.getOrganization().getTitle(),
+                organization == null ? null : organization.getId(),
+                organization == null ? null : organization.getTitle(),
                 projectMemberRole,
                 getUsersCount(project.getUsers()),
                 getTasksCount(project.getTasks()),
                 project.getLastActivityAt() == null ? "" : project.getLastActivityAt().toString()
         );
+    }
+
+    public ProjectDetailsDto mapToProjectDetailsDto(Project project, ProjectMemberRole projectMemberRole) {
+        return new ProjectDetailsDto(
+                project.getId(),
+                project.getOrganization() == null ? null : project.getOrganization().getId(),
+                project.getOrganization() == null ? null : project.getOrganization().getTitle(),
+                project.getTitle(),
+                project.getDescription(),
+                mapStacks(project.getStacks()),
+                project.getIsPrivate(),
+                project.getAiReviewEnabled(),
+                project.getRepositoryUrl(),
+                project.getLastActivityAt() == null ? "" : project.getLastActivityAt().toString(),
+                projectMemberRole,
+                !ProjectMemberRole.GUEST.equals(projectMemberRole),
+                mapParticipantsId(project.getUsers()),
+                ProjectMemberRole.GUEST.equals(projectMemberRole) ? List.of() : mapTaskIds(project.getTasks())
+        );
+    }
+
+    private List<String> mapStacks(Set<ProjectStack> stacks) {
+        if(stacks == null) return List.of();
+        List<String> stackFullResponses = new ArrayList<>();
+        for(var stack : stacks) {
+            stackFullResponses.add(stack.getStack().getTitle());
+        }
+        return stackFullResponses;
+    }
+
+    private List<Long> mapTaskIds(Set<Task> tasks){
+        if(tasks == null) return List.of();
+        List<Long> taskIds = new ArrayList<>();
+        for(var task : tasks) {
+            taskIds.add(task.getId());
+        }
+        return taskIds;
+    }
+
+    private List<Long> mapParticipantsId(Set<UserProject> participants){
+        if(participants == null) return List.of();
+        List<Long> participantsId = new ArrayList<>();
+        for(UserProject participant : participants) {
+            participantsId.add(participant.getUser().getId());
+        }
+        return participantsId;
     }
 
     private int getTasksCount(Set<Task> tasks) {
@@ -65,70 +112,5 @@ public class ProjectMapper {
     private int getUsersCount(Set<UserProject> userProjects) {
         if(userProjects == null) return 0;
         return userProjects.size();
-    }
-
-    public ProjectDetailsDto mapToProjectDetailsDto(Project project){
-        return new ProjectDetailsDto(
-                project.getId(),
-                project.getOrganization() == null ? null : project.getOrganization().getId(),
-                project.getOrganization() == null ? null : project.getOrganization().getTitle(),
-                project.getTitle(),
-                project.getDescription(),
-                mapStacks(project.getStacks()),
-                project.getIsPrivate(),
-                project.getAiReviewEnabled(),
-                project.getRepositoryUrl(),
-                project.getLastActivityAt() == null ? "" : project.getLastActivityAt().toString(),
-                ProjectMemberRole.GUEST,
-                false,
-                mapParticipantsId(project.getUsers()),
-                List.of()
-        );
-    }
-
-    public ProjectDetailsDto mapToProjectDetailsDto(Project project, UserProject userProject) {
-        return new ProjectDetailsDto(
-                project.getId(),
-                project.getOrganization() == null ? null : project.getOrganization().getId(),
-                project.getOrganization() == null ? null : project.getOrganization().getTitle(),
-                project.getTitle(),
-                project.getDescription(),
-                mapStacks(project.getStacks()),
-                project.getIsPrivate(),
-                project.getAiReviewEnabled(),
-                project.getRepositoryUrl(),
-                project.getLastActivityAt() == null ? "" : project.getLastActivityAt().toString(),
-                userProject.getProjectMemberRole(),
-                true,
-                mapParticipantsId(project.getUsers()),
-                mapTaskIds(project.getTasks())
-        );
-    }
-
-    public List<String> mapStacks(Set<ProjectStack> stacks) {
-        if(stacks == null) return List.of();
-        List<String> stackFullResponses = new ArrayList<>();
-        for(var stack : stacks) {
-            stackFullResponses.add(stack.getStack().getTitle());
-        }
-        return stackFullResponses;
-    }
-
-    public List<Long> mapTaskIds(Set<Task> tasks){
-        if(tasks == null) return List.of();
-        List<Long> taskIds = new ArrayList<>();
-        for(var task : tasks) {
-            taskIds.add(task.getId());
-        }
-        return taskIds;
-    }
-
-    public List<Long> mapParticipantsId(Set<UserProject> participants){
-        if(participants == null) return List.of();
-        List<Long> participantsId = new ArrayList<>();
-        for(UserProject participant : participants) {
-            participantsId.add(participant.getUser().getId());
-        }
-        return participantsId;
     }
 }

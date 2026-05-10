@@ -167,7 +167,9 @@ public class ProjectController {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
 
-        if(project.getIsPrivate() && !projectService.isUserInProject(project, user)){
+        if(project.getIsPrivate()
+                && !projectService.isUserOwnerInProject(project, user)
+                && !projectService.isUserMemberInProject(project, user)){
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
         }
 
@@ -176,12 +178,14 @@ public class ProjectController {
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
 
-        if(!project.getIsPrivate() && !projectService.isUserMemberOfProject(project, user)){
-            return projectMapper.mapToProjectDetailsDto(project);
+        if(project.getIsPrivate()
+                && !projectService.isUserOwnerInProject(project, user)
+                && !projectService.isUserMemberInProject(project, user)){
+            return projectMapper.mapToProjectDetailsDto(project, ProjectMemberRole.GUEST);
         }
 
         UserProject userProject = projectService.getUserProject(user, project);
-        return projectMapper.mapToProjectDetailsDto(project, userProject);
+        return projectMapper.mapToProjectDetailsDto(project, userProject.getProjectMemberRole());
     }
 
     @Operation(description = "Обновление проекта по id")
@@ -197,7 +201,7 @@ public class ProjectController {
         Project updatedProject = projectService.update(request, project);
         UserProject userProject = projectService.getUserProject(user, updatedProject);
 
-        return projectMapper.mapToProjectDetailsDto(project, userProject);
+        return projectMapper.mapToProjectDetailsDto(project, userProject.getProjectMemberRole());
     }
 
     @Operation(description = "Удаление проекта по id")
@@ -222,7 +226,7 @@ public class ProjectController {
         if(projectService.isUserOwnerInProject(project, user)){
             throw new RuntimeException("400 OWNER CAN'T LEAVE PROJECT");
         }
-        if(!projectService.isUserInProject(project, user)){
+        if(!projectService.isUserProjectExists(project, user)){
             throw new RuntimeException("Пользователь не состоит в проекте");
         }
         projectService.removeUserFromProject(user, project);
@@ -274,7 +278,7 @@ public class ProjectController {
         return projectInviteMapper.mapToProjectInviteResponse(projectInvite);
     }
 
-    @Operation(description = "Вступление пользователя в проект")
+    @Operation(description = "Вступление пользователя в публичный проект")
     @PostMapping("/{projectId}/join")
     public ProjectJoinedResponse join(@PathVariable("projectId") Long projectId) throws UserNotFoundException {
         Project project = projectService.getById(projectId);
@@ -282,11 +286,8 @@ public class ProjectController {
         if(Boolean.TRUE.equals(project.getIsPrivate())){
             throw new RuntimeException("403 PROJECT_NOT_PUBLIC");
         }
-        if(projectService.isUserInProject(project, user)){
+        if(projectService.isUserProjectExists(project, user)){
             throw new RuntimeException("409 ALREADY_MEMBER");
-        }
-        if(project.getOrganization() == null){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
         projectService.addUserToProject(user, project, ProjectMemberRole.MEMBER);
         return new ProjectJoinedResponse(true, project.getId());
@@ -294,37 +295,14 @@ public class ProjectController {
 
     @Operation(description = "Поиск публичных проектов для вступления")
     @GetMapping("/public/search")
-    public PageResponse<ProjectListItemDto> searchPublicProjects(
-            @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String sort
-    ) throws UserNotFoundException {
-
+    public List<ProjectListItemDto> search() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
-        Sort parsedSort = parseSort(sort);
-
-        Page<Project> projects =
-                projectService.getPublicProjectsForSearch(
-                        page,
-                        size,
-                        parsedSort,
-                        q,
-                        user
-                );
-
-        Page<ProjectListItemDto> dtoPage =
-                projects.map(project ->
-                        projectMapper.mapToProjectListItemDto(
-                                project,
-                                projectService.getProjectMemberRole(user, project)
-                        )
-                );
-
-        return PageResponse.of(
-                dtoPage,
-                List.of(sort == null ? "lastActivityAt,desc" : sort)
-        );
+        List<Project> projects = projectService.getPublicProjects(user);
+        List<ProjectListItemDto> projectListItemDtos = new ArrayList<>();
+        for(var project : projects){
+            projectListItemDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.GUEST));
+        }
+        return projectListItemDtos;
     }
 
     private Sort parseSort(String sortParam) {

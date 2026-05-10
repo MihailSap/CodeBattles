@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.project.ProjectCreateRequest;
 import ru.urfu.backend.dto.project.ProjectUpdateRequest;
-import ru.urfu.backend.mapper.ProjectMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 import ru.urfu.backend.model.enums.ProjectMembershipFilter;
@@ -21,6 +20,7 @@ import ru.urfu.backend.specification.ProjectSpecification;
 import ru.urfu.backend.specification.PublicProjectSpecification;
 import ru.urfu.backend.specification.UserProjectSpecification;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +34,6 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectStackRepository projectStackRepository;
     private final UserProjectSpecification userProjectSpecification;
     private final PublicProjectSpecification publicProjectSpecification;
-    private final ProjectMapper projectMapper;
 
     @Autowired
     public ProjectServiceImpl(
@@ -44,7 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
             StackService stackService,
             ProjectStackRepository projectStackRepository,
             UserProjectSpecification userProjectSpecification,
-            PublicProjectSpecification publicProjectSpecification, ProjectMapper projectMapper
+            PublicProjectSpecification publicProjectSpecification
     ) {
         this.projectRepository = projectRepository;
         this.projectSpecification = projectSpecification;
@@ -53,27 +52,6 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectStackRepository = projectStackRepository;
         this.userProjectSpecification = userProjectSpecification;
         this.publicProjectSpecification = publicProjectSpecification;
-        this.projectMapper = projectMapper;
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Page<Project> getPublicProjectsForSearch(
-            int page,
-            int size,
-            Sort sort,
-            String q,
-            User currentUser
-    ) {
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Specification<Project> spec =
-                publicProjectSpecification.publicProjects(
-                        currentUser.getId(),
-                        q
-                );
-
-        return projectRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -132,6 +110,19 @@ public class ProjectServiceImpl implements ProjectService {
         );
 
         return projectRepository.findAll(spec, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Project> getPublicProjects(User user){
+        List<Project> projects = projectRepository.findByIsPrivateFalseAndOrganizationNull();
+        List<Project> result = new ArrayList<>();
+        for(Project project : projects){
+            if(!isUserProjectExists(project, user)){
+                result.add(project);
+            }
+        }
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -269,18 +260,17 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Transactional(readOnly = true)
     @Override
-    public boolean isUserInProject(Project project, User user) {
+    public boolean isUserProjectExists(Project project, User user) {
         Optional<UserProject> userProjectOptional = userProjectRepository.findByUserAndProject(user, project);
         return userProjectOptional.isPresent();
     }
 
     @Transactional(readOnly = true)
     @Override
-    public boolean isUserMemberOfProject(Project project, User user) {
+    public boolean isUserMemberInProject(Project project, User user) {
         Optional<UserProject> userProjectOptional = userProjectRepository.findByUserAndProject(user, project);
         return userProjectOptional.isPresent()
-                && (!ProjectMemberRole.OWNER.equals(userProjectOptional.get().getProjectMemberRole())
-                || ProjectMemberRole.MEMBER.equals(userProjectOptional.get().getProjectMemberRole()));
+                && ProjectMemberRole.MEMBER.equals(userProjectOptional.get().getProjectMemberRole());
     }
 
     @Transactional(readOnly = true)

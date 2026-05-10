@@ -16,6 +16,8 @@ import java.util.List;
 
 public interface ProjectService {
 
+    List<Project> getPublicProjects(User user);
+
     Page<Project> getAll(
             int page, int size, Sort sort, String search, ProjectPrivacy privacy, Long organizationId,
             ProjectMembershipFilter membership, User currentUser);
@@ -23,8 +25,6 @@ public interface ProjectService {
     Page<UserProject> getParticipants(
             Project project, int page, int size, Sort sort, String search, ProjectMemberRole role,
             List<Long> excludeSelectedIds);
-
-    Page<Project> getPublicProjectsForSearch(int page, int size, Sort sort, String q, User currentUser);
 
     ProjectMemberRole getProjectMemberRole(User user, Project project);
 
@@ -50,7 +50,7 @@ public interface ProjectService {
 
     boolean isUserOwnerInProject(Project project, User user);
 
-    boolean isUserInProject(Project project, User user);
+    boolean isUserProjectExists(Project project, User user);
 
-    boolean isUserMemberOfProject(Project project, User user);
+    boolean isUserMemberInProject(Project project, User user);
 }

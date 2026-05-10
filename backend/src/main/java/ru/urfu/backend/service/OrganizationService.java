@@ -6,7 +6,11 @@ import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 
+import java.util.List;
+
 public interface OrganizationService {
+
+    List<UserOrganization> getMyOrganizations(User user);
 
     Page<UserOrganization> getMyOrganizations(User user, int page, int size);
 

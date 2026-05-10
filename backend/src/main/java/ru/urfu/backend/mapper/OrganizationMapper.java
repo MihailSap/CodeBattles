@@ -5,11 +5,9 @@ import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.dto.project.ProjectItemResponse;
 import ru.urfu.backend.dto.project.ProjectListItemDto;
-import ru.urfu.backend.model.Organization;
-import ru.urfu.backend.model.Project;
-import ru.urfu.backend.model.User;
-import ru.urfu.backend.model.UserOrganization;
+import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.service.ProjectService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +17,12 @@ import java.util.Set;
 public class OrganizationMapper {
 
     private final ProjectMapper projectMapper;
+    private final ProjectService projectService;
 
     @Autowired
-    public OrganizationMapper(ProjectMapper projectMapper) {
+    public OrganizationMapper(ProjectMapper projectMapper, ProjectService projectService) {
         this.projectMapper = projectMapper;
+        this.projectService = projectService;
     }
 
     public OrganizationDetailsDto mapToOrganizationDetailsDto(Organization organization, String viewerRole) {
@@ -52,12 +52,12 @@ public class OrganizationMapper {
         );
     }
 
-    public OrganizationProjectsCardDto mapToOrganizationProjectsCardDto(Organization organization, Boolean isAdmin){
+    public OrganizationProjectsCardDto mapToOrganizationProjectsCardDto(User user, Organization organization, Boolean isAdmin){
         Set<Project> projects = organization.getProjects();
         List<ProjectListItemDto> projectDetailsDtos = new ArrayList<>();
         for (Project project : projects) {
-            //FIXME: Убрать константу роли
-            projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.MEMBER));
+            UserProject userProject = projectService.getUserProject(user, project);
+            projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, userProject.getProjectMemberRole()));
         }
 
         return new OrganizationProjectsCardDto(

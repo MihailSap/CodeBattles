@@ -50,6 +50,14 @@ public class UserServiceImpl implements UserService {
         this.userStackRepository = userStackRepository;
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public User getByGithubId(String githubId) throws UserNotFoundException {
+        return userRepository.findByGithubId(githubId)
+                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+    }
+
+    @Transactional(readOnly = true)
     @Override
     public Page<User> getAll(int page, int size, String filter) {
         Sort sort = Sort.by(
@@ -61,24 +69,28 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll(spec, pageable);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getByEmail(String email) throws UserNotFoundException {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("403 FORBIDDEN"));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getById(long id) throws UserNotFoundException {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getByVerificationToken(String verificationToken) throws UserNotFoundException {
         return userRepository.findByVerificationToken(verificationToken)
                 .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public User getByPasswordResetToken(String token) throws UserNotFoundException {
         return userRepository.findByPasswordResetToken(token)
@@ -133,18 +145,13 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
     }
 
-    @Override
-    public User getByGithubId(String githubId) throws UserNotFoundException {
-        return userRepository.findByGithubId(githubId)
-                .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
-    }
-
     @Transactional
     @Override
     public User save(User user){
         return userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public boolean isExistsByEmail(String email) {
         return userRepository.existsByEmail(email);
@@ -178,18 +185,21 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Transactional
     @Override
     public User enableUser(User user) {
         user.setEnabled(true);
         return userRepository.save(user);
     }
 
+    @Transactional
     @Override
     public void setNullPasswordResetToken(User user){
         user.setPasswordResetToken(null);
         userRepository.save(user);
     }
 
+    @Transactional
     @Override
     public String setPasswordResetToken(User user) {
         String token = UUID.randomUUID().toString();
@@ -198,6 +208,7 @@ public class UserServiceImpl implements UserService {
         return token;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public boolean isExistsByGithubId(String githubId) {
         return userRepository.findByGithubId(githubId).isPresent();

@@ -33,6 +33,7 @@ import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.service.UserService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Tag(name = "Управление организациями")
@@ -83,24 +84,18 @@ public class OrganizationController {
 
     @Operation(description = "Получение организаций пользователя с проектами")
     @GetMapping("/my-with-projects")
-    public PageResponse<OrganizationProjectsCardDto> getMyOrganizationsWithProjects(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size
-    ) throws UserNotFoundException {
+    public List<OrganizationProjectsCardDto> getMyOrganizationsWithProjects() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
-
-        Page<UserOrganization> myOrganizations =
-                organizationService.getMyOrganizations(user, page, size);
-
-        Page<OrganizationProjectsCardDto> dtoPage =
-                myOrganizations.map(userOrganization ->
-                        organizationMapper.mapToOrganizationProjectsCardDto(
-                                userOrganization.getOrganization(),
-                                organizationService.isUserAdminInOrganization(user, userOrganization.getOrganization())
-                        )
-                );
-
-        return PageResponse.of(dtoPage, List.of("createdAt,desc"));
+        List<UserOrganization> userOrganizations = organizationService.getMyOrganizations(user);
+        List<OrganizationProjectsCardDto> result = new ArrayList<>();
+        for(var userOrganization : userOrganizations) {
+            result.add(organizationMapper.mapToOrganizationProjectsCardDto(
+                    user,
+                    userOrganization.getOrganization(),
+                    userOrganization.getAdmin()
+            ));
+        }
+        return result;
     }
 
     @Operation(description = "Поиск организаций для вступления")

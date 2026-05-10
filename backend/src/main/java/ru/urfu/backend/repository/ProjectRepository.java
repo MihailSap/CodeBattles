@@ -13,13 +13,9 @@ import java.util.Optional;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
 
+    List<Project> findByIsPrivateFalseAndOrganizationNull();
+
     Boolean existsByTitle(String title);
-
-    Optional<Project> findByTitle(String title);
-
-    List<Project> findByOrganization(Organization organization);
-
-    List<Project> findByUsers_User(User user);
 
     Optional<Project> findByTitleAndOrganization(String title, Organization organization);
 

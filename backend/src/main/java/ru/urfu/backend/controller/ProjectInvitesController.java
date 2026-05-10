@@ -59,7 +59,7 @@ public class ProjectInvitesController {
         ProjectInvite projectInvite = projectInviteService.getByToken(token);
         Project project = projectInvite.getProject();
         User user = authService.getAuthenticatedUser();
-        if(projectService.isUserInProject(project, user)){
+        if(projectService.isUserProjectExists(project, user)){
             throw new RuntimeException("409 ALREADY_MEMBER");
         }
         if(projectInvite.getExpiresAt().isBefore(LocalDateTime.now())){

@@ -7,9 +7,12 @@ import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserOrganizationRepository extends JpaRepository<UserOrganization, Long>, JpaSpecificationExecutor<UserOrganization> {
     Optional<UserOrganization> findByUserAndOrganization(User user, Organization organization);
+
+    List<UserOrganization> findByUser(User user);
 }

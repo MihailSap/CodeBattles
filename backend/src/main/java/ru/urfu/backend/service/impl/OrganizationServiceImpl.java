@@ -87,6 +87,12 @@ public class OrganizationServiceImpl implements OrganizationService {
         return userOrganizationRepository.findAll(spec, pageable);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserOrganization> getMyOrganizations(User user) {
+        return userOrganizationRepository.findByUser(user);
+    }
+
     @Transactional
     @Override
     public Organization create(CreateOrganizationRequestDto request, User user){
@@ -189,7 +195,9 @@ public class OrganizationServiceImpl implements OrganizationService {
     public boolean isUserAdminInOrganization(User user, Organization organization){
         Optional<UserOrganization> userOrganization =
                 userOrganizationRepository.findByUserAndOrganization(user, organization);
-        return userOrganization.isPresent() && Boolean.TRUE.equals(userOrganization.get().getAdmin());
+        return userOrganization.isPresent()
+                && Boolean.TRUE.equals(userOrganization.get().getEnabled())
+                && Boolean.TRUE.equals(userOrganization.get().getAdmin());
     }
 
     @Transactional(readOnly = true)
