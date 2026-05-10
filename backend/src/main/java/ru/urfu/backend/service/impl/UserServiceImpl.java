@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import ru.urfu.backend.dto.auth.RegisterRequest;
 import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
@@ -16,9 +17,9 @@ import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.UserStack;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.User;
-import ru.urfu.backend.repository.StackRepository;
 import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.repository.UserStackRepository;
+import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.service.UserService;
 import ru.urfu.backend.specification.UserSpecification;
@@ -30,10 +31,11 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserStackRepository userStackRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSpecification userSpecification;
     private final StackService stackService;
-    private final UserStackRepository userStackRepository;
+    private final FileService fileService;
 
     @Autowired
     public UserServiceImpl(
@@ -41,13 +43,15 @@ public class UserServiceImpl implements UserService {
             PasswordEncoder passwordEncoder,
             UserSpecification userSpecification,
             StackService stackService,
-            UserStackRepository userStackRepository
+            UserStackRepository userStackRepository,
+            FileService fileService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSpecification = userSpecification;
         this.stackService = stackService;
         this.userStackRepository = userStackRepository;
+        this.fileService = fileService;
     }
 
     @Transactional(readOnly = true)
@@ -121,8 +125,23 @@ public class UserServiceImpl implements UserService {
         newUser.setEnabled(true);
         newUser.setPassword("oauth");
         newUser.setRole(Role.USER);
-        newUser.setAvatarUrl(avatar);
+        newUser.setAvatarFileTitle(avatar);
         userRepository.save(newUser);
+    }
+
+    @Transactional
+    @Override
+    public User updateImage(User user, MultipartFile imageFile) {
+        String oldUserAvatarUrl = user.getAvatarFileTitle();
+        if(oldUserAvatarUrl != null){
+            fileService.delete(oldUserAvatarUrl);
+        }
+
+        String newUserAvatarUrl = fileService.save(imageFile);
+        user.setAvatarFileTitle(newUserAvatarUrl);
+        userRepository.save(user);
+
+        return user;
     }
 
     @Transactional

@@ -43,7 +43,7 @@ public class TaskMapper {
                 userTask.getUser().getLogin(),
                 userTask.getUser().getEmail(),
                 userTask.getUser().getFullName(),
-                userTask.getUser().getAvatarUrl(),
+                userTask.getUser().getAvatarFileTitle(),
                 ProjectMemberRole.OWNER //FIXME: Убрать заглушку
         );
     }

@@ -32,7 +32,7 @@ public class ProjectMapper {
                 participant.getLogin(),
                 participant.getEmail(),
                 participant.getFullName(),
-                participant.getAvatarUrl(),
+                participant.getAvatarFileTitle(),
                 userProject.getProjectMemberRole()
         );
     }

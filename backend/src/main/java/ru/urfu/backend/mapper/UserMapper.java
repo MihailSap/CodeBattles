@@ -22,7 +22,7 @@ public class UserMapper {
                 user.getEmail(),
                 user.getLogin(),
                 user.getRegisteredAt() == null ? null : user.getRegisteredAt().toString(),
-                user.getAvatarUrl(),
+                user.getAvatarFileTitle(),
                 user.getRole(),
                 user.isEnabled()
         );

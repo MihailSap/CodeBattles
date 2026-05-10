@@ -8,6 +8,7 @@ public interface PathsConstants {
     String ORGANIZATIONS = "/organizations";
     String PROJECTS = "/projects";
     String TASKS = "/tasks";
+    String FILES = "/files";
     String PROJECT_INVITES = "/project-invites";
     String PROFILE = "/profile";
 }

@@ -14,6 +14,7 @@ import ru.urfu.backend.model.enums.ProjectPrivacy;
 import ru.urfu.backend.repository.ProjectRepository;
 import ru.urfu.backend.repository.ProjectStackRepository;
 import ru.urfu.backend.repository.UserProjectRepository;
+import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.specification.ProjectSpecification;
@@ -28,12 +29,12 @@ import java.util.Optional;
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
-    private final ProjectSpecification projectSpecification;
     private final UserProjectRepository userProjectRepository;
-    private final StackService stackService;
     private final ProjectStackRepository projectStackRepository;
+    private final StackService stackService;
+
     private final UserProjectSpecification userProjectSpecification;
-    private final PublicProjectSpecification publicProjectSpecification;
+    private final ProjectSpecification projectSpecification;
 
     @Autowired
     public ProjectServiceImpl(
@@ -42,8 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
             UserProjectRepository userProjectRepository,
             StackService stackService,
             ProjectStackRepository projectStackRepository,
-            UserProjectSpecification userProjectSpecification,
-            PublicProjectSpecification publicProjectSpecification
+            UserProjectSpecification userProjectSpecification
     ) {
         this.projectRepository = projectRepository;
         this.projectSpecification = projectSpecification;
@@ -51,7 +51,6 @@ public class ProjectServiceImpl implements ProjectService {
         this.stackService = stackService;
         this.projectStackRepository = projectStackRepository;
         this.userProjectSpecification = userProjectSpecification;
-        this.publicProjectSpecification = publicProjectSpecification;
     }
 
     @Transactional(readOnly = true)
@@ -132,16 +131,16 @@ public class ProjectServiceImpl implements ProjectService {
                 .orElseThrow(() -> new RuntimeException("Связь между данными User и Project не найдена"));
     }
 
-    @Override
     @Transactional
+    @Override
     public Project create(ProjectCreateRequest request, User user, Organization organization){
         Project project = new Project();
         project.setOrganization(organization);
         return create(request, user, project);
     }
 
-    @Override
     @Transactional
+    @Override
     public Project create(ProjectCreateRequest request, User user){
         Project project = new Project();
         return create(request, user, project);

@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: rename-avatar-columns
+      author: SapeginMihail
+      changes:
+        - renameColumn:
+            tableName: users
+            oldColumnName: avatar_url
+            newColumnName: avatar_file_title
+        - renameColumn:
+            tableName: organization
+            oldColumnName: logo
+            newColumnName: avatar_file_title

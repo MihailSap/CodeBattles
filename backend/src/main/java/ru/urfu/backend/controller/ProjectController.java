@@ -3,18 +3,13 @@ package ru.urfu.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.CreatedResponse;
 import ru.urfu.backend.dto.DeletedResponse;
 import ru.urfu.backend.dto.LeftResponse;
-import ru.urfu.backend.dto.PageResponse;
 import ru.urfu.backend.dto.invite.ProjectInviteRequest;
 import ru.urfu.backend.dto.invite.ProjectInviteResponse;
 import ru.urfu.backend.dto.project.*;
@@ -25,8 +20,6 @@ import ru.urfu.backend.mapper.ProjectMapper;
 import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
-import ru.urfu.backend.model.enums.ProjectMembershipFilter;
-import ru.urfu.backend.model.enums.ProjectPrivacy;
 import ru.urfu.backend.service.*;
 
 import java.util.ArrayList;
@@ -68,74 +61,31 @@ public class ProjectController {
         this.projectInviteMapper = projectInviteMapper;
     }
 
+    @Operation(description = "Получение проектов пользователя")
     @GetMapping
-    public PageResponse<ProjectListItemDto> getProjects(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) ProjectPrivacy privacy,
-            @RequestParam(required = false) Long organizationId,
-            @RequestParam(required = false) ProjectMembershipFilter membership
+    public List<ProjectListItemDto> getProjects(
     ) throws UserNotFoundException {
         User currentUser = authService.getAuthenticatedUser();
-        Sort parsedSort = parseSort(sort);
+        Set<UserProject> userProjects = currentUser.getProjects();
+        List<ProjectListItemDto> result = new ArrayList<>();
+        for(UserProject userProject : userProjects) {
+            result.add(projectMapper.mapToProjectListItemDto(
+                    userProject.getProject(), userProject.getProjectMemberRole()));
+        }
 
-        Page<Project> projects = projectService.getAll(
-                page,
-                size,
-                parsedSort,
-                search,
-                privacy,
-                organizationId,
-                membership,
-                currentUser
-        );
-
-        Page<ProjectListItemDto> dtoPage = projects.map(project ->
-                projectMapper.mapToProjectListItemDto(
-                        project, projectService.getProjectMemberRole(currentUser, project)
-                )
-        );
-
-        return PageResponse.of(dtoPage, List.of(sort == null ? "lastActivityAt,desc" : sort));
+        return result;
     }
 
     @Operation(description = "Получение участников проекта по id")
     @GetMapping("/{projectId}/participants")
-    public PageResponse<ProjectParticipantDto> getParticipants(
-            @PathVariable("projectId") Long projectId,
-            @RequestParam(defaultValue = "0")
-            @Min(0)
-            int page,
-            @RequestParam(defaultValue = "10")
-            @Min(1)
-            @Max(100)
-            int size,
-            @RequestParam(required = false)
-            String sort,
-            @RequestParam(required = false)
-            String search,
-            @RequestParam(required = false)
-            ProjectMemberRole role,
-            @RequestParam(required = false)
-            List<Long> excludeSelectedIds
-    ) {
+    public List<ProjectParticipantDto> getParticipants(@PathVariable("projectId") Long projectId) {
         Project project = projectService.getById(projectId);
-        Sort parsedSort = parseParticipantsSort(sort);
-        Page<UserProject> participants =
-                projectService.getParticipants(
-                        project,
-                        page,
-                        size,
-                        parsedSort,
-                        search,
-                        role,
-                        excludeSelectedIds
-                );
-
-        Page<ProjectParticipantDto> dtoPage = participants.map(projectMapper::mapToProjectParticipantDto);
-        return PageResponse.of(dtoPage, List.of(sort == null ? "role,asc;fullName,asc" : sort));
+        Set<UserProject> userProjects = project.getUsers();
+        List<ProjectParticipantDto> result = new ArrayList<>();
+        for (UserProject userProject : userProjects) {
+            result.add(projectMapper.mapToProjectParticipantDto(userProject));
+        }
+        return result;
     }
 
     @Operation(description = "Создание проекта")
@@ -303,51 +253,5 @@ public class ProjectController {
             projectListItemDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.GUEST));
         }
         return projectListItemDtos;
-    }
-
-    private Sort parseSort(String sortParam) {
-        if (sortParam == null || sortParam.isBlank()) {
-            return Sort.by(
-                    Sort.Order.desc("lastActivityAt"),
-                    Sort.Order.desc("id")
-            );
-        }
-
-        String[] parts = sortParam.split(",");
-        String field = parts[0].trim();
-        String direction = parts.length > 1 ? parts[1].trim() : "asc";
-
-        if ("name".equals(field)) {
-            field = "title";
-        }
-
-        return Sort.by(new Sort.Order(Sort.Direction.fromString(direction), field));
-    }
-
-    private Sort parseParticipantsSort(String sortParam) {
-        if (sortParam == null || sortParam.isBlank()) {
-            return Sort.by(
-                    Sort.Order.asc("user.fullName")
-            );
-        }
-
-        String[] parts = sortParam.split(",");
-        String field = parts[0].trim();
-        String direction =
-                parts.length > 1
-                        ? parts[1].trim()
-                        : "asc";
-
-        if ("fullName".equals(field)) {
-            field = "user.fullName";
-        }
-        if ("login".equals(field)) {
-            field = "user.login";
-        }
-        if ("role".equals(field)) {
-            field = "projectMemberRole";
-        }
-
-        return Sort.by(new Sort.Order(Sort.Direction.fromString(direction), field));
     }
 }

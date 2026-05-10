@@ -16,11 +16,13 @@ public interface OrganizationService {
 
     Page<Organization> searchForJoin(User user, String q, int page, int size);
 
+    List<Organization> getOrganizationsToJoin(User user);
+
     UserOrganization getUserOrganization(User user, Organization organization);
 
     Organization getById(Long id);
 
-    Organization create(CreateOrganizationRequestDto request, User user);
+    Organization create(OrganizationCreateRequest request, User user);
 
     void approveJoinRequest(Organization organization, User user);
 
@@ -30,7 +32,7 @@ public interface OrganizationService {
 
     Organization addUser(Organization organization, User user, boolean isAdmin);
 
-    Organization update(UpdateOrganizationRequest request, Organization organization);
+    Organization update(OrganizationUpdateRequest request, Organization organization);
 
     void delete(Organization organization);
 

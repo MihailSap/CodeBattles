@@ -3,6 +3,7 @@ package ru.urfu.backend.mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.organization.*;
+import ru.urfu.backend.dto.organization.join.OrganizationJoinRequest;
 import ru.urfu.backend.dto.project.ProjectItemResponse;
 import ru.urfu.backend.dto.project.ProjectListItemDto;
 import ru.urfu.backend.model.*;
@@ -25,13 +26,13 @@ public class OrganizationMapper {
         this.projectService = projectService;
     }
 
-    public OrganizationDetailsDto mapToOrganizationDetailsDto(Organization organization, String viewerRole) {
-        return new OrganizationDetailsDto(
+    public OrganizationDetailsResponse mapToOrganizationDetailsDto(Organization organization, String viewerRole) {
+        return new OrganizationDetailsResponse(
                 organization.getId(),
                 organization.getTitle(),
                 organization.getDescription(),
                 organization.getLink(),
-                organization.getLogo(),
+                organization.getAvatarFileTitle(),
                 getAdminId(organization),
                 viewerRole,
                 getParticipants(organization),
@@ -47,12 +48,12 @@ public class OrganizationMapper {
                 user.getLogin(),
                 user.getEmail(),
                 user.getFullName(),
-                user.getAvatarUrl(),
+                user.getAvatarFileTitle(),
                 userOrganization.getAdmin() ? "OWNER" : "MEMBER"
         );
     }
 
-    public OrganizationProjectsCardDto mapToOrganizationProjectsCardDto(User user, Organization organization, Boolean isAdmin){
+    public OrganizationProjectsCardResponse mapToOrganizationProjectsCardDto(User user, Organization organization, Boolean isAdmin){
         Set<Project> projects = organization.getProjects();
         List<ProjectListItemDto> projectDetailsDtos = new ArrayList<>();
         for (Project project : projects) {
@@ -60,9 +61,9 @@ public class OrganizationMapper {
             projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, userProject.getProjectMemberRole()));
         }
 
-        return new OrganizationProjectsCardDto(
+        return new OrganizationProjectsCardResponse(
                 organization.getId(),
-                organization.getLogo(),
+                organization.getAvatarFileTitle(),
                 organization.getTitle(),
                 organization.getLink(),
                 organization.getDescription(),
@@ -71,10 +72,11 @@ public class OrganizationMapper {
         );
     }
 
-    public OrganizationListItemDto mapToOrganizationListItemDto(Organization organization, Boolean isAdmin, Boolean hasPendingRequests) {
-        return new OrganizationListItemDto(
+    public OrganizationListItemResponse mapToOrganizationListItemDto(
+            Organization organization, Boolean isAdmin, Boolean hasPendingRequests) {
+        return new OrganizationListItemResponse(
                 organization.getId(),
-                organization.getLogo(),
+                organization.getAvatarFileTitle(),
                 organization.getTitle(),
                 organization.getLink(),
                 organization.getDescription(),
@@ -101,7 +103,7 @@ public class OrganizationMapper {
                     request.getUser().getId(),
                     request.getUser().getLogin(),
                     request.getUser().getFullName(),
-                    request.getUser().getAvatarUrl(),
+                    request.getUser().getAvatarFileTitle(),
                     request.getCreatedAt().toString()
             ));
         }

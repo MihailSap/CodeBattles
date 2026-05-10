@@ -1,6 +1,6 @@
 package ru.urfu.backend.dto.organization;
 
-public record OrganizationListShortItemDto(
+public record OrganizationListItemResponse(
         Long id,
         String logo,
         String name,
@@ -8,6 +8,7 @@ public record OrganizationListShortItemDto(
         String description,
         Integer participantsCount,
         Integer projectsCount,
+        Boolean isAdmin,
         Boolean hasPendingRequest
 ) {
 }

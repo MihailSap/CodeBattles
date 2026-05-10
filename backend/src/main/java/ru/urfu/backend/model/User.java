@@ -30,7 +30,7 @@ public class User extends BaseEntity {
 
     private String githubId;
 
-    private String avatarUrl;
+    private String avatarFileTitle;
 
     private LocalDateTime registeredAt = LocalDateTime.now();
 
@@ -134,12 +134,12 @@ public class User extends BaseEntity {
         this.githubId = githubId;
     }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
+    public String getAvatarFileTitle() {
+        return avatarFileTitle;
     }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+    public void setAvatarFileTitle(String avatarUrl) {
+        this.avatarFileTitle = avatarUrl;
     }
 
     public Set<UserOrganization> getOrganizations() {

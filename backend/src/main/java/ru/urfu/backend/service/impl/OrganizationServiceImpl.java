@@ -8,16 +8,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.repository.OrganizationRepository;
 import ru.urfu.backend.repository.UserOrganizationRepository;
+import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.specification.OrganizationSpecification;
 import ru.urfu.backend.specification.UserOrganizationSpecification;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +31,18 @@ public class OrganizationServiceImpl implements OrganizationService {
     private final UserOrganizationRepository userOrganizationRepository;
     private final UserOrganizationSpecification userOrganizationSpecification;
     private final OrganizationSpecification organizationSpecification;
+    private final FileService fileService;
 
     @Autowired
     public OrganizationServiceImpl(
             OrganizationRepository organizationRepository,
             UserOrganizationRepository userOrganizationRepository,
-            UserOrganizationSpecification userOrganizationSpecification, OrganizationSpecification organizationSpecification) {
+            UserOrganizationSpecification userOrganizationSpecification, OrganizationSpecification organizationSpecification, FileService fileService) {
         this.organizationRepository = organizationRepository;
         this.userOrganizationRepository = userOrganizationRepository;
         this.userOrganizationSpecification = userOrganizationSpecification;
         this.organizationSpecification = organizationSpecification;
+        this.fileService = fileService;
     }
 
     @Transactional(readOnly = true)
@@ -76,10 +81,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public Page<UserOrganization> getMyOrganizations(User user, int page, int size) {
         Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+                page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<UserOrganization> spec =
                 userOrganizationSpecification.byUser(user);
@@ -93,14 +95,23 @@ public class OrganizationServiceImpl implements OrganizationService {
         return userOrganizationRepository.findByUser(user);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<Organization> getOrganizationsToJoin(User user) {
+        return organizationRepository.findAllWhereUserNotEnabled(user);
+    }
+
     @Transactional
     @Override
-    public Organization create(CreateOrganizationRequestDto request, User user){
+    public Organization create(OrganizationCreateRequest request, User user){
         Organization organization = new Organization();
         organization.setTitle(request.name());
         organization.setDescription(request.description());
-        organization.setLogo(request.logo());
         organization.setLink(request.link());
+
+        String avatarTitle = fileService.save(request.logo());
+        organization.setAvatarFileTitle(avatarTitle);
+
         organizationRepository.save(organization);
 
         return addUser(organization, user, true);
@@ -143,7 +154,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
     @Transactional
     @Override
-    public Organization update(UpdateOrganizationRequest request, Organization organization) {
+    public Organization update(OrganizationUpdateRequest request, Organization organization) {
         String title = request.name();
         if(title != null && !title.isEmpty()){
             if(organizationRepository.existsByTitle(title)){
@@ -162,9 +173,10 @@ public class OrganizationServiceImpl implements OrganizationService {
             organization.setLink(link);
         }
 
-        String logoUrl = request.logoUrl();
-        if(logoUrl != null && !logoUrl.isEmpty()){
-            organization.setLogo(logoUrl);
+        MultipartFile avatar = request.avatar();
+        if(avatar != null){
+            String avatarTitle = fileService.save(avatar);
+            organization.setAvatarFileTitle(avatarTitle);
         }
 
         return organizationRepository.save(organization);

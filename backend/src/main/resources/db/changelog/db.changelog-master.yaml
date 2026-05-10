@@ -55,3 +55,5 @@ databaseChangeLog:
       file: db/changelog/changeset/027-add-project-id-to-task.yaml
   - include:
       file: db/changelog/changeset/028-add-requirements-to-task.yaml
+  - include:
+      file: db/changelog/changeset/029-rename-avatar-columns.yaml

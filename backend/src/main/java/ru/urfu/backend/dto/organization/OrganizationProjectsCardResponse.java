@@ -4,7 +4,7 @@ import ru.urfu.backend.dto.project.ProjectListItemDto;
 
 import java.util.List;
 
-public record OrganizationProjectsCardDto(
+public record OrganizationProjectsCardResponse(
         Long id,
         String logo,
         String name,

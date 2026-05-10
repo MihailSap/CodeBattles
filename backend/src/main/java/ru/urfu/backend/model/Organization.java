@@ -17,7 +17,7 @@ public class Organization extends BaseEntity {
 
     private String description;
 
-    private String logo;
+    private String avatarFileTitle;
 
     private String link;
 
@@ -61,12 +61,12 @@ public class Organization extends BaseEntity {
         this.members = members;
     }
 
-    public String getLogo() {
-        return logo;
+    public String getAvatarFileTitle() {
+        return avatarFileTitle;
     }
 
-    public void setLogo(String logo) {
-        this.logo = logo;
+    public void setAvatarFileTitle(String logo) {
+        this.avatarFileTitle = logo;
     }
 
     public String getLink() {

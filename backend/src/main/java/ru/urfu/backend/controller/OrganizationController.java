@@ -3,22 +3,21 @@ package ru.urfu.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.CreatedResponse;
 import ru.urfu.backend.dto.DeletedResponse;
 import ru.urfu.backend.dto.LeftResponse;
-import ru.urfu.backend.dto.PageResponse;
 import ru.urfu.backend.dto.invite.GenerateOrganizationInviteRequestDto;
 import ru.urfu.backend.dto.invite.OrganizationInviteDto;
 import ru.urfu.backend.dto.invite.OrganizationInviteJoinResponseDto;
 import ru.urfu.backend.dto.invite.OrganizationInviteShortResponse;
 import ru.urfu.backend.dto.organization.*;
+import ru.urfu.backend.dto.organization.join.OrganizationJoinApprovedResponse;
+import ru.urfu.backend.dto.organization.join.OrganizationJoinRejectedResponse;
+import ru.urfu.backend.dto.organization.join.OrganizationJoinResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.OrganizationInviteMapper;
 import ru.urfu.backend.mapper.OrganizationMapper;
@@ -61,68 +60,53 @@ public class OrganizationController {
 
     @Operation(description = "Получение организаций пользователя")
     @GetMapping("/my")
-    public PageResponse<OrganizationListItemDto> getMyOrganizations(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size
+    public List<OrganizationListItemResponse> getMyOrganizations(
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
-
-        Page<UserOrganization> myOrganizations =
-                organizationService.getMyOrganizations(user, page, size);
-
-        Page<OrganizationListItemDto> dtoPage =
-                myOrganizations.map(userOrganization ->
-                        organizationMapper.mapToOrganizationListItemDto(
-                                userOrganization.getOrganization(),
-                                organizationService.isUserAdminInOrganization(user, userOrganization.getOrganization()),
-                                organizationService.isUserExistsInOrganization(userOrganization.getOrganization(), user)
-                        )
-                );
-
-        return PageResponse.of(dtoPage, List.of("createdAt,desc"));
+        List<UserOrganization> userOrganizations = organizationService.getMyOrganizations(user);
+        List<OrganizationListItemResponse> result = new ArrayList<>();
+        for(var userOrganization : userOrganizations) {
+            result.add(organizationMapper.mapToOrganizationListItemDto(
+                    userOrganization.getOrganization(),
+                    userOrganization.getAdmin(),
+                    !userOrganization.getEnabled()
+            ));
+        }
+        return result;
     }
 
     @Operation(description = "Получение организаций пользователя с проектами")
     @GetMapping("/my-with-projects")
-    public List<OrganizationProjectsCardDto> getMyOrganizationsWithProjects() throws UserNotFoundException {
+    public List<OrganizationProjectsCardResponse> getMyOrganizationsWithProjects()
+            throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         List<UserOrganization> userOrganizations = organizationService.getMyOrganizations(user);
-        List<OrganizationProjectsCardDto> result = new ArrayList<>();
+        List<OrganizationProjectsCardResponse> result = new ArrayList<>();
         for(var userOrganization : userOrganizations) {
             result.add(organizationMapper.mapToOrganizationProjectsCardDto(
-                    user,
-                    userOrganization.getOrganization(),
-                    userOrganization.getAdmin()
-            ));
+                    user, userOrganization.getOrganization(), userOrganization.getAdmin()));
         }
         return result;
     }
 
     @Operation(description = "Поиск организаций для вступления")
     @GetMapping("/search")
-    public Page<OrganizationListItemDto> getOrganizationForInvite(
-            @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size
+    public List<OrganizationListItemResponse> getOrganizationForInvite(
     ) throws UserNotFoundException {
-
         User user = authService.getAuthenticatedUser();
+        List<Organization> organizations = organizationService.getOrganizationsToJoin(user);
+        List<OrganizationListItemResponse> result = new ArrayList<>();
+        for(Organization organization : organizations) {
+            result.add(organizationMapper.mapToOrganizationListItemDto(organization, false,
+                    organizationService.isOrganizationContainsPendingJoinRequest(organization, user)));
+        }
 
-        Page<Organization> organizations =
-                organizationService.searchForJoin(user, q, page, size);
-
-        return organizations.map(organization ->
-                organizationMapper.mapToOrganizationListItemDto(
-                        organization,
-                        organizationService.isUserAdminInOrganization(user, organization),
-                        organizationService.isOrganizationContainsPendingJoinRequest(organization, user)
-                )
-        );
+        return result;
     }
 
     @Operation(description = "Создание организации")
     @PostMapping
-    public ResponseEntity<CreatedResponse> create(@RequestBody CreateOrganizationRequestDto request) throws UserNotFoundException {
+    public ResponseEntity<CreatedResponse> create(@ModelAttribute OrganizationCreateRequest request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         if(organizationService.isOrganizationExistsByTitle(request.name())){
             throw new RuntimeException("409 ORGANIZATION_NAME_CONFLICT");
@@ -133,7 +117,7 @@ public class OrganizationController {
 
     @Operation(description = "Получение организации по id")
     @GetMapping("/{organizationId}")
-    public OrganizationDetailsDto getOrganizationById(@PathVariable("organizationId") Long organizationId) throws UserNotFoundException {
+    public OrganizationDetailsResponse getOrganizationById(@PathVariable("organizationId") Long organizationId) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserExistsInOrganization(organization, user)) {
@@ -149,8 +133,8 @@ public class OrganizationController {
 
     @Operation(description = "Обновление организации по id")
     @PatchMapping("/{organizationId}")
-    public OrganizationDetailsDto updateOrganizationById(
-            @PathVariable("organizationId") Long organizationId, @RequestBody UpdateOrganizationRequest request) throws UserNotFoundException {
+    public OrganizationDetailsResponse updateOrganizationById(
+            @PathVariable("organizationId") Long organizationId, @ModelAttribute OrganizationUpdateRequest request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserAdminInOrganization(user, organization)){

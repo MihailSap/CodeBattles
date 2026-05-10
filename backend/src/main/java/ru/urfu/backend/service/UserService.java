@@ -1,6 +1,7 @@
 package ru.urfu.backend.service;
 
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 import ru.urfu.backend.dto.auth.RegisterRequest;
 import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
@@ -39,6 +40,8 @@ public interface UserService {
     void updateStack(User user, List<StackRequest> stackRequests);
 
     User makeNotAdmin(User user);
+
+    User updateImage(User user, MultipartFile imageFile);
 
     void processGithubUser(String githubId, String login, String email, String avatar);
 

@@ -1,4 +1,4 @@
-package ru.urfu.backend.dto.organization;
+package ru.urfu.backend.dto.organization.join;
 
 public record OrganizationJoinRequest(
         Long id,
