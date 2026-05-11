@@ -95,16 +95,6 @@ public class Project extends BaseEntity {
         this.users = users;
     }
 
-    public void addUser(User user, ProjectMemberRole role) {
-        UserProject userProject = new UserProject();
-        userProject.setUser(user);
-        userProject.setProject(this);
-        userProject.setProjectMemberRole(role);
-
-        users.add(userProject);
-        user.getProjects().add(userProject);
-    }
-
     public Set<Task> getTasks() {
         return tasks;
     }

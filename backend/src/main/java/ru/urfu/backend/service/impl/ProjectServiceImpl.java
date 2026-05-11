@@ -156,7 +156,11 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project savedProject = projectRepository.save(project);
 
-        savedProject.addUser(user, ProjectMemberRole.OWNER);
+        UserProject userProject = new UserProject();
+        userProject.setProject(savedProject);
+        userProject.setUser(user);
+        userProject.setProjectMemberRole(ProjectMemberRole.OWNER);
+        userProjectRepository.save(userProject);
 
         List<String> stackTitles = request.stack();
         for(String stackTitle : stackTitles){
