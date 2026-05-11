@@ -12,19 +12,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.urfu.backend.dto.auth.RegisterRequest;
 import ru.urfu.backend.dto.stack.StackRequest;
+import ru.urfu.backend.dto.user.profile.ProfilePassportUpdateRequest;
+import ru.urfu.backend.dto.user.profile.ProfileSkillsUpdateDto;
+import ru.urfu.backend.dto.user.profile.ProfileUpdateRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.model.NotificationSettings;
 import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.UserStack;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.model.enums.StackType;
 import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.repository.UserStackRepository;
 import ru.urfu.backend.service.FileService;
+import ru.urfu.backend.service.NotificationSettingsService;
 import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.service.UserService;
 import ru.urfu.backend.specification.UserSpecification;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -36,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final UserSpecification userSpecification;
     private final StackService stackService;
     private final FileService fileService;
+    private final NotificationSettingsService notificationSettingsService;
 
     @Autowired
     public UserServiceImpl(
@@ -44,7 +53,8 @@ public class UserServiceImpl implements UserService {
             UserSpecification userSpecification,
             StackService stackService,
             UserStackRepository userStackRepository,
-            FileService fileService
+            FileService fileService,
+            NotificationSettingsService notificationSettingsService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -52,6 +62,7 @@ public class UserServiceImpl implements UserService {
         this.stackService = stackService;
         this.userStackRepository = userStackRepository;
         this.fileService = fileService;
+        this.notificationSettingsService = notificationSettingsService;
     }
 
     @Transactional(readOnly = true)
@@ -105,10 +116,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public User create(RegisterRequest registerRequest) {
         User user = new User();
+        user.setRole(Role.USER);
         user.setEmail(registerRequest.email());
         user.setLogin(registerRequest.login());
         user.setPassword(passwordEncoder.encode(registerRequest.password()));
-        user.setRole(Role.USER);
+        user.setNotificationSettings(notificationSettingsService.create(user));
 
         String token = UUID.randomUUID().toString();
         user.setVerificationToken(token);
@@ -126,6 +138,7 @@ public class UserServiceImpl implements UserService {
         newUser.setPassword("oauth");
         newUser.setRole(Role.USER);
         newUser.setAvatarFileTitle(avatar);
+        newUser.setNotificationSettings(notificationSettingsService.create(newUser));
         userRepository.save(newUser);
     }
 
@@ -142,6 +155,18 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return user;
+    }
+
+    @Transactional
+    @Override
+    public User deleteImage(User user) {
+        String avatarFileTitle = user.getAvatarFileTitle();
+        if(avatarFileTitle == null || avatarFileTitle.isEmpty()){
+            return user;
+        }
+        fileService.delete(avatarFileTitle);
+        user.setAvatarFileTitle(null);
+        return userRepository.save(user);
     }
 
     @Transactional
@@ -244,6 +269,86 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         } catch (UserNotFoundException e) {
             create(githubId, login, email, avatar);
+        }
+    }
+
+    @Transactional
+    @Override
+    public User updateUser(User user, ProfileUpdateRequest request){
+        String fullName = request.name();
+        if(fullName != null){
+            user.setFullName(fullName);
+        }
+
+        MultipartFile avatar = request.avatar();
+        if(avatar != null){
+            fileService.delete(avatar.getOriginalFilename());
+            String avatarFileTitle = fileService.save(avatar);
+            user.setAvatarFileTitle(avatarFileTitle);
+        }
+
+        return userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public boolean isCorrectPassword(String rawPassword, String encodedPassword){
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    @Transactional
+    @Override
+    public User updateSkills(User user, ProfileSkillsUpdateDto request) {
+        user.getStacks().clear();
+
+        ProfileSkillsUpdateDto.SkillsByGroup skillsByGroup = request.getSkillsByGroup();
+        if (skillsByGroup == null) {
+            return userRepository.save(user);
+        }
+
+        validateSkills(skillsByGroup);
+
+        userStackRepository.flush();
+
+        saveSkills(user, skillsByGroup.getLanguages(), StackType.LANGUAGES);
+        saveSkills(user, skillsByGroup.getFrameworks(), StackType.FRAMEWORKS);
+        saveSkills(user, skillsByGroup.getTools(), StackType.TOOLS);
+
+        return userRepository.save(user);
+    }
+
+    private void saveSkills(User user, List<String> skills, StackType type) {
+        if (skills == null || skills.isEmpty()) return;
+        for (String skillTitle : skills) {
+            Stack stack = stackService.getOrUpdate(skillTitle.trim(), type);
+            UserStack userStack = new UserStack();
+            userStack.setUser(user);
+            userStack.setStack(stack);
+            user.getStacks().add(userStack);
+        }
+    }
+
+    private void validateSkills(ProfileSkillsUpdateDto.SkillsByGroup skillsByGroup) {
+        validateGroup(skillsByGroup.getLanguages(), "languages");
+        validateGroup(skillsByGroup.getFrameworks(), "frameworks");
+        validateGroup(skillsByGroup.getTools(), "tools");
+    }
+
+    private void validateGroup(List<String> skills, String groupName) {
+        if (skills == null) return;
+        Set<String> uniqueValues = new HashSet<>();
+        for (String skill : skills) {
+            if (skill == null || skill.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Группа навыков '%s' не должна быть пустой".formatted(groupName)
+                );
+            }
+            String normalizedSkill = skill.trim().toLowerCase();
+            if (!uniqueValues.add(normalizedSkill)) {
+                throw new IllegalArgumentException(
+                        "Дубликат навыка '%s' в категории '%s'".formatted(skill, groupName)
+                );
+            }
         }
     }
 }

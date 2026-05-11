@@ -13,6 +13,7 @@ import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.dto.user.UpdatePasswordRequest;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.dto.user.UpdateLoginRequest;
+import ru.urfu.backend.dto.user.UserRoleResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.PageMapper;
 import ru.urfu.backend.mapper.UserMapper;
@@ -94,25 +95,26 @@ public class UserController {
     @Operation(description = "Добавление пользователю роли 'ADMIN'")
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{userId}/admin")
-    public UserResponse makeAdmin(@PathVariable("userId") long userId)
+    public UserRoleResponse makeAdmin(@PathVariable("userId") long userId)
             throws UserNotFoundException {
         User user = userService.getById(userId);
         User updatedUser = userService.makeAdmin(user);
-        return userMapper.mapToUserResponse(updatedUser);
+        return userMapper.mapToUserRoleResponse(updatedUser);
     }
 
     @Operation(description = "Удаление у пользователя роли 'ADMIN'")
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/{userId}/not-admin")
-    public UserResponse makeNotAdmin(@PathVariable("userId") long userId)
+    public UserRoleResponse makeNotAdmin(@PathVariable("userId") long userId)
             throws UserNotFoundException {
         User user = userService.getById(userId);
         User updatedUser = userService.makeNotAdmin(user);
-        return userMapper.mapToUserResponse(updatedUser);
+        return userMapper.mapToUserRoleResponse(updatedUser);
     }
 
     @Operation(description = "Подтверждение аккаунта нового пользователя")
-    @PatchMapping("/{userId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{userId}/enable")
     public UserResponse enable(@PathVariable("userId") Long userId) throws UserNotFoundException {
         User user = userService.getById(userId);
         User enabledUser = userService.enableUser(user);

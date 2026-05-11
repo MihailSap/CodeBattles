@@ -44,4 +44,22 @@ public class GithubClientImpl implements GithubClient {
                 .findFirst()
                 .orElse(null);
     }
+
+    @Override
+    public String fetchLoginByGithubId(String githubId) {
+        ResponseEntity<Map<String, Object>> response =
+                restTemplate.exchange(
+                        "https://api.github.com/user/" + githubId,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+        Map<String, Object> body = response.getBody();
+        if (body == null || body.get("login") == null) {
+            throw new RuntimeException("GitHub аккаунт не найден");
+        }
+
+        return body.get("login").toString();
+    }
 }

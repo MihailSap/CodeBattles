@@ -3,6 +3,8 @@ package ru.urfu.backend.mapper;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.auth.CurrentUserResponse;
 import ru.urfu.backend.dto.user.UserResponse;
+import ru.urfu.backend.dto.user.UserRoleResponse;
+import ru.urfu.backend.dto.user.profile.ProfileSkillsUpdateDto;
 import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserStack;
@@ -15,6 +17,10 @@ import java.util.Set;
 @Component
 public class UserMapper {
 
+    public UserRoleResponse mapToUserRoleResponse(User user) {
+        return new UserRoleResponse(user.getId(), user.getRole());
+    }
+
     public CurrentUserResponse mapToCurrentUserResponse(User user){
         return new CurrentUserResponse(
                 user.getId(),
@@ -26,6 +32,27 @@ public class UserMapper {
                 user.getRole(),
                 user.isEnabled()
         );
+    }
+
+    public ProfileSkillsUpdateDto mapToProfileSkillsUpdateDto(User user){
+        List<String> languages = new ArrayList<>();
+        List<String> tools = new ArrayList<>();
+        List<String> frameworks = new ArrayList<>();
+
+        for(UserStack userStack : user.getStacks()){
+            Stack stack = userStack.getStack();
+            if(StackType.LANGUAGES.equals(stack.getType())){
+                languages.add(stack.getTitle());
+            } else if(StackType.TOOLS.equals(stack.getType())){
+                tools.add(stack.getTitle());
+            } else if(StackType.FRAMEWORKS.equals(stack.getType())){
+                frameworks.add(stack.getTitle());
+            }
+        }
+
+        return new ProfileSkillsUpdateDto(
+                new ProfileSkillsUpdateDto.SkillsByGroup(
+                        languages, frameworks, tools));
     }
 
     public UserResponse mapToUserResponse(User user) {

@@ -6,12 +6,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
-import ru.urfu.backend.dto.user.UpdateAvatarRequest;
+import ru.urfu.backend.dto.LinkedAccountsResponse;
+import ru.urfu.backend.dto.MessageResponse;
+import ru.urfu.backend.dto.NotificationSettingsDto;
+import ru.urfu.backend.dto.user.profile.*;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.mapper.NotificationSettingsMapper;
 import ru.urfu.backend.mapper.UserMapper;
+import ru.urfu.backend.model.NotificationSettings;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
+import ru.urfu.backend.service.GithubClient;
+import ru.urfu.backend.service.NotificationSettingsService;
 import ru.urfu.backend.service.UserService;
 
 @Tag(name = "Управление профилем")
@@ -23,12 +30,25 @@ public class ProfileController {
     private final AuthService authService;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final NotificationSettingsService notificationSettingsService;
+    private final NotificationSettingsMapper notificationSettingsMapper;
+    private final GithubClient githubClient;
 
     @Autowired
-    public ProfileController(AuthService authService, UserService userService, UserMapper userMapper) {
+    public ProfileController(
+            AuthService authService,
+            UserService userService,
+            UserMapper userMapper,
+            NotificationSettingsService notificationSettingsService,
+            NotificationSettingsMapper notificationSettingsMapper,
+            GithubClient githubClient
+    ) {
         this.authService = authService;
         this.userService = userService;
         this.userMapper = userMapper;
+        this.notificationSettingsService = notificationSettingsService;
+        this.notificationSettingsMapper = notificationSettingsMapper;
+        this.githubClient = githubClient;
     }
 
     @Operation(description = "Получение профиля текущего пользователя")
@@ -38,13 +58,89 @@ public class ProfileController {
         return userMapper.mapToUserResponse(user);
     }
 
-    @PatchMapping("/{userId}/image")
-    public UserResponse updateImage(
-            @PathVariable("userId") Long userId,
+    @Operation(description = "Получение профиля пользователя по id")
+    @GetMapping("/{userId}")
+    public UserResponse getUserProfileById(@PathVariable("userId") Long userId) throws UserNotFoundException {
+        User user = userService.getById(userId);
+        return userMapper.mapToUserResponse(user);
+    }
+
+    @Operation(description = "Обновление имени и аватара текущего пользователя")
+    @PatchMapping("/me")
+    public UserResponse updateCurrentUserProfile(@ModelAttribute ProfileUpdateRequest request) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        User updatedUser = userService.updateUser(user, request);
+        return userMapper.mapToUserResponse(updatedUser);
+    }
+
+    @Operation(description = "Обновление навыков текущего пользователя")
+    @PatchMapping("/me/skills")
+    public ProfileSkillsUpdateDto updateCurrentUserSkills(@ModelAttribute ProfileSkillsUpdateDto request) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        User updatedUser = userService.updateSkills(user, request);
+        return userMapper.mapToProfileSkillsUpdateDto(updatedUser);
+    }
+
+    @Operation(description = "Получение связанных аккаунтов")
+    @GetMapping("/me/linked-accounts")
+    public LinkedAccountsResponse getLinkedAccounts() throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        String githubId = user.getGithubId();
+        if (githubId == null) {
+            return new LinkedAccountsResponse("", "");
+        }
+
+        String githubLogin = githubClient.fetchLoginByGithubId(githubId);
+        return new LinkedAccountsResponse(githubLogin, "");
+    }
+
+    @Operation(description = "Обновление аватара текущего пользователя")
+    @PostMapping("/me/avatar")
+    public AvatarUpdateResponse uploadAvatar(
             @ModelAttribute UpdateAvatarRequest updateAvatarRequest
     ) throws UserNotFoundException {
-        User user = userService.getById(userId);
-        User updatedUser = userService.updateImage(user, updateAvatarRequest.avatar());
-        return userMapper.mapToUserResponse(updatedUser);
+        User user = authService.getAuthenticatedUser();
+        User updatedUser = userService.updateImage(user, updateAvatarRequest.file());
+        return new AvatarUpdateResponse(updatedUser.getAvatarFileTitle());
+    }
+
+    @Operation(description = "Удаление аватара текущего пользователя")
+    @DeleteMapping("/me/avatar")
+    public AvatarUpdateResponse deleteAvatar(
+            @ModelAttribute UpdateAvatarRequest updateAvatarRequest
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        userService.deleteImage(user);
+        return new AvatarUpdateResponse("");
+    }
+
+    @Operation(description = "Обновление пароля текущего пользователя")
+    @PatchMapping("/me/password")
+    public MessageResponse updatePassword(
+            @RequestBody ProfilePassportUpdateRequest request) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        if(!userService.isCorrectPassword(request.currentPassword(), user.getPassword())){
+            throw new RuntimeException("409 INVALID_CURRENT_PASSWORD");
+        }
+        userService.updatePassword(user, request.currentPassword());
+        return new MessageResponse("Пароль успешно обновлён");
+    }
+
+    @Operation(description = "Получение настроек уведомлений текущего пользователя")
+    @GetMapping("/me/notification-settings")
+    public NotificationSettingsDto getNotificationSettings() throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        NotificationSettings notificationSettings = notificationSettingsService.getByUser(user);
+        return notificationSettingsMapper.mapToNotificationSettingsDto(notificationSettings);
+    }
+
+    @Operation(description = "Обновление настроек уведомлений текущего пользователя")
+    @PutMapping("/me/notification-settings")
+    public NotificationSettingsDto updateNotificationSettings(@RequestBody NotificationSettingsDto request)
+            throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        NotificationSettings notificationSettings = notificationSettingsService.update(
+                user.getNotificationSettings(), request);
+        return notificationSettingsMapper.mapToNotificationSettingsDto(notificationSettings);
     }
 }
