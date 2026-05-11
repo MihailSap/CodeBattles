@@ -27,15 +27,8 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
         notificationSettings.setNewComments(true);
         notificationSettings.setReviewAssignments(true);
         notificationSettings.setUser(user);
+        user.setNotificationSettings(notificationSettings);
         return notificationSettings;
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public NotificationSettings getByUser(User user){
-        return notificationSettingsRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException(
-                        "Для данного пользователя отсутствуют настройки уведомлений"));
     }
 
     @Transactional

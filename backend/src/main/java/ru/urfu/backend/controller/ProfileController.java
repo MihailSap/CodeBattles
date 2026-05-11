@@ -67,19 +67,20 @@ public class ProfileController {
 
     @Operation(description = "Обновление имени и аватара текущего пользователя")
     @PatchMapping("/me")
-    public UserResponse updateCurrentUserProfile(@ModelAttribute ProfileUpdateRequest request) throws UserNotFoundException {
+    public NameAvatarUpdateResponse updateCurrentUserProfile(@ModelAttribute ProfileUpdateRequest request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         User updatedUser = userService.updateUser(user, request);
-        return userMapper.mapToUserResponse(updatedUser);
+        return new NameAvatarUpdateResponse(
+                updatedUser.getFullName(), updatedUser.getAvatarFileTitle());
     }
 
-    @Operation(description = "Обновление навыков текущего пользователя")
-    @PatchMapping("/me/skills")
-    public ProfileSkillsUpdateDto updateCurrentUserSkills(@ModelAttribute ProfileSkillsUpdateDto request) throws UserNotFoundException {
-        User user = authService.getAuthenticatedUser();
-        User updatedUser = userService.updateSkills(user, request);
-        return userMapper.mapToProfileSkillsUpdateDto(updatedUser);
-    }
+//    @Operation(description = "Обновление навыков текущего пользователя")
+//    @PatchMapping("/me/skills")
+//    public ProfileSkillsUpdateDto updateCurrentUserSkills(@ModelAttribute ProfileSkillsUpdateDto request) throws UserNotFoundException {
+//        User user = authService.getAuthenticatedUser();
+//        User updatedUser = userService.updateSkills(user, request);
+//        return userMapper.mapToProfileSkillsUpdateDto(updatedUser);
+//    }
 
     @Operation(description = "Получение связанных аккаунтов")
     @GetMapping("/me/linked-accounts")
@@ -106,9 +107,7 @@ public class ProfileController {
 
     @Operation(description = "Удаление аватара текущего пользователя")
     @DeleteMapping("/me/avatar")
-    public AvatarUpdateResponse deleteAvatar(
-            @ModelAttribute UpdateAvatarRequest updateAvatarRequest
-    ) throws UserNotFoundException {
+    public AvatarUpdateResponse deleteAvatar() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         userService.deleteImage(user);
         return new AvatarUpdateResponse("");
@@ -122,7 +121,7 @@ public class ProfileController {
         if(!userService.isCorrectPassword(request.currentPassword(), user.getPassword())){
             throw new RuntimeException("409 INVALID_CURRENT_PASSWORD");
         }
-        userService.updatePassword(user, request.currentPassword());
+        userService.updatePassword(user, request.newPassword());
         return new MessageResponse("Пароль успешно обновлён");
     }
 
@@ -130,7 +129,10 @@ public class ProfileController {
     @GetMapping("/me/notification-settings")
     public NotificationSettingsDto getNotificationSettings() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
-        NotificationSettings notificationSettings = notificationSettingsService.getByUser(user);
+        if(user.getNotificationSettings() == null){
+            notificationSettingsService.create(user);
+        }
+        NotificationSettings notificationSettings = user.getNotificationSettings();
         return notificationSettingsMapper.mapToNotificationSettingsDto(notificationSettings);
     }
 
@@ -139,6 +141,9 @@ public class ProfileController {
     public NotificationSettingsDto updateNotificationSettings(@RequestBody NotificationSettingsDto request)
             throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
+        if(user.getNotificationSettings() == null){
+            notificationSettingsService.create(user);
+        }
         NotificationSettings notificationSettings = notificationSettingsService.update(
                 user.getNotificationSettings(), request);
         return notificationSettingsMapper.mapToNotificationSettingsDto(notificationSettings);

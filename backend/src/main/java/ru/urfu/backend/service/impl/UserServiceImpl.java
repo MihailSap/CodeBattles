@@ -317,17 +317,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-    private void saveSkills(User user, List<String> skills, StackType type) {
-        if (skills == null || skills.isEmpty()) return;
-        for (String skillTitle : skills) {
-            Stack stack = stackService.getOrUpdate(skillTitle.trim(), type);
-            UserStack userStack = new UserStack();
-            userStack.setUser(user);
-            userStack.setStack(stack);
-            user.getStacks().add(userStack);
-        }
-    }
-
     private void validateSkills(ProfileSkillsUpdateDto.SkillsByGroup skillsByGroup) {
         validateGroup(skillsByGroup.getLanguages(), "languages");
         validateGroup(skillsByGroup.getFrameworks(), "frameworks");
@@ -349,6 +338,17 @@ public class UserServiceImpl implements UserService {
                         "Дубликат навыка '%s' в категории '%s'".formatted(skill, groupName)
                 );
             }
+        }
+    }
+
+    private void saveSkills(User user, List<String> skills, StackType type) {
+        if (skills == null || skills.isEmpty()) return;
+        for (String skillTitle : skills) {
+            Stack stack = stackService.getOrUpdate(skillTitle.trim(), type);
+            UserStack userStack = new UserStack();
+            userStack.setUser(user);
+            userStack.setStack(stack);
+            user.getStacks().add(userStack);
         }
     }
 }

@@ -65,6 +65,7 @@ public class UserController {
         return userMapper.mapToUserResponse(user);
     }
 
+    @Operation(description = "Обновление навыков пользователя по его id")
     @PatchMapping("/stack/{userId}")
     public void updateStack(
             @PathVariable("userId") Long userId, @RequestBody List<StackRequest> stackRequests) throws UserNotFoundException {
