@@ -24,6 +24,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
   minute: '2-digit'
 });
 
+const compareText = (left, right) =>
+  String(left ?? '').localeCompare(String(right ?? ''), 'ru', { sensitivity: 'base' });
+
 export const formatDeadline = (value) => {
   if (!value) {
     return '—';
@@ -121,7 +124,7 @@ export const sortTasks = (tasks = []) => {
       return leftDeadline - rightDeadline;
     }
 
-    return left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' });
+    return compareText(left.name, right.name);
   });
 };
 
@@ -138,7 +141,7 @@ export const sortParticipants = (participants = []) => {
       return roleDelta;
     }
 
-    return left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' });
+    return compareText(left.fullName, right.fullName);
   });
 };
 

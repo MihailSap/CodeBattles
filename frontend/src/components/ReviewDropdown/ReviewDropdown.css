@@ -69,7 +69,21 @@
   background: var(--form-bg-color);
   box-shadow: var(--section-shadow);
   z-index: 20;
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 250px;
+}
+
+.review-dropdown__menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.review-dropdown__menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.review-dropdown__menu::-webkit-scrollbar-thumb {
+  background: var(--hover-primary-color);
+  border-radius: 10px;
 }
 
 .review-dropdown__option {
@@ -103,6 +117,10 @@
   .review-dropdown__option:hover {
     background: var(--header-button-hover-bg);
   }
+
+.review-dropdown__menu::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
 }
 
 @media (max-width: 500px) {
@@ -133,5 +151,21 @@
   .review-dropdown__option-check {
     width: 12px;
     height: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+
+  .review-dropdown__label {
+    font-size: 14px;
+  }
+
+  .review-dropdown__trigger {
+    font-size: 12px;
+  }
+
+  .review-dropdown__option {
+    font-size: 12px;
+    padding: 8px 5px;
   }
 }

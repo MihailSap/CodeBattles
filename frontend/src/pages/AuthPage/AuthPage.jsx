@@ -45,15 +45,16 @@ const AuthPage = () => {
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
   const postLoginRedirect = location.state?.from || ROUTES.home;
-
-  useEffect(() => {
-    dispatch(clearAuthMessages());
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+  const resetFormState = () => {
     setForm(initialForm);
     setValidationErrors(initialErrors);
     setTouched({});
     setSubmitted(false);
     setRegistrationCompleted(false);
+  };
+
+  useEffect(() => {
+    dispatch(clearAuthMessages());
 
     return () => {
       dispatch(clearAuthMessages());
@@ -118,6 +119,7 @@ const AuthPage = () => {
     const nextRoute = mode === 'login' ? ROUTES.login : ROUTES.register;
 
     if (location.pathname !== nextRoute) {
+      resetFormState();
       navigate(nextRoute);
     }
   };

@@ -24,7 +24,6 @@ import {
 } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
-import { useVisibleItems } from '../../hooks/useVisibleItems';
 import { formatDeadline, formatLastActivity, getDeadlineToneClass, sortParticipants, sortTasks, truncateText } from '../../utils/projectFormatters';
 import { validateProjectName, validateRepositoryUrl } from '../../utils/projectValidation';
 import './ProjectPage.css';
@@ -66,7 +65,7 @@ const ProjectPage = () => {
       setIsLoading(true);
 
       try {
-        const result = await projectsApi.getProjectById(projectId, Number(userId));
+        const result = await projectsApi.getProjectById(projectId);
 
         if (!isMounted) {
           return;
@@ -172,14 +171,7 @@ const ProjectPage = () => {
       });
   }, [allTasks, isOwner, project, taskSearch, tasksMode, userId]);
 
-  const { visibleItems: visibleTasks, hasMore: hasMoreTasks, sentinelRef: tasksSentinelRef } = useVisibleItems(visibleTasksSource, 20);
-
   const participants = useMemo(() => sortParticipants(project?.participants || []), [project?.participants]);
-  const {
-    visibleItems: visibleParticipants,
-    hasMore: hasMoreParticipants,
-    sentinelRef: participantsSentinelRef
-  } = useVisibleItems(participants, 10);
 
   const openTasksCount = useMemo(() => allTasks.filter((task) => task.status !== TASK_STATUS.DONE).length, [allTasks]);
 
@@ -243,16 +235,30 @@ const ProjectPage = () => {
     setSettingsSubmitting(true);
 
     try {
-      const nextProject = await projectsApi.updateProject(project.id, {
-        name: settingsDraft.name.trim(),
-        repositoryUrl: settingsDraft.repositoryUrl.trim(),
-        description: settingsDraft.description,
-        stack: settingsDraft.stack,
-        privacy: settingsDraft.privacy,
-        aiReviewEnabled: settingsDraft.aiReviewEnabled
-      });
+      const payload = {};
 
-      const fullProject = await projectsApi.getProjectById(nextProject.id, Number(userId));
+      if (settingsDraft.name.trim() !== project.name) {
+        payload.name = settingsDraft.name.trim();
+      }
+      if (settingsDraft.repositoryUrl.trim() !== project.repositoryUrl) {
+        payload.repositoryUrl = settingsDraft.repositoryUrl.trim();
+      }
+      if (settingsDraft.description !== project.description) {
+        payload.description = settingsDraft.description;
+      }
+      if (JSON.stringify(settingsDraft.stack) !== JSON.stringify(project.stack)) {
+        payload.stack = settingsDraft.stack;
+      }
+      if (settingsDraft.privacy !== project.privacy) {
+        payload.privacy = settingsDraft.privacy;
+      }
+      if (settingsDraft.aiReviewEnabled !== project.aiReviewEnabled) {
+        payload.aiReviewEnabled = settingsDraft.aiReviewEnabled;
+      }
+
+      const nextProject = await projectsApi.updateProject(project.id, payload);
+
+      const fullProject = await projectsApi.getProjectById(nextProject.id);
 
       setProject(fullProject);
       setSettingsDraft({
@@ -279,7 +285,7 @@ const ProjectPage = () => {
     setLeaveSubmitting(true);
 
     try {
-      await projectsApi.leaveProject(project.id, Number(userId));
+      await projectsApi.leaveProject(project.id);
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -447,7 +453,7 @@ const ProjectPage = () => {
                   <span>Дедлайн</span>
                 </div>
 
-                {visibleTasks.map((task) => (
+                {visibleTasksSource.map((task) => (
                   <div
                     key={task.id}
                     className="project-page__table-row"
@@ -468,8 +474,7 @@ const ProjectPage = () => {
                   </div>
                 ))}
 
-                {visibleTasks.length === 0 && <p className="project-page__list-empty">Задачи не найдены</p>}
-                {hasMoreTasks && <div ref={tasksSentinelRef} className="project-page__sentinel" />}
+                {visibleTasksSource.length === 0 && <p className="project-page__list-empty">Задачи не найдены</p>}
               </section>
             )}
           </>
@@ -496,7 +501,7 @@ const ProjectPage = () => {
             </div>
 
             <section className="section-card project-page__participants-list">
-              {visibleParticipants.map((participant) => (
+              {participants.map((participant) => (
                 <Link key={participant.id} className="project-page__participant-row" to={`${ROUTES.profile}/${participant.id}`}>
                   <div className="project-page__participant-main">
                     <span className="project-page__participant-avatar">
@@ -510,8 +515,6 @@ const ProjectPage = () => {
                   <span className="project-page__participant-role">{PROJECT_MEMBER_ROLE_LABELS[participant.role]}</span>
                 </Link>
               ))}
-
-              {hasMoreParticipants && <div ref={participantsSentinelRef} className="project-page__sentinel" />}
             </section>
           </>
         )}
@@ -624,6 +627,7 @@ const ProjectPage = () => {
                       });
                       setSettingsTouched({ name: false, repositoryUrl: false });
                     }}
+                    disabled={isSettingsSubmitting}
                     aria-label="Отменить изменения"
                   >
                     <CrossIcon />

@@ -48,16 +48,15 @@ const getDeadlineMeta = (review) => {
   };
 };
 
-const ReviewCard = ({ review }) => {
-  const authorLogin = review.status === REVIEW_STATUS.COMPLETED && review.revealAuthorAfterReview ? `@${review.author.login}` : 'Анонимно';
+const ReviewCard = ({ review, onClick }) => {
   const deadlineMeta = getDeadlineMeta(review);
 
   return (
-    <button className="review-card" type="button">
+    <button className="review-card" type="button" onClick={onClick}>
       <div className="review-card__top">
         <div className="review-card__title-wrap">
           <h3 className="review-card__title">{review.taskName}</h3>
-          {review.checkedByReviewer && (
+          {review.checkedByReviewer && deadlineMeta.text === 'Проверено вовремя' && (
             <span className="review-card__checked-icon">
               <CheckIcon />
             </span>
@@ -78,10 +77,6 @@ const ReviewCard = ({ review }) => {
       </div>
 
       <div className="review-card__bottom">
-        <p className="review-card__meta-line">
-          <span className="review-card__label">Автор:</span>
-          <span className="review-card__value">{authorLogin}</span>
-        </p>
         <p className="review-card__meta-line">
           <span className="review-card__label">Загружено:</span>
           <span className="review-card__value">{formatDate(review.uploadedAt)}</span>

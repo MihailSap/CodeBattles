@@ -115,7 +115,7 @@
 
 .project-skills-selector__popup--portal {
   position: absolute;
-  z-index: 9998;
+  z-index: 9992;
 }
 
 .project-skills-selector__popup--top {

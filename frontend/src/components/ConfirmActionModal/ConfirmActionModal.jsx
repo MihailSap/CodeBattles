@@ -1,3 +1,4 @@
+import ModalShell from '../ModalShell/ModalShell';
 import './ConfirmActionModal.css';
 
 const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel, onConfirm, isSubmitting, isDeleteAction }) => {
@@ -6,14 +7,13 @@ const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel
   }
 
   return (
-    <div className="confirm-modal-backdrop" role="presentation" onClick={onCancel}>
-      <div
-        className="confirm-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onCancel}
+      overlayClassName="confirm-modal-backdrop"
+      dialogClassName="confirm-modal"
+      ariaLabel={title}
+    >
         <h3 className="confirm-modal__title">{title}</h3>
         <p className="confirm-modal__description">{description}</p>
         <div className="confirm-modal__actions">
@@ -29,8 +29,7 @@ const ConfirmActionModal = ({ isOpen, title, description, confirmLabel, onCancel
             {confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

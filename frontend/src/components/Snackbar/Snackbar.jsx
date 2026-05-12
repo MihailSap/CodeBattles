@@ -14,8 +14,13 @@ const Snackbar = ({ message, type = 'success', onClose }) => {
         setIsVisible(true);
       });
 
+      const autoCloseTimeout = window.setTimeout(() => {
+        if (onClose) onClose();
+      }, 3000);
+
       return () => {
         window.cancelAnimationFrame(frameId);
+        window.clearTimeout(autoCloseTimeout);
       };
     }
 
@@ -34,7 +39,7 @@ const Snackbar = ({ message, type = 'success', onClose }) => {
       window.cancelAnimationFrame(frameId);
       window.clearTimeout(timeoutId);
     };
-  }, [displayedMessage, message, type]);
+  }, [displayedMessage, message, type, onClose]);
 
   if (!displayedMessage) {
     return null;

@@ -4,6 +4,7 @@ import { validateConfirmPassword, validatePassword } from '../../utils/auth';
 import { useAuth } from '../../hooks/useAuth';
 import Snackbar from '../Snackbar/Snackbar';
 import { CrossIcon, RefreshCycleIcon } from '../Icons/Icons';
+import ModalShell from '../ModalShell/ModalShell';
 import './ProfileSettingsModal.css';
 
 const initialPasswordForm = {
@@ -109,8 +110,8 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
 
       try {
         const [notificationSettings, linkedAccountsState] = await Promise.all([
-          profileSettingsApi.getNotificationSettings(userId),
-          profileSettingsApi.getLinkedAccounts(userId)
+          profileSettingsApi.getNotificationSettings(),
+          profileSettingsApi.getLinkedAccounts()
         ]);
 
         if (isCancelled) {
@@ -221,7 +222,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     setIsPasswordSubmitting(true);
 
     try {
-      await profileSettingsApi.updatePassword(userId, passwordForm.currentPassword,passwordForm.password);
+      await profileSettingsApi.updatePassword(passwordForm.currentPassword, passwordForm.password);
       showSnackbar('Пароль успешно обновлён', 'success');
       setPasswordForm(initialPasswordForm);
       setPasswordErrors(initialPasswordErrors);
@@ -244,7 +245,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     setIsNotificationsSaving(true);
 
     try {
-      await profileSettingsApi.updateNotificationSettings(userId, nextSettings);
+      await profileSettingsApi.updateNotificationSettings(nextSettings);
       showSnackbar('Настройки уведомлений сохранены', 'success');
     } catch {
       setNotifications(notifications);
@@ -258,7 +259,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     setIsLinkActionLoading(true);
 
     try {
-      const nextState = await profileSettingsApi.unlinkAccount(userId, provider);
+      const nextState = await profileSettingsApi.unlinkAccount(provider);
       setLinkedAccounts({
         ...initialLinkedAccounts,
         ...nextState
@@ -275,7 +276,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     setIsLinkActionLoading(true);
 
     try {
-      const nextState = await profileSettingsApi.linkAccount(userId, provider);
+      const nextState = await profileSettingsApi.linkAccount(provider);
       setLinkedAccounts({
         ...initialLinkedAccounts,
         ...nextState
@@ -297,26 +298,19 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const isGitlabLinked = Boolean(linkedAccounts.gitlabLogin);
 
   return (
-    <div className="profile-settings-modal__overlay" role="presentation" onClick={onClose}>
-      <div
-        className="profile-settings-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="profile-settings-modal-title"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="profile-settings-modal__header">
-          <h2 className="profile-settings-modal__title" id="profile-settings-modal-title">Настройки профиля</h2>
-          <button
-            className="profile-settings-modal__close"
-            type="button"
-            onClick={onClose}
-            aria-label="Закрыть настройки профиля"
-          >
-            <CrossIcon />
-          </button>
-        </div>
-
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      overlayClassName="profile-settings-modal__overlay"
+      dialogClassName="profile-settings-modal"
+      ariaLabelledBy="profile-settings-modal-title"
+      title="Настройки профиля"
+      titleId="profile-settings-modal-title"
+      headerClassName="profile-settings-modal__header"
+      titleClassName="profile-settings-modal__title"
+      closeClassName="profile-settings-modal__close"
+      closeAriaLabel="Закрыть настройки профиля"
+    >
         {loadError ? (
         <div className="profile-settings-modal__load-error" role="alert">
           {loadError}
@@ -485,9 +479,9 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
           </section>
         </div>
         )}
-      </div>
+      
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
-    </div>
+    </ModalShell>
   );
 };
 

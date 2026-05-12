@@ -23,7 +23,7 @@
 .projects-page__toolbar {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 600px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 500px) minmax(0, 1fr);
   align-items: center;
   gap: 30px;
 }
@@ -35,11 +35,10 @@
 
 .projects-page__switch {
   width: 100%;
-  height: 50px;
+  height: 40px;
   border-radius: 15px;
   border: 2px solid var(--primary-color);
-  box-shadow: var(--element-shadow);
-  background: var(--bg-color);
+  background: transparent;
   padding: 3px;
   position: relative;
   display: flex;
@@ -51,7 +50,7 @@
   top: 3px;
   left: 3px;
   width: calc(100% / 2 - 3px);
-  height: 40px;
+  height: 30px;
   border-radius: 10px;
   color: var(--white-text-color);
   background: var(--primary-color);
@@ -69,7 +68,7 @@
   border: none;
   border-radius: 10px;
   background: transparent;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--primary-color);
   cursor: pointer;
@@ -89,11 +88,10 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 10px;
+  padding: 8px;
   border-radius: 15px;
   border: 2px solid var(--hover-primary-color);
-  box-shadow: var(--element-shadow);
-  background: var(--bg-color);
+  background: transparent;
   transition: border-color var(--transition);
 }
 
@@ -102,8 +100,8 @@
 }
 
 .projects-page__search-wrap svg {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   color: var(--primary-color);
   flex-shrink: 0;
 }
@@ -112,7 +110,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--primary-color);
 }
@@ -127,7 +125,7 @@
 
 .projects-page__section {
   background: var(--form-bg-color);
-  padding: 30px 50px;
+  padding: 15px 50px;
   border-radius: 20px;
   box-shadow: var(--section-shadow);
   display: flex;
@@ -137,12 +135,12 @@
 
 .projects-page__title {
   color: var(--text-color);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
 }
 
 .projects-page__projects-grid {
-  margin-top: 20px;
+  margin-top: 10px;
   width: 100%;
   padding: 10px;
   display: grid;
@@ -182,7 +180,7 @@
 .projects-page__side-action {
   border-radius: 10px;
   border: 2px solid;
-  padding: 10px 30px;
+  padding: 8px 28px;
   color: var(--white-text-color);
   font-size: 16px;
   font-weight: 600;
@@ -227,7 +225,7 @@
   height: 60px;
   border-radius: 100px;
   border: 3px solid var(--primary-color);
-  background: var(--bg-color);
+  background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -293,7 +291,7 @@
 
   .projects-page__side-action:hover,
   .projects-page__load-more:hover {
-    background: var(--bg-color);
+    background: transparent;
   }
 
   .projects-page__side-action--create:hover {
@@ -350,7 +348,7 @@
   }
 
   .projects-page__section {
-    padding: 20px;
+    padding: 15px;
   }
 
   .projects-page__organizations-wrap {
@@ -375,7 +373,7 @@
   }
 
   .projects-page__toolbar {
-    gap: 20px;
+    gap: 15px;
   }
 
   .projects-page__toolbar-left {
@@ -383,24 +381,28 @@
   }
 
   .projects-page__switch {
-    height: 40px;
+    height: 35px;
   }
 
   .projects-page__switch-thumb {
-    height: 30px;
+    height: 25px;
   }
 
   .projects-page__switch-option {
-    font-size: 16px;
+    font-size: 14px;
+  }
+
+  .projects-page__search-wrap {
+    padding: 7.5px 10px;
   }
 
   .projects-page__search {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .projects-page__search-wrap svg {
-    width: 25px;
-    height: 25px;
+    width: 15px;
+    height: 15px;
   }
 
   .projects-page__section {
@@ -411,11 +413,11 @@
 
   .projects-page__title,
   .projects-page__empty {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .projects-page__projects-grid {
-    margin-top: 10px;
+    margin-top: 5px;
   }
 
   .projects-page__actions {
@@ -424,7 +426,7 @@
 
   .projects-page__side-action {
     width: 100%;
-    padding: 5px 15px;
+    padding: 3px 13px;
     font-size: 14px;
   }
 
@@ -446,6 +448,6 @@
 
 @media (max-width: 350px) {
   .projects-page__switch-option {
-    font-size: 14px;
+    font-size: 12px;
   }
 }

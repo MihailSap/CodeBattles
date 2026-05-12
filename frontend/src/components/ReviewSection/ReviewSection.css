@@ -73,10 +73,6 @@
   padding: 15px 10px;
 }
 
-.review-section--nested .review-section__content {
-  background: var(--element-bg-color);
-}
-
 @media (max-width: 500px) {
   .review-section__header {
     padding: 10px 8px;

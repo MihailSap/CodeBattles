@@ -1,6 +1,6 @@
 .organization-projects-card {
   background: var(--form-bg-color);
-  padding: 15px 30px;
+  padding: 15px 20px;
   border-radius: 20px;
   box-shadow: var(--section-shadow);
   width: 100%;
@@ -11,13 +11,14 @@
 
 .organization-projects-card__title {
   color: var(--text-color);
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   text-align: center;
 }
 
 .organization-projects-card__projects {
-  margin-top: 20px;
+  margin-top: 10px;
+  padding: 10px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 20px;
@@ -27,8 +28,8 @@
 }
 
 .organization-projects-card__empty {
-  margin-top: 20px;
-  min-height: 147.5px;
+  margin-top: 10px;
+  min-height: 138.5px;
   color: var(--primary-color);
   font-size: 20px;
   font-weight: 600;
@@ -41,10 +42,10 @@
 
 .organization-projects-card__create {
   margin: auto auto 0;
-  margin-top: 20px;
+  margin-top: 10px;
   border-radius: 10px;
   border: 2px solid var(--primary-color);
-  padding: 10px 30px;
+  padding: 8px 28px;
   background: var(--primary-color);
   color: var(--white-text-color);
   font-size: 16px;
@@ -58,9 +59,17 @@
   pointer-events: none;
 }
 
+.organization-projects-card__hidden-count {
+  margin-top: 4px;
+  color: var(--description-color);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .organization-projects-card__create:hover {
-    background: var(--bg-color);
+    background: transparent;
     color: var(--primary-color);
   }
 }
@@ -71,25 +80,25 @@
   }
 
   .organization-projects-card__title {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .organization-projects-card__projects {
-    margin-top: 15px;
-    padding: 5px;
+    margin-top: 5px;
     max-height: 347.5px;
     overflow-y: auto;
+    gap: 10px;
   }
 
   .organization-projects-card__empty {
-    margin-top: 15px;
-    min-height: 225px;
+    margin-top: 5px;
+    min-height: 110px;
     font-size: 16px;
   }
 
   .organization-projects-card__create {
-    margin-top: 15px;
-    padding: 5px 15px;
+    margin-top: 5px;
+    padding: 3px 13px;
     font-size: 14px;
   }
 }

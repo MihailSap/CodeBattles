@@ -1,0 +1,196 @@
+.report-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9992;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 15px;
+}
+
+.report-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(500px, 100%);
+  max-height: calc(100vh - 30px);
+  overflow-y: auto;
+  background-color: var(--bg-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 25px;
+  box-shadow: var(--modal-shadow);
+  padding: 30px 40px;
+}
+
+.report-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 25px;
+}
+
+.report-modal__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.report-modal__close {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  color: var(--error-text-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.report-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.report-modal__reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-modal__radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.report-modal__radio-input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+  margin: 0;
+}
+
+.report-modal__radio-text {
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.report-modal__textarea {
+  width: 100%;
+  min-height: 70px;
+  max-height: 140px;
+  resize: vertical;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--project-table-border-color);
+  background-color: var(--element-bg-color);
+  color: var(--text-color);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color var(--transition);
+}
+
+.report-modal__textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.report-modal__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.report-modal__submit-btn {
+  padding: 0.5px 28px;
+  border-radius: 7px;
+  color: var(--white-text-color);
+  background-color: var(--success-text-color);
+  border: 2px solid var(--success-text-color);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.report-modal__submit-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.report-modal__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 500px) {
+  .report-modal {
+    padding: 20px;
+  }
+
+  .report-modal__title {
+    font-size: 20px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+.report-modal__close:hover {
+  opacity: 0.8;
+}
+
+.report-modal__submit-btn:hover:not(:disabled) {
+  background-color: var(--element-bg-color);
+  color: var(--success-text-color);
+}
+}
+
+@media (max-width: 500px) {
+
+  .report-modal__backdrop {
+    padding: 10px;
+  }
+
+  .report-modal {
+    padding: 15px 20px;
+  }
+
+  .report-modal__title {
+    font-size: 20px;
+  }
+
+  .report-modal__content {
+    gap: 10px;
+  }
+
+  .report-modal__radio-label {
+    gap: 5px;
+  }
+
+  .report-modal__radio-text {
+    font-size: 14px;
+  }
+
+  .report-modal__textarea {
+    padding: 5px;
+    font-size: 12px;
+  }
+
+  .report-modal__submit-btn svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .report-modal__close {
+    width: 25px;
+    height: 25px;
+  }
+}

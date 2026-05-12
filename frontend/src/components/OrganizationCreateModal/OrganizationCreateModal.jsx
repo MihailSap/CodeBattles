@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import uploadIcon from '../../assets/upload-icon.svg';
 import deleteIcon from '../../assets/delete-icon.svg';
-import { CheckIcon, CrossIcon } from '../Icons/Icons';
+import { CheckIcon } from '../Icons/Icons';
+import ModalShell from '../ModalShell/ModalShell';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { validateOrganizationName, validateOrganizationUrl } from '../../utils/organizationValidation';
 import './OrganizationCreateModal.css';
@@ -90,15 +91,18 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
   };
 
   return (
-    <div className="organization-create-modal__overlay" role="presentation" onClick={handleClose}>
-      <div className="organization-create-modal" role="dialog" aria-modal="true" aria-label="Создание организации" onClick={(event) => event.stopPropagation()}>
-        <div className="organization-create-modal__head">
-          <h2 className="organization-create-modal__title">Создание организации</h2>
-          <button className="organization-create-modal__close" type="button" onClick={handleClose} aria-label="Закрыть форму">
-            <CrossIcon />
-          </button>
-        </div>
-
+    <ModalShell
+      isOpen={isOpen}
+      onClose={handleClose}
+      overlayClassName="organization-create-modal__overlay"
+      dialogClassName="organization-create-modal"
+      ariaLabel="Создание организации"
+      title="Создание организации"
+      headerClassName="organization-create-modal__head"
+      titleClassName="organization-create-modal__title"
+      closeClassName="organization-create-modal__close"
+      closeAriaLabel="Закрыть форму"
+    >
         <form className="organization-create-modal__form" onSubmit={handleSubmit}>
           <div className="organization-create-modal__main">
             <div className="organization-create-modal__left">
@@ -115,7 +119,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
                     <img src={uploadIcon} alt="" />
                   </button>
                 </div>
-                {logoPreview ? <img className="organization-create-modal__logo" src={logoPreview} alt="Логотип организации" /> : <span className="organization-create-modal__logo-placeholder">Логотип</span>}
+                {logoPreview ? <img className="organization-create-modal__logo" src={logoPreview} alt="Логотип организации" /> : <span className="organization-create-modal__logo-placeholder">Логотип*</span>}
               </div>
               <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleLogoUpload} />
             </div>
@@ -125,7 +129,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
                 <input
                   className={`organization-create-modal__input ${touched.name && nameError ? 'organization-create-modal__input--error' : ''}`}
                   type="text"
-                  placeholder="Название"
+                  placeholder="Название*"
                   value={form.name}
                   onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
                   onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
@@ -163,8 +167,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
             <CheckIcon />
           </button>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

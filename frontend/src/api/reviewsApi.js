@@ -1,4 +1,5 @@
-import { REVIEWS_MOCK, REVIEWS_NETWORK_DELAY_MS, REVIEWS_PAGE_SIZE_DEFAULT } from '../constants/reviewsMockData';
+import { MOCK_ASSIGNED_REVIEWS } from './mocks';
+import { REVIEWS_NETWORK_DELAY_MS, REVIEWS_PAGE_SIZE_DEFAULT } from '../constants/review';
 import { REVIEW_SORT } from '../constants/review';
 
 const withDelay = (value, ms = REVIEWS_NETWORK_DELAY_MS) =>
@@ -39,7 +40,7 @@ export const reviewsApi = {
   async getAssignedReviews(viewerId, params = {}) {
     const { page = 1, pageSize = REVIEWS_PAGE_SIZE_DEFAULT, status = '', sort = REVIEW_SORT.NEAREST_FIRST } = params;
 
-    const filtered = REVIEWS_MOCK
+    const filtered = MOCK_ASSIGNED_REVIEWS
       .filter((review) => review.reviewerId === Number(viewerId))
       .filter((review) => {
         if (!status) {

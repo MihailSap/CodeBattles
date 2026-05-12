@@ -8,6 +8,7 @@ import EntityTabs from '../../components/EntityTabs/EntityTabs';
 import Header from '../../components/Header/Header';
 import { AvatarIcon, CheckIcon, CrossIcon } from '../../components/Icons/Icons';
 import Snackbar from '../../components/Snackbar/Snackbar';
+import SolutionTab from '../../components/SolutionTab/SolutionTab';
 import Spinner from '../../components/Spinner/Spinner';
 import {
   ACCESS_ERROR_CODE,
@@ -51,6 +52,7 @@ const TaskPage = () => {
 
   const [task, setTask] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [project, setProject] = useState(null);
   const [activeTab, setActiveTab] = useState('solution');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFullRequirements, setShowFullRequirements] = useState(false);
@@ -63,9 +65,9 @@ const TaskPage = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSubmitting, setDeleteSubmitting] = useState(false);
 
-  const isOwner = task?.viewerRole === PROJECT_MEMBER_ROLE.OWNER;
+  const isOwner = (project?.viewerRole || task?.viewerRole) === PROJECT_MEMBER_ROLE.OWNER;
   const loadTask = useCallback(async () => {
-    const result = await projectsApi.getTaskById(taskId, Number(userId));
+    const result = await projectsApi.getTaskById(projectId, taskId);
     setTask(result);
     setSettingsDraft({
       name: result.name,
@@ -77,7 +79,16 @@ const TaskPage = () => {
       reviewerIds: result.reviewerIds,
       assigneeIds: result.assigneeIds
     });
-  }, [taskId, userId]);
+  }, [projectId, taskId]);
+
+  const loadProject = useCallback(async (projectId) => {
+    try {
+      const result = await projectsApi.getProjectById(projectId);
+      setProject(result);
+    } catch {
+      setProject(null);
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -87,6 +98,7 @@ const TaskPage = () => {
 
       try {
         await loadTask();
+        await loadProject(projectId);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -131,7 +143,7 @@ const TaskPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [loadTask, navigate, projectId, taskId, userId]);
+  }, [loadTask, loadProject, navigate, projectId, taskId]);
 
   useEffect(() => {
     if (!snackbar.message) {
@@ -160,12 +172,12 @@ const TaskPage = () => {
   const availableTabs = useMemo(() => {
     const baseTabs = [{ key: 'solution', label: tabs.solution }];
 
-    if (isOwner && task?.canManageSettings) {
+    if (isOwner) {
       baseTabs.push({ key: 'settings', label: tabs.settings });
     }
 
     return baseTabs;
-  }, [isOwner, task?.canManageSettings]);
+  }, [isOwner]);
 
   useEffect(() => {
     if (activeTab === 'settings' && !availableTabs.some((tab) => tab.key === 'settings')) {
@@ -239,6 +251,13 @@ const TaskPage = () => {
     return task.availableReviewers.filter((participant) => !settingsDraft.assigneeIds.includes(participant.id));
   }, [settingsDraft, task]);
 
+  const reviewTypes = useMemo(() => {
+    const types = Object.values(TASK_REVIEW_TYPE);
+    return project?.aiReviewEnabled
+      ? types
+      : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
+  }, [project?.aiReviewEnabled]);
+
   useEffect(() => {
     if (!settingsDraft) {
       return;
@@ -300,7 +319,7 @@ const TaskPage = () => {
           evaluationCriteria: settingsDraft.evaluationCriteria,
           reviewType: settingsDraft.reviewType,
           reviewerIds: settingsDraft.reviewerIds
-        }, Number(userId));
+        });
       } else {
         await projectsApi.updateTask(task.id, {
           name: settingsDraft.name.trim(),
@@ -311,7 +330,7 @@ const TaskPage = () => {
           reviewType: settingsDraft.reviewType,
           reviewerIds: settingsDraft.reviewerIds,
           assigneeIds: settingsDraft.assigneeIds
-        }, Number(userId));
+        });
       }
 
       await loadTask();
@@ -332,7 +351,7 @@ const TaskPage = () => {
     setDeleteSubmitting(true);
 
     try {
-      await projectsApi.deleteTask(task.id, Number(userId));
+      await projectsApi.deleteTask(task.id);
       navigate(ROUTES.projectById.replace(':projectId', task.projectId), {
         replace: true,
         state: {
@@ -379,7 +398,7 @@ const TaskPage = () => {
       <Header />
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
 
-      <main className="project-page__content">
+      <main className="project-page__content task-page-content">
         <section className="project-page__info section-card">
           <div className="project-page__title-row">
             <div className="project-page__title-wrap">
@@ -452,9 +471,13 @@ const TaskPage = () => {
         <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
 
         {activeTab === 'solution' && (
-          <section className="section-card task-page__solution">
-            <p className="project-page__list-empty">Раздел решения пока пуст</p>
-          </section>
+          <SolutionTab
+            task={task}
+            currentUser={{ id: Number(userId), fullName: 'Мой Пользователь' }}
+            aiReviewEnabled={project?.aiReviewEnabled}
+            onSnackbar={setSnackbar}
+            projectId={projectId}
+          />
         )}
 
         {activeTab === 'settings' && isOwner && settingsDraft && (
@@ -535,7 +558,7 @@ const TaskPage = () => {
               <div className="project-page__settings-field">
                 <h3 className="task-page__review-title">Тип ревью</h3>
                 <div className="task-page__review-list">
-                  {Object.values(TASK_REVIEW_TYPE).map((type) => (
+                  {reviewTypes.map((type) => (
                     <label key={type} className="task-page__review-item">
                       <input
                         type="radio"

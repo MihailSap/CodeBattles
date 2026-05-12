@@ -17,18 +17,21 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
   const [popupStyle, setPopupStyle] = useState({});
   const [isPopupOpenUp, setIsPopupOpenUp] = useState(false);
 
+  const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
+  const safeSelectedUserIds = useMemo(() => (Array.isArray(selectedUserIds) ? selectedUserIds : []), [selectedUserIds]);
+
   const selectedUsers = useMemo(
-    () => users
-      .filter((user) => selectedUserIds.includes(user.id))
+    () => safeUsers
+      .filter((user) => safeSelectedUserIds.includes(user.id))
       .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' })),
-    [selectedUserIds, users]
+    [safeSelectedUserIds, safeUsers]
   );
 
   const availableUsers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
-    return users
-      .filter((user) => !selectedUserIds.includes(user.id))
+    return safeUsers
+      .filter((user) => !safeSelectedUserIds.includes(user.id))
       .filter((user) => {
         if (!normalizedSearch) {
           return true;
@@ -37,7 +40,7 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
         return user.fullName.toLowerCase().includes(normalizedSearch) || user.login.toLowerCase().includes(normalizedSearch);
       })
       .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' }));
-  }, [search, selectedUserIds, users]);
+  }, [safeSelectedUserIds, safeUsers, search]);
 
   const { visibleItems, hasMore, sentinelRef } = useVisibleItems(availableUsers, USERS_CHUNK_SIZE);
 
@@ -146,16 +149,16 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
       return;
     }
 
-    if (selectedUserIds.includes(userId)) {
-      onChange(selectedUserIds.filter((id) => id !== userId));
+    if (safeSelectedUserIds.includes(userId)) {
+      onChange(safeSelectedUserIds.filter((id) => id !== userId));
       return;
     }
 
-    onChange([...selectedUserIds, userId]);
+    onChange([...safeSelectedUserIds, userId]);
   };
 
   const clearAll = () => {
-    if (disabled || selectedUserIds.length === 0) {
+    if (disabled || safeSelectedUserIds.length === 0) {
       return;
     }
 
@@ -166,7 +169,7 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
     <div className="assignees-selector" ref={rootRef}>
       <div className="assignees-selector__head">
         <h3 className="assignees-selector__title">{title}</h3>
-        <button className="assignees-selector__clear" type="button" onClick={clearAll} disabled={disabled || selectedUserIds.length === 0}>
+        <button className="assignees-selector__clear" type="button" onClick={clearAll} disabled={disabled || safeSelectedUserIds.length === 0}>
           Очистить все
         </button>
       </div>

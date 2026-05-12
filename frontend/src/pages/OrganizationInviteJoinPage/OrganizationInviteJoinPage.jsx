@@ -10,7 +10,7 @@ import './OrganizationInviteJoinPage.css';
 const OrganizationInviteJoinPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { isInitialized, isAuthenticated, userId } = useAuth();
+  const { isInitialized, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isInitialized || !isAuthenticated || !token) {
@@ -21,7 +21,7 @@ const OrganizationInviteJoinPage = () => {
 
     const join = async () => {
       try {
-        const result = await projectsApi.joinOrganizationByInvite(token, Number(userId));
+        const result = await projectsApi.joinOrganizationByInvite(token);
 
         if (!isMounted) {
           return;
@@ -69,7 +69,7 @@ const OrganizationInviteJoinPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, isInitialized, navigate, token, userId]);
+  }, [isAuthenticated, isInitialized, navigate, token]);
 
   if (!isInitialized) {
     return (

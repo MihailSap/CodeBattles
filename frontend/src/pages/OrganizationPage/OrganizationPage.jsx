@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import participantsCountIcon from '../../assets/participants-count-icon.svg';
 import projectsCountIcon from '../../assets/projects-count-icon.svg';
@@ -14,8 +14,6 @@ import Snackbar from '../../components/Snackbar/Snackbar';
 import Spinner from '../../components/Spinner/Spinner';
 import { ACCESS_ERROR_CODE, PROJECT_MEMBER_ROLE, PROJECT_MEMBER_ROLE_LABELS } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
-import { useAuth } from '../../hooks/useAuth';
-import { useVisibleItems } from '../../hooks/useVisibleItems';
 import { sortParticipants, truncateText } from '../../utils/projectFormatters';
 import { validateOrganizationName, validateOrganizationUrl } from '../../utils/organizationValidation';
 import './OrganizationPage.css';
@@ -26,14 +24,7 @@ const tabs = {
   settings: 'Настройки'
 };
 
-const roleWeight = {
-  [PROJECT_MEMBER_ROLE.OWNER]: 0,
-  [PROJECT_MEMBER_ROLE.MEMBER]: 1,
-  [PROJECT_MEMBER_ROLE.GUEST]: 2
-};
-
 const OrganizationPage = () => {
-  const { userId } = useAuth();
   const { organizationId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +36,7 @@ const OrganizationPage = () => {
   const [participantsMode, setParticipantsMode] = useState('members');
   const [projectSearch, setProjectSearch] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [projectsTotal, setProjectsTotal] = useState(0);
 
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const [isInviteSubmitting, setInviteSubmitting] = useState(false);
@@ -59,12 +51,15 @@ const OrganizationPage = () => {
   const [isCreateProjectSubmitting, setCreateProjectSubmitting] = useState(false);
 
   const [isSettingsSubmitting, setSettingsSubmitting] = useState(false);
+  const [requestActionUserId, setRequestActionUserId] = useState(null);
   const [settingsDraft, setSettingsDraft] = useState(null);
   const [settingsTouched, setSettingsTouched] = useState({ name: false, link: false });
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const [projectsList, setProjectsList] = useState([]);
+  const [debouncedProjectSearch, setDebouncedProjectSearch] = useState('');
 
-  const loadOrganization = async (id, viewerId) => {
-    const result = await projectsApi.getOrganizationById(id, viewerId);
+  const loadOrganization = async (id) => {
+    const result = await projectsApi.getOrganizationById(id);
     setOrganization(result);
     setSettingsDraft({
       name: result.name,
@@ -81,7 +76,7 @@ const OrganizationPage = () => {
       setIsLoading(true);
 
       try {
-        await loadOrganization(Number(organizationId), Number(userId));
+        await loadOrganization(Number(organizationId));
       } catch (error) {
         if (!isMounted) {
           return;
@@ -110,7 +105,7 @@ const OrganizationPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [navigate, organizationId, userId]);
+  }, [navigate, organizationId]);
 
   useEffect(() => {
     if (!snackbar.message) {
@@ -125,6 +120,16 @@ const OrganizationPage = () => {
       window.clearTimeout(timeoutId);
     };
   }, [snackbar.message]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedProjectSearch(projectSearch.trim());
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [projectSearch]);
 
   useEffect(() => {
     if (location.state?.snackbarMessage) {
@@ -159,42 +164,35 @@ const OrganizationPage = () => {
     return baseTabs;
   }, [isOwner]);
 
-  const projectsSource = useMemo(() => {
+  const loadProjects = useCallback(async () => {
+    const result = await projectsApi.getOrganizationProjects(Number(organizationId), { search: debouncedProjectSearch });
+    const participantsByProjectId = new Map((organization?.projects || []).map((project) => [project.id, project.participants || []]));
+    const enriched = result.data.map((project) => ({
+      ...project,
+      participants: participantsByProjectId.get(project.id) || project.participants || []
+    }));
+
+    setProjectsList(enriched);
+    setProjectsTotal(result.total);
+  }, [debouncedProjectSearch, organization?.projects, organizationId]);
+
+  useEffect(() => {
     if (!organization) {
-      return [];
+      return;
     }
 
-    const normalizedSearch = projectSearch.trim().toLowerCase();
-
-    return [...organization.projects]
-      .filter((project) => {
-        if (!normalizedSearch) {
-          return true;
-        }
-
-        return `${project.name} ${project.description}`.toLowerCase().includes(normalizedSearch);
-      })
-      .sort((left, right) => {
-        const roleDiff = (roleWeight[left.viewerRole] ?? 2) - (roleWeight[right.viewerRole] ?? 2);
-
-        if (roleDiff !== 0) {
-          return roleDiff;
-        }
-
-        return left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' });
-      });
-  }, [organization, projectSearch]);
-
-  const { visibleItems: visibleProjects, hasMore: hasMoreProjects, sentinelRef: projectsSentinelRef } = useVisibleItems(projectsSource, 20);
+    loadProjects().catch(() => setProjectsList([]));
+  }, [loadProjects, organization]);
 
   const participantsSource = useMemo(() => sortParticipants(organization?.participants || []), [organization?.participants]);
-  const { visibleItems: visibleParticipants, hasMore: hasMoreParticipants, sentinelRef: participantsSentinelRef } = useVisibleItems(participantsSource, 12);
 
   const requestsSource = useMemo(
-    () => [...(organization?.joinRequests || [])].sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' })),
+    () =>
+      [...(organization?.joinRequests || [])].sort((left, right) =>
+        String(left.fullName ?? '').localeCompare(String(right.fullName ?? ''), 'ru', { sensitivity: 'base' })
+      ),
     [organization?.joinRequests]
   );
-  const { visibleItems: visibleRequests, hasMore: hasMoreRequests, sentinelRef: requestsSentinelRef } = useVisibleItems(requestsSource, 12);
 
   const settingsNameError = useMemo(() => validateOrganizationName(settingsDraft?.name || ''), [settingsDraft?.name]);
   const settingsLinkError = useMemo(() => validateOrganizationUrl(settingsDraft?.link || ''), [settingsDraft?.link]);
@@ -209,7 +207,7 @@ const OrganizationPage = () => {
       settingsDraft.name !== organization.name ||
       settingsDraft.description !== organization.description ||
       settingsDraft.link !== organization.link ||
-      settingsDraft.logoUrl !== organization.logoUrl
+      !!settingsDraft.logoFile
     );
   }, [organization, settingsDraft]);
 
@@ -239,10 +237,11 @@ const OrganizationPage = () => {
 
     try {
       const result = await projectsApi.createProject({ ...payload, organizationId: organization.id });
+      const projectId = result?.projectId;
 
-      if (result?.reason === 'NOT_IMPLEMENTED') {
-        setSnackbar({ message: 'Создание проекта будет доступно после подключения backend', type: 'success' });
+      if (projectId) {
         setCreateProjectOpen(false);
+        navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
       }
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
@@ -263,7 +262,7 @@ const OrganizationPage = () => {
     setLeaveSubmitting(true);
 
     try {
-      await projectsApi.leaveOrganization(organization.id, Number(userId));
+      await projectsApi.leaveOrganization(organization.id);
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -308,12 +307,16 @@ const OrganizationPage = () => {
       return;
     }
 
+    setRequestActionUserId(request.userId);
+
     try {
       await projectsApi.rejectOrganizationJoinRequest(organization.id, request.userId);
-      await loadOrganization(organization.id, Number(userId));
+      await loadOrganization(organization.id);
       setSnackbar({ message: `Вы отклонили заявку пользователя @${request.login}`, type: 'error' });
     } catch {
       setSnackbar({ message: 'Не удалось отклонить заявку', type: 'error' });
+    } finally {
+      setRequestActionUserId(null);
     }
   };
 
@@ -322,36 +325,32 @@ const OrganizationPage = () => {
       return;
     }
 
+    setRequestActionUserId(request.userId);
+
     try {
       await projectsApi.approveOrganizationJoinRequest(organization.id, request.userId);
-      await loadOrganization(organization.id, Number(userId));
+      await loadOrganization(organization.id);
       setSnackbar({ message: `Вы приняли заявку пользователя @${request.login}`, type: 'success' });
     } catch {
       setSnackbar({ message: 'Не удалось принять заявку', type: 'error' });
+    } finally {
+      setRequestActionUserId(null);
     }
   };
 
   const handleLogoUpload = (event) => {
     const file = event.target.files?.[0];
-
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const nextUrl = URL.createObjectURL(file);
 
     setSettingsDraft((prev) => {
-      if (!prev) {
-        return prev;
-      }
-
-      if (prev.logoUrl?.startsWith('blob:')) {
-        URL.revokeObjectURL(prev.logoUrl);
-      }
+      if (!prev) return prev;
 
       return {
         ...prev,
-        logoUrl: nextUrl
+        logoUrl: nextUrl,
+        logoFile: file,
       };
     });
   };
@@ -361,41 +360,49 @@ const OrganizationPage = () => {
       return;
     }
 
-    if (settingsDraft?.logoUrl?.startsWith('blob:') && settingsDraft.logoUrl !== organization.logoUrl) {
-      URL.revokeObjectURL(settingsDraft.logoUrl);
-    }
-
     setSettingsTouched({ name: false, link: false });
+
     setSettingsDraft({
       name: organization.name,
       description: organization.description,
       link: organization.link,
-      logoUrl: organization.logoUrl
+      logoUrl: organization.logoUrl,
+      logoFile: null
     });
   };
 
   const handleSaveSettings = async () => {
-    if (!organization || !settingsDraft) {
-      return;
-    }
+    if (!organization || !settingsDraft) return;
 
     setSettingsTouched({ name: true, link: true });
 
-    if (settingsFormInvalid || !hasSettingsChanges) {
-      return;
-    }
+    if (settingsFormInvalid || !hasSettingsChanges) return;
 
     setSettingsSubmitting(true);
 
     try {
-      await projectsApi.updateOrganization(organization.id, {
-        name: settingsDraft.name.trim(),
-        description: settingsDraft.description,
-        link: settingsDraft.link.trim(),
-        logoUrl: settingsDraft.logoUrl
-      });
+      const payload = {};
 
-      await loadOrganization(organization.id, Number(userId));
+      if (settingsDraft.name.trim() !== organization.name) {
+        payload.name = settingsDraft.name.trim();
+      }
+
+      if (settingsDraft.description !== organization.description) {
+        payload.description = settingsDraft.description;
+      }
+      if (settingsDraft.link.trim() !== organization.link) {
+        payload.link = settingsDraft.link.trim();
+      }
+      if (settingsDraft.logoFile) {
+        payload.logoFile = settingsDraft.logoFile;
+      }
+
+      await projectsApi.updateOrganization(organization.id, payload);
+
+      await loadOrganization(organization.id);
+
+      setSettingsDraft(prev => ({ ...prev, logoFile: null }));
+
       setSettingsTouched({ name: false, link: false });
       setSnackbar({ message: 'Изменения сохранены', type: 'success' });
     } catch (error) {
@@ -480,7 +487,7 @@ const OrganizationPage = () => {
           <>
             <div className="project-page__controls">
               <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Проекты ({projectsSource.length})</span>
+                <span className="project-page__participants-count">Проекты ({projectsTotal})</span>
               </div>
 
               <div className="project-page__controls-right">
@@ -510,7 +517,7 @@ const OrganizationPage = () => {
                 <span>Роль</span>
               </div>
 
-              {visibleProjects.map((project) => (
+              {projectsList.map((project) => (
                 <div
                   key={project.id}
                   className="project-page__table-row organization-page__projects-row"
@@ -531,8 +538,7 @@ const OrganizationPage = () => {
                 </div>
               ))}
 
-              {visibleProjects.length === 0 && <p className="project-page__list-empty">Проекты не найдены</p>}
-              {hasMoreProjects && <div ref={projectsSentinelRef} className="project-page__sentinel" />}
+              {projectsList.length === 0 && <p className="project-page__list-empty">Проекты не найдены</p>}
             </section>
           </>
         )}
@@ -579,7 +585,7 @@ const OrganizationPage = () => {
 
             <section className="section-card project-page__participants-list">
               {isOwner && participantsMode === 'requests'
-                ? visibleRequests.map((request) => (
+                ? requestsSource.map((request) => (
                   <div key={request.id} className="project-page__participant-row">
                     <div className="project-page__participant-main">
                       <span className="project-page__participant-avatar">
@@ -596,6 +602,7 @@ const OrganizationPage = () => {
                         className="organization-page__request-button organization-page__request-button--reject"
                         type="button"
                         onClick={() => handleRejectRequest(request)}
+                        disabled={requestActionUserId === request.userId}
                         aria-label={`Отклонить заявку @${request.login}`}
                       >
                         <CrossIcon />
@@ -604,6 +611,7 @@ const OrganizationPage = () => {
                         className="organization-page__request-button organization-page__request-button--accept"
                         type="button"
                         onClick={() => handleApproveRequest(request)}
+                        disabled={requestActionUserId === request.userId}
                         aria-label={`Принять заявку @${request.login}`}
                       >
                         <CheckIcon />
@@ -611,7 +619,7 @@ const OrganizationPage = () => {
                     </div>
                   </div>
                 ))
-                : visibleParticipants.map((participant) => (
+                : participantsSource.map((participant) => (
                   <Link key={participant.id} className="project-page__participant-row" to={`${ROUTES.profile}/${participant.id}`}>
                     <div className="project-page__participant-main">
                       <span className="project-page__participant-avatar">
@@ -626,11 +634,8 @@ const OrganizationPage = () => {
                   </Link>
                 ))}
 
-              {isOwner && participantsMode === 'requests' && visibleRequests.length === 0 && <p className="project-page__list-empty">Заявок пока нет</p>}
-              {(!isOwner || participantsMode === 'members') && visibleParticipants.length === 0 && <p className="project-page__list-empty">Участники не найдены</p>}
-
-              {isOwner && participantsMode === 'requests' && hasMoreRequests && <div ref={requestsSentinelRef} className="project-page__sentinel" />}
-              {(!isOwner || participantsMode === 'members') && hasMoreParticipants && <div ref={participantsSentinelRef} className="project-page__sentinel" />}
+              {isOwner && participantsMode === 'requests' && requestsSource.length === 0 && <p className="project-page__list-empty">Заявок пока нет</p>}
+              {(!isOwner || participantsMode === 'members') && participantsSource.length === 0 && <p className="project-page__list-empty">Участники не найдены</p>}
             </section>
           </>
         )}

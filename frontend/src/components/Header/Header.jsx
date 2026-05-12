@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import logoDark from '../../assets/logo-dark.svg';
-import logoLight from '../../assets/logo-light.svg';
+import logoDark from '../../assets/logo-dark.svg?url';
+import logoLight from '../../assets/logo-light.svg?url';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import { logoutUser } from '../../store/slices/authSlice';
