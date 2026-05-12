@@ -1,5 +1,9 @@
 @import '../ProjectPage/ProjectPage.css';
 
+.project-page__content.task-page-content {
+  max-width: 1500px;
+}
+
 .task-page__offset-section {
   margin-top: 15px;
 }
@@ -167,5 +171,60 @@
   .task-page__review-item {
     font-size: 12px;
     gap: 5px;
+  }
+}
+
+@media (max-width: 500px){
+
+  .task-page__offset-section{
+    margin-top: 10px;
+  }
+
+  .task-page__assignees-wrap{
+    gap: 10px;
+  }
+
+  .task-page__assignees-list{
+    gap: 10px;
+  }
+
+  .task-page__assignee-item{
+    gap: 10px;
+  }
+
+  .task-page__assignee-avatar,
+.task-page__assignee-avatar img,
+.task-page__assignee-avatar svg{
+    width: 43px;
+    height: 43px;
+  }
+
+  .task-page__assignee-meta{
+    gap: 5px;
+  }
+
+  .task-page__assignee-name,
+.task-page__assignee-login{
+    font-size: 14px;
+  }
+
+  .task-page__solution{
+    margin-top: 5px;
+  }
+
+  .task-page__review-title{
+    font-size: 14px;
+  }
+
+  .task-page__review-list{
+    gap: 5px;
+  }
+
+  .task-page__review-item{
+    font-size: 12px;
+  }
+
+  .task-page .project-page__settings .date-time-picker__input{
+    font-size: 12px;
   }
 }

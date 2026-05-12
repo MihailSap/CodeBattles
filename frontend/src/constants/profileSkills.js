@@ -31,9 +31,3 @@ export const SKILL_GROUPS = [
     options: ['Docker', 'Kubernetes', 'Git', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Terraform', 'Ansible', 'Prometheus', 'Grafana', 'Elastic Stack (ELK)']
   },
 ];
-
-export const MOCK_USER_SKILLS = {
-  languages: ['TypeScript', 'JavaScript', 'Java'],
-  frameworks: ['React', 'Spring (Boot)', 'Node.js'],
-  tools: ['Git', 'Docker', 'GitHub Actions']
-};

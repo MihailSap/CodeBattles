@@ -1,0 +1,18 @@
+.code-editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.code-editor-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.code-editor-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--primary-color);
+  background-color: var(--element-bg-color);
+}

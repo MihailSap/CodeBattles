@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { CheckIcon, CrossIcon } from '../Icons/Icons';
+import { CheckIcon } from '../Icons/Icons';
 import DateTimePicker from '../DateTimePicker/DateTimePicker';
+import ModalShell from '../ModalShell/ModalShell';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import './InviteLinkModal.css';
 
@@ -67,6 +68,10 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
   }
 
   const handleClose = () => {
+    if (isSubmitting) {
+      return;
+    }
+
     setExpiresAt('');
     setReusable(false);
     setGeneratedLink('');
@@ -75,15 +80,19 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
   };
 
   return (
-    <div className="invite-link-modal__backdrop" role="presentation" onClick={handleClose}>
-      <div className="invite-link-modal" role="dialog" aria-modal="true" aria-label="Формирование ссылки" onClick={(event) => event.stopPropagation()}>
-        <div className="invite-link-modal__head">
-          <h2 className="invite-link-modal__title">Пригласительная ссылка</h2>
-          <button className="invite-link-modal__close" type="button" onClick={handleClose} aria-label="Закрыть форму">
-            <CrossIcon />
-          </button>
-        </div>
-
+    <ModalShell
+      isOpen={isOpen}
+      onClose={handleClose}
+      overlayClassName="invite-link-modal__backdrop"
+      dialogClassName="invite-link-modal"
+      ariaLabel="Формирование ссылки"
+      title="Пригласительная ссылка"
+      headerClassName="invite-link-modal__head"
+      titleClassName="invite-link-modal__title"
+      closeClassName="invite-link-modal__close"
+      closeAriaLabel="Закрыть форму"
+      closeDisabled={isSubmitting}
+    >
         <div className="invite-link-modal__content">
           {!generatedLink && (
             <>
@@ -103,11 +112,11 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
                 <h3 className="invite-link-modal__section-title">Тип ссылки:</h3>
                 <div className="invite-link-modal__radios">
                   <label className="invite-link-modal__radio-item">
-                    <input className="invite-link-modal__radio" type="radio" checked={!reusable} onChange={() => setReusable(false)} />
+                    <input className="invite-link-modal__radio" type="radio" checked={!reusable} onChange={() => setReusable(false)} disabled={isSubmitting} />
                     <span>Одноразовая</span>
                   </label>
                   <label className="invite-link-modal__radio-item">
-                    <input className="invite-link-modal__radio" type="radio" checked={reusable} onChange={() => setReusable(true)} />
+                    <input className="invite-link-modal__radio" type="radio" checked={reusable} onChange={() => setReusable(true)} disabled={isSubmitting} />
                     <span>Многоразовая</span>
                   </label>
                 </div>
@@ -125,8 +134,7 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

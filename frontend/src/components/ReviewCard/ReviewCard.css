@@ -3,7 +3,7 @@
   border: none;
   padding: 20px;
   border-radius: 20px;
-  background: var(--form-bg-color);
+  background: var(--element-bg-color);
   box-shadow: var(--review-element-shadow);
   text-align: left;
   cursor: pointer;

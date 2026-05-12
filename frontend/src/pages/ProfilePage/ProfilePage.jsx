@@ -117,6 +117,8 @@ const ProfilePage = () => {
   const [receivedAchievementIds, setReceivedAchievementIds] = useState([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+  const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
   const {
     openedSkillsPopup,
     popupDirection,
@@ -188,7 +190,13 @@ const ProfilePage = () => {
       setIsPageLoading(true);
 
       try {
-        const payload = await profileApi.getProfilePageData(normalizedRouteUserId || null);
+        let payload = null;
+
+        if (isOwnProfile) {
+          payload = await profileApi.getProfilePageData();
+        } else {
+          payload = await profileApi.getProfilePageData(normalizedRouteUserId);
+        }
 
         if (isCancelled) {
           return;
@@ -295,6 +303,8 @@ const ProfilePage = () => {
       return;
     }
 
+    setPendingAvatarFile(null);
+    setShouldDeleteAvatar(false);
     setProfileDraft(profileData);
     setIsProfileEditMode(true);
   };
@@ -305,6 +315,8 @@ const ProfilePage = () => {
     }
 
     removeTemporaryAvatarUrl(profileDraft.avatarPath);
+    setPendingAvatarFile(null);
+    setShouldDeleteAvatar(false);
     setProfileDraft(profileData);
     setIsProfileEditMode(false);
   };
@@ -321,16 +333,13 @@ const ProfilePage = () => {
       return;
     }
 
-    try {
-      await profileApi.deleteAvatar();
-      removeTemporaryAvatarUrl(profileDraft.avatarPath);
-      setProfileDraft((previousState) => ({
-        ...previousState,
-        avatarPath: ''
-      }));
-    } catch {
-      showSnackbar('Не удалось удалить аватар', 'error');
-    }
+    removeTemporaryAvatarUrl(profileDraft.avatarPath);
+    setPendingAvatarFile(null);
+    setShouldDeleteAvatar(true);
+    setProfileDraft((previousState) => ({
+      ...previousState,
+      avatarPath: ''
+    }));
   };
 
   const handleAvatarUpload = async (event) => {
@@ -345,21 +354,17 @@ const ProfilePage = () => {
       return;
     }
 
-    try {
-      const response = await profileApi.uploadAvatar(file);
-      removeTemporaryAvatarUrl(profileDraft.avatarPath);
+    const localPreviewUrl = URL.createObjectURL(file);
+    removeTemporaryAvatarUrl(profileDraft.avatarPath);
 
-      if (response.avatarPath?.startsWith('blob:')) {
-        createdAvatarUrlsRef.current.add(response.avatarPath);
-      }
+    setPendingAvatarFile(file);
+    setShouldDeleteAvatar(false);
+    setProfileDraft((previousState) => ({
+      ...previousState,
+      avatarPath: localPreviewUrl
+    }));
 
-      setProfileDraft((previousState) => ({
-        ...previousState,
-        avatarPath: response.avatarPath || ''
-      }));
-    } catch {
-      showSnackbar('Не удалось загрузить аватар', 'error');
-    }
+    createdAvatarUrlsRef.current.add(localPreviewUrl);
   };
 
   const handleProfileSave = async () => {
@@ -370,10 +375,15 @@ const ProfilePage = () => {
     setIsProfileSaving(true);
 
     try {
+      if (shouldDeleteAvatar) {
+        await profileApi.deleteAvatar();
+      }
+
       const savedProfile = await profileApi.updateProfileSection({
         name: profileDraft.name.trim(),
-        avatarPath: profileDraft.avatarPath
+        avatar: pendingAvatarFile
       });
+
       const nextProfile = {
         ...profileData,
         ...savedProfile
@@ -381,7 +391,10 @@ const ProfilePage = () => {
 
       setProfileData(nextProfile);
       setProfileDraft(nextProfile);
+      setPendingAvatarFile(null);
+      setShouldDeleteAvatar(false);
       setIsProfileEditMode(false);
+
       dispatch(
         patchAuthUser({
           name: nextProfile.name,
@@ -452,7 +465,7 @@ const ProfilePage = () => {
     setIsSkillsSaving(true);
 
     try {
-      const savedSkills = await profileApi.updateSkillsSection(skillsDraft);
+      const savedSkills = await profileApi.updateSkillsSection(profileData.id || userId, skillsDraft);
       const normalizedSkills = normalizeSkills(savedSkills);
 
       setSkillsData(normalizedSkills);
@@ -481,7 +494,6 @@ const ProfilePage = () => {
           </div>
         ) : (
           <div className="profile-page__grid">
-            {/* <div className="profile-page__grid-left"> */}
               <ProfileSection
                 canEditProfile={canEditProfile}
                 fileInputRef={fileInputRef}
@@ -516,9 +528,6 @@ const ProfilePage = () => {
                 skillsByGroup={skillsByGroup}
                 skillsDraftByGroup={skillsDraftByGroup}
               />
-            {/* </div> */}
-
-            {/* <div className="profile-page__grid-right"> */}
               <StatisticsSection
                 acceptedDecisionsPercent={acceptedDecisionsPercent}
                 getPercentClass={getPercentClass}
@@ -532,7 +541,6 @@ const ProfilePage = () => {
                 receivedAchievementIdSet={receivedAchievementIdSet}
               />
             </div>
-          // </div>
         )}
       </main>
 

@@ -10,7 +10,7 @@
   padding: 10px 20px;
   border-radius: 10px;
   border: 1px solid transparent;
-  z-index: 320;
+  z-index: 9993;
   opacity: 1;
   transform: translateX(120%);
   opacity: 0;

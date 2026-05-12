@@ -10,33 +10,26 @@ import './OrganizationsSidebar.css';
 
 const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const headerHeight = document.querySelector('.header')?.getBoundingClientRect().height || 0;
 
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     let isMounted = true;
 
     const load = async () => {
       setIsLoading(true);
-
       try {
-        const result = await projectsApi.getMyOrganizations(viewerId, { page: 1, pageSize: 15 });
+        const result = await projectsApi.getMyOrganizations(viewerId);
 
-        if (!isMounted) {
-          return;
+        if (isMounted) {
+          setItems(result || []);
         }
-
-        setItems(result.data);
-        setPage(1);
-        setHasMore(result.hasMore);
+      } catch (error) {
+        console.error('Failed to load organizations', error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -50,25 +43,6 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
       isMounted = false;
     };
   }, [isOpen, viewerId]);
-
-  const handleScroll = async (event) => {
-    if (!hasMore) {
-      return;
-    }
-
-    const target = event.currentTarget;
-    const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 20;
-
-    if (!isBottom) {
-      return;
-    }
-
-    const nextPage = page + 1;
-    const result = await projectsApi.getMyOrganizations(viewerId, { page: nextPage, pageSize: 15 });
-    setItems((prev) => [...prev, ...result.data]);
-    setPage(nextPage);
-    setHasMore(result.hasMore);
-  };
 
   const sorted = useMemo(
     () =>
@@ -106,7 +80,7 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
           </button>
         </div>
 
-        <ul className="organizations-sidebar__list" onScroll={handleScroll}>
+        <ul className="organizations-sidebar__list">
           {isLoading ? (
             <li className="organizations-sidebar__loading">
               <Spinner />

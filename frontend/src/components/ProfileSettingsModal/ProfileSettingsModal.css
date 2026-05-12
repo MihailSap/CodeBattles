@@ -1,7 +1,7 @@
 .profile-settings-modal__overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 9992;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,7 @@
 .profile-settings-modal__action-button--reset {
   align-self: center;
   margin-top: 30px;
-  padding: 1px 45px;
+  padding: 0.5px 40px;
 }
 
 .profile-settings-modal__action-button--reset svg {
@@ -177,7 +177,7 @@
 .profile-settings-modal__action-button--link {
   display: flex;
   margin: 20px auto 0;
-  padding: 5px 20px;
+  padding: 3px 18px;
   font-weight: 500;
   font-size: 16px;
 }
@@ -324,7 +324,7 @@
 
   .profile-settings-modal {
     padding: 18px;
-    max-height: 80vh;
+    max-height: 70vh;
   }
 
   .profile-settings-modal__title,
@@ -365,7 +365,7 @@
   }
 
   .profile-settings-modal__action-button--reset {
-    padding: 1px 30px;
+    padding: 0.5px 30px;
     margin-top: 20px;
   }
 
@@ -404,7 +404,7 @@
 
   .profile-settings-modal__action-button--link {
     margin-top: 15px;
-    padding: 5px 15px;
+    padding: 3px 13px;
     font-size: 14px;
   }
 

@@ -14,8 +14,6 @@ const SkillsSection = ({
   onSkillsSave,
   onToggleSkill,
   openedSkillsPopup,
-  popupDirection,
-  popupHorizontalAlign,
   popupMaxHeight,
   skillsByGroup,
   skillsDraftByGroup
@@ -98,7 +96,7 @@ const SkillsSection = ({
                       createPortal(
                         <div
                           id={popupId}
-                          className={`profile-page__skills-popup profile-page__skills-popup--portal ${popupDirection === 'up' ? 'profile-page__skills-popup--top' : ''} ${popupHorizontalAlign === 'right' ? 'profile-page__skills-popup--right' : ''}`}
+                          className="profile-page__skills-popup profile-page__skills-popup--portal"
                           data-skills-popup="true"
                           role="dialog"
                           aria-label={`Выбор навыков: ${group.title}`}

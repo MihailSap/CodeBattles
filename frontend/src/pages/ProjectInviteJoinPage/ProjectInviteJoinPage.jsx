@@ -10,7 +10,7 @@ import './ProjectInviteJoinPage.css';
 const ProjectInviteJoinPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { isInitialized, isAuthenticated, userId } = useAuth();
+  const { isInitialized, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isInitialized || !isAuthenticated || !token) {
@@ -21,7 +21,7 @@ const ProjectInviteJoinPage = () => {
 
     const join = async () => {
       try {
-        const result = await projectsApi.joinByInvite(token, Number(userId));
+        const result = await projectsApi.joinByInvite(token);
 
         if (!isMounted) {
           return;
@@ -80,7 +80,7 @@ const ProjectInviteJoinPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated, isInitialized, navigate, token, userId]);
+  }, [isAuthenticated, isInitialized, navigate, token]);
 
   if (!isInitialized) {
     return (

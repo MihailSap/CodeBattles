@@ -11,7 +11,6 @@ import ProjectCard from '../../components/ProjectCard/ProjectCard';
 import ProjectCreateModal from '../../components/ProjectCreateModal/ProjectCreateModal';
 import Snackbar from '../../components/Snackbar/Snackbar';
 import Spinner from '../../components/Spinner/Spinner';
-import { PROJECT_MEMBER_ROLE } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import './ProjectsPage.css';
@@ -21,12 +20,6 @@ const VIEW_MODE = {
   WITH_ORGANIZATION: 'WITH_ORGANIZATION'
 };
 
-const roleWeight = {
-  [PROJECT_MEMBER_ROLE.OWNER]: 0,
-  [PROJECT_MEMBER_ROLE.MEMBER]: 1,
-  [PROJECT_MEMBER_ROLE.GUEST]: 2
-};
-
 const CAROUSEL_PADDING = 10;
 
 const ProjectsPage = () => {
@@ -34,15 +27,15 @@ const ProjectsPage = () => {
   const navigate = useNavigate();
   const { userId } = useAuth();
 
-  const [viewMode, setViewMode] = useState(VIEW_MODE.WITHOUT_ORGANIZATION);
+  const [viewMode, setViewMode] = useState(VIEW_MODE.WITH_ORGANIZATION);
   const [search, setSearch] = useState('');
   const [dashboard, setDashboard] = useState({ withoutOrganizationProjects: [], organizationsWithProjects: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
-  const [noOrgVisibleCount, setNoOrgVisibleCount] = useState(24);
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   const [isProjectCreateSubmitting, setProjectCreateSubmitting] = useState(false);
+  const [createProjectOrganizationId, setCreateProjectOrganizationId] = useState(null);
 
   const [isOrganizationCreateOpen, setOrganizationCreateOpen] = useState(false);
   const [isOrganizationCreateSubmitting, setOrganizationCreateSubmitting] = useState(false);
@@ -56,21 +49,27 @@ const ProjectsPage = () => {
   const [cardsPerView, setCardsPerView] = useState(2);
   const carouselViewportRef = useRef(null);
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async ({ resetNoOrg = true } = {}) => {
     setIsLoading(true);
 
     try {
-      const result = await projectsApi.getProjectsDashboard(Number(userId));
-      setDashboard(result);
+      const result = await projectsApi.getProjectsDashboard({ search });
+
+      setDashboard((prev) => ({
+        ...result,
+        withoutOrganizationProjects: resetNoOrg
+          ? result.withoutOrganizationProjects
+          : [...prev.withoutOrganizationProjects, ...result.withoutOrganizationProjects]
+      }));
     } catch {
       setSnackbar({ message: 'Не удалось загрузить список проектов', type: 'error' });
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [search]);
 
   useEffect(() => {
-    loadDashboard();
+    loadDashboard({ resetNoOrg: true });
   }, [loadDashboard]);
 
   useEffect(() => {
@@ -97,65 +96,9 @@ const ProjectsPage = () => {
     };
   }, [snackbar.message]);
 
-  useEffect(() => {
-    if (viewMode === VIEW_MODE.WITHOUT_ORGANIZATION) {
-      setNoOrgVisibleCount(24);
-    }
-  }, [search, viewMode]);
+  const noOrganizationProjects = useMemo(() => dashboard.withoutOrganizationProjects, [dashboard.withoutOrganizationProjects]);
 
-  const noOrganizationProjects = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
-    return dashboard.withoutOrganizationProjects
-      .filter((project) => {
-        if (!normalizedSearch) {
-          return true;
-        }
-
-        return `${project.name} ${project.description}`.toLowerCase().includes(normalizedSearch);
-      })
-      .sort((left, right) => {
-        const roleDiff = (roleWeight[left.role] || 2) - (roleWeight[right.role] || 2);
-
-        if (roleDiff !== 0) {
-          return roleDiff;
-        }
-
-        return left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' });
-      });
-  }, [dashboard.withoutOrganizationProjects, search]);
-
-  const visibleNoOrganizationProjects = useMemo(
-    () => noOrganizationProjects.slice(0, noOrgVisibleCount),
-    [noOrgVisibleCount, noOrganizationProjects]
-  );
-
-  const hasMoreNoOrganizationProjects = visibleNoOrganizationProjects.length < noOrganizationProjects.length;
-
-  const organizationsWithProjects = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-    const sortedOrganizations = [...dashboard.organizationsWithProjects].sort((left, right) => left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' }));
-
-    if (!normalizedSearch) {
-      return sortedOrganizations;
-    }
-
-    return sortedOrganizations
-      .map((organization) => {
-        const organizationMatches = `${organization.name} ${organization.description}`.toLowerCase().includes(normalizedSearch);
-        const filteredProjects = organization.projects.filter((project) => `${project.name} ${project.description}`.toLowerCase().includes(normalizedSearch));
-
-        if (!organizationMatches && filteredProjects.length === 0) {
-          return null;
-        }
-
-        return {
-          ...organization,
-          projects: organizationMatches ? organization.projects : filteredProjects
-        };
-      })
-      .filter(Boolean);
-  }, [dashboard.organizationsWithProjects, search]);
+  const organizationsWithProjects = useMemo(() => dashboard.organizationsWithProjects, [dashboard.organizationsWithProjects]);
 
   useEffect(() => {
     const maxStart = Math.max(0, organizationsWithProjects.length - cardsPerView);
@@ -239,10 +182,16 @@ const ProjectsPage = () => {
     setProjectCreateSubmitting(true);
 
     try {
-      const result = await projectsApi.createProject(payload);
+      const result = await projectsApi.createProject({
+        ...payload,
+        organizationId: createProjectOrganizationId
+      });
+      const projectId = result?.projectId;
 
-      if (result?.reason === 'NOT_IMPLEMENTED') {
-        setSnackbar({ message: 'Создание проекта будет доступно после подключения backend', type: 'success' });
+      if (projectId) {
+        setProjectCreateOpen(false);
+        setCreateProjectOrganizationId(null);
+        navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
       }
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
@@ -266,9 +215,11 @@ const ProjectsPage = () => {
 
     try {
       const result = await projectsApi.createOrganization(payload);
+      const organizationId = result?.organizationId;
 
-      if (result?.reason === 'NOT_IMPLEMENTED') {
-        setSnackbar({ message: 'Создание организации будет доступно после подключения backend', type: 'success' });
+      if (organizationId) {
+        setOrganizationCreateOpen(false);
+        navigate(ROUTES.organizationById.replace(':organizationId', organizationId), { replace: true });
       }
     } catch (error) {
       if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
@@ -283,22 +234,22 @@ const ProjectsPage = () => {
   };
 
   const fetchProjectsForJoin = useCallback(
-    async ({ query, page, pageSize }) => {
-      return projectsApi.searchProjectsForJoin(Number(userId), { query, page, pageSize });
+    async ({ query }) => {
+      return projectsApi.searchProjectsForJoin(Number(userId), { query });
     },
     [userId]
   );
 
   const fetchOrganizationsForJoin = useCallback(
-    async ({ query, page, pageSize }) => {
-      return projectsApi.searchOrganizations(Number(userId), { query, page, pageSize });
+    async ({ query }) => {
+      return projectsApi.searchOrganizations(Number(userId), { query });
     },
     [userId]
   );
 
   const handleJoinProject = async (projectId) => {
     try {
-      await projectsApi.joinPublicProject(projectId, Number(userId));
+      await projectsApi.joinPublicProject(projectId);
       await loadDashboard();
       setSnackbar({ message: 'Вы вступили в проект', type: 'success' });
     } catch {
@@ -308,7 +259,7 @@ const ProjectsPage = () => {
 
   const handleRequestOrganizationAccess = async (organizationId) => {
     try {
-      await projectsApi.requestOrganizationAccess(organizationId, Number(userId));
+      await projectsApi.requestOrganizationAccess(organizationId);
       setSnackbar({ message: 'Запрос на вступление отправлен владельцу организации', type: 'success' });
     } catch {
       setSnackbar({ message: 'Не удалось отправить запрос на вступление', type: 'error' });
@@ -332,20 +283,20 @@ const ProjectsPage = () => {
             </div>
 
             <div className="projects-page__switch" role="tablist" aria-label="Режим просмотра проектов">
-              <span className={`projects-page__switch-thumb ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? 'projects-page__switch-thumb--with-org' : ''}`} />
-              <button
-                className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
-                type="button"
-                onClick={() => setViewMode(VIEW_MODE.WITHOUT_ORGANIZATION)}
-              >
-                Без организации
-              </button>
+              <span className={`projects-page__switch-thumb ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-thumb--with-org' : ''}`} />
               <button
                 className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
                 type="button"
                 onClick={() => setViewMode(VIEW_MODE.WITH_ORGANIZATION)}
               >
                 С организацией
+              </button>
+              <button
+                className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
+                type="button"
+                onClick={() => setViewMode(VIEW_MODE.WITHOUT_ORGANIZATION)}
+              >
+                Без организации
               </button>
             </div>
 
@@ -366,26 +317,27 @@ const ProjectsPage = () => {
               <div className="projects-page__section">
                 <h1 className="projects-page__title">Мои проекты</h1>
 
-                {visibleNoOrganizationProjects.length === 0 ? (
+                {noOrganizationProjects.length === 0 ? (
                   <p className="projects-page__empty">У вас пока нет проектов</p>
                 ) : (
                   <div className="projects-page__projects-grid">
-                    {visibleNoOrganizationProjects.map((project) => (
+                    {noOrganizationProjects.map((project) => (
                       <ProjectCard key={project.id} project={project} onClick={() => openProject(project.id)} />
                     ))}
                   </div>
-                )}
-
-                {hasMoreNoOrganizationProjects && (
-                  <button className="projects-page__load-more" type="button" onClick={() => setNoOrgVisibleCount((prev) => prev + 24)}>
-                    Загрузить еще
-                  </button>
                 )}
               </div>
             </section>
 
             <div className="projects-page__actions">
-              <button className="projects-page__side-action projects-page__side-action--create" type="button" onClick={() => setProjectCreateOpen(true)}>
+              <button
+                className="projects-page__side-action projects-page__side-action--create"
+                type="button"
+                onClick={() => {
+                  setCreateProjectOrganizationId(null);
+                  setProjectCreateOpen(true);
+                }}
+              >
                 Создать проект
               </button>
               <button className="projects-page__side-action projects-page__side-action--join" type="button" onClick={() => setProjectsSearchOpen(true)}>
@@ -420,7 +372,14 @@ const ProjectsPage = () => {
                   >
                     {organizationsWithProjects.map((organization) => (
                       <div className="projects-page__organizations-slide" key={organization.id}>
-                        <OrganizationProjectsCard organization={organization} onProjectOpen={openProject} onCreateProject={() => setProjectCreateOpen(true)} />
+                        <OrganizationProjectsCard
+                          organization={organization}
+                          onProjectOpen={openProject}
+                          onCreateProject={(organizationId) => {
+                            setCreateProjectOrganizationId(organizationId);
+                            setProjectCreateOpen(true);
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -456,7 +415,10 @@ const ProjectsPage = () => {
 
       <ProjectCreateModal
         isOpen={isProjectCreateOpen}
-        onClose={() => setProjectCreateOpen(false)}
+        onClose={() => {
+          setProjectCreateOpen(false);
+          setCreateProjectOrganizationId(null);
+        }}
         onSubmit={handleCreateProject}
         isSubmitting={isProjectCreateSubmitting}
       />

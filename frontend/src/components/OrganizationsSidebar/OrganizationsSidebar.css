@@ -1,7 +1,7 @@
 .organizations-sidebar__overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 9992;
   transition: background-color var(--transition), visibility var(--transition);
 }
 
@@ -24,8 +24,8 @@
   border-right: 2px solid var(--primary-color);
   border-bottom: 2px solid var(--primary-color);
   box-shadow: var(--modal-shadow);
-  background: var(--element-bg-color);
-  padding: 30px 20px;
+  background: var(--bg-color);
+  padding: 15px 20px;
   display: flex;
   flex-direction: column;
   transition: transform var(--transition), opacity var(--transition);
@@ -51,14 +51,14 @@
   grid-column: 2;
   color: var(--text-color);
   font-weight: 600;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .organizations-sidebar__close {
   grid-column: 3;
   justify-self: end;
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   padding: 5px;
   border-radius: 50%;
   border: none;
@@ -74,7 +74,7 @@
 }
 
 .organizations-sidebar__list {
-  margin-top: 20px;
+  margin-top: 10px;
   margin-left: -20px;
   margin-right: -20px;
   overflow-y: auto;
@@ -109,7 +109,7 @@
   width: 100%;
   background: transparent;
   border: none;
-  padding: 15px 30px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   gap: 20px;
@@ -119,8 +119,8 @@
 }
 
 .organizations-sidebar__logo {
-  width: 90px;
-  height: 90px;
+  width: 85px;
+  height: 85px;
   border-radius: 10px;
   border: 2px solid var(--primary-color);
   object-fit: cover;
@@ -136,12 +136,12 @@
 
 .organizations-sidebar__name {
   color: var(--primary-color);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .organizations-sidebar__role {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -154,7 +154,7 @@
 }
 
 .organizations-sidebar__projects {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text-color);
 }
@@ -172,32 +172,33 @@
 
 @media (max-width: 500px) {
   .organizations-sidebar {
-    padding: 20px;
+    padding: 10px;
+    width: min(320px, calc(100vw - 20px));
   }
 
   .organizations-sidebar__title {
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .organizations-sidebar__close {
-    height: 35px;
-    width: 35px;
+    height: 30px;
+    width: 30px;
   }
 
   .organizations-sidebar__list {
-    margin-top: 15px;
-    margin-left: -20px;
-    margin-right: -20px;
+    margin-top: 5px;
+    margin-left: -10px;
+    margin-right: -10px;
   }
 
   .organizations-sidebar__item-link {
-    padding: 10px 20px;
+    padding: 10px 15px;
     gap: 15px;
   }
 
   .organizations-sidebar__logo {
-    width: 65px;
-    height: 65px;
+    width: 60px;
+    height: 60px;
   }
 
   .organizations-sidebar__meta {
@@ -207,6 +208,6 @@
   .organizations-sidebar__name,
   .organizations-sidebar__role,
   .organizations-sidebar__projects {
-    font-size: 16px;
+    font-size: 14px;
   }
 }

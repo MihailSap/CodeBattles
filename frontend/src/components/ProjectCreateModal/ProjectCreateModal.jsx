@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { CheckIcon, CrossIcon } from '../Icons/Icons';
+import { CheckIcon } from '../Icons/Icons';
 import ProjectSkillsSelector from '../ProjectSkillsSelector/ProjectSkillsSelector';
+import ModalShell from '../ModalShell/ModalShell';
 import { PROJECT_PRIVACY, PROJECT_PRIVACY_LABELS } from '../../constants/project';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import { validateProjectName, validateRepositoryUrl } from '../../utils/projectValidation';
@@ -59,15 +60,18 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   };
 
   return (
-    <div className="project-create-modal__backdrop" onClick={handleClose} role="presentation">
-      <div className="project-create-modal" role="dialog" aria-modal="true" aria-label="Создание проекта" onClick={(event) => event.stopPropagation()}>
-        <div className="project-create-modal__head">
-          <h2 className="project-create-modal__title">Создание проекта</h2>
-          <button className="project-create-modal__close" type="button" onClick={handleClose} aria-label="Закрыть форму">
-            <CrossIcon />
-          </button>
-        </div>
-
+    <ModalShell
+      isOpen={isOpen}
+      onClose={handleClose}
+      overlayClassName="project-create-modal__backdrop"
+      dialogClassName="project-create-modal"
+      ariaLabel="Создание проекта"
+      title="Создание проекта"
+      headerClassName="project-create-modal__head"
+      titleClassName="project-create-modal__title"
+      closeClassName="project-create-modal__close"
+      closeAriaLabel="Закрыть форму"
+    >
         <form className="project-create-modal__content" onSubmit={submit}>
           <div className="project-create-modal__fields">
             <div className="project-create-modal__field">
@@ -138,8 +142,7 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
             <CheckIcon />
           </button>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

@@ -28,9 +28,9 @@ const normalizeUser = (user) => {
 
 export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, { rejectWithValue }) => {
   try {
-    const response = await userApi.getCurrentUser();
+    const user = await userApi.getCurrentUser();
 
-    return response.data;
+    return user;
   } catch (error) {
     return rejectWithValue(getApiErrorMessage(error, 'Не удалось получить данные пользователя', 'currentUser'));
   }

@@ -30,8 +30,9 @@
     --header-button-hover-bg: rgba(21, 101, 192, 0.1);
     --heder-exit-button-hover-bg: rgba(248, 81, 73, 0.1);
     --section-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.25);
-    --profile-avatar-border-color: rgba(21, 101, 192, 0.2);
+    --profile-avatar-border-color: rgba(21, 101, 192, 0.5);
     --star-color: rgb(255, 197, 0);
+    --start-hover-color: rgb(255, 197, 0, 0.5);
     --achievement-description-color: rgb(0, 0, 0, 0.7);
     --not-received-achievement-description-color: rgb(0, 0, 0, 0.5);
     --scroll-color: rgb(0, 0, 0, 0.3);
@@ -60,7 +61,6 @@
     --hover-primary-color: rgb(67, 155, 255, 0.5);
     --text-color: rgb(245, 245, 245);
     --subtext-color: rgb(245, 245, 245, 0.7);
-    --fade-text-color: rgb(201, 209, 217);
     --element-shadow: 0px 0px 5px 0px rgba(67, 155, 255);
     --modal-shadow: 0px 0px 5px 1px rgba(67, 155, 255, 0.5);
     --header-shadow: 0px 4px 4px 0px rgba(67, 155, 255, 0.5);
@@ -71,10 +71,12 @@
     --success-text-color: rgb(21, 192, 89);
     --success-bg: rgba(82, 210, 115, 0.2);
     --success-border: rgba(82, 210, 115, 0.6);
-    --section-shadow: 0px 0px 6px 2px rgba(67, 155, 255, 0.25);
+    --section-shadow: 0px 0px 5px 0px rgba(67, 155, 255, 0.25);
     --profile-avatar-border-color: rgba(67, 155, 255, 0.2);
     --achievement-description-color: rgb(255, 255, 255, 0.5);
     --not-received-achievement-description-color: rgb(255, 255, 255, 0.5);
     --github-bg: rgb(0, 0, 0);
+    --project-table-border-color: rgb(30, 30, 47);
     --project-settings-input-border-color: rgba(255, 255, 255, 0.1);
+    --review-element-shadow: 0px 0px 5px 1px rgba(67, 155, 255, 0.25);
 }

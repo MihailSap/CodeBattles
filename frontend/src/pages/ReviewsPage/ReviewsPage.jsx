@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { reviewsApi } from '../../api/reviewsApi';
 import Header from '../../components/Header/Header';
 import ReviewCard from '../../components/ReviewCard/ReviewCard';
@@ -6,6 +7,7 @@ import ReviewDropdown from '../../components/ReviewDropdown/ReviewDropdown';
 import ReviewSection from '../../components/ReviewSection/ReviewSection';
 import Spinner from '../../components/Spinner/Spinner';
 import { REVIEW_SORT, REVIEW_SORT_LABEL, REVIEW_STATUS, REVIEW_STATUS_LABEL } from '../../constants/review';
+import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 import './ReviewsPage.css';
 
@@ -70,6 +72,7 @@ const groupReviews = (reviews) => {
 };
 
 const ReviewsPage = () => {
+  const navigate = useNavigate();
   const { userId } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -82,8 +85,6 @@ const ReviewsPage = () => {
 
       try {
         const response = await reviewsApi.getAssignedReviews(Number(userId), {
-          page: 1,
-          pageSize: 100,
           status: statusFilter,
           sort: sortDirection
         });
@@ -147,7 +148,11 @@ const ReviewsPage = () => {
                     <ReviewSection key={project.id} title={project.title} reviewsCount={project.reviews.length} nested>
                       <div className="reviews-page__reviews-list">
                         {project.reviews.map((review) => (
-                          <ReviewCard key={review.id} review={review} />
+                          <ReviewCard
+                            key={review.id}
+                            review={review}
+                            onClick={() => navigate(ROUTES.reviewById.replace(':reviewId', review.id))}
+                          />
                         ))}
                       </div>
                     </ReviewSection>

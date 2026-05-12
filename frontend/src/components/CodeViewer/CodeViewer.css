@@ -1,0 +1,80 @@
+.code-viewer-container {
+  width: 100%;
+  height: 600px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--project-table-border-color);
+  background-color: var(--element-bg-color);
+}
+
+.code-viewer-comment-line {
+  background-color: rgba(234, 179, 8, 0.15);
+}
+
+.code-viewer-comment-glyph {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="%231f2937"/><path d="M7.2 8.9c0-1.49 1.2-2.7 2.7-2.7h4.2c1.49 0 2.7 1.21 2.7 2.7v2.7c0 1.49-1.21 2.7-2.7 2.7h-2.56l-2.74 2.2v-2.2H9.9c-1.5 0-2.7-1.21-2.7-2.7V8.9z" fill="%236366f1"/></svg>');
+  background-size: 35px;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.code-viewer-comment-glyph--ai {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="%231f2937"/><path d="M7.2 8.9c0-1.49 1.2-2.7 2.7-2.7h4.2c1.49 0 2.7 1.21 2.7 2.7v2.7c0 1.49-1.21 2.7-2.7 2.7h-2.56l-2.74 2.2v-2.2H9.9c-1.5 0-2.7-1.21-2.7-2.7V8.9z" fill="%238b5cf6"/></svg>');
+  background-color: color-mix(in srgb, #8b5cf6 15%, transparent);
+  border-color: color-mix(in srgb, #8b5cf6 42%, transparent);
+}
+
+.code-viewer-comment-widget {
+  padding: 4px 12px;
+  background-color: var(--primary-color);
+  color: var(--white-text-color);
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  transition: opacity 0.15s;
+}
+
+[data-theme='dark'] .code-viewer-container {
+  border-color: color-mix(in srgb, var(--primary-color) 24%, transparent);
+  background-color: color-mix(in srgb, var(--element-bg-color) 94%, #000 6%);
+}
+
+[data-theme='dark'] .code-viewer-comment-widget {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+@media (hover: hover) and (pointer: fine) {
+
+  .code-viewer-comment-glyph:hover {
+    background-color: color-mix(in srgb, var(--primary-color) 24%, transparent);
+    border-color: color-mix(in srgb, var(--primary-color) 52%, transparent);
+  }
+
+  .code-viewer-comment-glyph--ai:hover {
+    background-color: color-mix(in srgb, #8b5cf6 24%, transparent);
+    border-color: color-mix(in srgb, #8b5cf6 58%, transparent);
+  }
+
+  .code-viewer-comment-widget:hover {
+    opacity: 0.85;
+  }
+}
+
+@media (max-width: 500px) {
+  .code-viewer-comment-widget {
+    font-size: 12px;
+  }
+
+  .code-viewer-container .monaco-editor,
+  .code-viewer-container .monaco-editor .overflow-guard,
+  .code-viewer-container .monaco-editor .monaco-scrollable-element {
+    touch-action: pan-y !important;
+  }
+}

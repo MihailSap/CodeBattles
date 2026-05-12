@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.35);
-  z-index: 210;
+  z-index: 9992;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -17,7 +17,7 @@
   border-radius: 25px;
   border: 2px solid var(--primary-color);
   box-shadow: var(--modal-shadow);
-  background-color: var(--element-bg-color);
+  background-color: var(--bg-color);
   padding: 40px;
 }
 
@@ -79,7 +79,7 @@
   padding: 10px;
   font-weight: 500;
   font-size: 14px;
-  background-color: var(--bg-color);
+  background-color: var(--element-bg-color);
   color: var(--text-color);
   box-shadow: var(--element-shadow);
   transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
@@ -185,7 +185,7 @@
   }
 
   .project-create-modal__submit:hover:enabled {
-    background: var(--bg-color);
+    background: var(--element-bg-color);
     color: var(--success-text-color);
   }
 }

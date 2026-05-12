@@ -31,9 +31,9 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
           filter: filter || undefined
         });
 
-        const content = Array.isArray(response.data?.content) ? response.data.content : [];
-        const backendTotalPages = Number.isFinite(response.data?.totalPages) ? response.data.totalPages : 0;
-        const backendPage = Number.isFinite(response.data?.page) ? response.data.page : targetPage;
+        const content = Array.isArray(response?.content) ? response.content : [];
+        const backendTotalPages = Number.isFinite(response?.totalPages) ? response.totalPages : 0;
+        const backendPage = Number.isFinite(response?.page) ? response.page : targetPage;
 
         setUsers(content);
         setTotalPages(backendTotalPages);
@@ -85,6 +85,13 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
     });
   };
 
+  const openEnableConfirm = (targetUser) => {
+    setConfirmState({
+      type: 'enable',
+      targetUser
+    });
+  };
+
   const closeConfirm = () => {
     if (!isSubmittingAction) {
       setConfirmState(null);
@@ -119,6 +126,10 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
           await onSelfDemote();
           return;
         }
+      }
+
+      if (confirmState.type === 'enable') {
+        await userApi.enableUser(confirmState.targetUser.id);
       }
 
       await loadUsers(page, debouncedSearch);
@@ -228,7 +239,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
                             className="admin-users__action-button admin-users__action-button--approve"
                             type="button"
                             aria-label={`Подтвердить пользователя ${targetUser.login || targetUser.id}`}
-                            disabled
+                            onClick={() => openEnableConfirm(targetUser)}
+                            disabled={isSubmittingAction}
                           >
                             ✓
                           </button>
@@ -266,15 +278,25 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
       <ConfirmActionModal
         isOpen={Boolean(confirmState)}
-        title={confirmState?.type === 'delete' ? 'Удалить пользователя?' : confirmState?.shouldBeAdmin ? 'Назначить пользователю роль администратора?' : 'Снять с пользователя роль администратора?'}
+        title={
+          confirmState?.type === 'delete'
+            ? 'Удалить пользователя?'
+            : confirmState?.type === 'enable'
+              ? 'Подтвердить почту пользователя?'
+              : confirmState?.shouldBeAdmin
+                ? 'Назначить пользователю роль администратора?'
+                : 'Снять с пользователя роль администратора?'
+        }
         description={
           confirmState?.type === 'delete'
             ? 'Пользователь будет удален из системы. Это действие нельзя отменить.'
-            : confirmState?.shouldBeAdmin
-              ? 'Пользователь получит роль администратора.'
-              : 'У пользователя будет снята роль администратора.'
+            : confirmState?.type === 'enable'
+              ? 'Почта пользователя будет принудительно подтверждена.'
+              : confirmState?.shouldBeAdmin
+                ? 'Пользователь получит роль администратора.'
+                : 'У пользователя будет снята роль администратора.'
         }
-        confirmLabel={confirmState?.type === 'delete' ? 'Удалить' : 'Да'}
+        confirmLabel={confirmState?.type === 'delete' ? 'Удалить' : 'Подтвердить'}
         onCancel={closeConfirm}
         onConfirm={handleConfirmAction}
         isSubmitting={isSubmittingAction}

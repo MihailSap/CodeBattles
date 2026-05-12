@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CrossIcon } from '../Icons/Icons';
+import ModalShell from '../ModalShell/ModalShell';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import Spinner from '../Spinner/Spinner';
 import './JoinSearchModal.css';
@@ -14,7 +14,7 @@ const JoinSearchModal = ({
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [items, setItems] = useState([]);
-  const [page, setPage] = useState(1);
+  const [pendingRequestIds, setPendingRequestIds] = useState([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,23 +37,20 @@ const JoinSearchModal = ({
       setIsLoading(true);
 
       try {
-        const result = await fetchItems({ query: debouncedQuery, page: 1, pageSize: 15 });
+        const result = await fetchItems({ query: debouncedQuery });
 
         if (!isMounted) {
           return;
         }
 
         setItems(result.data);
-        setPage(1);
-        setHasMore(result.hasMore);
+        setPendingRequestIds([]);
       } catch {
         if (!isMounted) {
           return;
         }
 
         setItems([]);
-        setPage(1);
-        setHasMore(false);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -75,10 +72,8 @@ const JoinSearchModal = ({
       return;
     }
 
-    const nextPage = page + 1;
-    const result = await fetchItems({ query: debouncedQuery, page: nextPage, pageSize: 15 });
+    const result = await fetchItems({ query: debouncedQuery });
     setItems((prev) => [...prev, ...result.data]);
-    setPage(nextPage);
     setHasMore(result.hasMore);
   };
 
@@ -92,15 +87,18 @@ const JoinSearchModal = ({
   };
 
   return (
-    <div className="join-search-modal__overlay" role="presentation" onClick={onClose}>
-      <div className="join-search-modal" role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}>
-        <div className="join-search-modal__head">
-          <h2 className="join-search-modal__title">{title}</h2>
-          <button className="join-search-modal__close" type="button" onClick={onClose} aria-label="Закрыть окно">
-            <CrossIcon />
-          </button>
-        </div>
-
+    <ModalShell
+      isOpen
+      onClose={onClose}
+      overlayClassName="join-search-modal__overlay"
+      dialogClassName="join-search-modal"
+      ariaLabel={title}
+      title={title}
+      headerClassName="join-search-modal__head"
+      titleClassName="join-search-modal__title"
+      closeClassName="join-search-modal__close"
+      closeAriaLabel="Закрыть окно"
+    >
         <div className="join-search-modal__content">
           <input
             className="join-search-modal__search"
@@ -127,7 +125,11 @@ const JoinSearchModal = ({
                         <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
                         <p className="join-search-modal__value">Открытых задач: {item.openTasksCount}</p>
                       </div>
-                      <button className="join-search-modal__action" type="button" onClick={() => onJoin(item.id)}>
+                      <button className="join-search-modal__action" type="button" onClick={async () => {
+                        await onJoin(item.id);
+                        setItems((prev) => prev.filter((i) => i.id !== item.id));
+                      }}
+                      >
                         Вступить
                       </button>
                     </div>
@@ -141,10 +143,17 @@ const JoinSearchModal = ({
                           <p className="join-search-modal__value">Проектов: {item.projectsCount}</p>
                         </div>
                       </div>
-                      {item.hasPendingRequest ? (
+                      {item.hasPendingRequest || pendingRequestIds.includes(item.id) ? (
                         <span className="join-search-modal__status">Запрос отправлен</span>
                       ) : (
-                        <button className="join-search-modal__action" type="button" onClick={() => onRequestAccess(item.id)}>
+                        <button
+                          className="join-search-modal__action"
+                          type="button"
+                          onClick={async () => {
+                            await onRequestAccess(item.id);
+                            setPendingRequestIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
+                          }}
+                        >
                           Запросить доступ
                         </button>
                       )}
@@ -155,8 +164,7 @@ const JoinSearchModal = ({
             )}
           </ul>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

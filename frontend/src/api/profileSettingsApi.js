@@ -1,101 +1,36 @@
-import { userApi } from './userApi';
-
-const defaultNotificationSettings = {
-  reviewAssignments: true,
-  newComments: true,
-  achievements: true
-};
-
-const defaultLinkedAccounts = {
-  githubLogin: '',
-  gitlabLogin: ''
-};
-
-const state = {
-  notificationsByUserId: {},
-  linkedAccountsByUserId: {}
-};
-
-const getKey = (userId) => {
-  if (userId === null || userId === undefined) {
-    return 'guest';
-  }
-
-  return String(userId);
-};
-
-const clone = (value) => JSON.parse(JSON.stringify(value));
+import { httpClient } from './httpClient';
 
 export const profileSettingsApi = {
-  async updatePassword(userId, currentPassword, newPassword) {
-    if (userId === null || userId === undefined) {
-      throw new Error('Не удалось определить ID пользователя');
-    }
-
-    const response = await userApi.updatePassword(userId, currentPassword, newPassword);
+  async updatePassword(currentPassword, newPassword) {
+    const response = await httpClient.patch('/api/v1/profile/me/password', {
+      currentPassword,
+      newPassword
+    });
     return response.data;
   },
 
-  async getNotificationSettings(userId) {
-    const key = getKey(userId);
-    const settings = state.notificationsByUserId[key] || defaultNotificationSettings;
-    return clone(settings);
+  async getNotificationSettings() {
+    const response = await httpClient.get('/api/v1/profile/me/notification-settings');
+    return response.data;
   },
 
-  async updateNotificationSettings(userId, settings) {
-    const key = getKey(userId);
-    state.notificationsByUserId[key] = {
-      ...defaultNotificationSettings,
-      ...settings
-    };
-    return clone(state.notificationsByUserId[key]);
+  async updateNotificationSettings(settings) {
+    const response = await httpClient.put('/api/v1/profile/me/notification-settings', settings);
+    return response.data;
   },
 
-  async getLinkedAccounts(userId) {
-    const key = getKey(userId);
-    const accounts = state.linkedAccountsByUserId[key] || defaultLinkedAccounts;
-    return clone(accounts);
+  async getLinkedAccounts() {
+    const response = await httpClient.get('/api/v1/profile/me/linked-accounts');
+    return response.data;
   },
 
-  async linkAccount(userId, provider) {
-    const key = getKey(userId);
-    const current = state.linkedAccountsByUserId[key] || defaultLinkedAccounts;
-
-    if (provider === 'github') {
-      state.linkedAccountsByUserId[key] = {
-        ...current,
-        githubLogin: current.githubLogin || ''
-      };
-    }
-
-    if (provider === 'gitlab') {
-      state.linkedAccountsByUserId[key] = {
-        ...current,
-        gitlabLogin: current.gitlabLogin || ''
-      };
-    }
-
-    return clone(state.linkedAccountsByUserId[key]);
+  async linkAccount(provider) {
+    console.warn(`Link account for ${provider} is not implemented on backend`);
+    return this.getLinkedAccounts();
   },
 
-  async unlinkAccount(userId, provider) {
-    const key = getKey(userId);
-    const current = state.linkedAccountsByUserId[key] || defaultLinkedAccounts;
-
-    if (provider === 'github') {
-      state.linkedAccountsByUserId[key] = {
-        ...current,
-        githubLogin: ''
-      };
-    }
-
-    if (provider === 'gitlab') {
-      state.linkedAccountsByUserId[key] = {
-        ...current,
-        gitlabLogin: ''
-      };
-    }
-
-    return clone(state.linkedAccountsByUserId[key]);
+  async unlinkAccount(provider) {
+    console.warn(`Unlink account for ${provider} is not implemented on backend`);
+    return this.getLinkedAccounts();
   }
 };

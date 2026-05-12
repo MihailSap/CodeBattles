@@ -57,7 +57,7 @@ const TaskCreatePage = () => {
       setIsLoading(true);
 
       try {
-        const result = await projectsApi.getProjectById(projectId, Number(userId));
+        const result = await projectsApi.getProjectById(projectId);
 
         if (!isMounted) {
           return;
@@ -72,7 +72,7 @@ const TaskCreatePage = () => {
 
         if (result.organizationId && result.privacy === PROJECT_PRIVACY.PUBLIC) {
           try {
-            const organization = await projectsApi.getOrganizationById(result.organizationId, Number(userId));
+            const organization = await projectsApi.getOrganizationById(result.organizationId);
             if (isMounted) {
               setOrganizationParticipants(organization.participants || []);
             }
@@ -159,6 +159,11 @@ const TaskCreatePage = () => {
     () => reviewersSource.filter((participant) => !form.assigneeIds.includes(participant.id)),
     [form.assigneeIds, reviewersSource]
   );
+
+  const reviewTypes = useMemo(() => {
+    const types = Object.values(TASK_REVIEW_TYPE);
+    return project?.aiReviewEnabled ? types : types.filter(type => type !== TASK_REVIEW_TYPE.AI_ONLY);
+  }, [project?.aiReviewEnabled]);
 
   useEffect(() => {
     if (!isManualReviewers) {
@@ -317,7 +322,7 @@ const TaskCreatePage = () => {
           <div className="task-create-page__block">
             <h3 className="task-create-page__block-title">Тип ревью</h3>
             <div className="task-create-page__radio-list">
-              {Object.values(TASK_REVIEW_TYPE).map((type) => (
+              {reviewTypes.map((type) => (
                 <label key={type} className="task-create-page__radio-item">
                   <input
                     className="task-create-page__radio"
