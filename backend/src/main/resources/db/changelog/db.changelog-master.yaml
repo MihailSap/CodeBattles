@@ -59,3 +59,5 @@ databaseChangeLog:
       file: db/changelog/changeset/029-rename-avatar-columns.yaml
   - include:
       file: db/changelog/changeset/030-create-notification-settings.yaml
+  - include:
+      file: db/changelog/changeset/031-update-task-fields.yaml

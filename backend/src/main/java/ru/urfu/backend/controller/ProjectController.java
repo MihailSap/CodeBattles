@@ -13,7 +13,10 @@ import ru.urfu.backend.dto.LeftResponse;
 import ru.urfu.backend.dto.invite.ProjectInviteRequest;
 import ru.urfu.backend.dto.invite.ProjectInviteResponse;
 import ru.urfu.backend.dto.project.*;
-import ru.urfu.backend.dto.tasks.TaskCreateRequest;
+import ru.urfu.backend.dto.tasks.CreateTaskRequestDto;
+import ru.urfu.backend.dto.tasks.TaskDetailsResponse;
+import ru.urfu.backend.dto.tasks.TaskListItemResponse;
+import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.ProjectInviteMapper;
 import ru.urfu.backend.mapper.ProjectMapper;
@@ -183,37 +186,6 @@ public class ProjectController {
         return new LeftResponse(true);
     }
 
-    @Operation(description = "Получение задач проекта по id")
-    @GetMapping("/{projectId}/tasks")
-    public List<ProjectTaskDto> getProjectTasks(@PathVariable("projectId") Long projectId){
-        Project project = projectService.getById(projectId);
-        Set<Task> tasks = project.getTasks();
-        List<ProjectTaskDto> projectTaskDtos = new ArrayList<>();
-        for(var task : tasks){
-            ProjectTaskDto projectTaskDto = taskMapper.mapToProjectTaskDto(task);
-            projectTaskDtos.add(projectTaskDto);
-        }
-        return projectTaskDtos;
-    }
-
-    @Operation(description = "Создание задачи для проекта")
-    @PostMapping("/{projectId}/tasks")
-    public ResponseEntity<CreatedResponse> createTask(
-            @PathVariable("projectId") Long projectId, @RequestBody TaskCreateRequest request) throws UserNotFoundException {
-        Project project = projectService.getById(projectId);
-        Task task = taskService.create(request, project);
-        return ResponseEntity.status(201).body(new CreatedResponse(task.getId()));
-    }
-
-    @Operation(description = "Получение задачи проекта")
-    @GetMapping("/{projectId}/tasks/{taskId}")
-    public ProjectTaskDto getTaskById(
-            @PathVariable("projectId") Long projectId, @PathVariable("taskId") Long taskId
-    ){
-        Task task = taskService.getById(taskId);
-        return taskMapper.mapToProjectTaskDto(task);
-    }
-
     @Operation(description = "Создание invite запроса")
     @PostMapping("/{projectId}/invites")
     public ProjectInviteResponse createInviteLink(
@@ -253,5 +225,88 @@ public class ProjectController {
             projectListItemDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.GUEST));
         }
         return projectListItemDtos;
+    }
+
+    @Operation(description = "Создание задачи")
+    @PostMapping("/{projectId}/tasks")
+    public ResponseEntity<TaskDetailsResponse> createTask(
+            @PathVariable("projectId") Long projectId,
+            @RequestBody CreateTaskRequestDto requestDto
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Project project = projectService.getById(projectId);
+        if(!projectService.isUserOwnerInProject(project, user)){
+            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+        }
+        Task task = taskService.create(requestDto, project);
+        return ResponseEntity.status(201).body(taskMapper.mapToTaskDetailsResponse(task));
+    }
+
+    @Operation(description = "Получение задач проекта")
+    @GetMapping("/{projectId}/tasks")
+    public List<TaskListItemResponse> getProjectTasks(
+            @PathVariable("projectId") Long projectId
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Project project = projectService.getById(projectId);
+        if(!projectService.isUserOwnerInProject(project, user)
+                && !projectService.isUserMemberInProject(project, user)){
+            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+        }
+
+        List<TaskListItemResponse> taskListItemResponses = new ArrayList<>();
+        for(Task task : project.getTasks()){
+            TaskListItemResponse taskListItemResponse = taskMapper.mapToTaskListItemResponse(task);
+            taskListItemResponses.add(taskListItemResponse);
+        }
+        return taskListItemResponses;
+    }
+
+    @Operation(description = "Получение деталей задачи")
+    @GetMapping("/{projectId}/tasks/{taskId}")
+    public TaskDetailsResponse getTask(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("taskId") Long taskId
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Project project = projectService.getById(projectId);
+        Task task = taskService.getById(taskId);
+        if(!projectService.isUserOwnerInProject(project, user)
+            && !taskService.isUserReviewerInTask(user, task)){
+            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+        }
+        return taskMapper.mapToTaskDetailsResponse(task);
+    }
+
+    @Operation(description = "Обновление настроек задачи")
+    @PatchMapping("/{projectId}/tasks/{taskId}")
+    public TaskDetailsResponse updateTask(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("taskId") Long taskId,
+            @RequestBody UpdateTaskSettingsRequest request
+            ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Project project = projectService.getById(projectId);
+        if(!projectService.isUserOwnerInProject(project, user)){
+            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+        }
+        Task task = taskService.getById(taskId);
+        Task updatedTask = taskService.update(task, request);
+        return taskMapper.mapToTaskDetailsResponse(updatedTask);
+    }
+
+    @Operation(description = "Удаление задачи")
+    @DeleteMapping("/{projectId}/tasks/{taskId}")
+    public DeletedResponse deleteTask(
+            @PathVariable("projectId") Long projectId,
+            @PathVariable("taskId") Long taskId
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Project project = projectService.getById(projectId);
+        if(!projectService.isUserOwnerInProject(project, user)){
+            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+        }
+        taskService.delete(taskId);
+        return new DeletedResponse(true);
     }
 }

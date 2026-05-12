@@ -28,6 +28,10 @@ public class Task extends BaseEntity {
 
     private String requirements;
 
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime updatedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
@@ -118,5 +122,21 @@ public class Task extends BaseEntity {
 
     public void setRequirements(String requirements) {
         this.requirements = requirements;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdDate) {
+        this.createdAt = createdDate;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedDate) {
+        this.updatedAt = updatedDate;
     }
 }

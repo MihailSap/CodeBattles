@@ -2,6 +2,7 @@ package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
 import ru.urfu.backend.model.base.BaseEntity;
+import ru.urfu.backend.model.enums.UserTaskType;
 
 @Entity
 @Table(name = "user_task")
@@ -14,6 +15,9 @@ public class UserTask extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
     private Task task;
+
+    @Enumerated(EnumType.STRING)
+    private UserTaskType userTaskType;
 
     public User getUser() {
         return user;
@@ -29,5 +33,13 @@ public class UserTask extends BaseEntity {
 
     public void setTask(Task task) {
         this.task = task;
+    }
+
+    public UserTaskType getUserTaskType() {
+        return userTaskType;
+    }
+
+    public void setUserTaskType(UserTaskType userTaskType) {
+        this.userTaskType = userTaskType;
     }
 }
