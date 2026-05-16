@@ -6,7 +6,7 @@
 }
 
 .review-dropdown__label {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 16px;
 }
@@ -15,22 +15,22 @@
   min-width: 100px;
   padding: 5px;
   border-radius: 7px;
-  border: 2px solid var(--hover-primary-color);
-  background: var(--bg-color);
+  border: 2px solid var(--color-accent-muted);
+  background: var(--color-page-bg);
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 5px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .review-dropdown__trigger--open,
 .review-dropdown__trigger:focus-visible {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
   outline: none;
 }
 
@@ -39,15 +39,15 @@
 }
 
 .review-dropdown__value--placeholder {
-  color: var(--project-input-placeholder-color);
+  color: var(--color-input-placeholder);
 }
 
 .review-dropdown__icon {
   width: 14px;
   height: 14px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   display: inline-flex;
-  transition: transform var(--transition);
+  transition: transform var(--transition-fast);
 }
 
 .review-dropdown__icon--open {
@@ -65,9 +65,9 @@
   left: 0;
   width: 100%;
   border-radius: 10px;
-  border: 2px solid var(--hover-primary-color);
-  background: var(--form-bg-color);
-  box-shadow: var(--section-shadow);
+  border: 2px solid var(--color-accent-muted);
+  background: var(--color-surface-panel);
+  box-shadow: var(--shadow-section);
   z-index: 20;
   overflow-y: auto;
   max-height: 250px;
@@ -82,7 +82,7 @@
 }
 
 .review-dropdown__menu::-webkit-scrollbar-thumb {
-  background: var(--hover-primary-color);
+  background: var(--color-accent-muted);
   border-radius: 10px;
 }
 
@@ -90,7 +90,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 14px;
   font-weight: 600;
   padding: 8px 10px;
@@ -99,13 +99,13 @@
   justify-content: space-between;
   text-align: left;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .review-dropdown__option-check {
   width: 14px;
   height: 14px;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .review-dropdown__option-check svg {
@@ -115,11 +115,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .review-dropdown__option:hover {
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 
 .review-dropdown__menu::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
+  background: var(--color-accent);
 }
 }
 

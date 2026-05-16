@@ -7,9 +7,7 @@ export const profileApi = {
     const url = userId === 'me' ? '/api/v1/profile/me' : `/api/v1/profile/${userId}`;
     const response = await httpClient.get(url);
     const user = response.data;
-
-    console.log('Fetched user data:', user);
-
+    
     const skills = {
       languages: Array.isArray(user.languages) ? user.languages : [],
       frameworks: Array.isArray(user.frameworks) ? user.frameworks : [],

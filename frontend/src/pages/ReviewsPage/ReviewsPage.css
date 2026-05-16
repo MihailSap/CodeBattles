@@ -1,6 +1,6 @@
 .reviews-page {
   min-height: 100vh;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .reviews-page__content {
@@ -14,7 +14,7 @@
 }
 
 .reviews-page__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -35,7 +35,7 @@
 }
 
 .reviews-page__total {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-weight: 600;
   font-size: 16px;
 }
@@ -65,11 +65,11 @@
   border-radius: 20px;
   padding: 40px 20px;
   text-align: center;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 18px;
   font-weight: 600;
-  background: var(--form-bg-color);
-  box-shadow: var(--section-shadow);
+  background: var(--color-surface-panel);
+  box-shadow: var(--shadow-section);
 }
 
 @media (max-width: 700px) {

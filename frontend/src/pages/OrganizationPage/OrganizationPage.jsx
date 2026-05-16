@@ -16,6 +16,8 @@ import { ACCESS_ERROR_CODE, PROJECT_MEMBER_ROLE, PROJECT_MEMBER_ROLE_LABELS } fr
 import { ROUTES } from '../../constants/routes';
 import { sortParticipants, truncateText } from '../../utils/projectFormatters';
 import { validateOrganizationName, validateOrganizationUrl } from '../../utils/organizationValidation';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import './OrganizationPage.css';
 
 const tabs = {
@@ -54,9 +56,9 @@ const OrganizationPage = () => {
   const [requestActionUserId, setRequestActionUserId] = useState(null);
   const [settingsDraft, setSettingsDraft] = useState(null);
   const [settingsTouched, setSettingsTouched] = useState({ name: false, link: false });
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [projectsList, setProjectsList] = useState([]);
-  const [debouncedProjectSearch, setDebouncedProjectSearch] = useState('');
+  const debouncedProjectSearch = useDebouncedValue(projectSearch, 300);
 
   const loadOrganization = async (id) => {
     const result = await projectsApi.getOrganizationById(id);
@@ -108,38 +110,11 @@ const OrganizationPage = () => {
   }, [navigate, organizationId]);
 
   useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSnackbar({ message: '', type: 'success' });
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [snackbar.message]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedProjectSearch(projectSearch.trim());
-    }, 350);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [projectSearch]);
-
-  useEffect(() => {
     if (location.state?.snackbarMessage) {
-      setSnackbar({
-        message: location.state.snackbarMessage,
-        type: location.state.snackbarType || 'success'
-      });
+      showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate]);
+  }, [location.pathname, location.state, navigate, showSnackbar]);
 
   useEffect(() => {
     return () => {
@@ -221,7 +196,7 @@ const OrganizationPage = () => {
     try {
       return await projectsApi.generateOrganizationInvite(organization.id, payload);
     } catch {
-      setSnackbar({ message: 'Не удалось сформировать ссылку. Попробуйте позже', type: 'error' });
+      showSnackbar('Не удалось сформировать ссылку. Попробуйте позже', 'error');
       return null;
     } finally {
       setInviteSubmitting(false);
@@ -245,9 +220,9 @@ const OrganizationPage = () => {
       }
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
-        setSnackbar({ message: 'Проект с таким названием уже существует', type: 'error' });
+        showSnackbar('Проект с таким названием уже существует', 'error');
       } else {
-        setSnackbar({ message: 'Не удалось создать проект. Попробуйте позже', type: 'error' });
+        showSnackbar('Не удалось создать проект. Попробуйте позже', 'error');
       }
     } finally {
       setCreateProjectSubmitting(false);
@@ -271,7 +246,7 @@ const OrganizationPage = () => {
         }
       });
     } catch {
-      setSnackbar({ message: 'Не удалось выйти из организации', type: 'error' });
+      showSnackbar('Не удалось выйти из организации', 'error');
     } finally {
       setLeaveSubmitting(false);
       setLeaveModalOpen(false);
@@ -295,7 +270,7 @@ const OrganizationPage = () => {
         }
       });
     } catch {
-      setSnackbar({ message: 'Не удалось удалить организацию', type: 'error' });
+      showSnackbar('Не удалось удалить организацию', 'error');
     } finally {
       setDeleteSubmitting(false);
       setDeleteModalOpen(false);
@@ -312,9 +287,9 @@ const OrganizationPage = () => {
     try {
       await projectsApi.rejectOrganizationJoinRequest(organization.id, request.userId);
       await loadOrganization(organization.id);
-      setSnackbar({ message: `Вы отклонили заявку пользователя @${request.login}`, type: 'error' });
+      showSnackbar(`Вы отклонили заявку пользователя @${request.login}`, 'error');
     } catch {
-      setSnackbar({ message: 'Не удалось отклонить заявку', type: 'error' });
+      showSnackbar('Не удалось отклонить заявку', 'error');
     } finally {
       setRequestActionUserId(null);
     }
@@ -330,9 +305,9 @@ const OrganizationPage = () => {
     try {
       await projectsApi.approveOrganizationJoinRequest(organization.id, request.userId);
       await loadOrganization(organization.id);
-      setSnackbar({ message: `Вы приняли заявку пользователя @${request.login}`, type: 'success' });
+      showSnackbar(`Вы приняли заявку пользователя @${request.login}`, 'success');
     } catch {
-      setSnackbar({ message: 'Не удалось принять заявку', type: 'error' });
+      showSnackbar('Не удалось принять заявку', 'error');
     } finally {
       setRequestActionUserId(null);
     }
@@ -404,12 +379,12 @@ const OrganizationPage = () => {
       setSettingsDraft(prev => ({ ...prev, logoFile: null }));
 
       setSettingsTouched({ name: false, link: false });
-      setSnackbar({ message: 'Изменения сохранены', type: 'success' });
+      showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
       if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
-        setSnackbar({ message: 'Организация с таким названием существует', type: 'error' });
+        showSnackbar('Организация с таким названием существует', 'error');
       } else {
-        setSnackbar({ message: 'Возникла непредвиденная ошибка. Попробуйте позже', type: 'error' });
+        showSnackbar('Возникла непредвиденная ошибка. Попробуйте позже', 'error');
       }
     } finally {
       setSettingsSubmitting(false);
@@ -438,7 +413,7 @@ const OrganizationPage = () => {
   return (
     <div className="project-page organization-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="project-page__content">
         <section className="project-page__info section-card">
@@ -494,7 +469,7 @@ const OrganizationPage = () => {
                 <label className="project-page__search-field">
                   <SearchIcon />
                   <input
-                    type="text"
+                    type="search"
                     placeholder="Поиск"
                     value={projectSearch}
                     onChange={(event) => setProjectSearch(event.target.value.slice(0, 120))}
@@ -728,7 +703,7 @@ const OrganizationPage = () => {
         isOpen={isInviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         onGenerate={handleInviteGenerate}
-        onCopySuccess={() => setSnackbar({ message: 'Ссылка скопирована', type: 'success' })}
+        onCopySuccess={() => showSnackbar('Ссылка скопирована', 'success')}
         isSubmitting={isInviteSubmitting}
       />
 

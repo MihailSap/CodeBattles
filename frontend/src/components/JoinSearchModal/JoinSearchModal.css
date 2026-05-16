@@ -13,9 +13,9 @@
   width: min(1000px, 100%);
   max-height: min(100vh - 160px, 920px);
   border-radius: 25px;
-  border: 2px solid var(--primary-color);
-  box-shadow: var(--modal-shadow);
-  background-color: var(--bg-color);
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-accent-strong);
+  background-color: var(--color-page-bg);
   padding: 40px;
   display: flex;
   flex-direction: column;
@@ -30,7 +30,7 @@
 
 .join-search-modal__title {
   grid-column: 2;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -42,9 +42,9 @@
   height: 30px;
   border: none;
   background: transparent;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   cursor: pointer;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .join-search-modal__close svg {
@@ -66,21 +66,21 @@
   display: block;
   padding: 10px 15px;
   border-radius: 15px;
-  border: 2px solid var(--hover-primary-color);
-  box-shadow: var(--element-shadow);
-  background: var(--element-bg-color);
+  border: 2px solid var(--color-accent-muted);
+  box-shadow: var(--shadow-accent);
+  background: var(--color-surface);
   font-size: 18px;
   font-weight: 400;
-  color: var(--text-color);
-  transition: border-color var(--transition);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast);
 }
 
 .join-search-modal__search::placeholder {
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
 }
 
 .join-search-modal__search:focus {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
   outline: none;
 }
 
@@ -95,7 +95,7 @@
 }
 
 .join-search-modal__item {
-  border-bottom: 1px solid var(--project-table-border-color);
+  border-bottom: 1px solid var(--color-border-muted);
   min-width: 100%;
   width: max-content;
 }
@@ -129,7 +129,7 @@
   width: 80px;
   height: 80px;
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -143,34 +143,34 @@
 .join-search-modal__name {
   font-size: 20px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .join-search-modal__value {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .join-search-modal__action {
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   padding: 3px 13px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
   white-space: nowrap;
 }
 
 .join-search-modal__status {
   padding: 5px 10px;
   border-radius: 7px;
-  border: 2px solid var(--primary-color);
-  background: var(--element-bg-color);
-  color: var(--primary-color);
+  border: 2px solid var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
@@ -179,19 +179,19 @@
 .join-search-modal__empty {
   padding: 30px 10px;
   text-align: center;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .join-search-modal__close:hover {
-    color: var(--error-border-active-input-color);
+    color: var(--color-danger-border-active);
   }
 
   .join-search-modal__action:hover {
-    background: var(--element-bg-color);
-    color: var(--primary-color);
+    background: var(--color-surface);
+    color: var(--color-accent);
   }
 }
 

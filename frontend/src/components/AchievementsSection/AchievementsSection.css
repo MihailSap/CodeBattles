@@ -29,7 +29,7 @@
   justify-content: center;
   margin: 0;
   width: 100%;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 500;
   font-size: 18px;
   height: 350px;
@@ -49,7 +49,7 @@
   width: 50px;
   height: 50px;
   flex-shrink: 0;
-  transition: filter var(--transition), opacity var(--transition);
+  transition: filter var(--transition-fast), opacity var(--transition-fast);
 }
 
 [data-theme='dark'] .profile-page__achievement-image {
@@ -79,19 +79,19 @@
 }
 
 .profile-page__achievement-item--received .profile-page__achievement-name {
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .profile-page__achievement-item--received .profile-page__achievement-description {
-  color: var(--achievement-description-color);
+  color: var(--color-achievement-description);
 }
 
 .profile-page__achievement-item--not-received .profile-page__achievement-name {
-  color: var(--achievement-description-color);
+  color: var(--color-achievement-description);
 }
 
 .profile-page__achievement-item--not-received .profile-page__achievement-description {
-  color: var(--not-received-achievement-description-color);
+  color: var(--color-achievement-locked-description);
 }
 
 .profile-page__achievement-item--not-received .profile-page__achievement-image {
@@ -107,7 +107,7 @@
 .profile-page__achievement-check svg {
   width: 20px;
   height: 20px;
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .profile-page__achievements-list::-webkit-scrollbar {
@@ -116,17 +116,17 @@
 
 .profile-page__achievements-list::-webkit-scrollbar-track {
   background: transparent;
-  border: 1px solid var(--scroll-color);
+  border: 1px solid var(--color-scrollbar-thumb);
   border-radius: 10px;
 }
 
 .profile-page__achievements-list::-webkit-scrollbar-thumb {
-  background: var(--scroll-color);
+  background: var(--color-scrollbar-thumb);
   border-radius: 10px;
 }
 
 .profile-page__achievements-list {
-  scrollbar-color: var(--scroll-color) transparent;
+  scrollbar-color: var(--color-scrollbar-thumb) transparent;
 }
 
 @media (max-width: 1200px) {

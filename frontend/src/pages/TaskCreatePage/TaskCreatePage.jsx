@@ -10,6 +10,7 @@ import Spinner from '../../components/Spinner/Spinner';
 import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { validateTaskName } from '../../utils/projectValidation';
 import './TaskCreatePage.css';
 
@@ -48,7 +49,7 @@ const TaskCreatePage = () => {
   const [organizationParticipants, setOrganizationParticipants] = useState([]);
   const [form, setForm] = useState(initialState);
   const [touched, setTouched] = useState({ name: false, deadline: false, submitted: false });
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   useEffect(() => {
     let isMounted = true;
@@ -101,20 +102,6 @@ const TaskCreatePage = () => {
       isMounted = false;
     };
   }, [navigate, projectId, userId]);
-
-  useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSnackbar({ message: '', type: 'success' });
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [snackbar.message]);
 
   const nowMin = useMemo(() => new Date(), []);
   const nameError = useMemo(() => validateTaskName(form.name), [form.name]);
@@ -191,7 +178,7 @@ const TaskCreatePage = () => {
     }
 
     if (isPastDateTime(form.deadline)) {
-      setSnackbar({ message: 'Дедлайн не может быть в прошлом', type: 'error' });
+      showSnackbar('Дедлайн не может быть в прошлом', 'error');
       return;
     }
 
@@ -200,12 +187,12 @@ const TaskCreatePage = () => {
     }
 
     if (form.assigneeIds.length === 0) {
-      setSnackbar({ message: 'Выберите хотя бы одного исполнителя', type: 'error' });
+      showSnackbar('Выберите хотя бы одного исполнителя', 'error');
       return;
     }
 
     if (isManualReviewers && form.reviewerIds.length === 0) {
-      setSnackbar({ message: 'Выберите хотя бы одного ревьюера', type: 'error' });
+      showSnackbar('Выберите хотя бы одного ревьюера', 'error');
       return;
     }
 
@@ -224,7 +211,7 @@ const TaskCreatePage = () => {
         navigate(`${ROUTES.projects}/${project.id}/tasks/${result.taskId}`, { replace: true });
       }
     } catch {
-      setSnackbar({ message: 'Не удалось создать задачу. Попробуйте позже', type: 'error' });
+      showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -248,7 +235,7 @@ const TaskCreatePage = () => {
   return (
     <div className="task-create-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="task-create-page__content">
         <button className="task-create-page__back" type="button" onClick={() => navigate(`${ROUTES.projects}/${projectId}`)}>

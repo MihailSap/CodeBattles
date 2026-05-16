@@ -11,16 +11,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__metrics-bar {
   display: flex;
   gap: 20px;
   padding: 10px 15px;
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   margin-bottom: 15px;
   flex-wrap: wrap;
 }
@@ -28,17 +28,17 @@
 .solution-tab__reviewers-names {
   display: flex;
   flex-direction: column;
-  background: var(--form-bg-color);
+  background: var(--color-surface-panel);
   padding: 15px;
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
-  color: var(--text-color);
+  box-shadow: var(--shadow-section);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__reviewers-title {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   text-align: center;
   margin: 0 0 20px 0;
 }
@@ -52,13 +52,13 @@
 .solution-tab__reviewer-name {
   font-size: 16px;
   font-weight: 400;
-  color: var(--primary-color);
+  color: var(--color-accent);
   line-height: 1.35;
 }
 
 .solution-tab__label {
   font-weight: 600;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
 }
 
 .solution-tab__metric {
@@ -66,27 +66,27 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__metric-icon {
   width: 16px;
   height: 16px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__value {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__value.success {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .solution-tab__value.error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .solution-tab__upload-block {
@@ -97,15 +97,15 @@
   height: 250px;
   padding: 10px;
   gap: 20px;
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
 }
 
 .solution-tab__upload-text {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-tab__upload-actions {
@@ -118,37 +118,37 @@
 .btn-git {
   padding: 3px 28px;
   border-radius: 7px;
-  border: 2px solid var(--success-text-color);
+  border: 2px solid var(--color-success);
   font-size: 16px;
   font-weight: 600;
-  color: var(--white-text-color);
-  background-color: var(--success-text-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .btn-manual {
   padding: 3px 28px;
   border-radius: 7px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   font-size: 16px;
   font-weight: 600;
-  color: var(--white-text-color);
-  background-color: var(--primary-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-accent);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .btn-finish {
   padding: 8px 28px;
   border-radius: 7px;
-  border: 2px solid var(--success-text-color);
+  border: 2px solid var(--color-success);
   font-size: 16px;
   font-weight: 600;
-  color: var(--white-text-color);
-  background-color: var(--success-text-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .solution-tab__content {
@@ -166,9 +166,9 @@
 }
 
 .solution-tab__file-tree-card {
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   padding: 10px;
   position: sticky;
   top: 90px;
@@ -203,16 +203,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   padding: 20px;
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
 }
 
 .solution-tab__card-title {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   margin: 0 0 15px 0;
   text-align: center;
 }
@@ -224,7 +224,7 @@
 }
 
 .solution-tab__card-text--error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .solution-tab__checkbox-label {
@@ -233,7 +233,7 @@
   gap: 10px;
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   cursor: pointer;
   margin-bottom: 15px;
   text-align: center;
@@ -242,41 +242,14 @@
 .solution-tab__checkbox-label input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
 }
 
 .solution-tab__waiting-text {
   font-size: 20px;
   font-weight: 600;
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
   text-align: center;
-}
-
-.solution-tab__back-to-top {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  background: var(--bg-color);
-  box-shadow: var(--modal-shadow);
-  padding: 8px;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.solution-tab__back-to-top-icon {
-  display: flex;
-  width: 20px;
-  height: 20px;
-  transform: rotate(180deg);
 }
 
 [data-theme='dark'] .solution-tab__metrics-bar,
@@ -284,11 +257,11 @@
 [data-theme='dark'] .solution-tab__upload-block,
 [data-theme='dark'] .solution-tab__file-tree-card,
 [data-theme='dark'] .solution-tab__card {
-  border: 1px solid color-mix(in srgb, var(--primary-color) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
 }
 
 [data-theme='dark'] .solution-tab__file-tree-card {
-  background: color-mix(in srgb, var(--element-bg-color) 90%, var(--bg-color) 10%);
+  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-page-bg) 10%);
 }
 
 @media (max-width: 1024px) {
@@ -368,18 +341,6 @@
   .btn-manual {
     font-size: 14px;
     padding: 3px 18px;
-  }
-
-  .solution-tab__back-to-top {
-    width: 40px;
-    height: 40px;
-  }
-
-  .solution-tab__back-to-top-icon {
-    display: flex;
-    width: 15px;
-    height: 15px;
-    transform: rotate(180deg);
   }
 
   .solution-tab {
@@ -495,20 +456,16 @@
 
   .btn-git:hover {
     background-color: transparent;
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 
   .btn-manual:hover {
     background-color: transparent;
-    color: var(--primary-color);
+    color: var(--color-accent);
   }
 
   .btn-finish:hover {
-    background-color: var(--element-bg-color);
-    color: var(--success-text-color);
-  }
-
-  .solution-tab__back-to-top:hover {
-    background: var(--element-bg-color);
+    background-color: var(--color-surface);
+    color: var(--color-success);
   }
 }

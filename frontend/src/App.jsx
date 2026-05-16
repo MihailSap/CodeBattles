@@ -15,6 +15,7 @@ import { store } from './store/store';
 const AuthPage = lazy(() => import('./pages/AuthPage/AuthPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage/AdminPage'));
 const MainPage = lazy(() => import('./pages/MainPage/MainPage'));
+const LeaderboardPage = lazy(() => import('./pages/LeaderboardPage/LeaderboardPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage/NotFoundPage'));
 const OrganizationInviteJoinPage = lazy(() => import('./pages/OrganizationInviteJoinPage/OrganizationInviteJoinPage'));
 const OrganizationPage = lazy(() => import('./pages/OrganizationPage/OrganizationPage'));
@@ -57,6 +58,7 @@ const router = createBrowserRouter(
         <Route path={ROUTES.projectTaskById} element={withSuspense(<TaskPage />)} />
         <Route path={ROUTES.reviewById} element={withSuspense(<ReviewPage />)} />
         <Route path={ROUTES.reviews} element={withSuspense(<ReviewsPage />)} />
+        <Route path={ROUTES.leaderboard} element={withSuspense(<LeaderboardPage />)} />
         <Route path={ROUTES.profile} element={withSuspense(<ProfilePage />)} />
         <Route path={ROUTES.profileByUserId} element={withSuspense(<ProfilePage />)} />
       </Route>

@@ -13,8 +13,8 @@ const StarSelector = ({ value, onChange, disabled = false }) => {
         const ratingValue = i + 1;
         const isFilled = ratingValue <= (hoverValue || value);
         const starColor = hoverValue && ratingValue <= hoverValue
-          ? 'var(--start-hover-color)'
-          : isFilled ? 'var(--star-color)' : undefined;
+          ? 'var(--color-rating-star-hover)'
+          : isFilled ? 'var(--color-rating-star)' : undefined;
 
         return (
           <button

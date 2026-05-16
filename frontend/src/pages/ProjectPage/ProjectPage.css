@@ -1,6 +1,6 @@
 .project-page {
   min-height: 100vh;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
 }
@@ -21,8 +21,8 @@
 
 .section-card {
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
-  background: var(--form-bg-color);
+  box-shadow: var(--shadow-section);
+  background: var(--color-surface-panel);
   padding: 15px;
 }
 
@@ -46,7 +46,7 @@
 }
 
 .project-page__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -54,7 +54,7 @@
 .project-page__private-icon {
   width: 25px;
   height: 25px;
-  transition: filter var(--transition);
+  transition: filter var(--transition-fast);
 }
 
 [data-theme="dark"] .project-page__private-icon {
@@ -68,14 +68,14 @@
   font-weight: 600;
   padding: 4px 15px;
   background: transparent;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
   max-width: fit-content;
 }
 
 .project-page__organization {
   margin-top: 15px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 500;
   font-size: 20px;
   font-style: italic;
@@ -88,7 +88,7 @@
 
 .project-page__description {
   margin-top: 15px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 400;
   font-size: 16px;
   line-height: 1.45;
@@ -98,24 +98,24 @@
   margin-left: 6px;
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .project-page__repository {
   max-width: fit-content;
   margin-top: 15px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-weight: 400;
   font-size: 20px;
   text-decoration: underline;
   text-underline-offset: 3px;
   word-break: break-all;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .project-page__stack-list {
@@ -130,8 +130,8 @@
   border: none;
   border-radius: 5px;
   padding: 5px 10px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 14px;
   font-weight: 400;
   line-height: 1.2;
@@ -149,7 +149,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 400;
   font-size: 16px;
 }
@@ -157,7 +157,7 @@
 .project-page__metric-item img, .project-page__metric-item svg {
   width: 19px;
   height: 19px;
-  transition: filter var(--transition);
+  transition: filter var(--transition-fast);
 }
 
 [data-theme="dark"] .project-page__metric-item img {
@@ -165,12 +165,12 @@
 }
 
 [data-theme="dark"] .project-page__metric-item svg {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .project-page__tabs-wrap {
   margin-top: 10px;
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--color-accent);
   padding: 10px 10px 0;
 }
 
@@ -186,26 +186,26 @@
   top: 0;
   width: calc(100% / var(--tabs-count));
   height: 100%;
-  background: var(--primary-color);
+  background: var(--color-accent);
   border-radius: 7px 7px 0 0;
-  transition: transform var(--transition);
+  transition: transform var(--transition-fast);
 }
 
 .project-page__tab {
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   padding: 5px 15px;
   cursor: pointer;
   position: relative;
   z-index: 1;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .project-page__tab--active {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .project-page__controls {
@@ -229,7 +229,7 @@
 .project-page__mode-switch {
   width: 300px;
   border-radius: 7px;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
   position: relative;
   display: flex;
   align-items: center;
@@ -240,8 +240,8 @@
   width: 50%;
   height: 100%;
   border-radius: 5px;
-  background: var(--primary-color);
-  transition: transform var(--transition);
+  background: var(--color-accent);
+  transition: transform var(--transition-fast);
 }
 
 .project-page__mode-thumb--mine {
@@ -252,7 +252,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
   padding: 5px 15px;
@@ -262,48 +262,48 @@
 }
 
 .project-page__mode-button--active {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .project-page__my-tasks,
 .project-page__participants-count {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 20px;
   font-weight: 600;
 }
 
 .project-page__search-field {
   border-radius: 7px;
-  border: 2px solid var(--hover-primary-color);
+  border: 2px solid var(--color-accent-muted);
   padding: 3px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--bg-color);
-  transition: border-color var(--transition);
+  background: var(--color-page-bg);
+  transition: border-color var(--transition-fast);
 }
 
 .project-page__search-field:focus-within {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .project-page__search-field svg {
   width: 19px;
   height: 19px;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .project-page__search-field input {
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
   width: 180px;
 }
 
 .project-page__search-field input::placeholder {
-  color: var(--project-input-placeholder-color);
+  color: var(--color-input-placeholder);
 }
 
 .project-page__search-field input:focus {
@@ -314,26 +314,26 @@
   padding: 3px 13px;
   border: 2px solid;
   border-radius: 7px;
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .project-page__action-button--success {
-  border-color: var(--success-text-color);
-  background: var(--success-text-color);
+  border-color: var(--color-success);
+  background: var(--color-success);
 }
 
 .project-page__action-button--primary {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
 }
 
 .project-page__action-button--danger {
-  border-color: var(--error-text-color);
-  background: var(--error-text-color);
+  border-color: var(--color-danger);
+  background: var(--color-danger);
 }
 
 .project-page__table-section {
@@ -347,8 +347,8 @@
   align-items: center;
   gap: 10px;
   padding: 15px 10px;
-  border-bottom: 1px solid var(--project-table-border-color);
-  transition: background-color var(--transition);
+  border-bottom: 1px solid var(--color-border-muted);
+  transition: background-color var(--transition-fast);
 }
 
 .project-page__table-row:last-child {
@@ -356,13 +356,13 @@
 }
 
 .project-page__table-row--head {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 600;
 }
 
 .project-page__task-name {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 500;
 }
@@ -374,15 +374,15 @@
 
 .project-page__task-status--in_progress,
 .project-page__task-status--rework {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .project-page__task-status--in_review {
-  color: var(--purple-value-color);
+  color: var(--color-status-review);
 }
 
 .project-page__task-status--done {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .project-page__assignees {
@@ -397,15 +397,15 @@
   width: 19px;
   height: 19px;
   border-radius: 50%;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .project-page__assignee-avatar img {
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--color-accent);
 }
 
 .project-page__assignee-more {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 500;
 }
@@ -416,15 +416,15 @@
 }
 
 .project-page__deadline--error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .project-page__deadline--warning {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .project-page__deadline--success {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .project-page__participants-list {
@@ -434,12 +434,12 @@
 
 .project-page__participant-row {
   padding: 15px;
-  border-bottom: 1px solid var(--project-table-border-color);
+  border-bottom: 1px solid var(--color-border-muted);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  transition: background-color var(--transition);
+  transition: background-color var(--transition-fast);
 }
 
 .project-page__participant-row:last-child {
@@ -458,11 +458,11 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .project-page__participant-avatar img {
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--color-accent);
 }
 
 .project-page__participant-meta {
@@ -478,11 +478,11 @@
 }
 
 .project-page__participant-name {
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .project-page__participant-login {
-  color: var(--subtext-color);
+  color: var(--color-text-secondary);
 }
 
 .project-page__settings {
@@ -502,34 +502,34 @@
 .project-page__settings-title {
   font-size: 16px;
   font-weight: 500;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .project-page__settings-input {
   width: 100%;
   padding: 13px 12px;
   border-radius: 10px;
-  border: 1px solid var(--project-settings-input-border-color);
+  border: 1px solid var(--color-control-border);
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-color);
-  background: var(--element-bg-color);
-  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .project-page__settings-input:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .project-page__settings-input--error {
-  border-color: var(--error-border-input-color);
-  box-shadow: var(--error-shadow-input-color);
-  background-color: var(--error-bg-input-color);
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-danger-focus);
+  background-color: var(--color-danger-surface);
 }
 
 .project-page__settings-input--error:focus {
-  border-color: var(--error-border-active-input-color);
+  border-color: var(--color-danger-border-active);
 }
 
 .project-page__settings-textarea {
@@ -542,7 +542,7 @@
 }
 
 .project-page__settings-error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
   font-size: 14px;
 }
 
@@ -557,7 +557,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 14px;
   font-weight: 400;
 }
@@ -565,20 +565,20 @@
 .project-page__privacy-item input {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
 }
 
 .project-page__ai-check {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 400;
 }
 
 .project-page__ai-check input {
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
 }
 
 .project-page__settings-actions {
@@ -596,7 +596,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .project-page__settings-action svg {
@@ -605,15 +605,15 @@
 }
 
 .project-page__settings-action--save {
-  color: var(--white-text-color);
-  background: var(--success-text-color);
-  border-color: var(--success-text-color);
+  color: var(--color-text-inverse);
+  background: var(--color-success);
+  border-color: var(--color-success);
 }
 
 .project-page__settings-action--cancel {
-  color: var(--white-text-color);
-  background: var(--error-text-color);
-  border-color: var(--error-text-color);
+  color: var(--color-text-inverse);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .project-page__settings-action:disabled {
@@ -624,7 +624,7 @@
 .project-page__empty-state,
 .project-page__list-empty {
   margin-top: 5px;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   font-size: 16px;
   text-align: center;
 }
@@ -642,7 +642,7 @@
 
   .project-page__repository:hover,
   .project-page__description-toggle:hover {
-    color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
   }
 
   .project-page__action-button:hover {
@@ -650,20 +650,20 @@
   }
 
   .project-page__action-button--success:hover {
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 
   .project-page__action-button--primary:hover {
-    color: var(--primary-color);
+    color: var(--color-accent);
   }
 
   .project-page__action-button--danger:hover {
-    color: var(--error-text-color);
+    color: var(--color-danger);
   }
 
   .project-page__table-row:hover,
   .project-page__participant-row:hover {
-    background-color: var(--header-button-hover-bg);
+    background-color: var(--color-accent-hover-bg);
     cursor: pointer;
   }
 
@@ -673,13 +673,13 @@
   }
 
   .project-page__settings-action--save:hover:enabled {
-    background: var(--element-bg-color);
-    color: var(--success-text-color);
+    background: var(--color-surface);
+    color: var(--color-success);
   }
 
   .project-page__settings-action--cancel:hover:enabled {
-    background: var(--element-bg-color);
-    color: var(--error-text-color);
+    background: var(--color-surface);
+    color: var(--color-danger);
   }
 }
 

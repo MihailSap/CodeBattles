@@ -1,6 +1,6 @@
 .entity-tabs__wrap {
   margin-top: 10px;
-  border-bottom: 2px solid var(--primary-color);
+  border-bottom: 2px solid var(--color-accent);
   padding: 10px 10px 0;
 }
 
@@ -16,26 +16,26 @@
   top: 0;
   width: calc(100% / var(--tabs-count));
   height: 100%;
-  background: var(--primary-color);
+  background: var(--color-accent);
   border-radius: 7px 7px 0 0;
-  transition: transform var(--transition);
+  transition: transform var(--transition-fast);
 }
 
 .entity-tabs__tab {
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   padding: 5px 15px;
   cursor: pointer;
   position: relative;
   z-index: 1;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .entity-tabs__tab--active {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 @media (max-width: 900px) {

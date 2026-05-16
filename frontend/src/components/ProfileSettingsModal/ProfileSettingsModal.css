@@ -11,12 +11,12 @@
 
 .profile-settings-modal {
   width: min(1120px, 90%);
-  max-height: min(100vh - 200px, 920px);
+  max-height: min(100vh - 150px, 920px);
   overflow: auto;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   border-radius: 25px;
-  box-shadow: var(--modal-shadow);
-  background-color: var(--element-bg-color);
+  box-shadow: var(--shadow-accent-strong);
+  background-color: var(--color-surface);
   padding: 30px 40px;
 }
 
@@ -30,7 +30,7 @@
 .profile-settings-modal__title {
   margin: 0;
   text-align: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -41,7 +41,7 @@
   right: 0;
   border: none;
   background: transparent;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   width: 30px;
   height: 30px;
   padding: 0;
@@ -66,15 +66,15 @@
 
 .profile-settings-modal__section {
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   padding: 20px;
-  background: var(--bg-color);
+  background: var(--color-page-bg);
   display: flex;
   flex-direction: column;
 }
 
 [data-theme="dark"] .profile-settings-modal__section--security {
-  box-shadow: var(--green-form-shadow);
+  box-shadow: var(--shadow-success-soft);
 }
 
 .profile-settings-modal__section--accounts {
@@ -86,11 +86,11 @@
   font-weight: 600;
   font-size: 24px;
   text-align: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .profile-settings-modal__section--security .profile-settings-modal__section-title {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .profile-settings-modal__security-form {
@@ -113,54 +113,54 @@
 
 .profile-settings-modal__input {
   width: 100%;
-  border: 2px solid var(--green-border-input-color);
-  box-shadow: var(--green-shadow-input);
+  border: 2px solid var(--color-success-control-border);
+  box-shadow: var(--shadow-success-focus);
   border-radius: 10px;
   padding: 10px;
   font-weight: 500;
   font-size: 14px;
-  color: var(--text-color);
-  background: var(--element-bg-color);
-  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .profile-settings-modal__input::placeholder {
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
 }
 
 .profile-settings-modal__input:focus {
   outline: none;
-  border-color: var(--green-border-active-input-color);
+  border-color: var(--color-success-control-border-active);
 }
 
 .profile-settings-modal__input--error {
-  background-color: var(--error-bg-input-color);
-  border-color: var(--error-border-input-color);
-  box-shadow: var(--error-shadow-input-color);
+  background-color: var(--color-danger-surface);
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-danger-focus);
 }
 
 .profile-settings-modal__input--error:focus {
-  border-color: var(--error-border-active-input-color);
+  border-color: var(--color-danger-border-active);
 }
 
 .profile-settings-modal__input-error {
   margin: 2px 0 0;
   font-size: 14px;
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .profile-settings-modal__action-button {
   border-radius: 10px;
-  border: 2px solid var(--success-text-color);
-  background: var(--success-text-color);
-  color: var(--white-text-color);
+  border: 2px solid var(--color-success);
+  background: var(--color-success);
+  color: var(--color-text-inverse);
   margin-left: auto;
   margin-right: auto;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .profile-settings-modal__action-button--reset {
@@ -207,14 +207,14 @@
 .profile-settings-modal__checkbox-row input {
   width: 20px;
   height: 20px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
   flex-shrink: 0;
 }
 
 .profile-settings-modal__checkbox-row span {
   font-weight: 400;
   font-size: 16px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .profile-settings-modal__accounts-grid {
@@ -231,13 +231,13 @@
 }
 
 .profile-settings-modal__account--github {
-  background: var(--github-bg);
-  border-color: var(--github-bg);
+  background: var(--color-brand-github-bg);
+  border-color: var(--color-brand-github-bg);
 }
 
 .profile-settings-modal__account--gitlab {
-  background: var(--element-bg-color);
-  border-color: var(--gitlab-color);
+  background: var(--color-surface);
+  border-color: var(--color-brand-gitlab);
 }
 
 .profile-settings-modal__account-title {
@@ -245,11 +245,11 @@
   font-weight: 600;
   font-size: 24px;
   text-align: center;
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .profile-settings-modal__account--gitlab .profile-settings-modal__account-title {
-  color: var(--gitlab-color);
+  color: var(--color-brand-gitlab);
 }
 
 .profile-settings-modal__account-row {
@@ -263,13 +263,13 @@
 .profile-settings-modal__account-login {
   font-weight: 500;
   font-size: 20px;
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .profile-settings-modal__account--gitlab .profile-settings-modal__account-login {
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .profile-settings-modal__unlink-button {
@@ -278,7 +278,7 @@
   width: 25px;
   height: 25px;
   background: transparent;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -294,8 +294,8 @@
 @media (hover: hover) and (pointer: fine) {
   .profile-settings-modal__action-button:hover:enabled {
     background: transparent;
-    color: var(--success-text-color);
-    border-color: var(--success-text-color);
+    color: var(--color-success);
+    border-color: var(--color-success);
   }
 }
 

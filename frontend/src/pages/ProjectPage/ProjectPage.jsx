@@ -24,6 +24,8 @@ import {
 } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { formatDeadline, formatLastActivity, getDeadlineToneClass, sortParticipants, sortTasks, truncateText } from '../../utils/projectFormatters';
 import { validateProjectName, validateRepositoryUrl } from '../../utils/projectValidation';
 import './ProjectPage.css';
@@ -51,10 +53,11 @@ const ProjectPage = () => {
   const [isDeleteSubmitting, setDeleteSubmitting] = useState(false);
   const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
   const [isLeaveSubmitting, setLeaveSubmitting] = useState(false);
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [settingsDraft, setSettingsDraft] = useState(null);
   const [settingsTouched, setSettingsTouched] = useState({ name: false, repositoryUrl: false });
   const [isSettingsSubmitting, setSettingsSubmitting] = useState(false);
+  const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
 
   const isOwner = project?.viewerRole === PROJECT_MEMBER_ROLE.OWNER;
 
@@ -121,25 +124,11 @@ const ProjectPage = () => {
   }, [navigate, projectId, userId]);
 
   useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSnackbar({ message: '', type: 'success' });
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [snackbar.message]);
-
-  useEffect(() => {
     if (location.state?.snackbarMessage) {
-      setSnackbar({ message: location.state.snackbarMessage, type: location.state.snackbarType || 'success' });
+      showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate]);
+  }, [location.pathname, location.state, navigate, showSnackbar]);
 
   const allTasks = useMemo(() => sortTasks(project?.tasks || []), [project?.tasks]);
 
@@ -148,7 +137,7 @@ const ProjectPage = () => {
       return [];
     }
 
-    const normalizedSearch = taskSearch.trim().toLowerCase();
+    const normalizedSearch = debouncedTaskSearch.trim().toLowerCase();
 
     return allTasks
       .filter((task) => {
@@ -169,7 +158,7 @@ const ProjectPage = () => {
 
         return task.name.toLowerCase().includes(normalizedSearch);
       });
-  }, [allTasks, isOwner, project, taskSearch, tasksMode, userId]);
+  }, [allTasks, isOwner, project, debouncedTaskSearch, tasksMode, userId]);
 
   const participants = useMemo(() => sortParticipants(project?.participants || []), [project?.participants]);
 
@@ -218,7 +207,7 @@ const ProjectPage = () => {
     try {
       return await projectsApi.generateProjectInvite(project.id, payload);
     } catch {
-      setSnackbar({ message: 'Не удалось сформировать ссылку. Попробуйте позже', type: 'error' });
+      showSnackbar('Не удалось сформировать ссылку. Попробуйте позже', 'error');
       return null;
     } finally {
       setInviteSubmitting(false);
@@ -269,12 +258,12 @@ const ProjectPage = () => {
         privacy: fullProject.privacy,
         aiReviewEnabled: fullProject.aiReviewEnabled
       });
-      setSnackbar({ message: 'Изменения сохранены', type: 'success' });
+      showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
-        setSnackbar({ message: 'Проект с таким названием уже существует', type: 'error' });
+        showSnackbar('Проект с таким названием уже существует', 'error');
       } else {
-        setSnackbar({ message: 'Возникла непредвиденная ошибка. Попробуйте позже', type: 'error' });
+        showSnackbar('Возникла непредвиденная ошибка. Попробуйте позже', 'error');
       }
     } finally {
       setSettingsSubmitting(false);
@@ -294,7 +283,7 @@ const ProjectPage = () => {
         }
       });
     } catch {
-      setSnackbar({ message: 'Не удалось выйти из проекта', type: 'error' });
+      showSnackbar('Не удалось выйти из проекта', 'error');
     } finally {
       setLeaveSubmitting(false);
       setLeaveModalOpen(false);
@@ -314,7 +303,7 @@ const ProjectPage = () => {
         }
       });
     } catch {
-      setSnackbar({ message: 'Не удалось удалить проект', type: 'error' });
+      showSnackbar('Не удалось удалить проект', 'error');
     } finally {
       setDeleteSubmitting(false);
       setDeleteModalOpen(false);
@@ -343,7 +332,7 @@ const ProjectPage = () => {
   return (
     <div className="project-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="project-page__content">
         <section className="project-page__info section-card">
@@ -424,7 +413,7 @@ const ProjectPage = () => {
                 {project.canSeeTasks && (
                   <label className="project-page__search-field">
                     <SearchIcon />
-                    <input type="text" placeholder="Поиск" value={taskSearch} onChange={(event) => setTaskSearch(event.target.value.slice(0, 100))} />
+                    <input type="search" placeholder="Поиск" value={taskSearch} onChange={(event) => setTaskSearch(event.target.value.slice(0, 100))} />
                   </label>
                 )}
 
@@ -643,7 +632,7 @@ const ProjectPage = () => {
         isOpen={isInviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
         onGenerate={handleInviteGenerate}
-        onCopySuccess={() => setSnackbar({ message: 'Ссылка скопирована в буфер обмена', type: 'success' })}
+        onCopySuccess={() => showSnackbar('Ссылка скопирована в буфер обмена', 'success')}
         isSubmitting={isInviteSubmitting}
       />
 

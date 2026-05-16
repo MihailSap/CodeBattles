@@ -8,9 +8,9 @@
 
 .review-results-sidebar__block {
   flex: 1 1 100%;
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   padding: 15px;
   display: flex;
   flex-direction: column;
@@ -19,7 +19,7 @@
 .review-results-sidebar__title {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   text-align: center;
   margin: 0 0 20px 0;
 }
@@ -48,22 +48,22 @@
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   opacity: 1;
 }
 
 .review-results-sidebar .review-dropdown__trigger {
-  background-color: var(--element-bg-color);
+  background-color: var(--color-surface);
 }
 
 .review-results-sidebar .review-dropdown__menu {
-  background-color: var(--element-bg-color);
+  background-color: var(--color-surface);
 }
 
 .review-results-sidebar__text {
   font-size: 16px;
   font-weight: 400;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   white-space: pre-wrap;
   line-height: 1.55;
 }
@@ -71,7 +71,7 @@
 .review-results-sidebar__text-bold {
   font-size: 16px;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .review-results-sidebar__verdict {
@@ -80,11 +80,11 @@
 }
 
 .review-results-sidebar__verdict.approved {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .review-results-sidebar__verdict.rework {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .review-results-sidebar__field--compact {
@@ -101,7 +101,7 @@
 .review-results-sidebar__label-small {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   opacity: 0.95;
 }
 
@@ -110,10 +110,10 @@
   font-weight: 500;
 }
 
-.severity-none { color: var(--success-text-color); }
-.severity-low { color: var(--primary-color); }
-.severity-medium { color: var(--yellow-value-color); }
-.severity-high { color: var(--error-text-color); }
+.severity-none { color: var(--color-success); }
+.severity-low { color: var(--color-accent); }
+.severity-medium { color: var(--color-status-warning); }
+.severity-high { color: var(--color-danger); }
 
 .star-rating {
   display: flex;
@@ -132,11 +132,11 @@
 }
 
 [data-theme='dark'] .review-results-sidebar__block {
-  border: 1px solid color-mix(in srgb, var(--primary-color) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 [data-theme='dark'] .review-results-sidebar__text {
-  color: color-mix(in srgb, var(--text-color) 78%, #fff 22%);
+  color: color-mix(in srgb, var(--color-text-primary) 78%, #fff 22%);
 }
 
 @media (max-width: 500px) {

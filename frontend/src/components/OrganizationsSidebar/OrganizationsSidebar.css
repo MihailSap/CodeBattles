@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 9992;
-  transition: background-color var(--transition), visibility var(--transition);
+  transition: background-color var(--transition-fast), visibility var(--transition-fast);
 }
 
 .organizations-sidebar__overlay--open {
@@ -20,15 +20,15 @@
   left: 0;
   width: min(400px, calc(100vw - 20px));
   border-radius: 0 25px 25px 0;
-  border-top: 2px solid var(--primary-color);
-  border-right: 2px solid var(--primary-color);
-  border-bottom: 2px solid var(--primary-color);
-  box-shadow: var(--modal-shadow);
-  background: var(--bg-color);
+  border-top: 2px solid var(--color-accent);
+  border-right: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-accent-strong);
+  background: var(--color-page-bg);
   padding: 15px 20px;
   display: flex;
   flex-direction: column;
-  transition: transform var(--transition), opacity var(--transition);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .organizations-sidebar--open {
@@ -49,7 +49,7 @@
 
 .organizations-sidebar__title {
   grid-column: 2;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 20px;
 }
@@ -63,9 +63,9 @@
   border-radius: 50%;
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   cursor: pointer;
-  transition: color var(--transition), transform var(--transition), background-color var(--transition);
+  transition: color var(--transition-fast), transform var(--transition-fast), background-color var(--transition-fast);
 }
 
 .organizations-sidebar__close svg {
@@ -83,7 +83,7 @@
 }
 
 .organizations-sidebar__item {
-  border-bottom: 1px solid var(--project-table-border-color);
+  border-bottom: 1px solid var(--color-border-muted);
 }
 
 .organizations-sidebar__item--last {
@@ -99,7 +99,7 @@
 
 .organizations-sidebar__empty {
   padding: 20px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   text-align: center;
@@ -115,14 +115,14 @@
   gap: 20px;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--transition);
+  transition: background-color var(--transition-fast);
 }
 
 .organizations-sidebar__logo {
   width: 85px;
   height: 85px;
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -135,7 +135,7 @@
 }
 
 .organizations-sidebar__name {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 700;
 }
@@ -146,27 +146,27 @@
 }
 
 .organizations-sidebar__role--owner {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .organizations-sidebar__role--member {
-  color: var(--dark-purple-value-color);
+  color: var(--color-secondary-accent);
 }
 
 .organizations-sidebar__projects {
   font-size: 16px;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .organizations-sidebar__item-link:hover {
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 
   .organizations-sidebar__close:hover {
     transform: scale(1.05);
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 }
 

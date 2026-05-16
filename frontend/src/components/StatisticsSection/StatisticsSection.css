@@ -26,7 +26,7 @@
 
 .profile-page__stat-title {
   text-align: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 500;
   line-height: 120%;
@@ -44,7 +44,7 @@
 .profile-page__stars-row svg {
   width: 30px;
   height: 30px;
-  color: var(--star-color);
+  color: var(--color-rating-star);
 }
 
 .profile-page__accepted-block {
@@ -62,15 +62,15 @@
 }
 
 .profile-page__accepted-percent--error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .profile-page__accepted-percent--warning {
-  color: var(--warning-text-color);
+  color: var(--color-metric-warning);
 }
 
 .profile-page__accepted-percent--success {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 @media (max-width: 1440px) {

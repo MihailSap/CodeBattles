@@ -1,0 +1,205 @@
+.leaderboard-table {
+  border-radius: 7px;
+  border: 1px solid var(--color-leaderboard-border);
+  overflow: hidden;
+  margin: 0 auto;
+  max-width: min-content;
+}
+
+.leaderboard-table--empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.leaderboard-table__scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.leaderboard-table__inner {
+  min-width: 100%;
+  width: max-content;
+  display: grid;
+}
+
+.leaderboard-table__row {
+  display: contents;
+  color: var(--color-text-primary);
+}
+
+.leaderboard-table__cell {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-align: center;
+  min-width: 0;
+  border-top: 1px solid var(--color-leaderboard-border);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaderboard-table__row--head .leaderboard-table__cell {
+  border-top: none;
+  border-bottom: 1px solid var(--color-leaderboard-border);
+  padding: 10px 20px;
+}
+
+.leaderboard-table__row--gold .leaderboard-table__cell,
+.leaderboard-table__row--silver .leaderboard-table__cell,
+.leaderboard-table__row--bronze .leaderboard-table__cell {
+  border-top-width: 2px;
+  border-bottom: 2px solid;
+}
+
+.leaderboard-table__row--gold .leaderboard-table__cell {
+  border-color: var(--color-medal-gold);
+}
+
+.leaderboard-table__row--silver .leaderboard-table__cell {
+  border-color: var(--color-medal-silver);
+}
+
+.leaderboard-table__row--bronze .leaderboard-table__cell {
+  border-color: var(--color-medal-bronze);
+}
+
+.leaderboard-table__row--gold .leaderboard-table__cell:first-child,
+.leaderboard-table__row--silver .leaderboard-table__cell:first-child,
+.leaderboard-table__row--bronze .leaderboard-table__cell:first-child {
+  border-left-width: 2px;
+  border-left-style: solid;
+  border-radius: 7px 0 0 7px;
+}
+
+.leaderboard-table__row--gold .leaderboard-table__cell:last-child,
+.leaderboard-table__row--silver .leaderboard-table__cell:last-child,
+.leaderboard-table__row--bronze .leaderboard-table__cell:last-child {
+  border-right-width: 2px;
+  border-right-style: solid;
+  border-radius: 0 7px 7px 0;
+}
+
+.leaderboard-table__row--current .leaderboard-table__cell {
+  background: var(--color-accent-hover-bg);
+}
+
+.leaderboard-table__row--current .leaderboard-table__cell:first-child {
+  box-shadow: inset 4px 0 0 var(--color-accent);
+}
+
+.leaderboard-table__cell--user {
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.leaderboard-table__row--head .leaderboard-table__cell--user {
+  justify-content: center;
+}
+
+.leaderboard-table__rank {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.leaderboard-table__rank--gold {
+  color: var(--color-medal-gold);
+}
+
+.leaderboard-table__rank--silver {
+  color: var(--color-medal-silver);
+}
+
+.leaderboard-table__rank--bronze {
+  color: var(--color-medal-bronze);
+}
+
+.leaderboard-table__avatar,
+.leaderboard-table__avatar img,
+.leaderboard-table__avatar svg {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--color-accent);
+  flex: 0 0 auto;
+}
+
+.leaderboard-table__avatar img {
+  border: 1px solid var(--color-accent);
+  object-fit: cover;
+}
+
+.leaderboard-table__name {
+  min-width: 0;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-accent);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.leaderboard-table__separator {
+  padding: 4px 0;
+  border-top: 1px solid var(--color-leaderboard-border);
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+.leaderboard-table__reset-button {
+  padding: 3px 8px;
+  border: 2px solid var(--color-danger);
+  border-radius: 7px;
+  color: var(--color-text-inverse);
+  background: var(--color-danger);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .leaderboard-table__row:not(.leaderboard-table__row--head):hover .leaderboard-table__cell {
+    background: var(--color-accent-hover-bg);
+  }
+
+  .leaderboard-table__reset-button:hover {
+    background: transparent;
+    color: var(--color-danger);
+  }
+}
+
+@media (max-width: 500px) {
+  .leaderboard-table__cell {
+    padding: 5px;
+    font-size: 14px;
+  }
+
+  .leaderboard-table__row--head .leaderboard-table__cell {
+    padding: 10px;
+  }
+
+  .leaderboard-table__cell--user {
+    gap: 5px;
+  }
+
+  .leaderboard-table__name {
+    font-size: 14px;
+  }
+
+  .leaderboard-table__separator {
+    font-size: 16px;
+  }
+
+  .leaderboard-table__reset-button {
+    font-size: 12px;
+  }
+}

@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-color);
+  background-color: var(--color-page-bg);
 }
 
 .main-page > .header {
@@ -19,16 +19,16 @@
   border: 1px solid rgba(21, 101, 192, 0.25);
   border-radius: 14px;
   padding: 20px;
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
 }
 
 .main-page__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 24px;
 }
 
 .main-page__text {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 15px;
 }
 

@@ -13,6 +13,6 @@
 .code-editor-wrapper {
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--primary-color);
-  background-color: var(--element-bg-color);
+  border: 1px solid var(--color-accent);
+  background-color: var(--color-surface);
 }

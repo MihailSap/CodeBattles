@@ -11,15 +11,15 @@
   margin: auto;
   padding: 32px 28px;
   border-radius: 20px;
-  background-color: var(--form-bg-color);
-  box-shadow: var(--form-shadow);
+  background-color: var(--color-surface-panel);
+  box-shadow: var(--shadow-elevated-card);
   position: relative;
   z-index: 1;
   text-align: center;
 }
 
 .verify-email-page__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 36px;
   font-weight: 700;
   line-height: 1.2;
@@ -27,7 +27,7 @@
 
 .verify-email-page__status {
   margin-top: 18px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 24px;
   font-weight: 600;
   line-height: 1.35;
@@ -38,7 +38,7 @@
 }
 
 .verify-email-page__status--error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 [data-theme="dark"] .verify-email-page__status--success {
