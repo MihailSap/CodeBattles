@@ -1,8 +1,8 @@
 .organization-projects-card {
-  background: var(--form-bg-color);
+  background: var(--color-surface-panel);
   padding: 15px 20px;
   border-radius: 20px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   width: 100%;
   min-height: 100%;
   display: flex;
@@ -10,7 +10,7 @@
 }
 
 .organization-projects-card__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 20px;
   font-weight: 600;
   text-align: center;
@@ -30,7 +30,7 @@
 .organization-projects-card__empty {
   margin-top: 10px;
   min-height: 138.5px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   text-align: center;
@@ -44,14 +44,14 @@
   margin: auto auto 0;
   margin-top: 10px;
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   padding: 8px 28px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .organization-projects-card__create--stub {
@@ -70,7 +70,7 @@
 @media (hover: hover) and (pointer: fine) {
   .organization-projects-card__create:hover {
     background: transparent;
-    color: var(--primary-color);
+    color: var(--color-accent);
   }
 }
 

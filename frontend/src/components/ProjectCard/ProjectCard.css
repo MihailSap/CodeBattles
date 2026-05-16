@@ -1,8 +1,8 @@
 .project-card {
   width: 100%;
   border-radius: 15px;
-  border: 2px solid var(--primary-color);
-  box-shadow: var(--element-shadow);
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-accent);
   background: transparent;
   padding: 13px;
   display: flex;
@@ -11,7 +11,7 @@
   justify-content: center;
   gap: 15px;
   cursor: pointer;
-  transition: transform var(--transition);
+  transition: transform var(--transition-fast);
 }
 
 .project-card__title-row {
@@ -23,7 +23,7 @@
 }
 
 .project-card__title {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 700;
   text-align: center;
@@ -50,19 +50,19 @@
 }
 
 .project-card__role--owner {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .project-card__role--member {
-  color: var(--dark-purple-value-color);
+  color: var(--color-secondary-accent);
 }
 
 .project-card__role--guest {
-  color: var(--gray-value-color);
+  color: var(--color-role-guest);
 }
 
 .project-card__tasks {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 500;
   text-align: center;

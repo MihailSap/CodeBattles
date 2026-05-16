@@ -14,9 +14,9 @@
   max-height: calc(100vh - 30px);
   overflow-y: auto;
   border-radius: 25px;
-  border: 2px solid var(--primary-color);
-  box-shadow: var(--modal-shadow);
-  background-color: var(--bg-color);
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-accent-strong);
+  background-color: var(--color-page-bg);
   padding: 40px;
 }
 
@@ -30,7 +30,7 @@
 .invite-link-modal__title {
   grid-column: 2;
   justify-self: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -42,9 +42,9 @@
   height: 30px;
   border: none;
   background: transparent;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   cursor: pointer;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .invite-link-modal__close svg {
@@ -66,7 +66,7 @@
 }
 
 .invite-link-modal__section-title {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 500;
 }
@@ -74,7 +74,7 @@
 .invite-link-modal__error {
   margin-top: 2px;
   font-size: 14px;
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .invite-link-modal__radios {
@@ -88,22 +88,22 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 14px;
 }
 
 .invite-link-modal__radio {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
 }
 
 .invite-link-modal__submit {
   border-radius: 10px;
-  border: 2px solid var(--success-text-color);
+  border: 2px solid var(--color-success);
   padding: 0.5px 40px;
-  background: var(--success-text-color);
-  color: var(--white-text-color);
+  background: var(--color-success);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   align-self: center;
@@ -112,7 +112,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition), opacity var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
   width: fit-content;
 }
 
@@ -133,46 +133,46 @@
 }
 
 .invite-link-modal__result a {
-  color: var(--primary-color);
+  color: var(--color-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
   word-break: break-all;
   font-size: 16px;
   text-align: center;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .invite-link-modal__result button {
   width: fit-content;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   border-radius: 7px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   padding: 5px 15px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   align-self: center;
-  transition: color var(--transition), background-color var(--transition);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .invite-link-modal__close:hover {
-    color: var(--error-border-active-input-color);
+    color: var(--color-danger-border-active);
   }
 
   .invite-link-modal__submit:hover:enabled {
-    background: var(--element-bg-color);
-    color: var(--success-text-color);
+    background: var(--color-surface);
+    color: var(--color-success);
   }
 
   .invite-link-modal__result button:hover {
-    background-color: var(--element-bg-color);
-    color: var(--primary-color);
+    background-color: var(--color-surface);
+    color: var(--color-accent);
   }
 
   .invite-link-modal__result a:hover {
-    color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
   }
 }
 

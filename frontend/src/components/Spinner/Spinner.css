@@ -3,7 +3,7 @@
   height: 70px;
   border-radius: 50%;
   border: 6px solid rgba(21, 101, 192, 0.2);
-  border-top-color: var(--primary-color);
+  border-top-color: var(--color-accent);
   animation: spinner-rotate 0.8s linear infinite;
 }
 

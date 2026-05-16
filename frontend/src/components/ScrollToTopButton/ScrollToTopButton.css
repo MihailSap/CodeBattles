@@ -5,14 +5,14 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    border: 2px solid var(--primary-color);
-    color: var(--primary-color);
-    background: var(--bg-color);
-    box-shadow: var(--modal-shadow);
+    border: 2px solid var(--color-accent);
+    color: var(--color-accent);
+    background: var(--color-page-bg);
+    box-shadow: var(--shadow-accent-strong);
     padding: 12px;
     cursor: pointer;
     z-index: 9990;
-    transition: background-color var(--transition), color var(--transition), transform var(--transition);
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .scroll-to-top-button svg {
@@ -23,8 +23,8 @@
 
 @media (hover: hover) and (pointer: fine) {
     .scroll-to-top-button:hover {
-        background: var(--primary-color);
-        color: var(--white-text-color);
+        background: var(--color-accent);
+        color: var(--color-text-inverse);
         transform: translateY(-2px);
     }
 }

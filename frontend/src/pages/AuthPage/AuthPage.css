@@ -92,8 +92,8 @@
   justify-content: space-between;
   padding: 30px;
   border-radius: 20px;
-  background-color: var(--form-bg-color);
-  box-shadow: var(--form-shadow);
+  background-color: var(--color-surface-panel);
+  box-shadow: var(--shadow-elevated-card);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -105,24 +105,24 @@
   margin: 0;
   padding: 18px;
   border-radius: 14px;
-  border: 2px solid var(--success-border);
-  background-color: var(--success-bg);
-  color: var(--success-text-color);
+  border: 2px solid var(--color-success-border);
+  background-color: var(--color-success-surface);
+  color: var(--color-success);
   font-size: 20px;
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-  transition: color var(--transition), background-color var(--transition), border-color var(--transition);
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .auth-mode-switch {
   width: min(350px, calc(100% - 40px));
   height: 40px;
   border-radius: 15px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   padding: 3px;
-  box-shadow: var(--element-shadow);
-  background: var(--element-bg-color);
+  box-shadow: var(--shadow-accent);
+  background: var(--color-surface);
   position: relative;
   display: flex;
   align-items: center;
@@ -133,11 +133,11 @@
   width: calc(100% / 2 - 3px);
   height: 30px;
   border-radius: 10px;
-  background-color: var(--primary-color);
+  background-color: var(--color-accent);
   position: absolute;
   top: 3px;
   left: 3px;
-  transition: left var(--transition);
+  transition: left var(--transition-fast);
   z-index: 0;
 }
 
@@ -150,18 +150,18 @@
   border: none;
   background: transparent;
   border-radius: 10px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   cursor: pointer;
   z-index: 1;
   text-align: center;
   height: 30px;
-  transition: color var(--transition), text-decoration-color var(--transition);
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
 }
 
 .auth-mode-switch__option--active {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .auth-form {
@@ -190,33 +190,33 @@
   width: 100%;
   height: 40px;
   border-radius: 10px;
-  border: 2px solid var(--hover-primary-color);
+  border: 2px solid var(--color-accent-muted);
   padding: 10px;
   font-weight: 500;
   font-size: 14px;
-  background-color: var(--element-bg-color);
-  color: var(--text-color);
-  box-shadow: var(--element-shadow);
-  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-accent);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
 
 .auth-input::placeholder {
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .auth-input--error {
-  background-color: var(--error-bg-input-color);
-  border-color: var(--error-border-input-color);
-  box-shadow: var(--error-shadow-input-color);
+  background-color: var(--color-danger-surface);
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-danger-focus);
 }
 
 .auth-input--error:focus {
-  border-color: var(--error-border-active-input-color);
+  border-color: var(--color-danger-border-active);
 }
 
 .auth-input-error {
@@ -224,7 +224,7 @@
   margin-top: 2px;
   font-size: 14px;
   white-space: wrap;
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .auth-social {
@@ -246,7 +246,7 @@
   font-weight: 500;
   font-size: 12px;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition), background-color var(--transition), transform var(--transition);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .auth-social__button img {
@@ -256,45 +256,45 @@
 }
 
 .auth-social__button--github {
-  color: var(--text-color);
-  border-color: var(--text-color);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
 }
 
 .auth-social__button--gitlab {
-  color: var(--gitlab-button-color);
-  border-color: var(--gitlab-button-color);
+  color: var(--color-brand-gitlab);
+  border-color: var(--color-brand-gitlab);
 }
 
 .auth-recovery-text {
   width: 100%;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   font-size: 16px;
   font-weight: 400;
   text-align: center;
 }
 
 .auth-recovery-link {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-weight: 600;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .auth-submit {
   margin-top: 30px;
   padding: 8px 28px;
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
-  background-color: var(--primary-color);
-  color: var(--white-text-color);
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .auth-submit:disabled {
-  background-color: var(--fade-button-color);
-  border-color: var(--fade-button-color);
+  background-color: var(--color-button-disabled);
+  border-color: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
@@ -302,12 +302,12 @@
   width: 100%;
   padding: 10px 30px;
   border-radius: 20px;
-  border: 2px solid var(--error-border-input-color);
-  background-color: var(--error-bg-input-color);
-  color: var(--error-text-color);
+  border: 2px solid var(--color-danger-border);
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
   font-size: 14px;
   text-align: center;
-  box-shadow: var(--error-shadow-input-color);
+  box-shadow: var(--shadow-danger-focus);
   position: absolute;
   top: calc(100% + 14px);
   left: 0;
@@ -315,11 +315,11 @@
 
 @media (hover: hover) and (pointer: fine) {
   .auth-mode-switch__option:hover {
-    color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
   }
 
   .auth-mode-switch__option--active:hover {
-    color: var(--white-text-color);
+    color: var(--color-text-inverse);
   }
 
   .auth-social__button--github:hover {
@@ -331,7 +331,7 @@
   }
 
   .auth-recovery-link:hover {
-    color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
   }
 
   .auth-social__button--gitlab:hover {
@@ -339,8 +339,8 @@
   }
 
   .auth-submit:hover:enabled {
-    background-color: var(--element-bg-color);
-    color: var(--primary-color);
+    background-color: var(--color-surface);
+    color: var(--color-accent);
   }
 }
 

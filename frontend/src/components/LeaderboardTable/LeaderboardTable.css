@@ -1,6 +1,6 @@
 .leaderboard-table {
   border-radius: 7px;
-  border: 1px solid var(--leaderboard-table-border-color);
+  border: 1px solid var(--color-leaderboard-border);
   overflow: hidden;
   margin: 0 auto;
   max-width: min-content;
@@ -9,7 +9,7 @@
 .leaderboard-table--empty {
   padding: 40px 20px;
   text-align: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 600;
 }
@@ -27,18 +27,18 @@
 
 .leaderboard-table__row {
   display: contents;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .leaderboard-table__cell {
   padding: 10px;
   font-size: 16px;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   text-align: center;
   min-width: 0;
-  border-top: 1px solid var(--leaderboard-table-border-color);
-  transition: background-color var(--transition), border-color var(--transition);
+  border-top: 1px solid var(--color-leaderboard-border);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,7 +46,7 @@
 
 .leaderboard-table__row--head .leaderboard-table__cell {
   border-top: none;
-  border-bottom: 1px solid var(--leaderboard-table-border-color);
+  border-bottom: 1px solid var(--color-leaderboard-border);
   padding: 10px 20px;
 }
 
@@ -58,15 +58,15 @@
 }
 
 .leaderboard-table__row--gold .leaderboard-table__cell {
-  border-color: var(--gold-color);
+  border-color: var(--color-medal-gold);
 }
 
 .leaderboard-table__row--silver .leaderboard-table__cell {
-  border-color: var(--silver-color);
+  border-color: var(--color-medal-silver);
 }
 
 .leaderboard-table__row--bronze .leaderboard-table__cell {
-  border-color: var(--bronze-color);
+  border-color: var(--color-medal-bronze);
 }
 
 .leaderboard-table__row--gold .leaderboard-table__cell:first-child,
@@ -86,11 +86,11 @@
 }
 
 .leaderboard-table__row--current .leaderboard-table__cell {
-  background: var(--header-button-hover-bg);
+  background: var(--color-accent-hover-bg);
 }
 
 .leaderboard-table__row--current .leaderboard-table__cell:first-child {
-  box-shadow: inset 4px 0 0 var(--primary-color);
+  box-shadow: inset 4px 0 0 var(--color-accent);
 }
 
 .leaderboard-table__cell--user {
@@ -103,20 +103,20 @@
 }
 
 .leaderboard-table__rank {
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 
 .leaderboard-table__rank--gold {
-  color: var(--gold-color);
+  color: var(--color-medal-gold);
 }
 
 .leaderboard-table__rank--silver {
-  color: var(--silver-color);
+  color: var(--color-medal-silver);
 }
 
 .leaderboard-table__rank--bronze {
-  color: var(--bronze-color);
+  color: var(--color-medal-bronze);
 }
 
 .leaderboard-table__avatar,
@@ -125,12 +125,12 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  color: var(--primary-color);
+  color: var(--color-accent);
   flex: 0 0 auto;
 }
 
 .leaderboard-table__avatar img {
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--color-accent);
   object-fit: cover;
 }
 
@@ -140,15 +140,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
 }
 
 .leaderboard-table__separator {
   padding: 4px 0;
-  border-top: 1px solid var(--leaderboard-table-border-color);
-  color: var(--fade-text-color);
+  border-top: 1px solid var(--color-leaderboard-border);
+  color: var(--color-text-muted);
   text-align: center;
   font-size: 20px;
   letter-spacing: 0;
@@ -156,24 +156,24 @@
 
 .leaderboard-table__reset-button {
   padding: 3px 8px;
-  border: 2px solid var(--error-text-color);
+  border: 2px solid var(--color-danger);
   border-radius: 7px;
-  color: var(--white-text-color);
-  background: var(--error-text-color);
+  color: var(--color-text-inverse);
+  background: var(--color-danger);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .leaderboard-table__row:not(.leaderboard-table__row--head):hover .leaderboard-table__cell {
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 
   .leaderboard-table__reset-button:hover {
     background: transparent;
-    color: var(--error-text-color);
+    color: var(--color-danger);
   }
 }
 

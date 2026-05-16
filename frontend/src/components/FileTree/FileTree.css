@@ -15,12 +15,12 @@
   padding: 5px;
   cursor: pointer;
   border-radius: 7px;
-  transition: var(--transition);
-  color: var(--primary-color);
+  transition: var(--transition-fast);
+  color: var(--color-accent);
 }
 
 .file-tree-node--selected {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .file-tree-node__icon {
@@ -60,7 +60,7 @@
 .file-tree-node__comment-dot {
   width: 5px;
   height: 5px;
-  background-color: var(--error-text-color);
+  background-color: var(--color-danger);
   border-radius: 50%;
   margin-left: 5px;
   flex-shrink: 0;
@@ -68,7 +68,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .file-tree-node:hover {
-    background-color: var(--header-button-hover-bg);
+    background-color: var(--color-accent-hover-bg);
   }
 }
 

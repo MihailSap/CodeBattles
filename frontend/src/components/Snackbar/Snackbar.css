@@ -49,17 +49,17 @@
 }
 
 .snackbar--success {
-  background-color: var(--bg-color);
-  border-color: var(--success-text-color);
-  color: var(--success-text-color);
-  box-shadow: var(--green-form-shadow);
+  background-color: var(--color-page-bg);
+  border-color: var(--color-success);
+  color: var(--color-success);
+  box-shadow: var(--shadow-success-soft);
 }
 
 .snackbar--error {
-  background-color: var(--bg-color);
-  border-color: var(--error-text-color);
-  color: var(--error-text-color);
-  box-shadow: var(--error-shadow-input-color);
+  background-color: var(--color-page-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  box-shadow: var(--shadow-danger-focus);
 }
 
 .snackbar__message {

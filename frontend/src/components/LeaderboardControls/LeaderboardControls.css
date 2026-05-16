@@ -16,11 +16,11 @@
 
 .leaderboard-controls__dropdowns .review-dropdown__trigger {
   min-width: 190px;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .leaderboard-controls__dropdowns .review-dropdown__menu {
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .leaderboard-controls__actions {
@@ -32,23 +32,23 @@
 
 .leaderboard-controls__search {
   border-radius: 7px;
-  border: 2px solid var(--hover-primary-color);
+  border: 2px solid var(--color-accent-muted);
   padding: 3px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--element-bg-color);
-  transition: border-color var(--transition);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
 }
 
 .leaderboard-controls__search:focus-within {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .leaderboard-controls__search svg {
   width: 19px;
   height: 19px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   flex: 0 0 auto;
 }
 
@@ -56,13 +56,13 @@
   width: 260px;
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
 }
 
 .leaderboard-controls__search input::placeholder {
-  color: var(--project-input-placeholder-color);
+  color: var(--color-input-placeholder);
 }
 
 .leaderboard-controls__search input:focus {
@@ -71,19 +71,19 @@
 
 .leaderboard-controls__my-rating {
   padding: 3px 13px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   border-radius: 7px;
-  color: var(--white-text-color);
-  background: var(--primary-color);
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .leaderboard-controls__my-rating:active {
-  color: var(--primary-color);
+  color: var(--color-accent);
   background: transparent;
 }
 
@@ -93,7 +93,7 @@
   }
 
   .leaderboard-controls__my-rating:hover {
-    color: var(--primary-color);
+    color: var(--color-accent);
   }
 }
 

@@ -33,11 +33,11 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .task-page__assignee-avatar img {
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--color-accent);
   width: 100%;
   height: 100%;
 }
@@ -55,11 +55,11 @@
 }
 
 .task-page__assignee-name {
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .task-page__assignee-login {
-  color: var(--subtext-color);
+  color: var(--color-text-secondary);
 }
 
 .task-page__solution {
@@ -69,7 +69,7 @@
 .task-page__review-title {
   font-size: 16px;
   font-weight: 500;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .task-page__review-list {
@@ -82,7 +82,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 14px;
   width: fit-content;
 }
@@ -90,7 +90,7 @@
 .task-page__review-item input {
   width: 16px;
   height: 16px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
 }
 
 .task-page .react-datepicker-wrapper,
@@ -101,27 +101,27 @@
 .task-page .project-page__settings .date-time-picker__input {
   height: auto;
   border-radius: 10px;
-  border: 1px solid var(--project-settings-input-border-color);
+  border: 1px solid var(--color-control-border);
   padding: 13px 12px;
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-color);
-  background: var(--element-bg-color);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
   box-shadow: none;
 }
 
 .task-page .project-page__settings .date-time-picker__input:focus {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .task-page .project-page__settings .date-time-picker__input--error {
-  border-color: var(--error-border-input-color);
-  box-shadow: var(--error-shadow-input-color);
-  background-color: var(--error-bg-input-color);
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-danger-focus);
+  background-color: var(--color-danger-surface);
 }
 
 .task-page .project-page__settings .date-time-picker__input--error:focus {
-  border-color: var(--error-border-active-input-color);
+  border-color: var(--color-danger-border-active);
 }
 
 @media (max-width: 500px) {

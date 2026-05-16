@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: var(--element-bg-color);
+  background-color: var(--color-surface);
 }
 
 .review-page__loader {
@@ -12,7 +12,7 @@
   justify-content: center;
   align-items: center;
   height: calc(100vh - var(--header-height));
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
 }
 
@@ -22,23 +22,23 @@
 
 .review-page__project-info {
   font-size: 14px;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
 .review-page__meta-value {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
 }
 
 .review-page__meta-value.error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .section-card {
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
-  background: var(--form-bg-color);
+  box-shadow: var(--shadow-section);
+  background: var(--color-surface-panel);
   padding: 15px;
 }
 
@@ -51,31 +51,31 @@
 }
 
 .review-page__deadline--error {
-  color: var(--error-text-color) !important;
+  color: var(--color-danger) !important;
   opacity: 1 !important;
 }
 
 .review-page__deadline--success {
-  color: var(--success-text-color) !important;
+  color: var(--color-success) !important;
   opacity: 1 !important;
 }
 
 .review-page__deadline--warning {
-  color: var(--yellow-value-color) !important;
+  color: var(--color-status-warning) !important;
   opacity: 1 !important;
 }
 
 .review-page__metric-value.success {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .review-page__metric-value.error {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .review-page__info-line {
   margin-top: 10px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 400;
   font-size: 16px;
   line-height: 1.45;
@@ -86,15 +86,15 @@
 }
 
 .review-page__deadline--overdue {
-  color: var(--error-text-color);
+  color: var(--color-danger);
 }
 
 .review-page__deadline--success {
-  color: var(--success-text-color);
+  color: var(--color-success);
 }
 
 .review-page__deadline--pending {
-  color: var(--yellow-value-color);
+  color: var(--color-status-warning);
 }
 
 .review-page__back-btn {
@@ -131,9 +131,9 @@
 }
 
 .review-page__card {
-  background-color: var(--form-bg-color);
+  background-color: var(--color-surface-panel);
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   padding: 10px;
 }
 
@@ -164,21 +164,21 @@
 .review-page__card-title {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   margin: 0 0 10px 0;
   text-align: center;
 }
 
 .review-page__submitted-text {
   font-size: 14px;
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   text-align: center;
   margin: 0;
 }
 
 [data-theme='dark'] .section-card,
 [data-theme='dark'] .review-page__card {
-  border: 1px solid color-mix(in srgb, var(--primary-color) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 @media (max-width: 1024px) {

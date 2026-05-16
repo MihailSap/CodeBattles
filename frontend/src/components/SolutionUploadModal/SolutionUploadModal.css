@@ -15,10 +15,10 @@
   width: min(1000px, 100%);
   max-height: calc(100vh - 30px);
   overflow-y: auto;
-  background-color: var(--bg-color);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--project-table-border-color));
+  background-color: var(--color-page-bg);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border-muted));
   border-radius: 20px;
-  box-shadow: var(--modal-shadow);
+  box-shadow: var(--shadow-accent-strong);
   padding: 28px;
 }
 
@@ -34,7 +34,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   text-align: center;
 }
 
@@ -49,9 +49,9 @@
   padding: 0;
   background-color: transparent;
   border: none;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   border-radius: 8px;
 }
 
@@ -76,11 +76,11 @@
 }
 
 .solution-upload-modal .review-dropdown__trigger {
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .solution-upload-modal .review-dropdown__menu {
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .solution-upload-modal__tab-pane {
@@ -110,13 +110,13 @@
 .solution-upload-modal__add-btn {
   padding: 8px 18px;
   border-radius: 8px;
-  color: var(--white-text-color);
-  background-color: var(--success-text-color);
-  border: 2px solid var(--success-text-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
+  border: 2px solid var(--color-success);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .solution-upload-modal__add-btn--bottom {
@@ -137,7 +137,7 @@
 }
 
 .solution-upload-modal__files-list::-webkit-scrollbar-thumb {
-  background-color: var(--primary-color);
+  background-color: var(--color-accent);
   border-radius: 3px;
 }
 
@@ -146,9 +146,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--project-table-border-color) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-muted) 80%, transparent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--form-bg-color) 88%, var(--element-bg-color) 12%);
+  background: color-mix(in srgb, var(--color-surface-panel) 88%, var(--color-surface) 12%);
   margin-bottom: 8px;
 }
 
@@ -165,19 +165,19 @@
 .solution-upload-modal__file-icon {
   width: 15px;
   height: 15px;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .solution-upload-modal__file-name {
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-upload-modal__file-remove {
   background: none;
   border: none;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   cursor: pointer;
   width: 15px;
   height: 15px;
@@ -185,7 +185,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .solution-upload-modal__archive-item {
@@ -193,15 +193,15 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--project-table-border-color) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-muted) 80%, transparent);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--form-bg-color) 88%, var(--element-bg-color) 12%);
+  background: color-mix(in srgb, var(--color-surface-panel) 88%, var(--color-surface) 12%);
 }
 
 .solution-upload-modal__archive-name {
   font-size: 14px;
   font-weight: 400;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .solution-upload-modal__footer {
@@ -213,11 +213,11 @@
 .solution-upload-modal__submit-btn {
   padding: 0.5px 38px;
   border-radius: 7px;
-  color: var(--white-text-color);
-  background-color: var(--success-text-color);
-  border: 2px solid var(--success-text-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
+  border: 2px solid var(--color-success);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,12 +333,12 @@
 
   .solution-upload-modal__close:hover {
     opacity: 1;
-    background: color-mix(in srgb, var(--error-text-color) 14%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 14%, transparent);
   }
 
   .solution-upload-modal__add-btn:hover {
     background-color: transparent;
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 
   .solution-upload-modal__file-remove:hover {
@@ -347,6 +347,6 @@
 
   .solution-upload-modal__submit-btn:hover:not(:disabled) {
     background-color: transparent;
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 }

@@ -6,20 +6,20 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 2px solid var(--hover-primary-color);
+  border: 2px solid var(--color-accent-muted);
   border-radius: 10px;
-  background: var(--element-bg-color);
-  transition: border-color var(--transition);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
 }
 
 .leaderboard-entity-search:focus-within {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .leaderboard-entity-search svg {
   width: 25px;
   height: 25px;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .leaderboard-entity-search__input {
@@ -27,12 +27,12 @@
   font-size: 16px;
   font-weight: 600;
   border: none;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   background: transparent;
 }
 
 .leaderboard-entity-search__input::placeholder {
-  color: var(--project-input-placeholder-color);
+  color: var(--color-input-placeholder);
 }
 
 .leaderboard-entity-search__input:focus {
@@ -46,9 +46,9 @@
   left: 0;
   right: 0;
   border-radius: 10px;
-  border: 2px solid var(--hover-primary-color);
-  background: var(--element-bg-color);
-  box-shadow: var(--section-shadow);
+  border: 2px solid var(--color-accent-muted);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-section);
   overflow: hidden;
 }
 
@@ -61,13 +61,13 @@
   grid-template-columns: minmax(0, 1fr) 20px;
   align-items: center;
   gap: 10px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 600;
   text-align: center;
-  border-bottom: 1px solid var(--leaderboard-table-border-color);
+  border-bottom: 1px solid var(--color-leaderboard-border);
   cursor: pointer;
-  transition: background-color var(--transition);
+  transition: background-color var(--transition-fast);
 }
 
 .leaderboard-entity-search__option span {
@@ -84,7 +84,7 @@
 
 .leaderboard-entity-search__empty {
   padding: 10px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 16px;
   font-weight: 600;
   text-align: center;
@@ -92,7 +92,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .leaderboard-entity-search__option:hover {
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 }
 

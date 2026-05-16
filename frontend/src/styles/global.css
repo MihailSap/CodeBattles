@@ -7,14 +7,14 @@
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--color-page-bg);
+  color: var(--color-text-primary);
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
   font-size: 14px;
   font-weight: 500;
   font-style: normal;
-  transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+  transition: background-color var(--duration-medium) ease, color var(--duration-medium) ease;
   min-height: 100vh;
 }
 

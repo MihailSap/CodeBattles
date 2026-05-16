@@ -1,6 +1,6 @@
 .profile-page {
   min-height: 100vh;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
 }
@@ -32,8 +32,8 @@
 
 .profile-page__section {
   border-radius: 10px;
-  box-shadow: var(--section-shadow);
-  background: var(--form-bg-color);
+  box-shadow: var(--shadow-section);
+  background: var(--color-surface-panel);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -55,7 +55,7 @@
 
 .profile-page__section-title {
   text-align: center;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 24px;
 }
@@ -65,7 +65,7 @@
   width: 25px;
   height: 25px;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   cursor: pointer;
   padding: 0;
   display: inline-flex;
@@ -100,7 +100,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .profile-page__action svg {
@@ -109,15 +109,15 @@
 }
 
 .profile-page__action--save {
-  color: var(--white-text-color);
-  background: var(--success-text-color);
-  border-color: var(--success-text-color);
+  color: var(--color-text-inverse);
+  background: var(--color-success);
+  border-color: var(--color-success);
 }
 
 .profile-page__action--cancel {
-  color: var(--white-text-color);
-  background: var(--error-text-color);
-  border-color: var(--error-text-color);
+  color: var(--color-text-inverse);
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .profile-page__action:disabled,
@@ -138,7 +138,7 @@
 .profile-page__skill-tag--editable:focus-visible,
 .profile-page__name-input:focus-visible,
 .profile-page__skills-option input:focus-visible {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -149,14 +149,14 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  background: var(--bg-color);
-  box-shadow: var(--modal-shadow);
+  border: 2px solid var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-page-bg);
+  box-shadow: var(--shadow-accent-strong);
   padding: 8px;
   cursor: pointer;
   z-index: 9990;
-  transition: background-color var(--transition), color var(--transition), transform var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
 }
 
 .profile-page__settings-button svg {
@@ -166,18 +166,18 @@
 
 @media (hover: hover) and (pointer: fine) {
   .profile-page__action--save:hover {
-    background: var(--element-bg-color);
-    color: var(--success-text-color);
+    background: var(--color-surface);
+    color: var(--color-success);
   }
 
   .profile-page__action--cancel:hover {
-    background: var(--element-bg-color);
-    color: var(--error-text-color);
+    background: var(--color-surface);
+    color: var(--color-danger);
   }
 
   .profile-page__settings-button:hover {
-    background: var(--primary-color);
-    color: var(--white-text-color);
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
     transform: translateY(-2px);
   }
 }

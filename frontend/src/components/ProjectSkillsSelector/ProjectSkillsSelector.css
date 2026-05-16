@@ -13,7 +13,7 @@
 }
 
 .project-skills-selector__title {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 500;
 }
@@ -21,14 +21,14 @@
 .project-skills-selector__clear {
   border: none;
   background: transparent;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 400;
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: pointer;
-  transition: color var(--transition), text-decoration-color var(--transition), opacity var(--transition);
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .project-skills-selector__clear:disabled {
@@ -45,7 +45,7 @@
 }
 
 .project-skills-selector__empty {
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 14px;
   line-height: 1.2;
 }
@@ -54,13 +54,13 @@
   border: none;
   border-radius: 5px;
   padding: 5px 10px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 14px;
   font-weight: 400;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color var(--transition), opacity var(--transition);
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .project-skills-selector__tag:disabled {
@@ -75,18 +75,18 @@
 .project-skills-selector__add {
   border-radius: 5px;
   padding: 5px 8px;
-  background: var(--element-bg-color);
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color);
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
   font-size: 14px;
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--transition), border-color var(--transition), opacity var(--transition);
+  transition: color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .project-create-modal .project-skills-selector__add {
-  background: var(--bg-color);
+  background: var(--color-page-bg);
 }
 
 .project-skills-selector__add:disabled {
@@ -102,9 +102,9 @@
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
-  background: var(--bg-color);
-  border: 1px solid var(--primary-color);
-  box-shadow: var(--modal-shadow);
+  background: var(--color-page-bg);
+  border: 1px solid var(--color-accent);
+  box-shadow: var(--shadow-accent-strong);
   border-radius: 10px;
   padding: 10px;
   z-index: 80;
@@ -134,7 +134,7 @@
   gap: 10px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   padding: 3px 2px;
 }
 
@@ -144,32 +144,32 @@
 
 .project-skills-selector__popup::-webkit-scrollbar-track {
   background: transparent;
-  border: 1px solid var(--scroll-color);
+  border: 1px solid var(--color-scrollbar-thumb);
   border-radius: 10px;
 }
 
 .project-skills-selector__popup::-webkit-scrollbar-thumb {
-  background: var(--scroll-color);
+  background: var(--color-scrollbar-thumb);
   border-radius: 10px;
 }
 
 .project-skills-selector__popup {
-  scrollbar-color: var(--scroll-color) transparent;
+  scrollbar-color: var(--color-scrollbar-thumb) transparent;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .project-skills-selector__clear:hover:enabled {
-    color: var(--hover-primary-color);
-    text-decoration-color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
+    text-decoration-color: var(--color-accent-muted);
   }
 
   .project-skills-selector__add:hover:enabled {
-    color: var(--hover-primary-color);
-    border-color: var(--hover-primary-color);
+    color: var(--color-accent-muted);
+    border-color: var(--color-accent-muted);
   }
 
   .project-skills-selector__tag:hover:enabled {
-    background: var(--skill-tag-hover-color);
+    background: var(--color-skill-tag-remove-bg);
   }
 }
 

@@ -15,10 +15,10 @@
   width: min(800px, 100%);
   max-height: calc(100vh - 30px);
   overflow-y: auto;
-  background-color: var(--bg-color);
-  border: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--project-table-border-color));
+  background-color: var(--color-page-bg);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border-muted));
   border-radius: 20px;
-  box-shadow: var(--modal-shadow);
+  box-shadow: var(--shadow-accent-strong);
   padding: 28px;
 }
 
@@ -34,7 +34,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--color-text-primary);
   text-align: center;
 }
 
@@ -49,9 +49,9 @@
   padding: 0;
   background-color: transparent;
   border: none;
-  color: var(--error-text-color);
+  color: var(--color-danger);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   border-radius: 8px;
 }
 
@@ -94,7 +94,7 @@
 
 .git-upload-modal__form-fields .review-dropdown__label {
   font-size: 14px;
-  color: var(--subtext-color);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
@@ -102,17 +102,17 @@
   width: 100%;
   min-height: 42px;
   border-width: 1px;
-  border-color: color-mix(in srgb, var(--project-table-border-color) 80%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-muted) 80%, transparent);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
 }
 
 .git-upload-modal__form-fields .review-dropdown__menu {
   border-width: 1px;
-  border-color: color-mix(in srgb, var(--project-table-border-color) 80%, transparent);
-  background: var(--element-bg-color);
+  border-color: color-mix(in srgb, var(--color-border-muted) 80%, transparent);
+  background: var(--color-surface);
 }
 
 .git-upload-modal__footer {
@@ -124,11 +124,11 @@
 .git-upload-modal__submit-btn {
   padding: 0.5px 38px;
   border-radius: 7px;
-  color: var(--white-text-color);
-  background-color: var(--success-text-color);
-  border: 2px solid var(--success-text-color);
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
+  border: 2px solid var(--color-success);
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -197,16 +197,16 @@
 @media (hover: hover) and (pointer: fine) {
   .git-upload-modal__close:hover {
     opacity: 1;
-    background: color-mix(in srgb, var(--error-text-color) 14%, transparent);
+    background: color-mix(in srgb, var(--color-danger) 14%, transparent);
   }
 
   .git-upload-modal__form-fields .review-dropdown__trigger:hover {
-    border-color: color-mix(in srgb, var(--primary-color) 60%, var(--project-table-border-color));
+    border-color: color-mix(in srgb, var(--color-accent) 60%, var(--color-border-muted));
   }
 
   .git-upload-modal__submit-btn:hover:not(:disabled) {
     background-color: transparent;
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 }
 

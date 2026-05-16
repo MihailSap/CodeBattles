@@ -42,7 +42,7 @@ export const CrossIcon = () => (
   </svg>
 );
 
-export const StarIcon = ({ filled = false, color = 'var(--star-color)' }) => (
+export const StarIcon = ({ filled = false, color = 'var(--color-rating-star)' }) => (
   <svg viewBox="0 0 24 24" fill={filled ? color : 'transparent'} xmlns="http://www.w3.org/2000/svg">
     <path
       d="m12 2 2.88 6.16 6.72.88-4.96 4.68 1.28 6.68L12 17.12 6.08 20.4l1.28-6.68L2.4 9.04l6.72-.88z"

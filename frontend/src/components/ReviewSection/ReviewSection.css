@@ -1,6 +1,6 @@
 .review-section {
   border-radius: 20px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
 }
 
 .review-section__header {
@@ -8,13 +8,13 @@
   border: none;
   padding: 15px 10px;
   border-radius: 20px 20px 0 0;
-  background: var(--review-section-header-bg-color);
-  color: var(--text-color);
+  background: var(--color-review-section-header-bg);
+  color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .review-section__header--collapsed {
@@ -25,7 +25,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  transition: transform var(--transition);
+  transition: transform var(--transition-fast);
 }
 
 .review-section__arrow svg {
@@ -46,8 +46,8 @@
   min-width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 20px;
   font-weight: 600;
   display: inline-flex;
@@ -60,13 +60,13 @@
 .review-section__body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--transition-duration) ease;
+  transition: max-height var(--duration-medium) ease;
 }
 
 .review-section__content {
   border-radius: 0 0 20px 20px;
   padding: 0 10px;
-  background: var(--form-bg-color);
+  background: var(--color-surface-panel);
 }
 
 .review-section__body--open .review-section__content {

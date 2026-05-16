@@ -3,8 +3,8 @@
   height: 600px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--project-table-border-color);
-  background-color: var(--element-bg-color);
+  border: 1px solid var(--color-border-muted);
+  background-color: var(--color-surface);
 }
 
 .code-viewer-comment-line {
@@ -18,7 +18,7 @@
   background-repeat: no-repeat;
   border-radius: 7px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-fast);
 }
 
 .code-viewer-comment-glyph--ai {
@@ -29,8 +29,8 @@
 
 .code-viewer-comment-widget {
   padding: 4px 12px;
-  background-color: var(--primary-color);
-  color: var(--white-text-color);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
   border-radius: 7px;
   font-size: 14px;
   font-weight: 500;
@@ -42,8 +42,8 @@
 }
 
 [data-theme='dark'] .code-viewer-container {
-  border-color: color-mix(in srgb, var(--primary-color) 24%, transparent);
-  background-color: color-mix(in srgb, var(--element-bg-color) 94%, #000 6%);
+  border-color: color-mix(in srgb, var(--color-accent) 24%, transparent);
+  background-color: color-mix(in srgb, var(--color-surface) 94%, #000 6%);
 }
 
 [data-theme='dark'] .code-viewer-comment-widget {
@@ -53,8 +53,8 @@
 @media (hover: hover) and (pointer: fine) {
 
   .code-viewer-comment-glyph:hover {
-    background-color: color-mix(in srgb, var(--primary-color) 24%, transparent);
-    border-color: color-mix(in srgb, var(--primary-color) 52%, transparent);
+    background-color: color-mix(in srgb, var(--color-accent) 24%, transparent);
+    border-color: color-mix(in srgb, var(--color-accent) 52%, transparent);
   }
 
   .code-viewer-comment-glyph--ai:hover {

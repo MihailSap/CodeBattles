@@ -1,6 +1,6 @@
 .projects-page {
   min-height: 100vh;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
   display: flex;
   flex-direction: column;
 }
@@ -37,7 +37,7 @@
   width: 100%;
   height: 40px;
   border-radius: 15px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   background: transparent;
   padding: 3px;
   position: relative;
@@ -52,9 +52,9 @@
   width: calc(100% / 2 - 3px);
   height: 30px;
   border-radius: 10px;
-  color: var(--white-text-color);
-  background: var(--primary-color);
-  transition: left var(--transition);
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  transition: left var(--transition-fast);
   z-index: 0;
 }
 
@@ -70,15 +70,15 @@
   background: transparent;
   font-size: 16px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--color-accent);
   cursor: pointer;
   position: relative;
   z-index: 1;
-  transition: color var(--transition);
+  transition: color var(--transition-fast);
 }
 
 .projects-page__switch-option--active {
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
 }
 
 .projects-page__search-wrap {
@@ -90,19 +90,19 @@
   gap: 5px;
   padding: 8px;
   border-radius: 15px;
-  border: 2px solid var(--hover-primary-color);
+  border: 2px solid var(--color-accent-muted);
   background: transparent;
-  transition: border-color var(--transition);
+  transition: border-color var(--transition-fast);
 }
 
 .projects-page__search-wrap:focus-within {
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .projects-page__search-wrap svg {
   width: 20px;
   height: 20px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   flex-shrink: 0;
 }
 
@@ -112,11 +112,11 @@
   background: transparent;
   font-size: 16px;
   font-weight: 600;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .projects-page__search::placeholder {
-  color: var( --project-input-placeholder-color);
+  color: var(--color-input-placeholder);
 }
 
 .projects-page__search:focus {
@@ -124,17 +124,17 @@
 }
 
 .projects-page__section {
-  background: var(--form-bg-color);
+  background: var(--color-surface-panel);
   padding: 15px 50px;
   border-radius: 20px;
-  box-shadow: var(--section-shadow);
+  box-shadow: var(--shadow-section);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .projects-page__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: 20px;
   font-weight: 600;
 }
@@ -151,7 +151,7 @@
 .projects-page__empty {
   margin-top: 20px;
   padding: 80px 0;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 20px;
   font-weight: 600;
   text-align: center;
@@ -160,14 +160,14 @@
 .projects-page__load-more {
   margin-top: 10px;
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--color-accent);
   padding: 5px 15px;
-  background: var(--primary-color);
-  color: var(--white-text-color);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .projects-page__actions {
@@ -181,28 +181,28 @@
   border-radius: 10px;
   border: 2px solid;
   padding: 8px 28px;
-  color: var(--white-text-color);
+  color: var(--color-text-inverse);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition), border-color var(--transition);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .projects-page__side-action--create {
-  border-color: var(--success-text-color);
-  background: var(--success-text-color);
-  box-shadow: var(--green-button-shadow);
+  border-color: var(--color-success);
+  background: var(--color-success);
+  box-shadow: var(--shadow-success-button);
 }
 
 .projects-page__side-action--join {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
-  box-shadow: var(--primary-button-shadow);
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  box-shadow: var(--shadow-accent-button);
 }
 
 .projects-page__side-action--org {
-  border-color: var(--dark-purple-value-color);
-  background: var(--dark-purple-value-color);
+  border-color: var(--color-secondary-accent);
+  background: var(--color-secondary-accent);
 }
 
 .projects-page__loader {
@@ -224,19 +224,19 @@
   width: 60px;
   height: 60px;
   border-radius: 100px;
-  border: 3px solid var(--primary-color);
+  border: 3px solid var(--color-accent);
   background: transparent;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color var(--transition), color var(--transition), background-color var(--transition);
+  transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .projects-page__arrow svg {
   width: 40px;
   height: 40px;
-  color: var(--primary-color);
+  color: var(--color-accent);
 }
 
 .projects-page__arrow--left svg {
@@ -244,12 +244,12 @@
 }
 
 .projects-page__arrow--disabled {
-  border-color: var(--not-active-arrow-button-color);
+  border-color: var(--color-pagination-disabled);
   cursor: not-allowed;
 }
 
 .projects-page__arrow--disabled svg {
-  color: var(--not-active-arrow-button-color);
+  color: var(--color-pagination-disabled);
 }
 
 .projects-page__organizations-viewport {
@@ -261,7 +261,7 @@
   display: flex;
   align-items: stretch;
   gap: 20px;
-  transition: transform var(--transition-duration) ease;
+  transition: transform var(--duration-medium) ease;
 }
 
 .projects-page__organizations-slide {
@@ -295,20 +295,20 @@
   }
 
   .projects-page__side-action--create:hover {
-    color: var(--success-text-color);
+    color: var(--color-success);
   }
 
   .projects-page__side-action--join:hover,
   .projects-page__load-more:hover {
-    color: var(--primary-color);
+    color: var(--color-accent);
   }
 
   .projects-page__side-action--org:hover {
-    color: var(--dark-purple-value-color);
+    color: var(--color-secondary-accent);
   }
 
   .projects-page__arrow:hover:not(.projects-page__arrow--disabled) {
-    background: var(--header-button-hover-bg);
+    background: var(--color-accent-hover-bg);
   }
 }
 

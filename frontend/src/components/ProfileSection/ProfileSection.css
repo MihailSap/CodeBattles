@@ -29,13 +29,13 @@
 }
 
 img.profile-page__avatar {
-  border: 2px solid var(--profile-avatar-border-color);
+  border: 2px solid var(--color-profile-avatar-border);
 }
 
 .profile-page__avatar svg {
   width: 100%;
   height: 100%;
-  color: var(--primary-color);
+  color: var(--color-accent);
   display: block;
 }
 
@@ -64,7 +64,7 @@ img.profile-page__avatar {
   justify-content: center;
   padding: 5px;
   background: transparent;
-  transition: background-color var(--transition);
+  transition: background-color var(--transition-fast);
 }
 
 .profile-page__avatar-action img {
@@ -93,13 +93,13 @@ img.profile-page__avatar {
 .profile-page__label {
   font-weight: 500;
   font-size: 16px;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .profile-page__value {
   font-weight: 500;
   font-size: 16px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -108,18 +108,18 @@ img.profile-page__avatar {
   flex: 1;
   min-width: 120px;
   border-radius: 10px;
-  border: 1px solid var(--primary-color);
+  border: 1px solid var(--color-accent);
   padding: 5px;
-  color: var(--primary-color);
+  color: var(--color-accent);
   font-size: 16px;
   font-weight: 500;
-  background: var(--element-bg-color);
+  background: var(--color-surface);
   outline: none;
-  transition: box-shadow var(--transition);
+  transition: box-shadow var(--transition-fast);
 }
 
 .profile-page__name-input:focus {
-  box-shadow: var(--element-shadow);
+  box-shadow: var(--shadow-accent);
 }
 
 @media (hover: hover) and (pointer: fine) {

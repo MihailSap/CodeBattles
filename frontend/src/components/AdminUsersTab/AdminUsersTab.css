@@ -1,7 +1,7 @@
 .admin-users {
   border-radius: 20px;
-  box-shadow: var(--section-shadow);
-  background-color: var(--form-bg-color);
+  box-shadow: var(--shadow-section);
+  background-color: var(--color-surface-panel);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -17,7 +17,7 @@
 }
 
 .admin-users__title {
-  color: var(--text-color);
+  color: var(--color-text-primary);
   font-size: clamp(20px, 2vw, 28px);
   font-weight: 600;
   line-height: 1.2;
@@ -33,17 +33,17 @@
 .admin-users__search-input {
   width: 100%;
   border-radius: 10px;
-  border: 2px solid var(--hover-primary-color);
-  background-color: var(--element-bg-color);
-  color: var(--text-color);
+  border: 2px solid var(--color-accent-muted);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
   font-size: 16px;
   padding: 10px 12px;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .admin-users__search-input:focus {
   outline: none;
-  border-color: var(--primary-color);
+  border-color: var(--color-accent);
 }
 
 .admin-users__table-wrap {
@@ -56,7 +56,7 @@
   width: 100%;
   min-width: 760px;
   border-collapse: collapse;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .admin-users__table thead tr {
@@ -83,15 +83,15 @@
 }
 
 .admin-users__row--me {
-  outline: 2px solid var(--hover-primary-color);
+  outline: 2px solid var(--color-accent-muted);
   outline-offset: -2px;
-  box-shadow: inset 4px 0 0 0 var(--hover-primary-color);
+  box-shadow: inset 4px 0 0 0 var(--color-accent-muted);
 }
 
 .admin-users__checkbox {
   width: 18px;
   height: 18px;
-  accent-color: var(--primary-color);
+  accent-color: var(--color-accent);
   cursor: pointer;
 }
 
@@ -118,16 +118,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color var(--transition), border-color var(--transition), background-color var(--transition);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .admin-users__action-button--delete {
-  color: var(--error-text-color);
+  color: var(--color-danger);
   border-color: rgba(248, 81, 73, 0.55);
 }
 
 .admin-users__action-button--approve {
-  color: var(--success-text-color);
+  color: var(--color-success);
   border-color: rgba(46, 160, 67, 0.6);
 }
 
@@ -155,17 +155,17 @@
 }
 
 .admin-users__empty-cell {
-  color: var(--fade-text-color);
+  color: var(--color-text-muted);
   text-align: center;
   font-size: 16px;
 }
 
 .admin-users__error {
-  border: 2px solid var(--error-border-input-color);
+  border: 2px solid var(--color-danger-border);
   border-radius: 14px;
   padding: 10px 12px;
-  background-color: var(--error-bg-input-color);
-  color: var(--error-text-color);
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
 }
 
 .admin-users__pagination {
@@ -181,24 +181,24 @@
   text-align: center;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-color);
+  color: var(--color-text-primary);
 }
 
 .admin-users__pagination-button {
   border-radius: 10px;
-  border: 2px solid var(--primary-color);
-  background-color: var(--primary-color);
-  color: var(--white-text-color);
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
   padding: 8px 12px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .admin-users__pagination-button:disabled {
-  border-color: var(--fade-button-color);
-  background-color: var(--fade-button-color);
+  border-color: var(--color-button-disabled);
+  background-color: var(--color-button-disabled);
   cursor: not-allowed;
 }
 
@@ -212,8 +212,8 @@
   }
 
   .admin-users__pagination-button:hover:enabled {
-    background-color: var(--element-bg-color);
-    color: var(--primary-color);
+    background-color: var(--color-surface);
+    color: var(--color-accent);
   }
 }
 
