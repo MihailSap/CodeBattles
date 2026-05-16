@@ -13,6 +13,8 @@ import Snackbar from '../../components/Snackbar/Snackbar';
 import Spinner from '../../components/Spinner/Spinner';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import './ProjectsPage.css';
 
 const VIEW_MODE = {
@@ -29,9 +31,10 @@ const ProjectsPage = () => {
 
   const [viewMode, setViewMode] = useState(VIEW_MODE.WITH_ORGANIZATION);
   const [search, setSearch] = useState('');
+  const debaouncedSearch = useDebouncedValue(search, 300);
   const [dashboard, setDashboard] = useState({ withoutOrganizationProjects: [], organizationsWithProjects: [] });
   const [isLoading, setIsLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   const [isProjectCreateSubmitting, setProjectCreateSubmitting] = useState(false);
@@ -53,7 +56,7 @@ const ProjectsPage = () => {
     setIsLoading(true);
 
     try {
-      const result = await projectsApi.getProjectsDashboard({ search });
+      const result = await projectsApi.getProjectsDashboard({ search: debaouncedSearch });
 
       setDashboard((prev) => ({
         ...result,
@@ -62,11 +65,11 @@ const ProjectsPage = () => {
           : [...prev.withoutOrganizationProjects, ...result.withoutOrganizationProjects]
       }));
     } catch {
-      setSnackbar({ message: 'Не удалось загрузить список проектов', type: 'error' });
+      showSnackbar('Не удалось загрузить список проектов', 'error');
     } finally {
       setIsLoading(false);
     }
-  }, [search]);
+  }, [debaouncedSearch, showSnackbar]);
 
   useEffect(() => {
     loadDashboard({ resetNoOrg: true });
@@ -74,27 +77,10 @@ const ProjectsPage = () => {
 
   useEffect(() => {
     if (location.state?.snackbarMessage) {
-      setSnackbar({
-        message: location.state.snackbarMessage,
-        type: location.state.snackbarType || 'success'
-      });
+      showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate]);
-
-  useEffect(() => {
-    if (!snackbar.message) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSnackbar({ message: '', type: 'success' });
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [snackbar.message]);
+  }, [location.pathname, location.state, navigate, showSnackbar]);
 
   const noOrganizationProjects = useMemo(() => dashboard.withoutOrganizationProjects, [dashboard.withoutOrganizationProjects]);
 
@@ -195,11 +181,11 @@ const ProjectsPage = () => {
       }
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
-        setSnackbar({ message: 'Проект с таким названием уже существует', type: 'error' });
+        showSnackbar('Проект с таким названием уже существует', 'error');
         return;
       }
 
-      setSnackbar({ message: 'Не удалось создать проект. Попробуйте позже', type: 'error' });
+      showSnackbar('Не удалось создать проект. Попробуйте позже', 'error');
     } finally {
       setProjectCreateSubmitting(false);
     }
@@ -207,7 +193,7 @@ const ProjectsPage = () => {
 
   const handleCreateOrganization = async (payload) => {
     if (!payload.logoPreview) {
-      setSnackbar({ message: 'Прикрепите лого организации', type: 'error' });
+      showSnackbar('Прикрепите лого организации', 'error');
       return;
     }
 
@@ -223,11 +209,11 @@ const ProjectsPage = () => {
       }
     } catch (error) {
       if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
-        setSnackbar({ message: 'Организация с таким названием существует', type: 'error' });
+        showSnackbar('Организация с таким названием существует', 'error');
         return;
       }
 
-      setSnackbar({ message: 'Не удалось создать организацию. Попробуйте позже', type: 'error' });
+      showSnackbar('Не удалось создать организацию. Попробуйте позже', 'error');
     } finally {
       setOrganizationCreateSubmitting(false);
     }
@@ -251,25 +237,25 @@ const ProjectsPage = () => {
     try {
       await projectsApi.joinPublicProject(projectId);
       await loadDashboard();
-      setSnackbar({ message: 'Вы вступили в проект', type: 'success' });
+      showSnackbar('Вы вступили в проект', 'success');
     } catch {
-      setSnackbar({ message: 'Не удалось вступить в проект', type: 'error' });
+      showSnackbar('Не удалось вступить в проект', 'error');
     }
   };
 
   const handleRequestOrganizationAccess = async (organizationId) => {
     try {
       await projectsApi.requestOrganizationAccess(organizationId);
-      setSnackbar({ message: 'Запрос на вступление отправлен владельцу организации', type: 'success' });
+      showSnackbar('Запрос на вступление отправлен владельцу организации', 'success');
     } catch {
-      setSnackbar({ message: 'Не удалось отправить запрос на вступление', type: 'error' });
+      showSnackbar('Не удалось отправить запрос на вступление', 'error');
     }
   };
 
   return (
     <div className="projects-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="projects-page__content">
         <section className="projects-page__toolbar-wrap">
@@ -302,7 +288,7 @@ const ProjectsPage = () => {
 
             <div className="projects-page__search-wrap">
               <SearchIcon />
-              <input className="projects-page__search" type="text" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value.slice(0, 120))} />
+              <input className="projects-page__search" type="search" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value.slice(0, 120))} />
             </div>
           </div>
         </section>

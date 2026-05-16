@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ModalShell from '../ModalShell/ModalShell';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import Spinner from '../Spinner/Spinner';
 import './JoinSearchModal.css';
 
@@ -12,23 +13,13 @@ const JoinSearchModal = ({
   onRequestAccess
 }) => {
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [items, setItems] = useState([]);
   const [pendingRequestIds, setPendingRequestIds] = useState([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useBodyScrollLock(true);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedQuery(query);
-    }, 350);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [query]);
 
   useEffect(() => {
     let isMounted = true;
@@ -102,7 +93,7 @@ const JoinSearchModal = ({
         <div className="join-search-modal__content">
           <input
             className="join-search-modal__search"
-            type="text"
+            type="search"
             placeholder="Поиск по названию и описанию"
             value={query}
             onChange={(event) => setQuery(event.target.value.slice(0, 120))}

@@ -11,7 +11,7 @@
 
 .profile-settings-modal {
   width: min(1120px, 90%);
-  max-height: min(100vh - 200px, 920px);
+  max-height: min(100vh - 150px, 920px);
   overflow: auto;
   border: 2px solid var(--primary-color);
   border-radius: 25px;

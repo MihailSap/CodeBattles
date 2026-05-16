@@ -7,6 +7,7 @@ import CodeViewer from '../CodeViewer/CodeViewer';
 import CommentsBlock from '../CommentsBlock/CommentsBlock';
 import ReviewResultsSidebar from '../ReviewResultsSidebar/ReviewResultsSidebar';
 import ReportModal from '../ReportModal/ReportModal';
+import ScrollToTopButton from '../ScrollToTopButton/ScrollToTopButton';
 import Spinner from '../Spinner/Spinner';
 import { getLanguageByFileName } from '../../utils/fileUtils';
 import { UnwrapIcon } from '../Icons/Icons';
@@ -31,13 +32,12 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
 
   const [fileContentLoading, setFileContentLoading] = useState(false);
   const [fileContentMap, setFileContentMap] = useState({});
-  const [showBackToTop, setShowBackToTop] = useState(false);
 
   const isAssignee = task.assigneeIds?.includes(currentUser?.id);
 
   const showSnackbar = useCallback(
     (message, type = 'success') => {
-      if (onSnackbar) onSnackbar({ message, type });
+      if (onSnackbar) onSnackbar(message, type);
     },
     [onSnackbar]
   );
@@ -75,19 +75,6 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
   useEffect(() => {
     loadReview();
   }, [loadReview]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setShowBackToTop(window.scrollY > 500);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-    };
-  }, []);
 
   const fetchFileContent = useCallback(async (filePath) => {
     if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
@@ -350,110 +337,110 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
 
             <div className="solution-tab__col-right">
               <>
-                  {isRework && isAssignee && (
-                    <div className="solution-tab__card">
-                      <h3 className="solution-tab__card-title">Отправить на проверку</h3>
-                      <div className="solution-tab__upload-actions">
-                        <button className="btn-git" type="button" onClick={() => setIsGitModalOpen(true)}>
-                          Git-репозиторий
-                        </button>
-                        <button className="btn-manual" type="button" onClick={() => setIsManualModalOpen(true)}>
-                          Вручную
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {isExpiredWithoutReview && isAssignee && (
-                    <div className="solution-tab__card">
-                      <div className="solution-tab__card-text solution-tab__card-text--error">
-                        Ни один назначенный ревьюер не выполнил ревью
-                      </div>
-                      <button
-                        className="btn-finish"
-                        type="button"
-                        onClick={() => handleResubmit({ type: 'resend' })}
-                        style={{ marginTop: 20 }}
-                      >
-                        Переотправить
+                {isRework && isAssignee && (
+                  <div className="solution-tab__card">
+                    <h3 className="solution-tab__card-title">Отправить на проверку</h3>
+                    <div className="solution-tab__upload-actions">
+                      <button className="btn-git" type="button" onClick={() => setIsGitModalOpen(true)}>
+                        Git-репозиторий
+                      </button>
+                      <button className="btn-manual" type="button" onClick={() => setIsManualModalOpen(true)}>
+                        Вручную
                       </button>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {shouldShowWaitingState && isAssignee && (
-                    <div className="solution-tab__card">
-                      <label className="solution-tab__checkbox-label" style={{ marginBottom: 12 }}>
-                        <input
-                          type="checkbox"
-                          checked={revealName}
-                          onChange={(e) => setRevealName(e.target.checked)}
-                        />
-                        Раскрыть моё имя ревьюерам после завершения ревью
-                      </label>
-                      <div className="solution-tab__waiting-text">Ожидание ревью</div>
+                {isExpiredWithoutReview && isAssignee && (
+                  <div className="solution-tab__card">
+                    <div className="solution-tab__card-text solution-tab__card-text--error">
+                      Ни один назначенный ревьюер не выполнил ревью
                     </div>
-                  )}
+                    <button
+                      className="btn-finish"
+                      type="button"
+                      onClick={() => handleResubmit({ type: 'resend' })}
+                      style={{ marginTop: 20 }}
+                    >
+                      Переотправить
+                    </button>
+                  </div>
+                )}
 
-                  {shouldShowFinishReview && isAssignee && (
-                    <div className="solution-tab__card">
-                      <button className="btn-finish" type="button" onClick={handleFinishReview}>
-                        Завершить ревью
-                      </button>
-                    </div>
-                  )}
-
-                  {isExpiredWithoutReview && aiReviewEnabled && aiFileComments.length > 0 && (
-                    <CommentsBlock
-                      comments={aiFileComments}
-                      currentUser={currentUser}
-                      onLike={handleLike}
-                      onDislike={handleDislike}
-                      readOnly
-                      pageContext="task"
-                      title="AI-комментарии"
-                    />
-                  )}
-
-                  {showCodeComments && (
-                    <>
-                      {hasReviewResults && revealedReviewers.length > 0 && (
-                        <div className="solution-tab__reviewers-names">
-                          <h3 className="solution-tab__reviewers-title">Ревьюеры</h3>
-                          <div className="solution-tab__reviewers-list">
-                            {revealedReviewers.map(fr => (
-                              <span className="solution-tab__reviewer-name" key={fr.id || fr.reviewerId}>
-                                {fr.reviewerName}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      <CommentsBlock
-                        comments={displayedComments}
-                        currentUser={currentUser}
-                        onReply={isAssignee ? handleReply : undefined}
-                        onLike={isAssignee ? handleLike : undefined}
-                        onDislike={isAssignee ? handleDislike : undefined}
-                        onDelete={isAssignee ? handleDeleteComment : undefined}
-                        onReport={isAssignee ? openReportModal : undefined}
-                        onCloseThread={isAssignee ? handleCloseThread : undefined}
-                        readOnly={!isAssignee}
-                        pageContext="task"
-                        emptyText="Выберите строку или диапазон строк с комментариями"
+                {shouldShowWaitingState && isAssignee && (
+                  <div className="solution-tab__card">
+                    <label className="solution-tab__checkbox-label" style={{ marginBottom: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={revealName}
+                        onChange={(e) => setRevealName(e.target.checked)}
                       />
-                    </>
-                  )}
+                      Раскрыть моё имя ревьюерам после завершения ревью
+                    </label>
+                    <div className="solution-tab__waiting-text">Ожидание ревью</div>
+                  </div>
+                )}
 
-                  {(isWaiting || isRework || isCompleted) && hasHistory && (
+                {shouldShowFinishReview && isAssignee && (
+                  <div className="solution-tab__card">
+                    <button className="btn-finish" type="button" onClick={handleFinishReview}>
+                      Завершить ревью
+                    </button>
+                  </div>
+                )}
+
+                {isExpiredWithoutReview && aiReviewEnabled && aiFileComments.length > 0 && (
+                  <CommentsBlock
+                    comments={aiFileComments}
+                    currentUser={currentUser}
+                    onLike={handleLike}
+                    onDislike={handleDislike}
+                    readOnly
+                    pageContext="task"
+                    title="AI-комментарии"
+                  />
+                )}
+
+                {showCodeComments && (
+                  <>
+                    {hasReviewResults && revealedReviewers.length > 0 && (
+                      <div className="solution-tab__reviewers-names">
+                        <h3 className="solution-tab__reviewers-title">Ревьюеры</h3>
+                        <div className="solution-tab__reviewers-list">
+                          {revealedReviewers.map(fr => (
+                            <span className="solution-tab__reviewer-name" key={fr.id || fr.reviewerId}>
+                              {fr.reviewerName}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <CommentsBlock
-                      comments={review.history.flatMap(h => h.comments || [])}
+                      comments={displayedComments}
                       currentUser={currentUser}
-                      readOnly
-                      isHistory
+                      onReply={isAssignee ? handleReply : undefined}
+                      onLike={isAssignee ? handleLike : undefined}
+                      onDislike={isAssignee ? handleDislike : undefined}
+                      onDelete={isAssignee ? handleDeleteComment : undefined}
+                      onReport={isAssignee ? openReportModal : undefined}
+                      onCloseThread={isAssignee ? handleCloseThread : undefined}
+                      readOnly={!isAssignee}
                       pageContext="task"
-                      title="Комментарии с прошлых ревью"
+                      emptyText="Выберите строку или диапазон строк с комментариями"
                     />
-                  )}
+                  </>
+                )}
+
+                {(isWaiting || isRework || isCompleted) && hasHistory && (
+                  <CommentsBlock
+                    comments={review.history.flatMap(h => h.comments || [])}
+                    currentUser={currentUser}
+                    readOnly
+                    isHistory
+                    pageContext="task"
+                    title="Комментарии с прошлых ревью"
+                  />
+                )}
               </>
             </div>
           </div>
@@ -481,18 +468,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
         isSubmitting={isSubmitting}
       />
 
-      {showBackToTop && (
-        <button
-          type="button"
-          className="solution-tab__back-to-top"
-          aria-label="Наверх"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <span className="solution-tab__back-to-top-icon">
-            <UnwrapIcon />
-          </span>
-        </button>
-      )}
+      <ScrollToTopButton />
     </div>
   );
 };

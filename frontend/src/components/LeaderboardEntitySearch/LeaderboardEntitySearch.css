@@ -1,0 +1,118 @@
+.leaderboard-entity-search {
+  width: min(600px, 100%);
+  margin: 0 auto;
+  padding: 5px 10px 5px 5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 2px solid var(--hover-primary-color);
+  border-radius: 10px;
+  background: var(--element-bg-color);
+  transition: border-color var(--transition);
+}
+
+.leaderboard-entity-search:focus-within {
+  border-color: var(--primary-color);
+}
+
+.leaderboard-entity-search svg {
+  width: 25px;
+  height: 25px;
+  color: var(--primary-color);
+}
+
+.leaderboard-entity-search__input {
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  color: var(--text-color);
+  background: transparent;
+}
+
+.leaderboard-entity-search__input::placeholder {
+  color: var(--project-input-placeholder-color);
+}
+
+.leaderboard-entity-search__input:focus {
+  outline: none;
+}
+
+.leaderboard-entity-search__dropdown {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  border-radius: 10px;
+  border: 2px solid var(--hover-primary-color);
+  background: var(--element-bg-color);
+  box-shadow: var(--section-shadow);
+  overflow: hidden;
+}
+
+.leaderboard-entity-search__option {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 1px solid var(--leaderboard-table-border-color);
+  cursor: pointer;
+  transition: background-color var(--transition);
+}
+
+.leaderboard-entity-search__option span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-entity-search__option svg {
+  width: 18px;
+  height: 18px;
+}
+
+.leaderboard-entity-search__empty {
+  padding: 10px;
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .leaderboard-entity-search__option:hover {
+    background: var(--header-button-hover-bg);
+  }
+}
+
+@media (max-width: 500px) {
+  .leaderboard-entity-search {
+    padding: 5px;
+  }
+
+  .leaderboard-entity-search svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .leaderboard-entity-search__input {
+    font-size: 14px;
+  }
+
+  .leaderboard-entity-search__option {
+    padding: 8px;
+    font-size: 14px;
+    gap: 5px;
+  }
+}

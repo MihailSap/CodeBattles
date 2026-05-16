@@ -116,7 +116,7 @@
 }
 
 .projects-page__search::placeholder {
-  color: var(--fade-text-color);
+  color: var( --project-input-placeholder-color);
 }
 
 .projects-page__search:focus {
@@ -370,6 +370,7 @@
 @media (max-width: 500px) {
   .projects-page__content {
     gap: 20px;
+    padding: 20px;
   }
 
   .projects-page__toolbar {

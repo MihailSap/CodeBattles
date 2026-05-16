@@ -252,33 +252,6 @@
   text-align: center;
 }
 
-.solution-tab__back-to-top {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  background: var(--bg-color);
-  box-shadow: var(--modal-shadow);
-  padding: 8px;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.solution-tab__back-to-top-icon {
-  display: flex;
-  width: 20px;
-  height: 20px;
-  transform: rotate(180deg);
-}
-
 [data-theme='dark'] .solution-tab__metrics-bar,
 [data-theme='dark'] .solution-tab__reviewers-names,
 [data-theme='dark'] .solution-tab__upload-block,
@@ -368,18 +341,6 @@
   .btn-manual {
     font-size: 14px;
     padding: 3px 18px;
-  }
-
-  .solution-tab__back-to-top {
-    width: 40px;
-    height: 40px;
-  }
-
-  .solution-tab__back-to-top-icon {
-    display: flex;
-    width: 15px;
-    height: 15px;
-    transform: rotate(180deg);
   }
 
   .solution-tab {
@@ -506,9 +467,5 @@
   .btn-finish:hover {
     background-color: var(--element-bg-color);
     color: var(--success-text-color);
-  }
-
-  .solution-tab__back-to-top:hover {
-    background: var(--element-bg-color);
   }
 }

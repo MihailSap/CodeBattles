@@ -21,6 +21,7 @@ import {
 } from '../../constants/project';
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { formatDeadline, getDeadlineToneClass } from '../../utils/projectFormatters';
 import { validateTaskName } from '../../utils/projectValidation';
 import './TaskPage.css';
@@ -57,7 +58,7 @@ const TaskPage = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFullRequirements, setShowFullRequirements] = useState(false);
   const [showFullCriteria, setShowFullCriteria] = useState(false);
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const [settingsDraft, setSettingsDraft] = useState(null);
   const [settingsTouched, setSettingsTouched] = useState({ name: false, deadline: false, submitted: false });
@@ -146,28 +147,11 @@ const TaskPage = () => {
   }, [loadTask, loadProject, navigate, projectId, taskId]);
 
   useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSnackbar({ message: '', type: 'success' });
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [snackbar.message]);
-
-  useEffect(() => {
     if (location.state?.snackbarMessage) {
-      setSnackbar({
-        message: location.state.snackbarMessage,
-        type: location.state.snackbarType || 'success'
-      });
+      showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
       navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate]);
+  }, [location.pathname, location.state, navigate, showSnackbar]);
 
   const availableTabs = useMemo(() => {
     const baseTabs = [{ key: 'solution', label: tabs.solution }];
@@ -306,7 +290,7 @@ const TaskPage = () => {
     setSettingsTouched({ name: true, deadline: true, submitted: true });
 
     if (isManualReviewers && settingsDraft.reviewerIds.length === 0) {
-      setSnackbar({ message: 'Выберите хотя бы одного ревьюера', type: 'error' });
+      showSnackbar('Выберите хотя бы одного ревьюера', 'error');
       return;
     }
 
@@ -335,9 +319,9 @@ const TaskPage = () => {
 
       await loadTask();
       setSettingsTouched({ name: false, deadline: false, submitted: false });
-      setSnackbar({ message: 'Изменения сохранены', type: 'success' });
+      showSnackbar('Изменения сохранены', 'success');
     } catch {
-      setSnackbar({ message: 'Не удалось сохранить изменения', type: 'error' });
+      showSnackbar('Не удалось сохранить изменения', 'error');
     } finally {
       setSettingsSubmitting(false);
     }
@@ -360,7 +344,7 @@ const TaskPage = () => {
         }
       });
     } catch {
-      setSnackbar({ message: 'Не удалось удалить задачу', type: 'error' });
+      showSnackbar('Не удалось удалить задачу', 'error');
     } finally {
       setDeleteSubmitting(false);
       setDeleteModalOpen(false);
@@ -396,7 +380,7 @@ const TaskPage = () => {
   return (
     <div className="project-page task-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="project-page__content task-page-content">
         <section className="project-page__info section-card">
@@ -475,7 +459,7 @@ const TaskPage = () => {
             task={task}
             currentUser={{ id: Number(userId), fullName: 'Мой Пользователь' }}
             aiReviewEnabled={project?.aiReviewEnabled}
-            onSnackbar={setSnackbar}
+            onSnackbar={showSnackbar}
             projectId={projectId}
           />
         )}

@@ -12,6 +12,7 @@ import FinalReviewForm from '../../components/FinalReviewForm/FinalReviewForm';
 import ReviewResultsSidebar from '../../components/ReviewResultsSidebar/ReviewResultsSidebar';
 import ReportModal from '../../components/ReportModal/ReportModal';
 import CommentModal from '../../components/CommentModal/CommentModal';
+import ScrollToTopButton from '../../components/ScrollToTopButton/ScrollToTopButton';
 import { projectsApi } from '../../api/projectsApi';
 import { ROUTES } from '../../constants/routes';
 import {
@@ -19,6 +20,7 @@ import {
   getDeadlineInfo
 } from '../../constants/review';
 import { useAuth } from '../../hooks/useAuth';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { getLanguageByFileName } from '../../utils/fileUtils';
 import { AvatarIcon, CommentIcon } from '../../components/Icons/Icons';
 import './ReviewPage.css';
@@ -31,7 +33,7 @@ const ReviewPage = () => {
   const [task, setTask] = useState(null);
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -111,11 +113,11 @@ const ReviewPage = () => {
       }
     } catch (err) {
       console.error('Review data load error:', err);
-      setSnackbar({ message: 'Ошибка загрузки данных ревью', type: 'error' });
+      showSnackbar('Ошибка загрузки данных ревью', 'error');
     } finally {
       setLoading(false);
     }
-  }, [reviewId, navigate, findFileByPath, numericUserId]);
+  }, [reviewId, navigate, findFileByPath, numericUserId, showSnackbar]);
 
   useEffect(() => {
     loadData();
@@ -130,11 +132,11 @@ const ReviewPage = () => {
     } catch (err) {
       console.error('Failed to fetch file content:', err);
       setFileContentMap(prev => ({ ...prev, [filePath]: { error: true } }));
-      setSnackbar({ message: 'Ошибка загрузки содержимого файла', type: 'error' });
+      showSnackbar('Ошибка загрузки содержимого файла', 'error');
     } finally {
       setFileContentLoading(false);
     }
-  }, [reviewId, fileContentMap]);
+  }, [reviewId, fileContentMap, showSnackbar]);
 
   const handleSelectFile = useCallback((file) => {
     setSelectedFile(file);
@@ -199,9 +201,9 @@ const ReviewPage = () => {
       });
       await loadData();
       setIsCommentModalOpen(false);
-      setSnackbar({ message: 'Комментарий добавлен', type: 'success' });
+      showSnackbar('Комментарий добавлен', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка отправки комментария. Попробуйте позже.', type: 'error' });
+      showSnackbar('Ошибка отправки комментария. Попробуйте позже.', 'error');
     } finally {
       setIsCommentSubmitting(false);
     }
@@ -217,9 +219,9 @@ const ReviewPage = () => {
         createdAt: new Date().toISOString()
       });
       await loadData();
-      setSnackbar({ message: 'Ответ отправлен', type: 'success' });
+      showSnackbar('Ответ отправлен', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка отправки ответа. Попробуйте позже.', type: 'error' });
+      showSnackbar('Ошибка отправки ответа. Попробуйте позже.', 'error');
     }
   };
 
@@ -245,9 +247,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.deleteReviewComment(taskId, commentId);
       await loadData();
-      setSnackbar({ message: 'Комментарий удален', type: 'success' });
+      showSnackbar('Комментарий удален', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка удаления комментария', type: 'error' });
+      showSnackbar('Ошибка удаления комментария', 'error');
     }
   };
 
@@ -255,9 +257,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.closeCommentThread(taskId, commentId, 'close');
       await loadData();
-      setSnackbar({ message: 'Тред закрыт', type: 'success' });
+      showSnackbar('Тред закрыт', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка закрытия треда', type: 'error' });
+      showSnackbar('Ошибка закрытия треда', 'error');
     }
   };
 
@@ -265,9 +267,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.closeCommentThread(taskId, commentId, 'open');
       await loadData();
-      setSnackbar({ message: 'Тред переоткрыт', type: 'success' });
+      showSnackbar('Тред переоткрыт', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка открытия треда', type: 'error' });
+      showSnackbar('Ошибка открытия треда', 'error');
     }
   };
 
@@ -280,9 +282,9 @@ const ReviewPage = () => {
         reviewerName: 'Вы'
       });
       await loadData();
-      setSnackbar({ message: 'Результаты ревью успешно сохранены', type: 'success' });
+      showSnackbar('Результаты ревью успешно сохранены', 'success');
     } catch {
-      setSnackbar({ message: 'Ошибка сохранения результатов ревью. Попробуйте позже.', type: 'error' });
+      showSnackbar('Ошибка сохранения результатов ревью. Попробуйте позже.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -293,9 +295,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.reportComment(taskId, reportingCommentId, { reason, comment });
       setIsReportModalOpen(false);
-      setSnackbar({ message: 'Жалоба отправлена', type: 'success' });
+      showSnackbar('Жалоба отправлена', 'success');
     } catch {
-      setSnackbar({ message: 'Не удалось отправить жалобу', type: 'error' });
+      showSnackbar('Не удалось отправить жалобу', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -387,7 +389,7 @@ const ReviewPage = () => {
   return (
     <div className="review-page">
       <Header />
-      <Snackbar message={snackbar.message} type={snackbar.type} onClose={() => setSnackbar({ message: '', type: 'success' })} />
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <div className="project-page__content review-page__content">
         <section className="project-page__info section-card">
@@ -558,6 +560,8 @@ const ReviewPage = () => {
           </div>
         </div>
       </div>
+
+      <ScrollToTopButton />
 
       <ReportModal
         isOpen={isReportModalOpen}

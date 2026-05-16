@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { profileApi } from '../../api/profileApi';
@@ -12,6 +12,7 @@ import Spinner from '../../components/Spinner/Spinner';
 import StatisticsSection from '../../components/StatisticsSection/StatisticsSection';
 import { SKILL_GROUPS } from '../../constants/profileSkills';
 import { useAuth } from '../../hooks/useAuth';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import { useSkillsPopup } from '../../hooks/useSkillsPopup';
 import { patchAuthUser } from '../../store/slices/authSlice';
 import './ProfilePage.css';
@@ -116,7 +117,7 @@ const ProfilePage = () => {
   const [achievements, setAchievements] = useState([]);
   const [receivedAchievementIds, setReceivedAchievementIds] = useState([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
   const {
@@ -140,28 +141,6 @@ const ProfilePage = () => {
     registeredAt: user?.registeredAt ?? '',
     avatarPath: user?.avatarPath ?? ''
   };
-
-  const closeSnackbar = useCallback(() => {
-    setSnackbar({ message: '', type: 'success' });
-  }, []);
-
-  const showSnackbar = useCallback((message, type = 'success') => {
-    setSnackbar({ message, type });
-  }, []);
-
-  useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      closeSnackbar();
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [closeSnackbar, snackbar.message]);
 
   useEffect(() => {
     const createdAvatarUrls = createdAvatarUrlsRef.current;

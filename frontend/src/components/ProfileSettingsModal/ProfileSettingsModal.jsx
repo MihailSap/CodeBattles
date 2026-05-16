@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { profileSettingsApi } from '../../api/profileSettingsApi';
 import { validateConfirmPassword, validatePassword } from '../../utils/auth';
 import { useAuth } from '../../hooks/useAuth';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+import { useSnackbar } from '../../hooks/useSnackbar';
 import Snackbar from '../Snackbar/Snackbar';
 import { CrossIcon, RefreshCycleIcon } from '../Icons/Icons';
 import ModalShell from '../ModalShell/ModalShell';
@@ -42,29 +44,9 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const [isLinkedAccountsLoading, setIsLinkedAccountsLoading] = useState(false);
   const [isLinkActionLoading, setIsLinkActionLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
-  const [snackbar, setSnackbar] = useState({ message: '', type: 'success' });
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
-  const closeSnackbar = useCallback(() => {
-    setSnackbar({ message: '', type: 'success' });
-  }, []);
-
-  const showSnackbar = useCallback((message, type = 'success') => {
-    setSnackbar({ message, type });
-  }, []);
-
-  useEffect(() => {
-    if (!snackbar.message) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      closeSnackbar();
-    }, 3200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [closeSnackbar, snackbar.message]);
+  useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -83,19 +65,6 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      return undefined;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {

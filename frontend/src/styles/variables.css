@@ -51,6 +51,10 @@
     --not-active-arrow-button-color: rgba(201, 209, 217);
     --review-section-header-bg-color: rgba(21, 101, 192, 0.2);
     --review-element-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 1);
+    --gold-color: rgb(255, 215, 0);
+    --silver-color: rgb(196, 196, 196);
+    --bronze-color: rgb(206, 137, 70);
+    --leaderboard-table-border-color: rgb(0, 0, 0, 0.3);
     --transition-duration: 0.5s;
     --transition: 0.2s ease;
 }
@@ -79,4 +83,5 @@
     --project-table-border-color: rgb(30, 30, 47);
     --project-settings-input-border-color: rgba(255, 255, 255, 0.1);
     --review-element-shadow: 0px 0px 5px 1px rgba(67, 155, 255, 0.25);
+    --leaderboard-table-border-color: rgb(255, 255, 255, 0.3);
 }
