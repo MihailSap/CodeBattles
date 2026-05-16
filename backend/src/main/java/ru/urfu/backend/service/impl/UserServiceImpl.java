@@ -219,6 +219,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void updateStack(User user, List<StackRequest> stackRequests){
+        if(!stackRequests.isEmpty()){
+            userStackRepository.deleteAllByUser(user);
+        }
+
         for(StackRequest stackRequest : stackRequests){
             Stack stack = stackService.getOrUpdate(stackRequest.title(), stackRequest.type());
 

@@ -71,13 +71,13 @@ public class UserMapper {
                 databases.add(s.getTitle());
             }
             if(StackType.FRAMEWORKS.equals(s.getType())) {
-                databases.add(s.getTitle());
+                frameworks.add(s.getTitle());
             }
             if(StackType.LANGUAGES.equals(s.getType())) {
-                databases.add(s.getTitle());
+                languages.add(s.getTitle());
             }
             if(StackType.TOOLS.equals(s.getType())) {
-                databases.add(s.getTitle());
+                tools.add(s.getTitle());
             }
         }
 
@@ -87,7 +87,7 @@ public class UserMapper {
                 user.getLogin(),
                 user.getFullName(),
                 user.getAvatarFileTitle(),
-                user.getRegisteredAt().toString(),
+                user.getRegisteredAt() == null ? "" : user.getRegisteredAt().toString(),
                 user.getRole(),
                 user.isEnabled(),
                 clouds,

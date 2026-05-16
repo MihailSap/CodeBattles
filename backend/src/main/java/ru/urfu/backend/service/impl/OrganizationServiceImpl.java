@@ -20,7 +20,6 @@ import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.specification.OrganizationSpecification;
 import ru.urfu.backend.specification.UserOrganizationSpecification;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,7 +91,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Transactional(readOnly = true)
     @Override
     public List<UserOrganization> getMyOrganizations(User user) {
-        return userOrganizationRepository.findByUser(user);
+        return userOrganizationRepository.findByUserAndIsEnabled_True(user);
     }
 
     @Transactional(readOnly = true)

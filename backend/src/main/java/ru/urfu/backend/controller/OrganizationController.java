@@ -68,8 +68,7 @@ public class OrganizationController {
         for(var userOrganization : userOrganizations) {
             result.add(organizationMapper.mapToOrganizationListItemDto(
                     userOrganization.getOrganization(),
-                    userOrganization.getAdmin(),
-                    !userOrganization.getEnabled()
+                    userOrganization.getAdmin()
             ));
         }
         return result;
@@ -97,8 +96,7 @@ public class OrganizationController {
         List<Organization> organizations = organizationService.getOrganizationsToJoin(user);
         List<OrganizationListItemResponse> result = new ArrayList<>();
         for(Organization organization : organizations) {
-            result.add(organizationMapper.mapToOrganizationListItemDto(organization, false,
-                    organizationService.isOrganizationContainsPendingJoinRequest(organization, user)));
+            result.add(organizationMapper.mapToOrganizationListItemDto(organization, false));
         }
 
         return result;

@@ -73,7 +73,7 @@ public class OrganizationMapper {
     }
 
     public OrganizationListItemResponse mapToOrganizationListItemDto(
-            Organization organization, Boolean isAdmin, Boolean hasPendingRequests) {
+            Organization organization, Boolean isAdmin) {
         return new OrganizationListItemResponse(
                 organization.getId(),
                 organization.getAvatarFileTitle(),
@@ -82,8 +82,7 @@ public class OrganizationMapper {
                 organization.getDescription(),
                 getMembersCount(organization),
                 getProjectsCount(organization),
-                isAdmin,
-                hasPendingRequests
+                isAdmin
         );
     }
 

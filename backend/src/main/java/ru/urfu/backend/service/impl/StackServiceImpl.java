@@ -39,8 +39,8 @@ public class StackServiceImpl implements StackService {
             Stack stack = optionalStack.get();
             if(StackType.OTHER.equals(stack.getType())) {
                 stack.setType(type);
-                return stackRepository.save(stack);
             }
+            return stackRepository.save(stack);
         }
 
         Stack newStack = new Stack();

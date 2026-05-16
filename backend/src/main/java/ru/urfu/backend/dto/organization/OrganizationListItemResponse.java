@@ -8,7 +8,6 @@ public record OrganizationListItemResponse(
         String description,
         Integer participantsCount,
         Integer projectsCount,
-        Boolean isAdmin,
-        Boolean hasPendingRequest
+        Boolean isAdmin
 ) {
 }

@@ -14,5 +14,5 @@ import java.util.Optional;
 public interface UserOrganizationRepository extends JpaRepository<UserOrganization, Long>, JpaSpecificationExecutor<UserOrganization> {
     Optional<UserOrganization> findByUserAndOrganization(User user, Organization organization);
 
-    List<UserOrganization> findByUser(User user);
+    List<UserOrganization> findByUserAndIsEnabled_True(User user);
 }
