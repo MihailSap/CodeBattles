@@ -12,6 +12,7 @@ import ru.urfu.backend.service.ProjectService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Component
@@ -53,12 +54,17 @@ public class OrganizationMapper {
         );
     }
 
-    public OrganizationProjectsCardResponse mapToOrganizationProjectsCardDto(User user, Organization organization, Boolean isAdmin){
+    public OrganizationProjectsCardResponse mapToOrganizationProjectsCardDto(
+            User user, Organization organization, Boolean isAdmin){
         Set<Project> projects = organization.getProjects();
         List<ProjectListItemDto> projectDetailsDtos = new ArrayList<>();
         for (Project project : projects) {
-            UserProject userProject = projectService.getUserProject(user, project);
-            projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, userProject.getProjectMemberRole()));
+            Optional<UserProject> userProject = projectService.getOptionalUserProject(user, project);
+            if (userProject.isPresent()) {
+                projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, userProject.get().getProjectMemberRole()));
+            } else {
+                projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.GUEST));
+            }
         }
 
         return new OrganizationProjectsCardResponse(
@@ -72,7 +78,7 @@ public class OrganizationMapper {
         );
     }
 
-    public OrganizationListItemResponse mapToOrganizationListItemDto(
+    public OrganizationListItemResponse mapToOrganizationListItemResponse(
             Organization organization, Boolean isAdmin) {
         return new OrganizationListItemResponse(
                 organization.getId(),
@@ -83,6 +89,20 @@ public class OrganizationMapper {
                 getMembersCount(organization),
                 getProjectsCount(organization),
                 isAdmin
+        );
+    }
+
+    public OrganizationListItemDto mapToOrganizationListItemDto(
+            Organization organization, Boolean hasPendingRequest) {
+        return new OrganizationListItemDto(
+                organization.getId(),
+                organization.getAvatarFileTitle(),
+                organization.getTitle(),
+                organization.getLink(),
+                organization.getDescription(),
+                getMembersCount(organization),
+                getProjectsCount(organization),
+                hasPendingRequest
         );
     }
 

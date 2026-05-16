@@ -13,6 +13,7 @@ import ru.urfu.backend.model.enums.ProjectMembershipFilter;
 import ru.urfu.backend.model.enums.ProjectPrivacy;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ProjectService {
 
@@ -27,6 +28,8 @@ public interface ProjectService {
             List<Long> excludeSelectedIds);
 
     ProjectMemberRole getProjectMemberRole(User user, Project project);
+
+    Optional<UserProject> getOptionalUserProject(User user, Project project);
 
     UserProject getUserProject(User user, Project project);
 

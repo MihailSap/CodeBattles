@@ -66,7 +66,7 @@ public class OrganizationController {
         List<UserOrganization> userOrganizations = organizationService.getMyOrganizations(user);
         List<OrganizationListItemResponse> result = new ArrayList<>();
         for(var userOrganization : userOrganizations) {
-            result.add(organizationMapper.mapToOrganizationListItemDto(
+            result.add(organizationMapper.mapToOrganizationListItemResponse(
                     userOrganization.getOrganization(),
                     userOrganization.getAdmin()
             ));
@@ -90,13 +90,17 @@ public class OrganizationController {
 
     @Operation(description = "Поиск организаций для вступления")
     @GetMapping("/search")
-    public List<OrganizationListItemResponse> getOrganizationForInvite(
+    public List<OrganizationListItemDto> getOrganizationForInvite(
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         List<Organization> organizations = organizationService.getOrganizationsToJoin(user);
-        List<OrganizationListItemResponse> result = new ArrayList<>();
+        List<OrganizationListItemDto> result = new ArrayList<>();
+
         for(Organization organization : organizations) {
-            result.add(organizationMapper.mapToOrganizationListItemDto(organization, false));
+            result.add(organizationMapper.mapToOrganizationListItemDto(
+                    organization,
+                    organizationService.isOrganizationContainsPendingJoinRequest(organization, user)
+            ));
         }
 
         return result;

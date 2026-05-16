@@ -18,7 +18,6 @@ import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.specification.ProjectSpecification;
-import ru.urfu.backend.specification.PublicProjectSpecification;
 import ru.urfu.backend.specification.UserProjectSpecification;
 
 import java.util.ArrayList;
@@ -129,6 +128,12 @@ public class ProjectServiceImpl implements ProjectService {
     public UserProject getUserProject(User user, Project project){
         return userProjectRepository.findByUserAndProject(user, project)
                 .orElseThrow(() -> new RuntimeException("Связь между данными User и Project не найдена"));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<UserProject> getOptionalUserProject(User user, Project project){
+        return userProjectRepository.findByUserAndProject(user, project);
     }
 
     @Transactional
