@@ -1,0 +1,72 @@
+.route-error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.route-error-page__bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.35)),
+    url('../../../shared/assets/auth-background-light.png');
+  background-size: cover;
+  background-position: 20%;
+  z-index: -1;
+}
+
+[data-theme="dark"] .route-error-page__bg {
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15)),
+    url('../../../shared/assets/auth-background-dark.png');
+}
+
+.route-error-page__card {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border-muted);
+  background: var(--color-surface-panel);
+  box-shadow: var(--shadow-section);
+  padding: 28px;
+  text-align: center;
+}
+
+.route-error-page__title {
+  margin: 0 0 12px 0;
+  color: var(--color-text-primary);
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 700;
+}
+
+.route-error-page__text {
+  margin: 0 0 20px 0;
+  color: var(--color-text-muted);
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.5;
+}
+
+.route-error-page__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 2px solid var(--color-accent);
+  color: var(--color-text-inverse);
+  background: var(--color-accent);
+  text-decoration: none;
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .route-error-page__link:hover {
+    background: transparent;
+    color: var(--color-accent);
+  }
+}
