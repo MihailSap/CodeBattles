@@ -3,7 +3,7 @@ package ru.urfu.backend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.urfu.backend.dto.tasks.CreateTaskRequestDto;
+import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Project;
@@ -49,7 +49,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Transactional
     @Override
-    public Task create(CreateTaskRequestDto request, Project project) throws UserNotFoundException {
+    public Task create(CreateTaskRequest request, Project project) throws UserNotFoundException {
         Task task = new Task();
         task.setTitle(request.name());
         task.setDeadline(LocalDateTime.parse(request.deadline()));
@@ -122,6 +122,12 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void delete(Long id){
         Task task = getById(id);
+        taskRepository.delete(task);
+    }
+
+    @Transactional
+    @Override
+    public void delete(Task task){
         taskRepository.delete(task);
     }
 

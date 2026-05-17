@@ -84,21 +84,6 @@ public class TaskMapper {
         );
     }
 
-    public ProjectTaskDto mapToProjectTaskDto(Task task){
-        return new ProjectTaskDto(
-                task.getId(),
-                task.getProject().getId(),
-                task.getTitle(),
-                task.getDescription(),
-                task.getRequirements(),
-                task.getEvaluationCriteria(),
-                task.getStatus(),
-                task.getDeadline().toString(),
-                task.getReviewType(),
-                mapToProjectParticipantDtoList(task.getUsers())
-        );
-    }
-
     public List<ProjectParticipantDto> mapToProjectParticipantDtoList(Set<UserTask> userTasks){
         List<ProjectParticipantDto> projectParticipantDtos = new ArrayList<>();
         for(UserTask userTask : userTasks){

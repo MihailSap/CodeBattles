@@ -4,7 +4,8 @@ import ru.urfu.backend.model.enums.ReviewType;
 
 import java.util.List;
 
-public record CreateTaskRequestDto(
+public record CreateTaskRequest(
+        Long projectId,
         String name,
         String description,
         String requirements,
