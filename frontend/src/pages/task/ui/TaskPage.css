@@ -1,0 +1,230 @@
+@import '../../project/ui/ProjectPage.css';
+
+.project-page__content.task-page-content {
+  max-width: 1500px;
+}
+
+.task-page__offset-section {
+  margin-top: 15px;
+}
+
+.task-page__assignees-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.task-page__assignees-list {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.task-page__assignee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.task-page__assignee-avatar,
+.task-page__assignee-avatar img,
+.task-page__assignee-avatar svg {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--color-accent);
+}
+
+.task-page__assignee-avatar img {
+  border: 1px solid var(--color-accent);
+  width: 100%;
+  height: 100%;
+}
+
+.task-page__assignee-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-page__assignee-name,
+.task-page__assignee-login {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.task-page__assignee-name {
+  color: var(--color-accent);
+}
+
+.task-page__assignee-login {
+  color: var(--color-text-secondary);
+}
+
+.task-page__solution {
+  margin-top: 10px;
+}
+
+.task-page__review-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.task-page__review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-page__review-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-accent);
+  font-size: 14px;
+  width: fit-content;
+}
+
+.task-page__review-item input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-accent);
+}
+
+.task-page .react-datepicker-wrapper,
+.task-page .react-datepicker__input-container {
+  width: 100%;
+}
+
+.task-page .project-page__settings .date-time-picker__input {
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--color-control-border);
+  padding: 13px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  box-shadow: none;
+}
+
+.task-page .project-page__settings .date-time-picker__input:focus {
+  border-color: var(--color-accent);
+}
+
+.task-page .project-page__settings .date-time-picker__input--error {
+  border-color: var(--color-danger-border);
+  box-shadow: var(--shadow-danger-focus);
+  background-color: var(--color-danger-surface);
+}
+
+.task-page .project-page__settings .date-time-picker__input--error:focus {
+  border-color: var(--color-danger-border-active);
+}
+
+@media (max-width: 500px) {
+  .task-page__assignees-wrap {
+    gap: 10px;
+  }
+
+  .task-page__assignees-wrap h3 {
+    font-size: 14px;
+  }
+
+  .task-page__assignees-list {
+    gap: 15px;
+  }
+
+  .task-page__assignee-item {
+    gap: 10px;
+  }
+
+  .task-page__assignee-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .task-page__assignee-meta {
+    gap: 5px;
+  }
+
+  .task-page__assignee-name,
+  .task-page__assignee-login {
+    font-size: 14px;
+  }
+
+  .task-page .project-page__settings .date-time-picker__input {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .task-page__review-title {
+    font-size: 14px;
+  }
+
+  .task-page__review-list {
+    gap: 5px;
+  }
+
+  .task-page__review-item {
+    font-size: 12px;
+    gap: 5px;
+  }
+}
+
+@media (max-width: 500px){
+
+  .task-page__offset-section{
+    margin-top: 10px;
+  }
+
+  .task-page__assignees-wrap{
+    gap: 10px;
+  }
+
+  .task-page__assignees-list{
+    gap: 10px;
+  }
+
+  .task-page__assignee-item{
+    gap: 10px;
+  }
+
+  .task-page__assignee-avatar,
+.task-page__assignee-avatar img,
+.task-page__assignee-avatar svg{
+    width: 43px;
+    height: 43px;
+  }
+
+  .task-page__assignee-meta{
+    gap: 5px;
+  }
+
+  .task-page__assignee-name,
+.task-page__assignee-login{
+    font-size: 14px;
+  }
+
+  .task-page__solution{
+    margin-top: 5px;
+  }
+
+  .task-page__review-title{
+    font-size: 14px;
+  }
+
+  .task-page__review-list{
+    gap: 5px;
+  }
+
+  .task-page__review-item{
+    font-size: 12px;
+  }
+
+  .task-page .project-page__settings .date-time-picker__input{
+    font-size: 12px;
+  }
+}
