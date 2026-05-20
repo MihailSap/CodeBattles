@@ -1,5 +1,6 @@
 import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { projectsApi } from '@/entities/project';
+import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, useCompleteNotificationMutation } from '@/entities/notification';
 import FileTree from '@/shared/ui/file-tree';
 import CodeViewer from '@/shared/ui/code-viewer';
 import { CommentsBlock } from '@/widgets/solution-workspace';
@@ -33,6 +34,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
 
   const [fileContentLoading, setFileContentLoading] = useState(false);
   const [fileContentMap, setFileContentMap] = useState({});
+  const [completeNotification] = useCompleteNotificationMutation();
 
   const isAssignee = task.assigneeIds?.includes(currentUser?.id);
 
@@ -109,6 +111,14 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
     setIsSubmitting(true);
     try {
       await projectsApi.submitSolution(task.id, { ...payload, revealAuthorAfterReview: revealName });
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.TASK,
+          projectId: task.projectId,
+          taskId: task.id
+        }
+      });
       await loadReview();
       setIsManualModalOpen(false);
       setIsGitModalOpen(false);
@@ -124,6 +134,14 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
     setIsSubmitting(true);
     try {
       await projectsApi.resubmitSolution(task.id, payload);
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.TASK,
+          projectId: task.projectId,
+          taskId: task.id
+        }
+      });
       await loadReview();
       setIsManualModalOpen(false);
       setIsGitModalOpen(false);
@@ -138,6 +156,14 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
   const handleFinishReview = async () => {
     try {
       await projectsApi.finishReview(task.id);
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.ACCEPT_REVIEW_RESULT,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.TASK,
+          projectId: task.projectId,
+          taskId: task.id
+        }
+      });
       await loadReview();
       showSnackbar('Ревью завершено');
     } catch {

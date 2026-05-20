@@ -16,11 +16,11 @@ const NotFoundPage = () => {
 
         <div className="not-found-page__actions">
           {isAuthenticated ? (
-            <Link className="not-found-page__link" to={ROUTES.home}>
+            <Link className="not-found-page__link" to={ROUTES.dashboard}>
               На главную
             </Link>
           ) : (
-            <Link className="not-found-page__link" to={ROUTES.login}>
+            <Link className="not-found-page__link" to={ROUTES.home}>
               К входу
             </Link>
           )}

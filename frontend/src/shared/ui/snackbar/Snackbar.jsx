@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { CrossIcon } from '@/shared/ui/icons';
 import './Snackbar.css';
 
 const Snackbar = ({ message, type = 'success', onClose }) => {
@@ -44,7 +45,7 @@ const Snackbar = ({ message, type = 'success', onClose }) => {
     <div className={`snackbar snackbar--${displayedType} ${isVisible ? 'snackbar--visible' : 'snackbar--hidden'}`} role="status" aria-live="polite">
       <span className="snackbar__message">{displayedMessage}</span>
       <button className="snackbar__close" type="button" onClick={onClose} aria-label="Закрыть уведомление">
-        ×
+        <CrossIcon />
       </button>
       <span className="snackbar__progress" aria-hidden="true" />
     </div>

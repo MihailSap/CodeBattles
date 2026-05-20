@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import logoDark from '@/shared/assets/logo-dark.svg?url';
@@ -10,39 +10,31 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { useTheme } from '@/shared/lib/theme';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
-import { BellIcon, AvatarIcon, AdminIcon, ExitIcon, CheckIcon, DeleteIcon } from '@/shared/ui/icons';
+import NotificationToast from '@/shared/ui/notification-toast';
+import {
+  formatNotificationTime,
+  getNotificationRoute,
+  useDeleteNotificationMutation,
+  useGetNotificationsQuery,
+  useMarkAllNotificationsReadMutation,
+  useNotificationRouteCompletion
+} from '@/entities/notification';
+import { BellIcon, AvatarIcon, AdminIcon, ExitIcon } from '@/shared/ui/icons';
+import NotificationsList from './NotificationsList';
 import './Header.css';
 
 const NAV_LINKS = [
-  { to: ROUTES.home, label: 'Главная' },
+  { to: ROUTES.dashboard, label: 'Главная' },
   { to: ROUTES.projects, label: 'Проекты' },
   { to: ROUTES.reviews, label: 'Ревью' },
   { to: ROUTES.leaderboard, label: 'Лидерборд' }
 ];
 
-const INITIAL_NOTIFICATIONS = [
-  {
-    id: 1,
-    title: 'Новое ревью по задаче',
-    text: 'Команда оставила комментарии к решению в проекте Code Arena.',
-    time: '5 минут назад',
-    isRead: false
-  },
-  {
-    id: 2,
-    title: 'Приглашение в проект',
-    text: 'Вас пригласили присоединиться к проекту Frontend Sprint.',
-    time: 'Сегодня, 12:20',
-    isRead: false
-  },
-  {
-    id: 3,
-    title: 'Проверка завершена',
-    text: 'Автоматические тесты по последней отправке успешно пройдены.',
-    time: 'Вчера',
-    isRead: true
-  }
-];
+const toToastNotification = (notification) => ({
+  title: notification.title,
+  text: notification.text,
+  time: formatNotificationTime(notification.createdAt)
+});
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -51,17 +43,29 @@ const Header = () => {
   const { user, isLoading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [notificationToDeleteId, setNotificationToDeleteId] = useState(null);
   const [toastNotification, setToastNotification] = useState(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
   const menuRef = useRef(null);
   const notificationsRef = useRef(null);
   const toastTimersRef = useRef([]);
-  const hasShownInitialToastRef = useRef(false);
+  const knownNotificationsRef = useRef(null);
+  const wasNotificationsOpenRef = useRef(false);
+  const {
+    data: notifications = [],
+    isLoading: isNotificationsLoading,
+    isError: isNotificationsError
+  } = useGetNotificationsQuery(undefined, { skip: !user });
+  const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation();
+  const [deleteNotification] = useDeleteNotificationMutation();
+
+  useNotificationRouteCompletion();
 
   const isAdmin = user?.role === 'ADMIN';
-  const unreadNotificationsCount = notifications.filter((notification) => !notification.isRead).length;
+  const unreadNotificationsCount = useMemo(
+    () => notifications.filter((notification) => !notification.isRead).length,
+    [notifications]
+  );
   const hasUnreadNotifications = unreadNotificationsCount > 0;
 
   const displayLogin = user?.login || 'Пользователь';
@@ -116,6 +120,10 @@ const Header = () => {
         setIsMenuOpen(false);
       }
 
+      if (notificationToDelete) {
+        return;
+      }
+
       if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
         setIsNotificationsOpen(false);
       }
@@ -124,7 +132,10 @@ const Header = () => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
         setIsMenuOpen(false);
-        setIsNotificationsOpen(false);
+
+        if (!notificationToDelete) {
+          setIsNotificationsOpen(false);
+        }
       }
     };
 
@@ -135,22 +146,50 @@ const Header = () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isMenuOpen, isNotificationsOpen]);
+  }, [isMenuOpen, isNotificationsOpen, notificationToDelete]);
 
   useEffect(() => {
-    if (isNotificationsOpen || hasShownInitialToastRef.current) {
+    if (!user) {
+      knownNotificationsRef.current = null;
       return;
     }
 
-    const initialToastTimerId = window.setTimeout(() => {
-      hasShownInitialToastRef.current = true;
-      showNotificationToast(INITIAL_NOTIFICATIONS[0]);
-    }, 900);
+    if (isNotificationsLoading) {
+      return;
+    }
 
-    return () => {
-      window.clearTimeout(initialToastTimerId);
-    };
-  }, [isNotificationsOpen, showNotificationToast]);
+    const nextKnownNotifications = new Map(
+      notifications.map((notification) => [notification.id, notification.createdAt])
+    );
+
+    if (!knownNotificationsRef.current) {
+      knownNotificationsRef.current = nextKnownNotifications;
+      return;
+    }
+
+    const newNotifications = notifications.filter(
+      (notification) =>
+        !notification.isRead &&
+        knownNotificationsRef.current.get(notification.id) !== notification.createdAt
+    );
+
+    knownNotificationsRef.current = nextKnownNotifications;
+
+    if (!isNotificationsOpen && newNotifications.length > 0) {
+      showNotificationToast(toToastNotification(newNotifications[0]));
+    }
+  }, [isNotificationsLoading, isNotificationsOpen, notifications, showNotificationToast, user]);
+
+  useEffect(() => {
+    const wasOpen = wasNotificationsOpenRef.current;
+    wasNotificationsOpenRef.current = isNotificationsOpen;
+
+    if (!wasOpen || isNotificationsOpen || unreadNotificationsCount === 0) {
+      return;
+    }
+
+    markAllNotificationsRead();
+  }, [isNotificationsOpen, markAllNotificationsRead, unreadNotificationsCount]);
 
   useEffect(() => {
     return () => {
@@ -179,41 +218,24 @@ const Header = () => {
     setIsNotificationsOpen(false);
   };
 
-  const handleMarkNotificationRead = (notificationId) => {
-    const currentNotification = notifications.find((notification) => notification.id === notificationId);
+  const handleNotificationClick = (notification) => {
+    const route = getNotificationRoute(notification);
 
-    setNotifications((currentNotifications) =>
-      currentNotifications.map((notification) =>
-        notification.id === notificationId ? { ...notification, isRead: true } : notification
-      )
-    );
-
-    if (currentNotification) {
-      showNotificationToast({
-        ...currentNotification,
-        title: 'Уведомление прочитано',
-        text: currentNotification.title,
-        time: 'Сейчас',
-        isRead: true
-      });
+    if (!route) {
+      return;
     }
+
+    setIsNotificationsOpen(false);
+    navigate(route);
   };
 
-  const handleConfirmDeleteNotification = () => {
+  const handleConfirmDeleteNotification = async () => {
     if (!notificationToDelete) {
       return;
     }
 
-    setNotifications((currentNotifications) =>
-      currentNotifications.filter((notification) => notification.id !== notificationToDelete.id)
-    );
+    await deleteNotification(notificationToDelete.id);
     setNotificationToDeleteId(null);
-    showNotificationToast({
-      title: 'Уведомление удалено',
-      text: notificationToDelete.title,
-      time: 'Сейчас',
-      isRead: true
-    });
   };
 
   return (
@@ -231,7 +253,7 @@ const Header = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === ROUTES.home}
+                end={item.to === ROUTES.dashboard}
                 className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
                 onClick={() => {
                   setIsMenuOpen(false);
@@ -265,7 +287,9 @@ const Header = () => {
                 aria-hidden={!isNotificationsOpen}
               >
                 <div className="header__notifications-head">
-                  <h2 className="header__notifications-title">Уведомления</h2>
+                  <div>
+                    <h2 className="header__notifications-title">Уведомления</h2>
+                  </div>
                   {unreadNotificationsCount > 0 && (
                     <span className="header__notifications-count">
                       {unreadNotificationsCount}
@@ -273,48 +297,13 @@ const Header = () => {
                   )}
                 </div>
 
-                {notifications.length > 0 ? (
-                  <div className="header__notifications-list">
-                    {notifications.map((notification) => (
-                      <article
-                        className={`header__notification-card ${notification.isRead ? 'header__notification-card--read' : ''}`}
-                        key={notification.id}
-                      >
-                        <div className="header__notification-content">
-                          <div className="header__notification-meta">
-                            <h3 className="header__notification-title">{notification.title}</h3>
-                            <span className="header__notification-time">{notification.time}</span>
-                          </div>
-                          <p className="header__notification-text">{notification.text}</p>
-                        </div>
-
-                        <div className="header__notification-actions" aria-label={`Действия с уведомлением: ${notification.title}`}>
-                          <button
-                            className="header__notification-action"
-                            type="button"
-                            title="Пометить прочитанным"
-                            aria-label={`Пометить уведомление "${notification.title}" прочитанным`}
-                            onClick={() => handleMarkNotificationRead(notification.id)}
-                            disabled={notification.isRead}
-                          >
-                            <CheckIcon />
-                          </button>
-                          <button
-                            className="header__notification-action header__notification-action--delete"
-                            type="button"
-                            title="Удалить"
-                            aria-label={`Удалить уведомление "${notification.title}"`}
-                            onClick={() => setNotificationToDeleteId(notification.id)}
-                          >
-                            <DeleteIcon />
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="header__notifications-empty">Новых уведомлений нет</p>
-                )}
+                <NotificationsList
+                  notifications={notifications}
+                  isLoading={isNotificationsLoading}
+                  isError={isNotificationsError}
+                  onNotificationClick={handleNotificationClick}
+                  onDeleteNotification={setNotificationToDeleteId}
+                />
               </div>
             </div>
 
@@ -355,25 +344,7 @@ const Header = () => {
         </div>
       </header>
 
-      {toastNotification && (
-        <div
-          className={`header-toast ${isToastVisible ? 'header-toast--visible' : ''}`}
-          role="status"
-          aria-live="polite"
-        >
-          <span className="header-toast__icon" aria-hidden="true">
-            <BellIcon />
-          </span>
-          <div className="header-toast__content">
-            <div className="header-toast__meta">
-              <strong className="header-toast__title">{toastNotification.title}</strong>
-              <span className="header-toast__time">{toastNotification.time}</span>
-            </div>
-            <p className="header-toast__text">{toastNotification.text}</p>
-          </div>
-          <span className="header-toast__progress" aria-hidden="true" />
-        </div>
-      )}
+      <NotificationToast notification={toastNotification} isVisible={isToastVisible} onClose={dismissNotificationToast} />
 
       <ConfirmActionModal
         isOpen={Boolean(notificationToDelete)}

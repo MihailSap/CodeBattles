@@ -1,5 +1,9 @@
 @import './variables.css';
 
+:root {
+  --app-header-height: 60px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -28,4 +32,16 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+@media (max-width: 900px) {
+  :root {
+    --app-header-height: 110px;
+  }
+}
+
+@media (max-width: 500px) {
+  :root {
+    --app-header-height: 100px;
+  }
 }

@@ -10,6 +10,7 @@ import ProtectedRoute from './ui/ProtectedRoute';
 import { store } from '../providers/store';
 
 const AuthPage = lazy(() => import('@/pages/auth'));
+const LandingPage = lazy(() => import('@/pages/landing'));
 const MainPage = lazy(() => import('@/pages/main'));
 const LeaderboardPage = lazy(() => import('@/pages/leaderboard'));
 const NotFoundPage = lazy(() => import('@/pages/not-found'));
@@ -56,13 +57,14 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
     HydrateFallback: RootFallback,
     children: [
+      { index: true, element: withSuspense(<LandingPage />) },
       {
         element: <ProtectedRoute />,
         children: [
           {
             element: <AuthorizedLayout />,
             children: [
-              { path: ROUTES.home, element: withSuspense(<MainPage />) },
+              { path: ROUTES.dashboard, element: withSuspense(<MainPage />) },
               { path: ROUTES.projects, element: withSuspense(<ProjectsPage />) },
               { path: ROUTES.projectById, element: withSuspense(<ProjectPage />) },
               { path: ROUTES.organizationById, element: withSuspense(<OrganizationPage />) },

@@ -78,13 +78,38 @@ const mapParticipant = (participant) => ({
   role: participant.role || PROJECT_MEMBER_ROLE.MEMBER
 });
 
+const isMockProjectId = (projectId) => MOCK_PROJECTS.some((project) => Number(project.id) === Number(projectId));
+
+const getParticipantsById = (participants = []) =>
+  new Map(participants.map((participant) => [Number(participant.id), participant]));
+
+const resolveParticipantsByIds = (ids = [], participants = []) => {
+  const participantsById = getParticipantsById(participants);
+
+  return ids
+    .map((id) => participantsById.get(Number(id)))
+    .filter(Boolean)
+    .map(mapParticipant);
+};
+
+const resolveAvailableParticipants = (ids = [], fallbackParticipants = []) => {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return fallbackParticipants.map(mapParticipant);
+  }
+
+  return resolveParticipantsByIds(ids, fallbackParticipants);
+};
+
 const mapTaskFromBackend = (task, projectViewerRole, allParticipants) => {
   const assignees = (task.assignees || []).map(mapParticipant);
+  const reviewers = (task.reviewers || []).map(mapParticipant);
   const assigneeIds = assignees.map((participant) => participant.id);
+  const reviewerIds = reviewers.map((participant) => participant.id);
 
   return {
     id: task.id,
     projectId: task.projectId,
+    projectName: task.projectName || '',
     name: task.name || '',
     description: task.description || '',
     requirements: task.requirements || '',
@@ -93,11 +118,54 @@ const mapTaskFromBackend = (task, projectViewerRole, allParticipants) => {
     deadline: task.deadline,
     reviewType: task.reviewType,
     assignees,
+    reviewers,
     assigneeIds,
+    reviewerIds,
     viewerRole: projectViewerRole,
-    canManageSettings: [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status),
+    commentsCount: task.commentsCount || 0,
+    hasSolution: Boolean(task.hasSolution),
+    createdAt: task.createdAt || '',
+    updatedAt: task.updatedAt || '',
+    isMock: false,
+    canManageSettings: Boolean(task.permissions?.canManageSettings ?? [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status)),
     availableAssignees: clone(allParticipants),
     availableReviewers: clone(allParticipants)
+  };
+};
+
+const mapTaskDetailsFromBackend = (task, participants, projectViewerRole) => {
+  const assigneeIds = Array.isArray(task.assigneeIds) ? task.assigneeIds : [];
+  const reviewerIds = Array.isArray(task.reviewerIds) ? task.reviewerIds : [];
+  const viewerRole = task.permissions?.viewerRole || projectViewerRole || PROJECT_MEMBER_ROLE.GUEST;
+
+  return {
+    id: task.id,
+    projectId: task.projectId,
+    organizationId: task.organizationId,
+    projectName: task.projectName || '',
+    projectPrivacy: task.isProjectPrivate ? PROJECT_PRIVACY.PRIVATE : PROJECT_PRIVACY.PUBLIC,
+    aiReviewEnabled: Boolean(task.aiReviewEnabled),
+    name: task.name || '',
+    description: task.description || '',
+    requirements: task.requirements || '',
+    evaluationCriteria: task.evaluationCriteria || '',
+    status: task.status,
+    deadline: task.deadline,
+    reviewType: task.reviewType,
+    assigneeIds,
+    reviewerIds,
+    assignees: resolveParticipantsByIds(assigneeIds, participants),
+    reviewers: resolveParticipantsByIds(reviewerIds, participants),
+    availableAssignees: resolveAvailableParticipants(task.availableAssignees, participants),
+    availableReviewers: resolveAvailableParticipants(task.availableReviewers, participants),
+    viewerRole,
+    canViewTask: Boolean(task.permissions?.canViewTask ?? true),
+    canManageSettings: Boolean(task.permissions?.canManageSettings ?? viewerRole === PROJECT_MEMBER_ROLE.OWNER),
+    canUploadSolution: Boolean(task.permissions?.canUploadSolution ?? false),
+    canFinishReview: Boolean(task.permissions?.canFinishReview ?? false),
+    createdAt: task.createdAt || '',
+    updatedAt: task.updatedAt || '',
+    isMock: false
   };
 };
 
@@ -216,6 +284,7 @@ const hydrateMockTask = (task, project) => {
     reviewers: (task.reviewerIds || []).map(resolveParticipant),
     viewerRole: project?.viewerRole || PROJECT_MEMBER_ROLE.GUEST,
     canManageSettings: [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status),
+    isMock: true,
     availableAssignees: clone(participants),
     availableReviewers: clone(participants)
   };
@@ -277,14 +346,13 @@ export const projectsApi = {
 
     const project = await request({ method: 'GET', url: `/api/v1/projects/${projectId}` });
     const participants = await this.getProjectUsers(projectId);
-    const tasks = await request({ method: 'GET', url: `/api/v1/projects/${project.id}/tasks` }).catch(() => []);
+    const tasks = project.canSeeTasks
+      ? await request({ method: 'GET', url: `/api/v1/tasks/tasks/by-project/${project.id}` }).catch(() => [])
+      : [];
 
     const viewerRole = project.viewerRole || PROJECT_MEMBER_ROLE.GUEST;
     const sortedParticipants = sortParticipants(participants || []);
-    const mockTasks = seedMockTasksForProject(project.id, sortedParticipants, viewerRole);
-    const normalizedTasks = (tasks || []).length > 0
-      ? (tasks || []).map((task) => mapTaskFromBackend(task, viewerRole, sortedParticipants))
-      : mockTasks;
+    const normalizedTasks = (tasks || []).map((task) => mapTaskFromBackend(task, viewerRole, sortedParticipants));
 
     return {
       id: project.id,
@@ -305,6 +373,16 @@ export const projectsApi = {
   },
 
   async getTaskById(projectId, taskId) {
+    if (!isMockProjectId(projectId)) {
+      const task = await request({ method: 'GET', url: `/api/v1/tasks/tasks/${taskId}` });
+      const participants = await this.getProjectUsers(task.projectId || projectId).catch(() => []);
+      const project = await request({ method: 'GET', url: `/api/v1/projects/${task.projectId || projectId}` }).catch(() => null);
+      const viewerRole = project?.viewerRole || task.permissions?.viewerRole || PROJECT_MEMBER_ROLE.GUEST;
+      const sortedParticipants = sortParticipants(participants || []);
+
+      return mapTaskDetailsFromBackend(task, sortedParticipants, viewerRole);
+    }
+
     let tasks = taskMockStore.get(getMockTaskKey(projectId)) || [];
 
     if (tasks.length === 0) {
@@ -343,11 +421,29 @@ export const projectsApi = {
   },
 
   async createTask(projectId, payload) {
+    if (isMockProjectId(projectId)) {
+      const project = await this.getProjectById(projectId);
+      const key = getMockTaskKey(projectId);
+      const tasks = taskMockStore.get(key) || [];
+      const nextId = Math.max(0, ...MOCK_TASKS.map((task) => Number(task.id)), ...tasks.map((task) => Number(task.id))) + 1;
+      const nextTask = hydrateMockTask({
+        id: nextId,
+        projectId: Number(projectId),
+        status: TASK_STATUS.IN_PROGRESS,
+        ...payload,
+        deadline: payload.deadline
+      }, project);
+
+      taskMockStore.set(key, [...tasks, nextTask]);
+      return { accepted: true, taskId: nextId };
+    }
+
     const data = await request({
       method: 'POST',
-      url: `/api/v1/projects/${projectId}/tasks`,
+      url: '/api/v1/tasks/tasks',
       data: {
         ...payload,
+        projectId: Number(projectId),
         deadline: toBackendLocalDateTime(payload.deadline)
       }
     });
@@ -373,9 +469,16 @@ export const projectsApi = {
       return clone(nextTask);
     }
 
-    const error = new Error('Задача не найдена');
-    error.status = 404;
-    throw error;
+    const data = await request({
+      method: 'PATCH',
+      url: `/api/v1/tasks/tasks/${taskId}`,
+      data: {
+        ...payload,
+        ...(payload.deadline !== undefined ? { deadline: toBackendLocalDateTime(payload.deadline) } : {})
+      }
+    });
+
+    return data;
   },
 
   async deleteTask(taskId) {
@@ -388,7 +491,8 @@ export const projectsApi = {
       }
     }
 
-    return { deleted: true };
+    const result = await request({ method: 'DELETE', url: `/api/v1/tasks/tasks/${taskId}` });
+    return { deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true) };
   },
 
   async leaveProject(projectId) {

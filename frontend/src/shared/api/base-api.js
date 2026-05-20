@@ -30,7 +30,8 @@ export const baseApi = createApi({
     'Review',
     'Profile',
     'Users',
-    'Leaderboard'
+    'Leaderboard',
+    'Notification'
   ],
   endpoints: () => ({})
 });

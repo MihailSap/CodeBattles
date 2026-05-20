@@ -44,7 +44,7 @@ const AuthPage = () => {
   const [validationErrors, setValidationErrors] = useState(initialErrors);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
-  const postLoginRedirect = location.state?.from || ROUTES.home;
+  const postLoginRedirect = location.state?.from || ROUTES.dashboard;
   const resetFormState = () => {
     setForm(initialForm);
     setValidationErrors(initialErrors);
@@ -96,7 +96,7 @@ const AuthPage = () => {
           return;
         }
 
-        navigate(ROUTES.home, { replace: true });
+        navigate(ROUTES.dashboard, { replace: true });
       } catch {
         tokenStorage.clearTokens();
 
@@ -247,7 +247,7 @@ const AuthPage = () => {
       <div className="auth-page__bg" role="presentation" aria-hidden="true" />
 
       <header className="auth-header">
-        <Link className="auth-header__logo-link" to={ROUTES.register}>
+        <Link className="auth-header__logo-link" to={ROUTES.home}>
           <img className="auth-header__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
         </Link>
         <div className="auth-header__toggle">

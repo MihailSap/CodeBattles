@@ -1,5 +1,5 @@
 .reviews-page {
-  min-height: 100vh;
+  min-height: calc(100dvh - var(--app-header-height));
   background: var(--color-surface);
 }
 

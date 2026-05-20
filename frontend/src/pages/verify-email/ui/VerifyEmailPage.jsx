@@ -45,7 +45,7 @@ const VerifyEmailPage = () => {
           return;
         }
 
-        navigate(isSuccess ? ROUTES.home : ROUTES.login, { replace: true });
+        navigate(isSuccess ? ROUTES.dashboard : ROUTES.login, { replace: true });
       }, 2000);
     };
 

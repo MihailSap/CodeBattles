@@ -15,6 +15,7 @@ import {
   REVIEW_STATUS_LABEL,
   getDeadlineInfo
 } from '@/entities/review';
+import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, useCompleteNotificationMutation } from '@/entities/notification';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getLanguageByFileName, lazyNamed } from '@/shared/lib';
@@ -45,6 +46,7 @@ const ReviewPage = () => {
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState(null);
+  const [completeNotification] = useCompleteNotificationMutation();
 
   const [fileContentLoading, setFileContentLoading] = useState(false);
   const [fileContentMap, setFileContentMap] = useState({});
@@ -280,6 +282,14 @@ const ReviewPage = () => {
         ...payload,
         reviewerId: numericUserId,
         reviewerName: 'Вы'
+      });
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_REVIEW_RESULT,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.REVIEW,
+          reviewId: Number(reviewId),
+          taskId
+        }
       });
       await loadData();
       showSnackbar('Результаты ревью успешно сохранены', 'success');
