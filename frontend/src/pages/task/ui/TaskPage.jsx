@@ -81,6 +81,7 @@ const TaskPage = () => {
   const isLoading = isTaskLoading || isProjectLoading;
 
   const isOwner = (project?.viewerRole || task?.viewerRole) === PROJECT_MEMBER_ROLE.OWNER;
+  const shouldShowSolutionTab = task?.isMock !== false;
 
   useEffect(() => {
     if (!task) {
@@ -151,8 +152,8 @@ const TaskPage = () => {
   }, [isOwner]);
 
   useEffect(() => {
-    if (activeTab === 'settings' && !availableTabs.some((tab) => tab.key === 'settings')) {
-      queueMicrotask(() => setActiveTab('solution'));
+    if (availableTabs.length > 0 && !availableTabs.some((tab) => tab.key === activeTab)) {
+      queueMicrotask(() => setActiveTab(availableTabs[0].key));
     }
   }, [activeTab, availableTabs]);
 
@@ -224,10 +225,10 @@ const TaskPage = () => {
 
   const reviewTypes = useMemo(() => {
     const types = Object.values(TASK_REVIEW_TYPE);
-    return project?.aiReviewEnabled
+    return (project?.aiReviewEnabled ?? task?.aiReviewEnabled)
       ? types
       : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
-  }, [project?.aiReviewEnabled]);
+  }, [project?.aiReviewEnabled, task?.aiReviewEnabled]);
 
   useEffect(() => {
     if (!settingsDraft) {
@@ -285,25 +286,27 @@ const TaskPage = () => {
       if (canEditRequirementsOnly) {
         await updateTask({
           taskId: task.id,
+          projectId: task.projectId,
           payload: {
-          requirements: settingsDraft.requirements,
-          evaluationCriteria: settingsDraft.evaluationCriteria,
-          reviewType: settingsDraft.reviewType,
-          reviewerIds: settingsDraft.reviewerIds
+            requirements: settingsDraft.requirements,
+            evaluationCriteria: settingsDraft.evaluationCriteria,
+            reviewType: settingsDraft.reviewType,
+            reviewerIds: settingsDraft.reviewerIds
           }
         }).unwrap();
       } else {
         await updateTask({
           taskId: task.id,
+          projectId: task.projectId,
           payload: {
-          name: settingsDraft.name.trim(),
-          description: settingsDraft.description.trim(),
-          requirements: settingsDraft.requirements.trim(),
-          evaluationCriteria: settingsDraft.evaluationCriteria.trim(),
-          deadline: settingsDraft.deadline,
-          reviewType: settingsDraft.reviewType,
-          reviewerIds: settingsDraft.reviewerIds,
-          assigneeIds: settingsDraft.assigneeIds
+            name: settingsDraft.name.trim(),
+            description: settingsDraft.description.trim(),
+            requirements: settingsDraft.requirements.trim(),
+            evaluationCriteria: settingsDraft.evaluationCriteria.trim(),
+            deadline: settingsDraft.deadline,
+            reviewType: settingsDraft.reviewType,
+            reviewerIds: settingsDraft.reviewerIds,
+            assigneeIds: settingsDraft.assigneeIds
           }
         }).unwrap();
       }
@@ -322,7 +325,7 @@ const TaskPage = () => {
     }
 
     try {
-      await deleteTask(task.id).unwrap();
+      await deleteTask({ taskId: task.id, projectId: task.projectId }).unwrap();
       navigate(ROUTES.projectById.replace(':projectId', task.projectId), {
         replace: true,
         state: {
@@ -435,14 +438,14 @@ const TaskPage = () => {
           </div>
         </section>
 
-        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
+        {availableTabs.length > 0 && <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />}
 
-        {activeTab === 'solution' && (
+        {activeTab === 'solution' && shouldShowSolutionTab && (
           <Suspense fallback={<div className="project-page__loader"><Spinner /></div>}>
             <SolutionTab
               task={task}
               currentUser={{ id: Number(userId), fullName: 'Мой Пользователь' }}
-              aiReviewEnabled={project?.aiReviewEnabled}
+              aiReviewEnabled={project?.aiReviewEnabled ?? task.aiReviewEnabled}
               onSnackbar={showSnackbar}
               projectId={projectId}
             />

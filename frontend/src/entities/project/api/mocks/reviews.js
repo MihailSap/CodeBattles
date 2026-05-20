@@ -1,5 +1,10 @@
-import { REVIEW_STATUS } from '@/entities/review';
 import { MOCK_LARGE_FILE_TREE, MOCK_LARGE_CODE, MOCK_LARGE_COMMENTS, MOCK_REWORK_HISTORY_COMMENTS } from './content';
+
+const REVIEW_STATUS = {
+  NEW: 'NEW',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED'
+};
 
 const makeDate = (daysFromNow, hour, minute) => {
   const date = new Date();

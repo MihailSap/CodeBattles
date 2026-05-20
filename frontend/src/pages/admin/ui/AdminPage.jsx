@@ -29,7 +29,7 @@ const AdminPage = () => {
 
     const handleSelfDemote = async () => {
         await dispatch(fetchCurrentUser());
-        navigate(ROUTES.home, { replace: true });
+        navigate(ROUTES.dashboard, { replace: true });
     };
 
     const handleSelfDelete = async () => {
@@ -59,7 +59,7 @@ const AdminPage = () => {
                 <div className="admin-header__actions">
                     <ThemeToggle />
                     <div className='admin-header__links-container'>
-                        <Link className="admin-header__link" to={ROUTES.home}>
+                        <Link className="admin-header__link" to={ROUTES.dashboard}>
                             На главную
                         </Link>
                         <button className="admin-header__logout" type="button" onClick={handleLogout} disabled={isLoading}>

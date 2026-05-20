@@ -9,7 +9,6 @@ import {
   useCreateProjectMutation,
   useDeleteOrganizationMutation,
   useGetOrganizationByIdQuery,
-  useGetOrganizationProjectsQuery,
   useLeaveOrganizationMutation,
   useRejectOrganizationJoinRequestMutation,
   useUpdateOrganizationMutation
@@ -22,6 +21,7 @@ import { ProjectCreateModal } from '@/features/create-project';
 import Snackbar from '@/shared/ui/snackbar';
 import Spinner from '@/shared/ui/spinner';
 import { ACCESS_ERROR_CODE, PROJECT_MEMBER_ROLE, PROJECT_MEMBER_ROLE_LABELS } from '@/entities/project';
+import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, useCompleteNotificationMutation } from '@/entities/notification';
 import { ROUTES } from '@/shared/config/routes';
 import { sortParticipants, truncateText } from '@/entities/project';
 import { validateOrganizationName, validateOrganizationUrl } from '@/entities/organization';
@@ -69,22 +69,13 @@ const OrganizationPage = () => {
   } = useGetOrganizationByIdQuery(numericOrganizationId, {
     refetchOnMountOrArgChange: 30
   });
-  const { data: organizationProjects = { data: [], total: 0 } } = useGetOrganizationProjectsQuery(
-    {
-      organizationId: numericOrganizationId,
-      params: { search: debouncedProjectSearch }
-    },
-    {
-      skip: !organization,
-      refetchOnMountOrArgChange: 30
-    }
-  );
   const [createProject, { isLoading: isCreateProjectSubmitting }] = useCreateProjectMutation();
   const [leaveOrganization, { isLoading: isLeaveSubmitting }] = useLeaveOrganizationMutation();
   const [deleteOrganization, { isLoading: isDeleteSubmitting }] = useDeleteOrganizationMutation();
   const [updateOrganization, { isLoading: isSettingsSubmitting }] = useUpdateOrganizationMutation();
   const [approveOrganizationJoinRequest] = useApproveOrganizationJoinRequestMutation();
   const [rejectOrganizationJoinRequest] = useRejectOrganizationJoinRequestMutation();
+  const [completeNotification] = useCompleteNotificationMutation();
 
   useEffect(() => {
     if (!organizationError) {
@@ -122,14 +113,20 @@ const OrganizationPage = () => {
   }, [organization]);
 
   const projectsList = useMemo(() => {
-    const participantsByProjectId = new Map((organization?.projects || []).map((project) => [project.id, project.participants || []]));
+    const normalizedSearch = debouncedProjectSearch.trim().toLowerCase();
 
-    return (organizationProjects.data || []).map((project) => ({
-      ...project,
-      participants: participantsByProjectId.get(project.id) || project.participants || []
-    }));
-  }, [organization?.projects, organizationProjects.data]);
-  const projectsTotal = organizationProjects.total || projectsList.length;
+    return (organization?.projects || []).filter((project) => {
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      return (
+        (project.name || '').toLowerCase().includes(normalizedSearch) ||
+        (project.description || '').toLowerCase().includes(normalizedSearch)
+      );
+    });
+  }, [debouncedProjectSearch, organization?.projects]);
+  const projectsTotal = projectsList.length;
 
   useEffect(() => {
     if (location.state?.snackbarMessage) {
@@ -278,6 +275,14 @@ const OrganizationPage = () => {
 
     try {
       await rejectOrganizationJoinRequest({ organizationId: organization.id, userId: request.userId }).unwrap();
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.RESOLVE_ORGANIZATION_JOIN_REQUEST,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
+          organizationId: organization.id,
+          userId: request.userId
+        }
+      });
       await refetchOrganization().unwrap();
       showSnackbar(`Вы отклонили заявку пользователя @${request.login}`, 'error');
     } catch {
@@ -296,6 +301,14 @@ const OrganizationPage = () => {
 
     try {
       await approveOrganizationJoinRequest({ organizationId: organization.id, userId: request.userId }).unwrap();
+      completeNotification({
+        action: NOTIFICATION_COMPLETION_ACTION.RESOLVE_ORGANIZATION_JOIN_REQUEST,
+        target: {
+          kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
+          organizationId: organization.id,
+          userId: request.userId
+        }
+      });
       await refetchOrganization().unwrap();
       showSnackbar(`Вы приняли заявку пользователя @${request.login}`, 'success');
     } catch {

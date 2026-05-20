@@ -1,6 +1,6 @@
 .snackbar {
   position: fixed;
-  top: 80px;
+  top: calc(var(--app-header-height) + 20px);
   right: 20px;
   max-width: 420px;
   display: flex;
@@ -69,13 +69,21 @@
 }
 
 .snackbar__close {
+  width: 28px;
+  height: 28px;
   border: none;
-  background: transparent;
-  color: inherit;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 24px;
-  line-height: 1;
-  padding: 2px;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.snackbar__close svg {
+  width: 16px;
+  height: 16px;
 }
 
 .snackbar__progress {
@@ -84,8 +92,9 @@
   right: 0;
   bottom: 0;
   height: 4px;
-  background-color: currentColor; 
+  background-color: currentColor;
   opacity: 0.7;
+  transform: scaleX(0);
   transform-origin: left center;
 }
 
@@ -93,24 +102,33 @@
   animation: snackbar-progress-shrink 3s linear forwards;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .snackbar__close:hover {
+    color: inherit;
+  }
+
+  .snackbar--success .snackbar__close:hover {
+    background-color: var(--color-success-surface);
+  }
+
+  .snackbar--error .snackbar__close:hover {
+    background-color: var(--color-danger-surface);
+  }
+}
+
 @keyframes snackbar-progress-shrink {
   from {
     transform: scaleX(1);
   }
+
   to {
     transform: scaleX(0);
   }
 }
 
-@media (max-width: 900px) {
-  .snackbar {
-    top: 130px;
-  }
-}
-
 @media (max-width: 500px) {
   .snackbar {
-    top: 10px;
+    top: calc(var(--app-header-height) + 10px);
     right: 10px;
     max-width: min(320px, calc(100vw - 40px));
     gap: 10px;
@@ -121,6 +139,12 @@
   }
 
   .snackbar__close {
-    font-size: 20px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .snackbar__close svg {
+    width: 14px;
+    height: 14px;
   }
 }

@@ -106,18 +106,28 @@ export const projectApiSlice = baseApi.injectEndpoints({
     }),
     updateTask: build.mutation({
       queryFn: ({ taskId, payload }) => toQueryResult(() => projectsApi.updateTask(taskId, payload)),
-      invalidatesTags: (_result, _error, { taskId }) => [
+      invalidatesTags: (_result, _error, { taskId, projectId }) => [
         { type: 'Task', id: taskId },
+        ...(projectId ? [{ type: 'Project', id: projectId }, { type: 'Task', id: `PROJECT-${projectId}` }] : []),
         reviewListTag
       ]
     }),
     deleteTask: build.mutation({
-      queryFn: (taskId) => toQueryResult(() => projectsApi.deleteTask(taskId)),
-      invalidatesTags: (_result, _error, taskId) => [
-        { type: 'Task', id: taskId },
-        projectListTag,
-        dashboardTag
-      ]
+      queryFn: (arg) => {
+        const taskId = typeof arg === 'object' ? arg.taskId : arg;
+        return toQueryResult(() => projectsApi.deleteTask(taskId));
+      },
+      invalidatesTags: (_result, _error, arg) => {
+        const taskId = typeof arg === 'object' ? arg.taskId : arg;
+        const projectId = typeof arg === 'object' ? arg.projectId : undefined;
+
+        return [
+          { type: 'Task', id: taskId },
+          ...(projectId ? [{ type: 'Project', id: projectId }, { type: 'Task', id: `PROJECT-${projectId}` }] : []),
+          projectListTag,
+          dashboardTag
+        ];
+      }
     }),
     createOrganization: build.mutation({
       queryFn: (payload) => toQueryResult(() => projectsApi.createOrganization(payload)),

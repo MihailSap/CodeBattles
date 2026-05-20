@@ -18,7 +18,7 @@ const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
   }
 
   if (onlyUnauthorized && isAuthenticated) {
-    return <Navigate to={ROUTES.home} replace />;
+    return <Navigate to={ROUTES.dashboard} replace />;
   }
 
   if (!onlyUnauthorized && !isAuthenticated) {
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
   }
 
   if (onlyAdmin && !isAdmin) {
-    return <Navigate to={ROUTES.home} replace />;
+    return <Navigate to={ROUTES.dashboard} replace />;
   }
 
   return <Outlet />;

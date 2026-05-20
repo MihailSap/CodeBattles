@@ -92,6 +92,18 @@ const ProjectsPage = () => {
   const maxCarouselStart = Math.max(0, organizationsWithProjects.length - cardsPerView);
   const boundedCarouselStart = Math.min(carouselStart, maxCarouselStart);
 
+  const updateCarouselMetrics = useCallback(() => {
+    const viewportWidth = carouselViewportRef.current?.clientWidth || 0;
+
+    if (!viewportWidth) {
+      return;
+    }
+
+    const nextCardsPerView = viewportWidth <= 800 ? 1 : 2;
+    setCardsPerView(nextCardsPerView);
+    setCarouselViewportWidth(viewportWidth);
+  }, []);
+
   const trackOffset = useMemo(() => {
     if (organizationsWithProjects.length <= 1 && cardsPerView === 2) {
       return 0;
@@ -111,37 +123,24 @@ const ProjectsPage = () => {
       return;
     }
 
-    const updateCardsPerView = () => {
-      const viewportWidth = carouselViewportRef.current?.clientWidth || 0;
-      if (!viewportWidth) {
-        return;
-      }
+    const carouselViewport = carouselViewportRef.current;
 
-      const nextCardsPerView = viewportWidth <= 800 ? 1 : 2;
-      setCardsPerView(nextCardsPerView);
-      setCarouselViewportWidth(viewportWidth);
-    };
+    if (!carouselViewport) {
+      return;
+    }
 
-    const resizeHandler = () => {
-      const viewportWidth = carouselViewportRef.current?.clientWidth || 0;
-      if (!viewportWidth) {
-        return;
-      }
+    const frameId = window.requestAnimationFrame(updateCarouselMetrics);
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateCarouselMetrics);
 
-      const nextCardsPerView = viewportWidth <= 800 ? 1 : 2;
-
-      setCardsPerView(nextCardsPerView);
-      setCarouselViewportWidth(viewportWidth);
-    };
-
-    const frameId = window.requestAnimationFrame(updateCardsPerView);
-    window.addEventListener('resize', resizeHandler);
+    resizeObserver?.observe(carouselViewport);
+    window.addEventListener('resize', updateCarouselMetrics);
 
     return () => {
       window.cancelAnimationFrame(frameId);
-      window.removeEventListener('resize', resizeHandler);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateCarouselMetrics);
     };
-  }, [viewMode]);
+  }, [isLoading, organizationsWithProjects.length, updateCarouselMetrics, viewMode]);
 
   const canSlideLeft = boundedCarouselStart > 0;
   const canSlideRight = boundedCarouselStart + cardsPerView < organizationsWithProjects.length;

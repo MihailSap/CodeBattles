@@ -1,5 +1,6 @@
 export const ROUTES = {
   home: '/',
+  dashboard: '/dashboard',
   admin: '/admin',
   projects: '/projects',
   projectById: '/projects/:projectId',
