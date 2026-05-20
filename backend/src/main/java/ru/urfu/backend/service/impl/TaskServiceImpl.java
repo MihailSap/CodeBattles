@@ -149,13 +149,31 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public boolean isUserReviewerInTask(User user, Task task){
         Optional<UserTask> userTask = userTaskRepository.findByUserAndTask(user, task);
-        return userTask.isPresent() && userTask.get().getUserTaskType().equals(UserTaskType.REVIEWER);
+        return userTask.isPresent() && UserTaskType.REVIEWER.equals(userTask.get().getUserTaskType());
     }
 
     @Transactional(readOnly = true)
     @Override
     public boolean isUserAssigneeInTask(User user, Task task){
         Optional<UserTask> userTask = userTaskRepository.findByUserAndTask(user, task);
-        return userTask.isPresent() && userTask.get().getUserTaskType().equals(UserTaskType.ASSIGNEE);
+        return userTask.isPresent() && UserTaskType.ASSIGNEE.equals(userTask.get().getUserTaskType());
+    }
+
+    @Transactional
+    @Override
+    public Task updateStatusInReview(Task task){
+        task.setUpdatedAt(LocalDateTime.now());
+        task.setStatus(TaskStatus.IN_REVIEW);
+        return taskRepository.save(task);
+    }
+
+    @Transactional
+    @Override
+    public Task complete(Task task){
+        LocalDateTime now = LocalDateTime.now();
+        task.setStatus(TaskStatus.DONE);
+        task.setUpdatedAt(now);
+        task.setCompletedAt(now);
+        return taskRepository.save(task);
     }
 }

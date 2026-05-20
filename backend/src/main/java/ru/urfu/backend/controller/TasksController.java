@@ -8,19 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.DeletedResponse;
-import ru.urfu.backend.dto.tasks.CreateTaskRequest;
-import ru.urfu.backend.dto.tasks.TaskDetailsResponse;
-import ru.urfu.backend.dto.tasks.TaskListItemResponse;
-import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
+import ru.urfu.backend.dto.review.ReviewResendRequest;
+import ru.urfu.backend.dto.tasks.*;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.TaskMapper;
-import ru.urfu.backend.model.Project;
-import ru.urfu.backend.model.Task;
-import ru.urfu.backend.model.User;
-import ru.urfu.backend.service.AuthService;
-import ru.urfu.backend.service.ProjectService;
-import ru.urfu.backend.service.TaskService;
+import ru.urfu.backend.model.*;
+import ru.urfu.backend.model.enums.ReviewStatus;
+import ru.urfu.backend.model.enums.ReviewType;
+import ru.urfu.backend.model.enums.TaskStatus;
+import ru.urfu.backend.service.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +47,7 @@ public class TasksController {
     }
 
     @Operation(description = "Создание задачи")
-    @PostMapping("/tasks")
+    @PostMapping
     public ResponseEntity<TaskDetailsResponse> createTask(
             @RequestBody CreateTaskRequest requestDto
     ) throws UserNotFoundException {
@@ -63,7 +61,7 @@ public class TasksController {
     }
 
     @Operation(description = "Получение задач проекта")
-    @GetMapping("/tasks/by-project/{projectId}")
+    @GetMapping("/by-project/{projectId}")
     public List<TaskListItemResponse> getProjectTasks(
             @PathVariable("projectId") Long projectId
     ) throws UserNotFoundException {
@@ -83,7 +81,7 @@ public class TasksController {
     }
 
     @Operation(description = "Получение деталей задачи")
-    @GetMapping("/tasks/{taskId}")
+    @GetMapping("/{taskId}")
     public TaskDetailsResponse getTask(
             @PathVariable("taskId") Long taskId
     ) throws UserNotFoundException {
@@ -91,14 +89,15 @@ public class TasksController {
         Task task = taskService.getById(taskId);
         Project project = task.getProject();
         if(!projectService.isUserOwnerInProject(project, user)
-                && !taskService.isUserReviewerInTask(user, task)){
+                && !taskService.isUserReviewerInTask(user, task)
+                && !taskService.isUserAssigneeInTask(user, task)){
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
         }
         return taskMapper.mapToTaskDetailsResponse(task);
     }
 
     @Operation(description = "Обновление настроек задачи")
-    @PatchMapping("/tasks/{taskId}")
+    @PatchMapping("/{taskId}")
     public TaskDetailsResponse updateTask(
             @PathVariable("taskId") Long taskId,
             @RequestBody UpdateTaskSettingsRequest request
@@ -115,7 +114,7 @@ public class TasksController {
     }
 
     @Operation(description = "Удаление задачи")
-    @DeleteMapping("/tasks/{taskId}")
+    @DeleteMapping("/{taskId}")
     public DeletedResponse deleteTask(
             @PathVariable("taskId") Long taskId
     ) throws UserNotFoundException {
@@ -127,5 +126,34 @@ public class TasksController {
         }
         taskService.delete(task);
         return new DeletedResponse(true);
+    }
+
+    @Operation(description = "Завершение задачи")
+    @PostMapping("/{taskId}/complete")
+    public TaskCloseResponse completeTask(
+            @PathVariable("taskId") Long taskId
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Task task = taskService.getById(taskId);
+        if(!taskService.isUserAssigneeInTask(user, task)){
+            throw new RuntimeException("403 FORBIDDEN_TASK");
+        }
+
+        List<Long> reviewIds = new ArrayList<>();
+        for(Review review : task.getReviews()){
+            if(!ReviewStatus.COMPLETED.equals(review.getStatus())){
+                throw new RuntimeException("Задача ещё не прошла все ревью");
+            }
+            reviewIds.add(review.getId());
+        }
+
+        Task updatedTask = taskService.complete(task);
+        return new TaskCloseResponse(
+                updatedTask.getId(),
+                updatedTask.getStatus(),
+                reviewIds,
+                ReviewStatus.COMPLETED,
+                updatedTask.getCompletedAt().toString()
+        );
     }
 }

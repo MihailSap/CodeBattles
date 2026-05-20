@@ -32,6 +32,8 @@ public class Task extends BaseEntity {
 
     private LocalDateTime updatedAt;
 
+    private LocalDateTime completedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
@@ -41,6 +43,9 @@ public class Task extends BaseEntity {
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
+
+    @OneToOne(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Solution solution;
 
     public Task() {}
 
@@ -138,5 +143,21 @@ public class Task extends BaseEntity {
 
     public void setUpdatedAt(LocalDateTime updatedDate) {
         this.updatedAt = updatedDate;
+    }
+
+    public Solution getSolution() {
+        return solution;
+    }
+
+    public void setSolution(Solution solution) {
+        this.solution = solution;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
     }
 }

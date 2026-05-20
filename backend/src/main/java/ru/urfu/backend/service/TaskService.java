@@ -15,6 +15,10 @@ public interface TaskService {
 
     Task update(Task task, UpdateTaskSettingsRequest request) throws UserNotFoundException;
 
+    Task updateStatusInReview(Task task);
+
+    Task complete(Task task);
+
     void delete(Long id);
 
     void delete(Task task);

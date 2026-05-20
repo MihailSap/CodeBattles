@@ -19,14 +19,6 @@ public interface ProjectService {
 
     List<Project> getPublicProjects(User user);
 
-    Page<Project> getAll(
-            int page, int size, Sort sort, String search, ProjectPrivacy privacy, Long organizationId,
-            ProjectMembershipFilter membership, User currentUser);
-
-    Page<UserProject> getParticipants(
-            Project project, int page, int size, Sort sort, String search, ProjectMemberRole role,
-            List<Long> excludeSelectedIds);
-
     ProjectMemberRole getProjectMemberRole(User user, Project project);
 
     Optional<UserProject> getOptionalUserProject(User user, Project project);

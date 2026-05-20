@@ -1,14 +1,15 @@
-package ru.urfu.backend.dto.solution;
+package ru.urfu.backend.dto.tasks;
 
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.TaskStatus;
 
-public record SolutionSubmitResponse(
+import java.util.List;
+
+public record TaskCloseResponse(
         Long taskId,
         TaskStatus taskStatus,
+        List<Long> reviewId,
         ReviewStatus reviewStatus,
-        String uploadedAt,
-        String reviewDeadline
+        String completedAt
 ) {
 }
-

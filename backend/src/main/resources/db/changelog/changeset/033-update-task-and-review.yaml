@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 033-update-task-and-review
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: task
+            columns:
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+        - addColumn:
+            tableName: review
+            columns:
+              - column:
+                  name: uploaded_at
+                  type: TIMESTAMP
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+              - column:
+                  name: deadline
+                  type: TIMESTAMP
+              - column:
+                  name: reveal_author_after_review
+                  type: BOOLEAN
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+              - column:
+                  name: solution_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: review
+            baseColumnNames: solution_id
+            referencedTableName: solution
+            referencedColumnNames: id
+            constraintName: fk_review_solution

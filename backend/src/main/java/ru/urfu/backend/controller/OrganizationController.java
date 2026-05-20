@@ -49,7 +49,14 @@ public class OrganizationController {
     private final UserService userService;
 
     @Autowired
-    public OrganizationController(OrganizationInviteService organizationInviteService, OrganizationInviteMapper organizationInviteMapper, OrganizationService organizationService, OrganizationMapper organizationMapper, AuthService authService, UserService userService) {
+    public OrganizationController(
+            OrganizationInviteService organizationInviteService,
+            OrganizationInviteMapper organizationInviteMapper,
+            OrganizationService organizationService,
+            OrganizationMapper organizationMapper,
+            AuthService authService,
+            UserService userService
+    ) {
         this.organizationInviteService = organizationInviteService;
         this.organizationInviteMapper = organizationInviteMapper;
         this.organizationService = organizationService;

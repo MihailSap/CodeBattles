@@ -1,24 +1,17 @@
 package ru.urfu.backend.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.project.ProjectCreateRequest;
 import ru.urfu.backend.dto.project.ProjectUpdateRequest;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
-import ru.urfu.backend.model.enums.ProjectMembershipFilter;
-import ru.urfu.backend.model.enums.ProjectPrivacy;
 import ru.urfu.backend.repository.ProjectRepository;
 import ru.urfu.backend.repository.ProjectStackRepository;
 import ru.urfu.backend.repository.UserProjectRepository;
-import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.StackService;
-import ru.urfu.backend.specification.ProjectSpecification;
-import ru.urfu.backend.specification.UserProjectSpecification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,49 +25,17 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectStackRepository projectStackRepository;
     private final StackService stackService;
 
-    private final UserProjectSpecification userProjectSpecification;
-    private final ProjectSpecification projectSpecification;
-
     @Autowired
     public ProjectServiceImpl(
             ProjectRepository projectRepository,
-            ProjectSpecification projectSpecification,
             UserProjectRepository userProjectRepository,
             StackService stackService,
-            ProjectStackRepository projectStackRepository,
-            UserProjectSpecification userProjectSpecification
+            ProjectStackRepository projectStackRepository
     ) {
         this.projectRepository = projectRepository;
-        this.projectSpecification = projectSpecification;
         this.userProjectRepository = userProjectRepository;
         this.stackService = stackService;
         this.projectStackRepository = projectStackRepository;
-        this.userProjectSpecification = userProjectSpecification;
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Page<UserProject> getParticipants(
-            Project project,
-            int page,
-            int size,
-            Sort sort,
-            String search,
-            ProjectMemberRole role,
-            List<Long> excludeSelectedIds
-    ) {
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Specification<UserProject> specification =
-                userProjectSpecification.withFilters(
-                        project,
-                        search,
-                        role,
-                        excludeSelectedIds
-                );
-
-        return userProjectRepository.findAll(specification, pageable);
     }
 
     @Transactional(readOnly = true)
@@ -83,31 +44,6 @@ public class ProjectServiceImpl implements ProjectService {
         Optional<UserProject> userProject = userProjectRepository.findByUserAndProject(user, project);
         if(userProject.isEmpty()) return ProjectMemberRole.GUEST;
         return userProject.get().getProjectMemberRole();
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Page<Project> getAll(
-            int page,
-            int size,
-            Sort sort,
-            String search,
-            ProjectPrivacy privacy,
-            Long organizationId,
-            ProjectMembershipFilter membership,
-            User currentUser
-    ) {
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Specification<Project> spec = projectSpecification.withFilters(
-                search,
-                privacy,
-                organizationId,
-                membership,
-                currentUser != null ? currentUser.getId() : null
-        );
-
-        return projectRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)

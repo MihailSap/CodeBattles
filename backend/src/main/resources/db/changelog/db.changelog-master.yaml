@@ -61,3 +61,7 @@ databaseChangeLog:
       file: db/changelog/changeset/030-create-notification-settings.yaml
   - include:
       file: db/changelog/changeset/031-update-task-fields.yaml
+  - include:
+      file: db/changelog/changeset/032-create-solution-tables.yaml
+  - include:
+      file: db/changelog/changeset/033-update-task-and-review.yaml

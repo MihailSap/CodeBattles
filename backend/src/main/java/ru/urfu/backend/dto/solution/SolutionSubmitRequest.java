@@ -5,6 +5,7 @@ import ru.urfu.backend.model.enums.SolutionUploadType;
 import java.util.List;
 
 public record SolutionSubmitRequest(
+        Long taskId,
         SolutionUploadType uploadType,
         Boolean revealAuthorAfterReview,
         SolutionManualCodeRequest manualCode,
