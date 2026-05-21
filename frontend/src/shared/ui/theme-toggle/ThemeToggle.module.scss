@@ -1,0 +1,66 @@
+.root {
+  width: 6rem;
+  height: 3.25rem;
+  border-radius: 100px;
+  border: 2px solid var(--color-accent);
+  padding: 0.125rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  cursor: pointer;
+}
+
+.icon {
+  width: calc(100% / 2);
+  height: 100%;
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.icon svg {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.thumb {
+  width: calc((100% - 0.25rem) / 2);
+  height: calc(100% - 0.25rem);
+  border-radius: 100px;
+  background-color: var(--color-accent);
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  z-index: 1;
+  --transition-extra: transform var(--transition-fast);
+}
+
+.root.isLight .thumb {
+  transform: translateX(0);
+}
+
+.root.isDark .thumb {
+  transform: translateX(100%);
+}
+
+.root.isLight .icon.isSun,
+.root.isDark .icon.isMoon {
+  color: var(--color-text-inverse);
+}
+
+@media (max-width: 31.25rem) {
+  .root {
+    width: 5rem;
+    height: 2.75rem;
+  }
+
+  .icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

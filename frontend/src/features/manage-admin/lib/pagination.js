@@ -1,6 +1,11 @@
 export const getPaginationItems = (page, totalPages) => {
   if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, index) => index);
+    return Array.from(
+      {
+        length: totalPages,
+      },
+      (_, index) => index
+    );
   }
 
   const items = new Set([0, totalPages - 1, page - 1, page, page + 1]);
@@ -26,6 +31,7 @@ export const getPaginationItems = (page, totalPages) => {
       }
 
       accumulator.push(item);
+
       return accumulator;
     }, []);
 };

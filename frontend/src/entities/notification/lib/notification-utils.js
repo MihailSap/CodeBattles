@@ -5,9 +5,7 @@ import {
   NOTIFICATION_TTL_DAYS,
   NOTIFICATION_TYPE,
 } from '../model/constants';
-
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
-
 export const addDays = (date, days) => new Date(date.getTime() + days * MS_IN_DAY);
 
 export const getNotificationExpiresAt = ({ type, createdAt, deadline }) => {
@@ -29,6 +27,7 @@ export const getNotificationExpiresAt = ({ type, createdAt, deadline }) => {
 
 export const isNotificationExpired = (notification, now = Date.now()) => {
   const expiresAt = new Date(notification.expiresAt).getTime();
+
   return Number.isFinite(expiresAt) && expiresAt <= now;
 };
 
@@ -147,14 +146,18 @@ export const getNotificationCompletionPayloadsForPath = (pathname) => {
   if (pathname === ROUTES.leaderboard) {
     payloads.push({
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_LEADERBOARD,
-      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD },
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.LEADERBOARD,
+      },
     });
   }
 
   if (pathname === ROUTES.profile) {
     payloads.push({
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_PROFILE,
-      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE },
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.PROFILE,
+      },
     });
   }
 

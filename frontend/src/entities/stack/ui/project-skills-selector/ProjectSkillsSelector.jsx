@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SKILL_GROUPS } from '../../model/profile-skills';
-import './ProjectSkillsSelector.css';
-
+import projectSkillsSelectorStyles from './ProjectSkillsSelector.module.scss';
+import taskCreatePageStyles from '../../../../pages/task-create/ui/TaskCreatePage.module.scss';
 const allSkills = SKILL_GROUPS.flatMap((group) => group.options);
-const uniqueSkills = [...new Set(allSkills)].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+
+const uniqueSkills = [...new Set(allSkills)].sort((a, b) =>
+  a.localeCompare(b, 'ru', {
+    sensitivity: 'base',
+  })
+);
 
 const POPUP_WIDTH = 420;
 const POPUP_MAX_HEIGHT = 320;
@@ -17,7 +22,7 @@ const ProjectSkillsSelector = ({
   value,
   onChange,
   title = 'Технологический стек:',
-  titleClassName = 'project-skills-selector__title',
+  titleClassName = projectSkillsSelectorStyles.title,
   forceOpenUp = false,
   boundarySelector = '',
   withClear = true,
@@ -33,7 +38,9 @@ const ProjectSkillsSelector = ({
   const selected = useMemo(
     () =>
       [...new Set((value || []).filter((item) => uniqueSkills.includes(item)))].sort((a, b) =>
-        a.localeCompare(b, 'ru', { sensitivity: 'base' })
+        a.localeCompare(b, 'ru', {
+          sensitivity: 'base',
+        })
       ),
     [value]
   );
@@ -41,6 +48,7 @@ const ProjectSkillsSelector = ({
   const orderedOptions = useMemo(() => {
     const selectedSet = new Set(selected);
     const unselected = uniqueSkills.filter((skill) => !selectedSet.has(skill));
+
     return [...unselected, ...selected];
   }, [selected]);
 
@@ -51,10 +59,17 @@ const ProjectSkillsSelector = ({
 
     if (selected.includes(skillName)) {
       onChange(selected.filter((item) => item !== skillName));
+
       return;
     }
 
-    onChange([...selected, skillName].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' })));
+    onChange(
+      [...selected, skillName].sort((a, b) =>
+        a.localeCompare(b, 'ru', {
+          sensitivity: 'base',
+        })
+      )
+    );
   };
 
   const clearAll = () => {
@@ -74,34 +89,37 @@ const ProjectSkillsSelector = ({
     }
 
     const triggerRect = triggerElement.getBoundingClientRect();
+
     const boundaryElement =
       (boundarySelector ? triggerElement.closest(boundarySelector) : null) ||
-      triggerElement.closest('.project-create-modal') ||
-      triggerElement.closest('.task-create-page__content') ||
+      triggerElement.closest(`.${projectSkillsSelectorStyles.createModal}`) ||
+      triggerElement.closest(`.${taskCreatePageStyles.content}`) ||
       triggerElement.closest('form');
+
     const boundaryRect = boundaryElement?.getBoundingClientRect();
 
     const minLeft = boundaryRect
       ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.left + POPUP_VIEWPORT_PADDING)
       : POPUP_VIEWPORT_PADDING;
+
     const maxRight = boundaryRect
       ? Math.min(window.innerWidth - POPUP_VIEWPORT_PADDING, boundaryRect.right - POPUP_VIEWPORT_PADDING)
       : window.innerWidth - POPUP_VIEWPORT_PADDING;
+
     const minTop = boundaryRect
       ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.top + POPUP_VIEWPORT_PADDING)
       : POPUP_VIEWPORT_PADDING;
+
     const maxBottom = boundaryRect
       ? Math.min(window.innerHeight - POPUP_VIEWPORT_PADDING, boundaryRect.bottom - POPUP_VIEWPORT_PADDING)
       : window.innerHeight - POPUP_VIEWPORT_PADDING;
 
     const availableWidth = Math.max(POPUP_MIN_WIDTH, maxRight - minLeft);
     const popupWidth = Math.min(POPUP_WIDTH, availableWidth);
-
     const spaceRight = maxRight - triggerRect.left;
     const spaceLeft = triggerRect.right - minLeft;
     const canOpenRight = spaceRight >= popupWidth;
     const canOpenLeft = spaceLeft >= popupWidth;
-
     let left = triggerRect.left;
 
     if (!canOpenRight && canOpenLeft) {
@@ -111,7 +129,6 @@ const ProjectSkillsSelector = ({
     }
 
     left = Math.min(maxRight - popupWidth, Math.max(minLeft, left));
-
     const spaceDown = maxBottom - triggerRect.bottom - POPUP_GAP;
     const spaceUp = triggerRect.top - minTop - POPUP_GAP;
     const openUpBySpace = spaceDown < POPUP_MIN_HEIGHT && spaceUp > spaceDown;
@@ -119,18 +136,20 @@ const ProjectSkillsSelector = ({
     const sideSpace = shouldOpenUp ? spaceUp : spaceDown;
     const oppositeSideSpace = shouldOpenUp ? spaceDown : spaceUp;
     const popupMaxHeight = Math.min(POPUP_MAX_HEIGHT, Math.max(POPUP_MIN_HEIGHT, Math.max(0, sideSpace)));
-
     let top = shouldOpenUp ? triggerRect.top - POPUP_GAP - popupMaxHeight : triggerRect.bottom + POPUP_GAP;
+
     if (shouldOpenUp && top < minTop && oppositeSideSpace > sideSpace) {
       const fallbackHeight = Math.min(POPUP_MAX_HEIGHT, Math.max(POPUP_MIN_HEIGHT, Math.max(0, oppositeSideSpace)));
       top = triggerRect.bottom + POPUP_GAP;
       top = Math.min(maxBottom - fallbackHeight, Math.max(minTop, top));
+
       setPopupStyle({
         top: `${top + window.scrollY}px`,
         left: `${left + window.scrollX}px`,
         width: `${popupWidth}px`,
         maxHeight: `${fallbackHeight}px`,
       });
+
       return;
     }
 
@@ -146,6 +165,7 @@ const ProjectSkillsSelector = ({
 
   const handleOpenPopup = (event) => {
     triggerRef.current = event.currentTarget;
+
     setIsOpen((previousState) => {
       const nextState = !previousState;
 
@@ -196,12 +216,12 @@ const ProjectSkillsSelector = ({
   }, [isOpen, recalculatePopupPosition, selected]);
 
   return (
-    <div className="project-skills-selector" ref={rootRef}>
-      <div className="project-skills-selector__head">
+    <div className={projectSkillsSelectorStyles.root} ref={rootRef}>
+      <div className={projectSkillsSelectorStyles.head}>
         <h3 className={titleClassName}>{title}</h3>
         {withClear && (
           <button
-            className="project-skills-selector__clear"
+            className={projectSkillsSelectorStyles.clear}
             type="button"
             onClick={clearAll}
             disabled={disabled || selected.length === 0}
@@ -211,12 +231,12 @@ const ProjectSkillsSelector = ({
         )}
       </div>
 
-      <div className="project-skills-selector__list">
-        {selected.length === 0 && <span className="project-skills-selector__empty">{emptyLabel}</span>}
+      <div className={projectSkillsSelectorStyles.list}>
+        {selected.length === 0 && <span className={projectSkillsSelectorStyles.isEmpty}>{emptyLabel}</span>}
 
         {selected.map((skillName) => (
           <button
-            className="project-skills-selector__tag"
+            className={projectSkillsSelectorStyles.tag}
             type="button"
             key={skillName}
             onClick={() => toggleSkill(skillName)}
@@ -226,10 +246,10 @@ const ProjectSkillsSelector = ({
           </button>
         ))}
 
-        <div className="project-skills-selector__popup-wrap">
+        <div className={projectSkillsSelectorStyles.popupWrap}>
           <button
             ref={triggerRef}
-            className="project-skills-selector__add"
+            className={projectSkillsSelectorStyles.add}
             type="button"
             onClick={handleOpenPopup}
             data-skills-add="true"
@@ -246,7 +266,7 @@ const ProjectSkillsSelector = ({
               <div
                 ref={popupRef}
                 id="project-stack-options"
-                className="project-skills-selector__popup project-skills-selector__popup--portal"
+                className={[projectSkillsSelectorStyles.popup, projectSkillsSelectorStyles.isPortal].join(' ')}
                 role="dialog"
                 aria-label="Выбор стека"
                 data-skills-popup="true"
@@ -256,7 +276,7 @@ const ProjectSkillsSelector = ({
                   const isChecked = selected.includes(skillName);
 
                   return (
-                    <label className="project-skills-selector__option" key={skillName}>
+                    <label className={projectSkillsSelectorStyles.option} key={skillName}>
                       <input
                         type="checkbox"
                         checked={isChecked}

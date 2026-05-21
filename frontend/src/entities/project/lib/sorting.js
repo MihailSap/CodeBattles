@@ -4,8 +4,8 @@ export const sortOrganizations = (organizations) => {
   return [...organizations].sort((a, b) => {
     const roleA = a.role === 'OWNER' ? 0 : 1;
     const roleB = b.role === 'OWNER' ? 0 : 1;
-
     if (roleA !== roleB) return roleA - roleB;
+
     return (a.name || '').localeCompare(b.name || '');
   });
 };
@@ -24,8 +24,8 @@ export const sortProjects = (projects) => {
   return [...projects].sort((a, b) => {
     const weightA = roleWeights[a.role] ?? 3;
     const weightB = roleWeights[b.role] ?? 3;
-
     if (weightA !== weightB) return weightA - weightB;
+
     return (a.name || '').localeCompare(b.name || '');
   });
 };
@@ -44,9 +44,7 @@ export const sortParticipants = (participants) => {
   return [...participants].sort((a, b) => {
     const weightA = roleWeights[a.role] ?? 3;
     const weightB = roleWeights[b.role] ?? 3;
-
     if (weightA !== weightB) return weightA - weightB;
-
     const nameCompare = (a.fullName || '').localeCompare(b.fullName || '');
     if (nameCompare !== 0) return nameCompare;
 
@@ -69,8 +67,8 @@ export const sortTasks = (tasks) => {
   return [...tasks].sort((a, b) => {
     const weightA = statusWeights[a.status] ?? 4;
     const weightB = statusWeights[b.status] ?? 4;
-
     if (weightA !== weightB) return weightA - weightB;
+
     return (a.name || '').localeCompare(b.name || '');
   });
 };

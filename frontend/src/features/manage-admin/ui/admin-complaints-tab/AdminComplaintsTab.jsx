@@ -13,25 +13,27 @@ import { ROUTES } from '@/shared/config/routes';
 import { getApiErrorMessage } from '@/shared/lib';
 import { formatAdminDateTime } from '../../lib/pagination';
 import AdminPagination from '../AdminPagination';
-import './AdminComplaintsTab.css';
-
+import adminComplaintsTabStyles from './AdminComplaintsTab.module.scss';
 const PAGE_SIZE = 5;
-
 const getProfileUrl = (userId) => ROUTES.profileByUserId.replace(':userId', userId);
 
 const AdminComplaintsTab = ({ isActive, moderator }) => {
   const [page, setPage] = useState(0);
   const [actionError, setActionError] = useState('');
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
   const complaintsQuery = useGetAdminComplaintsQuery(
-    { page, size: PAGE_SIZE },
+    {
+      page,
+      size: PAGE_SIZE,
+    },
     {
       skip: !isActive,
       refetchOnMountOrArgChange: 30,
     }
   );
-  const [resolveComplaint, resolveComplaintState] = useResolveAdminComplaintMutation();
 
+  const [resolveComplaint, resolveComplaintState] = useResolveAdminComplaintMutation();
   const complaints = Array.isArray(complaintsQuery.data?.content) ? complaintsQuery.data.content : [];
   const totalPages = Number.isFinite(complaintsQuery.data?.totalPages) ? complaintsQuery.data.totalPages : 0;
   const isLoading = complaintsQuery.isLoading || complaintsQuery.isFetching;
@@ -46,9 +48,11 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
   const hasComplaints = complaints.length > 0;
   const totalElements = Number.isFinite(complaintsQuery.data?.totalElements) ? complaintsQuery.data.totalElements : 0;
   const summary = totalElements === 1 ? '1 активная жалоба' : `${totalElements} активных жалоб`;
+
   const queryError = complaintsQuery.isError
     ? getApiErrorMessage(complaintsQuery.error, 'Не удалось загрузить жалобы', 'getAdminComplaints')
     : '';
+
   const error = actionError || queryError;
 
   const handleDecision = async (complaintId, decision) => {
@@ -62,6 +66,7 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
           moderator,
         },
       }).unwrap();
+
       showSnackbar(
         decision === ADMIN_COMPLAINT_DECISION.APPROVE
           ? 'Жалоба подтверждена, решение записано в журнал'
@@ -76,36 +81,36 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
   };
 
   return (
-    <section className="admin-panel admin-complaints" aria-label="Жалобы на комментарии">
+    <section className={adminComplaintsTabStyles.root} aria-label="Жалобы на комментарии">
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <div className="admin-panel__top">
+      <div className={adminComplaintsTabStyles.top}>
         <div>
-          <h2 className="admin-panel__title">Жалобы</h2>
-          <p className="admin-panel__subtitle">{summary}</p>
+          <h2 className={adminComplaintsTabStyles.title}>Жалобы</h2>
+          <p className={adminComplaintsTabStyles.subtitle}>{summary}</p>
         </div>
       </div>
 
-      <div className="admin-complaints__list">
+      <div className={adminComplaintsTabStyles.list}>
         {isLoading && (
-          <div className="admin-panel__loader">
+          <div className={adminComplaintsTabStyles.loader}>
             <Spinner />
           </div>
         )}
 
-        {!isLoading && !hasComplaints && <div className="admin-panel__empty">Активных жалоб нет</div>}
+        {!isLoading && !hasComplaints && <div className={adminComplaintsTabStyles.isEmpty}>Активных жалоб нет</div>}
 
         {!isLoading &&
           hasComplaints &&
           complaints.map((complaint) => (
-            <article className="admin-complaints__item" key={complaint.id}>
-              <div className="admin-complaints__body">
-                <div className="admin-complaints__comment">
-                  <span className="admin-complaints__label">Комментарий</span>
+            <article className={adminComplaintsTabStyles.item} key={complaint.id}>
+              <div className={adminComplaintsTabStyles.body}>
+                <div className={adminComplaintsTabStyles.comment}>
+                  <span className={adminComplaintsTabStyles.label}>Комментарий</span>
                   <p>{complaint.commentText}</p>
                 </div>
 
-                <dl className="admin-complaints__meta">
+                <dl className={adminComplaintsTabStyles.meta}>
                   <div>
                     <dt>Автор</dt>
                     <dd>
@@ -139,9 +144,9 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
                 </dl>
               </div>
 
-              <div className="admin-complaints__actions">
+              <div className={adminComplaintsTabStyles.actions}>
                 <button
-                  className="admin-complaints__action admin-complaints__action--approve"
+                  className={[adminComplaintsTabStyles.action, adminComplaintsTabStyles.isApprove].join(' ')}
                   type="button"
                   onClick={() => handleDecision(complaint.id, ADMIN_COMPLAINT_DECISION.APPROVE)}
                   disabled={isSubmitting}
@@ -151,7 +156,7 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
                   <span>Подтвердить</span>
                 </button>
                 <button
-                  className="admin-complaints__action admin-complaints__action--reject"
+                  className={[adminComplaintsTabStyles.action, adminComplaintsTabStyles.isReject].join(' ')}
                   type="button"
                   onClick={() => handleDecision(complaint.id, ADMIN_COMPLAINT_DECISION.REJECT)}
                   disabled={isSubmitting}
@@ -165,7 +170,7 @@ const AdminComplaintsTab = ({ isActive, moderator }) => {
           ))}
       </div>
 
-      {error && <p className="admin-panel__error">{error}</p>}
+      {error && <p className={adminComplaintsTabStyles.isError}>{error}</p>}
 
       <AdminPagination page={page} totalPages={totalPages} isLoading={isLoading || isSubmitting} onChange={setPage} />
     </section>

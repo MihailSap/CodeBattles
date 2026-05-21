@@ -1,6 +1,6 @@
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import './ConfirmActionModal.css';
+import confirmActionModalStyles from './ConfirmActionModal.module.scss';
 
 const ConfirmActionModal = ({
   isOpen,
@@ -22,23 +22,23 @@ const ConfirmActionModal = ({
     <ModalShell
       isOpen={isOpen}
       onClose={onCancel}
-      overlayClassName="confirm-modal-backdrop"
-      dialogClassName="confirm-modal"
+      overlayClassName={confirmActionModalStyles.backdrop}
+      dialogClassName={confirmActionModalStyles.root}
       ariaLabel={title}
     >
-      <h3 className="confirm-modal__title">{title}</h3>
-      <p className="confirm-modal__description">{description}</p>
-      <div className="confirm-modal__actions">
-        <button
-          className="confirm-modal__button confirm-modal__button--cancel"
-          type="button"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
+      <h3 className={confirmActionModalStyles.title}>{title}</h3>
+      <p className={confirmActionModalStyles.description}>{description}</p>
+      <div className={confirmActionModalStyles.actions}>
+        <button className={confirmActionModalStyles.button} type="button" onClick={onCancel} disabled={isSubmitting}>
           Отмена
         </button>
         <button
-          className={`confirm-modal__button confirm-modal__button--confirm ${isDeleteAction ? 'confirm-modal__button--confirm-delete' : 'confirm-modal__button--confirm-success'}`}
+          className={[
+            confirmActionModalStyles.button,
+            isDeleteAction ? confirmActionModalStyles.isConfirmDelete : confirmActionModalStyles.isConfirmSuccess,
+          ]
+            .filter(Boolean)
+            .join(' ')}
           type="button"
           onClick={onConfirm}
           disabled={isSubmitting}

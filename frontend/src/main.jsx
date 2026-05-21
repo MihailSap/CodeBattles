@@ -3,8 +3,7 @@ import { Provider } from 'react-redux';
 import { AppRouter } from '@/app/routes';
 import { store } from '@/app/providers/store';
 import { ThemeProvider } from '@/app/providers/theme';
-import '@/app/styles/global.css';
-
+import '@/app/styles/global.scss';
 const root = createRoot(document.getElementById('root'));
 
 root.render(

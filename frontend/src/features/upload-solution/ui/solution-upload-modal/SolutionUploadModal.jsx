@@ -7,12 +7,21 @@ import CodeEditor from '@/shared/ui/code-editor';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { solutionUploadFormSchema } from '../../model/upload-schemas';
-import './SolutionUploadModal.css';
+import solutionUploadModalStyles from './SolutionUploadModal.module.scss';
 
 const TABS = [
-  { key: 'manual', label: 'Ручной ввод' },
-  { key: 'files', label: 'Загрузка файлов' },
-  { key: 'archive', label: 'Загрузка архивом' },
+  {
+    key: 'manual',
+    label: 'Ручной ввод',
+  },
+  {
+    key: 'files',
+    label: 'Загрузка файлов',
+  },
+  {
+    key: 'archive',
+    label: 'Загрузка архивом',
+  },
 ];
 
 const MAX_FILES = 100;
@@ -54,6 +63,7 @@ const ALLOWED_FILE_EXTENSIONS = [
 ];
 
 const ARCHIVE_EXTENSIONS = '.zip,.rar,.tar,.gz,.7z,.bz2,.xz';
+
 const LANGUAGE_EXTENSION_MAP = {
   javascript: 'js',
   typescript: 'ts',
@@ -81,6 +91,7 @@ const LANGUAGE_EXTENSION_MAP = {
 const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   const fileInputRef = useRef(null);
   const archiveInputRef = useRef(null);
+
   const {
     control,
     handleSubmit,
@@ -98,13 +109,13 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
     },
     mode: 'onChange',
   });
+
   const [activeTab = 'manual', files = [], archive = null] = useWatch({
     control,
     name: ['activeTab', 'files', 'archive'],
   });
 
   useBodyScrollLock(isOpen);
-
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -121,14 +132,23 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   const handleFileChange = (e) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
-    setValue('files', [...files, ...incoming].slice(0, MAX_FILES), { shouldDirty: true, shouldValidate: true });
+
+    setValue('files', [...files, ...incoming].slice(0, MAX_FILES), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
     e.target.value = '';
   };
 
   const handleArchiveChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      setValue('archive', e.target.files[0], { shouldDirty: true, shouldValidate: true });
+      setValue('archive', e.target.files[0], {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     }
+
     e.target.value = '';
   };
 
@@ -136,7 +156,10 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
     setValue(
       'files',
       files.filter((_, i) => i !== index),
-      { shouldDirty: true, shouldValidate: true }
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      }
     );
   };
 
@@ -146,17 +169,36 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
 
   const submit = async ({ activeTab, code, language, files, archive }) => {
     if (isSubmitDisabled()) return;
-
     let payload = {};
+
     if (activeTab === 'manual') {
       payload = {
         type: 'manual',
-        files: [{ name: `solution.${LANGUAGE_EXTENSION_MAP[language] || 'txt'}`, content: code }],
+        files: [
+          {
+            name: `solution.${LANGUAGE_EXTENSION_MAP[language] || 'txt'}`,
+            content: code,
+          },
+        ],
       };
     } else if (activeTab === 'files') {
-      payload = { type: 'files', files: files.map((f) => ({ name: f.name, isFileObj: true })) };
+      payload = {
+        type: 'files',
+        files: files.map((f) => ({
+          name: f.name,
+          isFileObj: true,
+        })),
+      };
     } else {
-      payload = { type: 'archive', files: [{ name: archive.name, isFileObj: true }] };
+      payload = {
+        type: 'archive',
+        files: [
+          {
+            name: archive.name,
+            isFileObj: true,
+          },
+        ],
+      };
     }
 
     await onSubmit(payload);
@@ -168,15 +210,15 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
     <ModalShell
       isOpen={isOpen}
       onClose={handleClose}
-      overlayClassName="solution-upload-modal__backdrop"
-      dialogClassName="solution-upload-modal"
+      overlayClassName={solutionUploadModalStyles.backdrop}
+      dialogClassName={solutionUploadModalStyles.root}
       ariaLabel="Загрузка решения"
       title="Загрузка решения"
-      headerClassName="solution-upload-modal__head"
-      titleClassName="solution-upload-modal__title"
-      closeClassName="solution-upload-modal__close"
+      headerClassName={solutionUploadModalStyles.head}
+      titleClassName={solutionUploadModalStyles.title}
+      closeClassName={solutionUploadModalStyles.close}
     >
-      <div className="solution-upload-modal__tabs-wrap">
+      <div className={solutionUploadModalStyles.tabsWrap}>
         <Controller
           control={control}
           name="activeTab"
@@ -184,13 +226,15 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
         />
       </div>
 
-      <form className="solution-upload-modal__content" onSubmit={handleSubmit(submit)}>
-        <div className="solution-upload-modal__tab-content">
+      <form className={solutionUploadModalStyles.content} onSubmit={handleSubmit(submit)}>
+        <div className={solutionUploadModalStyles.tabContent}>
           <div
-            className="solution-upload-modal__tab-pane"
-            style={{ display: activeTab === 'manual' ? 'flex' : 'none' }}
+            className={solutionUploadModalStyles.tabPane}
+            style={{
+              display: activeTab === 'manual' ? 'flex' : 'none',
+            }}
           >
-            <div className="solution-upload-modal__manual">
+            <div className={solutionUploadModalStyles.manual}>
               <Controller
                 control={control}
                 name="code"
@@ -212,15 +256,20 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
             </div>
           </div>
 
-          <div className="solution-upload-modal__tab-pane" style={{ display: activeTab === 'files' ? 'flex' : 'none' }}>
-            <div className="solution-upload-modal__files">
+          <div
+            className={solutionUploadModalStyles.tabPane}
+            style={{
+              display: activeTab === 'files' ? 'flex' : 'none',
+            }}
+          >
+            <div className={solutionUploadModalStyles.files}>
               <input type="file" multiple accept={fileAccept} hidden ref={fileInputRef} onChange={handleFileChange} />
 
               {files.length === 0 ? (
-                <div className="solution-upload-modal__empty-state">
+                <div className={solutionUploadModalStyles.emptyState}>
                   <button
                     type="button"
-                    className="solution-upload-modal__add-btn"
+                    className={solutionUploadModalStyles.addBtn}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Добавить файлы +
@@ -228,18 +277,18 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
                 </div>
               ) : (
                 <>
-                  <div className="solution-upload-modal__files-list">
+                  <div className={solutionUploadModalStyles.filesList}>
                     {files.map((file, idx) => (
-                      <div key={`${file.name}-${idx}`} className="solution-upload-modal__file-item">
-                        <div className="solution-upload-modal__file-info">
-                          <span className="solution-upload-modal__file-icon">
+                      <div key={`${file.name}-${idx}`} className={solutionUploadModalStyles.fileItem}>
+                        <div className={solutionUploadModalStyles.fileInfo}>
+                          <span className={solutionUploadModalStyles.fileIcon}>
                             <FileIcon />
                           </span>
-                          <span className="solution-upload-modal__file-name">{file.name}</span>
+                          <span className={solutionUploadModalStyles.fileName}>{file.name}</span>
                         </div>
                         <button
                           type="button"
-                          className="solution-upload-modal__file-remove"
+                          className={solutionUploadModalStyles.fileRemove}
                           onClick={() => removeFile(idx)}
                         >
                           <CrossIcon />
@@ -250,7 +299,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
                   {files.length < MAX_FILES && (
                     <button
                       type="button"
-                      className="solution-upload-modal__add-btn solution-upload-modal__add-btn--bottom"
+                      className={[solutionUploadModalStyles.addBtn, solutionUploadModalStyles.isBottom].join(' ')}
                       onClick={() => fileInputRef.current?.click()}
                     >
                       Добавить файлы +
@@ -262,10 +311,12 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
           </div>
 
           <div
-            className="solution-upload-modal__tab-pane"
-            style={{ display: activeTab === 'archive' ? 'flex' : 'none' }}
+            className={solutionUploadModalStyles.tabPane}
+            style={{
+              display: activeTab === 'archive' ? 'flex' : 'none',
+            }}
           >
-            <div className="solution-upload-modal__archive">
+            <div className={solutionUploadModalStyles.archive}>
               <input
                 type="file"
                 accept={ARCHIVE_EXTENSIONS}
@@ -275,23 +326,28 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
               />
 
               {!archive ? (
-                <div className="solution-upload-modal__empty-state">
+                <div className={solutionUploadModalStyles.emptyState}>
                   <button
                     type="button"
-                    className="solution-upload-modal__add-btn"
+                    className={solutionUploadModalStyles.addBtn}
                     onClick={() => archiveInputRef.current?.click()}
                   >
                     Добавить архив +
                   </button>
                 </div>
               ) : (
-                <div className="solution-upload-modal__empty-state">
-                  <div className="solution-upload-modal__archive-item">
-                    <span className="solution-upload-modal__archive-name">{archive.name}</span>
+                <div className={solutionUploadModalStyles.emptyState}>
+                  <div className={solutionUploadModalStyles.archiveItem}>
+                    <span className={solutionUploadModalStyles.archiveName}>{archive.name}</span>
                     <button
                       type="button"
-                      className="solution-upload-modal__file-remove"
-                      onClick={() => setValue('archive', null, { shouldDirty: true, shouldValidate: true })}
+                      className={solutionUploadModalStyles.fileRemove}
+                      onClick={() =>
+                        setValue('archive', null, {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        })
+                      }
                     >
                       <CrossIcon />
                     </button>
@@ -302,9 +358,9 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
           </div>
         </div>
 
-        <div className="solution-upload-modal__footer">
-          <button type="submit" className="solution-upload-modal__submit-btn" disabled={isSubmitDisabled()}>
-            <span className="solution-upload-modal__submit-icon">
+        <div className={solutionUploadModalStyles.footer}>
+          <button type="submit" className={solutionUploadModalStyles.submitBtn} disabled={isSubmitDisabled()}>
+            <span className={solutionUploadModalStyles.submitIcon}>
               <CheckIcon />
             </span>
           </button>

@@ -11,7 +11,7 @@ import Spinner from '@/shared/ui/spinner';
 import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS, taskCreateFormSchema } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useSnackbar } from '@/shared/lib/hooks';
-import './TaskCreatePage.css';
+import taskCreatePageStyles from './TaskCreatePage.module.scss';
 
 const initialState = {
   name: '',
@@ -28,6 +28,7 @@ const TaskCreatePage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
   const {
     control,
     register,
@@ -39,10 +40,12 @@ const TaskCreatePage = () => {
     defaultValues: initialState,
     mode: 'onChange',
   });
+
   const [reviewType = TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds = [], reviewerIds = []] = useWatch({
     control,
     name: ['reviewType', 'assigneeIds', 'reviewerIds'],
   });
+
   const {
     data: project,
     error: projectError,
@@ -50,7 +53,9 @@ const TaskCreatePage = () => {
   } = useGetProjectByIdQuery(projectId, {
     refetchOnMountOrArgChange: 30,
   });
+
   const shouldLoadOrganization = Boolean(project?.organizationId && project.privacy === PROJECT_PRIVACY.PUBLIC);
+
   const { data: organization, isLoading: isOrganizationLoading } = useGetOrganizationByIdQuery(
     project?.organizationId,
     {
@@ -58,19 +63,24 @@ const TaskCreatePage = () => {
       refetchOnMountOrArgChange: 60,
     }
   );
+
   const [createTask, { isLoading: isSubmitting }] = useCreateTaskMutation();
   const organizationParticipants = useMemo(() => organization?.participants || [], [organization?.participants]);
   const isLoading = isProjectLoading || (shouldLoadOrganization && isOrganizationLoading);
 
   useEffect(() => {
     if (projectError) {
-      navigate(ROUTES.projects, { replace: true });
+      navigate(ROUTES.projects, {
+        replace: true,
+      });
     }
   }, [navigate, projectError]);
 
   useEffect(() => {
     if (project && project.viewerRole !== 'OWNER') {
-      navigate(`${ROUTES.projects}/${projectId}`, { replace: true });
+      navigate(`${ROUTES.projects}/${projectId}`, {
+        replace: true,
+      });
     }
   }, [navigate, project, projectId]);
 
@@ -105,14 +115,21 @@ const TaskCreatePage = () => {
 
   const reviewTypes = useMemo(() => {
     const types = Object.values(TASK_REVIEW_TYPE);
+
     return project?.aiReviewEnabled ? types : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
   }, [project?.aiReviewEnabled]);
 
   useEffect(() => {
     if (!isManualReviewers) {
       if (reviewerIds.length > 0) {
-        queueMicrotask(() => setValue('reviewerIds', [], { shouldDirty: true, shouldValidate: true }));
+        queueMicrotask(() =>
+          setValue('reviewerIds', [], {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        );
       }
+
       return;
     }
 
@@ -120,7 +137,12 @@ const TaskCreatePage = () => {
     const nextReviewerIds = reviewerIds.filter((id) => availableReviewerIds.has(id));
 
     if (nextReviewerIds.length !== reviewerIds.length) {
-      queueMicrotask(() => setValue('reviewerIds', nextReviewerIds, { shouldDirty: true, shouldValidate: true }));
+      queueMicrotask(() =>
+        setValue('reviewerIds', nextReviewerIds, {
+          shouldDirty: true,
+          shouldValidate: true,
+        })
+      );
     }
   }, [availableReviewers, isManualReviewers, reviewerIds, setValue]);
 
@@ -138,7 +160,9 @@ const TaskCreatePage = () => {
       }).unwrap();
 
       if (result?.accepted && result?.taskId) {
-        navigate(`${ROUTES.projects}/${project.id}/tasks/${result.taskId}`, { replace: true });
+        navigate(`${ROUTES.projects}/${project.id}/tasks/${result.taskId}`, {
+          replace: true,
+        });
       }
     } catch {
       showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
@@ -166,8 +190,8 @@ const TaskCreatePage = () => {
 
   if (isLoading) {
     return (
-      <div className="task-create-page">
-        <div className="task-create-page__loader">
+      <div className={taskCreatePageStyles.root}>
+        <div className={taskCreatePageStyles.loader}>
           <Spinner />
         </div>
       </div>
@@ -179,57 +203,59 @@ const TaskCreatePage = () => {
   }
 
   return (
-    <div className="task-create-page">
+    <div className={taskCreatePageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <main className="task-create-page__content">
+      <main className={taskCreatePageStyles.content}>
         <button
-          className="task-create-page__back"
+          className={taskCreatePageStyles.back}
           type="button"
           onClick={() => navigate(`${ROUTES.projects}/${projectId}`)}
         >
           ← Назад
         </button>
-        <h1 className="task-create-page__title">Создание задачи</h1>
+        <h1 className={taskCreatePageStyles.title}>Создание задачи</h1>
 
-        <form className="task-create-page__form" onSubmit={handleSubmit(submit, onInvalid)}>
-          <div className="task-create-page__fields">
-            <div className="task-create-page__field">
-              <h3 className="task-create-page__field-title">Название</h3>
+        <form className={taskCreatePageStyles.form} onSubmit={handleSubmit(submit, onInvalid)}>
+          <div className={taskCreatePageStyles.fields}>
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Название</h3>
               <input
-                className={`task-create-page__input ${nameError ? 'task-create-page__input--error' : ''}`}
+                className={[taskCreatePageStyles.input, nameError ? taskCreatePageStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 type="text"
                 placeholder="Название"
                 maxLength={100}
                 {...register('name')}
               />
-              {nameError && <p className="task-create-page__error">{nameError}</p>}
+              {nameError && <p className={taskCreatePageStyles.error}>{nameError}</p>}
             </div>
 
-            <div className="task-create-page__field">
-              <h3 className="task-create-page__field-title">Описание задачи</h3>
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Описание задачи</h3>
               <textarea
-                className="task-create-page__input task-create-page__textarea"
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
                 placeholder="Описание задачи"
                 maxLength={4000}
                 {...register('description')}
               />
             </div>
 
-            <div className="task-create-page__field">
-              <h3 className="task-create-page__field-title">Требования</h3>
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Требования</h3>
               <textarea
-                className="task-create-page__input task-create-page__textarea"
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
                 placeholder="Требования"
                 maxLength={4000}
                 {...register('requirements')}
               />
             </div>
 
-            <div className="task-create-page__field">
-              <h3 className="task-create-page__field-title">Критерии оценки</h3>
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Критерии оценки</h3>
               <textarea
-                className="task-create-page__input task-create-page__textarea"
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
                 placeholder="Критерии оценки"
                 maxLength={4000}
                 {...register('evaluationCriteria')}
@@ -237,8 +263,8 @@ const TaskCreatePage = () => {
             </div>
           </div>
 
-          <div className="task-create-page__block">
-            <h3 className="task-create-page__block-title">Дедлайн</h3>
+          <div className={taskCreatePageStyles.block}>
+            <h3 className={taskCreatePageStyles.blockTitle}>Дедлайн</h3>
             <Controller
               control={control}
               name="deadline"
@@ -253,15 +279,15 @@ const TaskCreatePage = () => {
                 />
               )}
             />
-            {deadlineError && <p className="task-create-page__error">{deadlineError}</p>}
+            {deadlineError && <p className={taskCreatePageStyles.error}>{deadlineError}</p>}
           </div>
 
-          <div className="task-create-page__block">
-            <h3 className="task-create-page__block-title">Тип ревью</h3>
-            <div className="task-create-page__radio-list">
+          <div className={taskCreatePageStyles.block}>
+            <h3 className={taskCreatePageStyles.blockTitle}>Тип ревью</h3>
+            <div className={taskCreatePageStyles.radioList}>
               {reviewTypes.map((type) => (
-                <label key={type} className="task-create-page__radio-item">
-                  <input className="task-create-page__radio" type="radio" value={type} {...register('reviewType')} />
+                <label key={type} className={taskCreatePageStyles.radioItem}>
+                  <input className={taskCreatePageStyles.radio} type="radio" value={type} {...register('reviewType')} />
                   <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
                 </label>
               ))}
@@ -269,7 +295,7 @@ const TaskCreatePage = () => {
           </div>
 
           {isManualReviewers && (
-            <div className="task-create-page__block">
+            <div className={taskCreatePageStyles.block}>
               <Controller
                 control={control}
                 name="reviewerIds"
@@ -286,7 +312,7 @@ const TaskCreatePage = () => {
             </div>
           )}
 
-          <div className="task-create-page__block">
+          <div className={taskCreatePageStyles.block}>
             <Controller
               control={control}
               name="assigneeIds"
@@ -301,7 +327,7 @@ const TaskCreatePage = () => {
             />
           </div>
 
-          <button className="task-create-page__submit" type="submit" disabled={!isValid || isSubmitting}>
+          <button className={taskCreatePageStyles.submit} type="submit" disabled={!isValid || isSubmitting}>
             <CheckIcon />
           </button>
         </form>

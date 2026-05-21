@@ -10,21 +10,25 @@ const makeDate = (daysFromNow, hour, minute) => {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
   date.setHours(hour, minute, 0, 0);
+
   return date.toISOString();
 };
 
 const COMMON_FILES = JSON.parse(JSON.stringify(MOCK_LARGE_FILE_TREE));
+
 const injectCode = (nodes) => {
   for (let node of nodes) {
     if (node.name === 'ArchitectureDiagram.jsx') {
       node.content = MOCK_LARGE_CODE;
     }
+
     if (node.children) injectCode(node.children);
   }
 };
-injectCode(COMMON_FILES);
 
+injectCode(COMMON_FILES);
 const DIFF_FILES = JSON.parse(JSON.stringify(COMMON_FILES));
+
 DIFF_FILES.push({
   id: 'diff-file-1',
   name: 'AuthService.js',
@@ -124,7 +128,10 @@ export const MOCK_REVIEWS_STORE = new Map([
       aiEvaluation: {
         qualityScore: 3.8,
         cyclomaticComplexity: 'C (Удовлетворительно)',
-        solidViolations: { count: 2, severity: 'Средняя' },
+        solidViolations: {
+          count: 2,
+          severity: 'Средняя',
+        },
         overallComment:
           'Код имеет среднюю сложность. Рекомендуется обратить внимание на принципы SOLID (Single Responsibility и Dependency Inversion), так как обнаружены нарушения в модуле ArchitectureDiagram.',
       },
@@ -170,14 +177,22 @@ export const MOCK_REVIEWS_STORE = new Map([
       aiEvaluation: {
         qualityScore: 4.9,
         cyclomaticComplexity: 'A (Отлично)',
-        solidViolations: { count: 0, severity: 'Проблем нет' },
+        solidViolations: {
+          count: 0,
+          severity: 'Проблем нет',
+        },
         overallComment:
           'Отличная работа! Код чистый, иерархия компонентов выстроена логично, а цикломатическая сложность минимальна. Нарушений принципов SOLID не обнаружено.',
       },
-      aiReviewEvaluation: { qualityScore: 4.8, specificity: 5, techDepth: 4, correctness: 5, nonToxicity: 5 },
+      aiReviewEvaluation: {
+        qualityScore: 4.8,
+        specificity: 5,
+        techDepth: 4,
+        correctness: 5,
+        nonToxicity: 5,
+      },
     },
   ],
-
   [
     9801,
     {
@@ -245,7 +260,10 @@ export const MOCK_REVIEWS_STORE = new Map([
       aiEvaluation: {
         qualityScore: 3.5,
         cyclomaticComplexity: 'C (Удовлетворительно)',
-        solidViolations: { count: 1, severity: 'Низкая' },
+        solidViolations: {
+          count: 1,
+          severity: 'Низкая',
+        },
         overallComment:
           'В решении присутствует излишняя вложенность в функциях обработки CI/CD логов. Рекомендуется провести рефакторинг для снижения сложности.',
       },
@@ -325,11 +343,20 @@ export const MOCK_REVIEWS_STORE = new Map([
       aiEvaluation: {
         qualityScore: 4.8,
         cyclomaticComplexity: 'A (Отлично)',
-        solidViolations: { count: 0, severity: 'Проблем нет' },
+        solidViolations: {
+          count: 0,
+          severity: 'Проблем нет',
+        },
         overallComment:
           'Высокое качество кода. Логика интеграции Sentry вынесена в отдельный сервис, что упрощает тестирование и дальнейшую поддержку.',
       },
-      aiReviewEvaluation: { qualityScore: 4.5, specificity: 4, techDepth: 5, correctness: 4, nonToxicity: 5 },
+      aiReviewEvaluation: {
+        qualityScore: 4.5,
+        specificity: 4,
+        techDepth: 5,
+        correctness: 4,
+        nonToxicity: 5,
+      },
     },
   ],
   [
@@ -395,15 +422,20 @@ export const MOCK_REVIEWS_STORE = new Map([
     },
   ],
 ]);
-
 export const MOCK_ASSIGNED_REVIEWS = [
   {
     id: 201,
     reviewerId: 57,
     taskId: 9801,
     taskName: 'Сделать auth middleware',
-    project: { id: 9999, name: 'Personal Architecture Notes' },
-    organization: { id: 300, name: 'CodeBattles Team' },
+    project: {
+      id: 9999,
+      name: 'Personal Architecture Notes',
+    },
+    organization: {
+      id: 300,
+      name: 'CodeBattles Team',
+    },
     uploadedAt: makeDate(-1, 11, 0),
     responseDeadline: makeDate(3, 10, 0),
     status: REVIEW_STATUS.NEW,
@@ -417,8 +449,14 @@ export const MOCK_ASSIGNED_REVIEWS = [
     reviewerId: 57,
     taskId: 9802,
     taskName: 'Настроить CI/CD',
-    project: { id: 9999, name: 'Personal Architecture Notes' },
-    organization: { id: 300, name: 'CodeBattles Team' },
+    project: {
+      id: 9999,
+      name: 'Personal Architecture Notes',
+    },
+    organization: {
+      id: 300,
+      name: 'CodeBattles Team',
+    },
     uploadedAt: makeDate(-3, 14, 0),
     responseDeadline: makeDate(1, 15, 0),
     status: REVIEW_STATUS.IN_PROGRESS,
@@ -432,8 +470,14 @@ export const MOCK_ASSIGNED_REVIEWS = [
     reviewerId: 57,
     taskId: 9803,
     taskName: 'Интеграция Sentry',
-    project: { id: 9999, name: 'Personal Architecture Notes' },
-    organization: { id: 300, name: 'CodeBattles Team' },
+    project: {
+      id: 9999,
+      name: 'Personal Architecture Notes',
+    },
+    organization: {
+      id: 300,
+      name: 'CodeBattles Team',
+    },
     uploadedAt: makeDate(-5, 10, 0),
     responseDeadline: makeDate(-2, 12, 0),
     status: REVIEW_STATUS.COMPLETED,
@@ -447,8 +491,14 @@ export const MOCK_ASSIGNED_REVIEWS = [
     reviewerId: 57,
     taskId: 9804,
     taskName: 'Редизайн профиля',
-    project: { id: 8888, name: 'Backend Microservices' },
-    organization: { id: 300, name: 'CodeBattles Team' },
+    project: {
+      id: 8888,
+      name: 'Backend Microservices',
+    },
+    organization: {
+      id: 300,
+      name: 'CodeBattles Team',
+    },
     uploadedAt: makeDate(-1, 8, 0),
     responseDeadline: makeDate(1, 10, 0),
     status: REVIEW_STATUS.NEW,
@@ -462,8 +512,14 @@ export const MOCK_ASSIGNED_REVIEWS = [
     reviewerId: 57,
     taskId: 9805,
     taskName: 'Оптимизация сборки',
-    project: { id: 7777, name: 'AI Research' },
-    organization: { id: 400, name: 'DeepMind Corp' },
+    project: {
+      id: 7777,
+      name: 'AI Research',
+    },
+    organization: {
+      id: 400,
+      name: 'DeepMind Corp',
+    },
     uploadedAt: makeDate(-2, 9, 30),
     responseDeadline: makeDate(2, 10, 0),
     status: REVIEW_STATUS.IN_PROGRESS,
@@ -477,7 +533,10 @@ export const MOCK_ASSIGNED_REVIEWS = [
     reviewerId: 57,
     taskId: 9806,
     taskName: 'Написать юнит тесты',
-    project: { id: 6666, name: 'My Personal Website' },
+    project: {
+      id: 6666,
+      name: 'My Personal Website',
+    },
     organization: null,
     uploadedAt: makeDate(-7, 10, 0),
     responseDeadline: makeDate(-4, 12, 0),

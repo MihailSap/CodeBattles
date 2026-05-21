@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { UnwrapIcon, CheckIcon } from '@/shared/ui/icons';
-import './ReviewDropdown.css';
+import reviewDropdownStyles from './ReviewDropdown.module.scss';
 
-const ReviewDropdown = ({ label, placeholder = '', value, options, onChange }) => {
+const ReviewDropdown = ({
+  label,
+  placeholder = '',
+  value,
+  options,
+  onChange,
+  rootClassName = '',
+  labelClassName = '',
+  triggerClassName = '',
+  menuClassName = '',
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -35,27 +45,37 @@ const ReviewDropdown = ({ label, placeholder = '', value, options, onChange }) =
   const selectedOption = options.find((option) => option.value === value);
 
   return (
-    <div className="review-dropdown" ref={rootRef}>
-      <span className="review-dropdown__label">{label}</span>
+    <div className={[reviewDropdownStyles.root, rootClassName].filter(Boolean).join(' ')} ref={rootRef}>
+      <span className={[reviewDropdownStyles.label, labelClassName].filter(Boolean).join(' ')}>{label}</span>
       <button
-        className={`review-dropdown__trigger ${isOpen ? 'review-dropdown__trigger--open' : ''}`}
+        className={[reviewDropdownStyles.trigger, triggerClassName, isOpen ? reviewDropdownStyles.isOpen : '']
+          .filter(Boolean)
+          .join(' ')}
         type="button"
         onClick={() => setIsOpen((prevState) => !prevState)}
         aria-expanded={isOpen}
       >
-        <span className={`review-dropdown__value ${selectedOption ? '' : 'review-dropdown__value--placeholder'}`}>
+        <span
+          className={[reviewDropdownStyles.value, selectedOption ? '' : reviewDropdownStyles.isPlaceholder]
+            .filter(Boolean)
+            .join(' ')}
+        >
           {selectedOption?.label || placeholder}
         </span>
-        <span className={`review-dropdown__icon ${isOpen ? 'review-dropdown__icon--open' : ''}`}>
+        <span
+          className={[reviewDropdownStyles.icon, isOpen ? reviewDropdownStyles.isOpen : ''].filter(Boolean).join(' ')}
+        >
           <UnwrapIcon />
         </span>
       </button>
 
       {isOpen && (
-        <div className="review-dropdown__menu" role="listbox">
+        <div className={[reviewDropdownStyles.menu, menuClassName].filter(Boolean).join(' ')} role="listbox">
           {options.map((option) => (
             <button
-              className={`review-dropdown__option ${option.value === value ? 'review-dropdown__option--active' : ''}`}
+              className={[reviewDropdownStyles.option, option.value === value ? reviewDropdownStyles.isActive : '']
+                .filter(Boolean)
+                .join(' ')}
               key={option.value || 'all'}
               type="button"
               onClick={() => {
@@ -65,7 +85,7 @@ const ReviewDropdown = ({ label, placeholder = '', value, options, onChange }) =
             >
               <span>{option.label}</span>
               {option.value === value && (
-                <span className="review-dropdown__option-check">
+                <span className={reviewDropdownStyles.optionCheck}>
                   <CheckIcon />
                 </span>
               )}

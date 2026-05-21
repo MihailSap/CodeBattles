@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
-
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
 });
@@ -19,7 +18,10 @@ const requestNewAccessToken = async () => {
     throw new Error('Refresh token is missing');
   }
 
-  const accessResponse = await refreshClient.post('/api/v1/auth/token', { refreshToken });
+  const accessResponse = await refreshClient.post('/api/v1/auth/token', {
+    refreshToken,
+  });
+
   const nextAccessToken = accessResponse.data?.accessToken;
 
   if (!nextAccessToken) {
@@ -29,7 +31,9 @@ const requestNewAccessToken = async () => {
   try {
     const refreshResponse = await refreshClient.post(
       '/api/v1/auth/refresh',
-      { refreshToken },
+      {
+        refreshToken,
+      },
       {
         headers: {
           Authorization: `Bearer ${nextAccessToken}`,
@@ -42,7 +46,10 @@ const requestNewAccessToken = async () => {
       refreshToken: refreshResponse.data?.refreshToken || refreshToken,
     });
   } catch {
-    tokenStorage.setTokens({ accessToken: nextAccessToken, refreshToken });
+    tokenStorage.setTokens({
+      accessToken: nextAccessToken,
+      refreshToken,
+    });
   }
 
   return tokenStorage.getAccessToken();
@@ -78,7 +85,6 @@ httpClient.interceptors.response.use(
     }
 
     const status = error.response?.status;
-
     const shouldRefreshByStatus = status === 401;
 
     if (!shouldRefreshByStatus) {

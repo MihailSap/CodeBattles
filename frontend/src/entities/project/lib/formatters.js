@@ -25,7 +25,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
 });
 
 const compareText = (left, right) =>
-  String(left ?? '').localeCompare(String(right ?? ''), 'ru', { sensitivity: 'base' });
+  String(left ?? '').localeCompare(String(right ?? ''), 'ru', {
+    sensitivity: 'base',
+  });
 
 export const formatDeadline = (value) => {
   if (!value) {
@@ -82,7 +84,7 @@ export const getDeadlineToneClass = (deadline, status) => {
   }
 
   if (status === TASK_STATUS.DONE) {
-    return 'project-page__deadline--success';
+    return 'success';
   }
 
   const now = new Date();
@@ -96,16 +98,16 @@ export const getDeadlineToneClass = (deadline, status) => {
   const deadlineMs = deadlineDate.getTime();
 
   if (deadlineMs < nowMs) {
-    return 'project-page__deadline--error';
+    return 'error';
   }
 
   const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
 
   if (deadlineMs - nowMs <= threeDaysMs) {
-    return 'project-page__deadline--warning';
+    return 'warning';
   }
 
-  return 'project-page__deadline--success';
+  return 'success';
 };
 
 export const sortTasks = (tasks = []) => {

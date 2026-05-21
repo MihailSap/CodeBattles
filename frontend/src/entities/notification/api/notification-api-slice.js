@@ -2,7 +2,10 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { isNotificationExpired } from '../lib/notification-utils';
 import { notificationsApi } from './notifications-api';
 
-const notificationListTag = { type: 'Notification', id: 'LIST' };
+const notificationListTag = {
+  type: 'Notification',
+  id: 'LIST',
+};
 
 const removeExpiredNotifications = (draft) => {
   const activeNotifications = draft.filter((notification) => !isNotificationExpired(notification));
@@ -27,7 +30,13 @@ export const notificationApiSlice = baseApi.injectEndpoints({
       queryFn: () => toQueryResult(() => notificationsApi.getNotifications()),
       providesTags: (result) =>
         result
-          ? [...result.map((notification) => ({ type: 'Notification', id: notification.id })), notificationListTag]
+          ? [
+              ...result.map((notification) => ({
+                type: 'Notification',
+                id: notification.id,
+              })),
+              notificationListTag,
+            ]
           : [notificationListTag],
       async onCacheEntryAdded(_arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
         let unsubscribe = () => {};
@@ -108,7 +117,10 @@ export const notificationApiSlice = baseApi.injectEndpoints({
         }
       },
       invalidatesTags: (_result, _error, notificationId) => [
-        { type: 'Notification', id: notificationId },
+        {
+          type: 'Notification',
+          id: notificationId,
+        },
         notificationListTag,
       ],
     }),
@@ -149,7 +161,6 @@ export const notificationApiSlice = baseApi.injectEndpoints({
     }),
   }),
 });
-
 export const {
   useCompleteNotificationMutation,
   useDeleteNotificationMutation,

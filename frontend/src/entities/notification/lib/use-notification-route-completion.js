@@ -14,7 +14,6 @@ export const useNotificationRouteCompletion = () => {
     }
 
     completedPathRef.current = location.pathname;
-
     const payloads = getNotificationCompletionPayloadsForPath(location.pathname);
 
     payloads.forEach((payload) => {

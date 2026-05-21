@@ -2,7 +2,8 @@ import { AvatarIcon } from '@/shared/ui/icons';
 import DeleteIcon from '@/shared/assets/delete-icon.svg';
 import UploadIcon from '@/shared/assets/upload-icon.svg';
 import { CheckIcon, CrossIcon, PencilIcon } from '@/shared/ui/icons';
-import './ProfileSection.css';
+import profileSectionStyles from './ProfileSection.module.scss';
+import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
 
 const ProfileSection = ({
   canEditProfile,
@@ -20,13 +21,13 @@ const ProfileSection = ({
   formatRegistrationDate,
 }) => {
   return (
-    <section className="profile-page__section profile-page__section--profile">
-      <div className="profile-page__section-head">
-        <div className="profile-page__section-title-wrap">
-          <h2 className="profile-page__section-title">Профиль</h2>
+    <section className={[profilePageStyles.section, profileSectionStyles.isProfile].join(' ')}>
+      <div className={profilePageStyles.sectionHead}>
+        <div className={profilePageStyles.sectionTitleWrap}>
+          <h2 className={profilePageStyles.sectionTitle}>Профиль</h2>
           {canEditProfile && !isProfileEditMode && (
             <button
-              className="profile-page__edit-button"
+              className={profilePageStyles.editButton}
               type="button"
               onClick={onProfileEditStart}
               disabled={isActionBlocked}
@@ -38,13 +39,13 @@ const ProfileSection = ({
         </div>
       </div>
 
-      <div className="profile-page__section-body profile-page__profile-body">
-        <div className="profile-page__avatar-wrap">
+      <div className={[profilePageStyles.sectionBody, profileSectionStyles.body].join(' ')}>
+        <div className={profileSectionStyles.avatarWrap}>
           {canEditProfile && isProfileEditMode && (
-            <div className="profile-page__avatar-actions">
+            <div className={profileSectionStyles.avatarActions}>
               {profileDraft.avatarPath && (
                 <button
-                  className="profile-page__avatar-action profile-page__avatar-action--danger"
+                  className={[profileSectionStyles.avatarAction, profileSectionStyles.isDanger].join(' ')}
                   type="button"
                   onClick={onAvatarDelete}
                   disabled={isActionBlocked}
@@ -54,7 +55,7 @@ const ProfileSection = ({
                 </button>
               )}
               <button
-                className="profile-page__avatar-action profile-page__avatar-action--accent"
+                className={[profileSectionStyles.avatarAction, profileSectionStyles.isAccent].join(' ')}
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isActionBlocked}
@@ -67,29 +68,31 @@ const ProfileSection = ({
           )}
           {profileDraft.avatarPath ? (
             <img
-              className={
-                `profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')
-              }
+              className={[
+                profileSectionStyles.avatar,
+                canEditProfile && isProfileEditMode ? profileSectionStyles.isEditable : '',
+              ].join(' ')}
               src={profileDraft.avatarPath}
               alt="Аватар пользователя"
             />
           ) : (
             <div
-              className={
-                `profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')
-              }
+              className={[
+                profileSectionStyles.avatar,
+                canEditProfile && isProfileEditMode ? profileSectionStyles.isEditable : '',
+              ].join(' ')}
             >
               <AvatarIcon />
             </div>
           )}
         </div>
 
-        <div className="profile-page__user-info">
-          <p className="profile-page__user-row">
-            <span className="profile-page__label">Имя:</span>
+        <div className={profileSectionStyles.userInfo}>
+          <p className={profileSectionStyles.userRow}>
+            <span className={profileSectionStyles.label}>Имя:</span>
             {canEditProfile && isProfileEditMode ? (
               <input
-                className="profile-page__name-input"
+                className={profileSectionStyles.nameInput}
                 type="text"
                 maxLength={255}
                 value={profileDraft.name}
@@ -97,28 +100,28 @@ const ProfileSection = ({
                 disabled={isActionBlocked}
               />
             ) : (
-              <span className="profile-page__value">{profileData.name || 'Не задано'}</span>
+              <span className={profileSectionStyles.value}>{profileData.name || 'Не задано'}</span>
             )}
           </p>
-          <p className="profile-page__user-row">
-            <span className="profile-page__label">E-Mail:</span>
-            <span className="profile-page__value">{profileData.email || 'Не задано'}</span>
+          <p className={profileSectionStyles.userRow}>
+            <span className={profileSectionStyles.label}>E-Mail:</span>
+            <span className={profileSectionStyles.value}>{profileData.email || 'Не задано'}</span>
           </p>
-          <p className="profile-page__user-row">
-            <span className="profile-page__label">Логин:</span>
-            <span className="profile-page__value">{profileData.login || 'Не задано'}</span>
+          <p className={profileSectionStyles.userRow}>
+            <span className={profileSectionStyles.label}>Логин:</span>
+            <span className={profileSectionStyles.value}>{profileData.login || 'Не задано'}</span>
           </p>
-          <p className="profile-page__user-row">
-            <span className="profile-page__label">Дата регистрации:</span>
-            <span className="profile-page__value">{formatRegistrationDate(profileData.registeredAt)}</span>
+          <p className={profileSectionStyles.userRow}>
+            <span className={profileSectionStyles.label}>Дата регистрации:</span>
+            <span className={profileSectionStyles.value}>{formatRegistrationDate(profileData.registeredAt)}</span>
           </p>
         </div>
       </div>
 
       {canEditProfile && isProfileEditMode && (
-        <div className="profile-page__actions">
+        <div className={profilePageStyles.actions}>
           <button
-            className="profile-page__action profile-page__action--save"
+            className={[profilePageStyles.action, profilePageStyles.isSave].join(' ')}
             type="button"
             onClick={onProfileSave}
             disabled={isActionBlocked}
@@ -127,7 +130,7 @@ const ProfileSection = ({
             <CheckIcon />
           </button>
           <button
-            className="profile-page__action profile-page__action--cancel"
+            className={[profilePageStyles.action, profilePageStyles.isCancel].join(' ')}
             type="button"
             onClick={onProfileEditCancel}
             disabled={isActionBlocked}

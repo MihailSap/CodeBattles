@@ -5,7 +5,7 @@ import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { CheckIcon } from '@/shared/ui/icons';
 import { COMMENT_CATEGORY, COMMENT_CATEGORY_LABEL, COMMENT_SEVERITY, COMMENT_SEVERITY_LABEL } from '@/entities/review';
 import { commentFormSchema } from '../../model/comment-schema';
-import './CommentModal.css';
+import commentModalStyles from './CommentModal.module.scss';
 
 const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => {
   const {
@@ -24,19 +24,24 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
   });
 
   useBodyScrollLock(isOpen);
-
   if (!isOpen) return null;
-
   const startLine = lineData?.startLine;
   const endLine = lineData?.endLine;
   const isSingleLine = startLine === endLine;
+
   const headerText = isSingleLine
     ? `Комментарий к строке ${startLine}`
     : `Комментарий к строкам ${startLine}-${endLine}`;
 
   const submit = ({ text, category, severity }) => {
     if (isSubmitting) return;
-    onSubmit({ text: text.trim(), category: category || null, severity: severity || null });
+
+    onSubmit({
+      text: text.trim(),
+      category: category || null,
+      severity: severity || null,
+    });
+
     reset();
   };
 
@@ -49,84 +54,84 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
     <ModalShell
       isOpen={isOpen}
       onClose={handleClose}
-      overlayClassName="comment-modal__backdrop"
-      dialogClassName="comment-modal"
+      overlayClassName={commentModalStyles.backdrop}
+      dialogClassName={commentModalStyles.root}
       ariaLabel={headerText}
       title={headerText}
-      headerClassName="comment-modal__head"
-      titleClassName="comment-modal__title"
-      closeClassName="comment-modal__close"
+      headerClassName={commentModalStyles.head}
+      titleClassName={commentModalStyles.title}
+      closeClassName={commentModalStyles.close}
     >
-      <form className="comment-modal__content" onSubmit={handleSubmit(submit)}>
-        <div className="comment-modal__field">
+      <form className={commentModalStyles.content} onSubmit={handleSubmit(submit)}>
+        <div className={commentModalStyles.field}>
           <label>Текст комментария*</label>
           <textarea
-            className="comment-modal__textarea"
+            className={commentModalStyles.textarea}
             placeholder="Введите текст комментария..."
             {...register('text')}
           />
         </div>
 
-        <div className="comment-modal__row">
-          <div className="comment-modal__field">
+        <div className={commentModalStyles.row}>
+          <div className={commentModalStyles.field}>
             <label>Категория</label>
-            <div className="comment-modal__radio-group">
-              <label className="comment-modal__radio-label">
+            <div className={commentModalStyles.radioGroup}>
+              <label className={commentModalStyles.radioLabel}>
                 <input
                   type="radio"
-                  className="comment-modal__radio-input"
+                  className={commentModalStyles.radioInput}
                   name="category"
                   value=""
                   {...register('category')}
                 />
-                <span className="comment-modal__radio-text">Без категории</span>
+                <span className={commentModalStyles.radioText}>Без категории</span>
               </label>
               {Object.values(COMMENT_CATEGORY).map((value) => (
-                <label key={value} className="comment-modal__radio-label">
+                <label key={value} className={commentModalStyles.radioLabel}>
                   <input
                     type="radio"
-                    className="comment-modal__radio-input"
+                    className={commentModalStyles.radioInput}
                     name="category"
                     value={value}
                     {...register('category')}
                   />
-                  <span className="comment-modal__radio-text">{COMMENT_CATEGORY_LABEL[value]}</span>
+                  <span className={commentModalStyles.radioText}>{COMMENT_CATEGORY_LABEL[value]}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div className="comment-modal__field">
+          <div className={commentModalStyles.field}>
             <label>Уровень критичности</label>
-            <div className="comment-modal__radio-group">
-              <label className="comment-modal__radio-label">
+            <div className={commentModalStyles.radioGroup}>
+              <label className={commentModalStyles.radioLabel}>
                 <input
                   type="radio"
-                  className="comment-modal__radio-input"
+                  className={commentModalStyles.radioInput}
                   name="severity"
                   value=""
                   {...register('severity')}
                 />
-                <span className="comment-modal__radio-text">Без критичности</span>
+                <span className={commentModalStyles.radioText}>Без критичности</span>
               </label>
               {Object.values(COMMENT_SEVERITY).map((value) => (
-                <label key={value} className="comment-modal__radio-label">
+                <label key={value} className={commentModalStyles.radioLabel}>
                   <input
                     type="radio"
-                    className="comment-modal__radio-input"
+                    className={commentModalStyles.radioInput}
                     name="severity"
                     value={value}
                     {...register('severity')}
                   />
-                  <span className="comment-modal__radio-text">{COMMENT_SEVERITY_LABEL[value]}</span>
+                  <span className={commentModalStyles.radioText}>{COMMENT_SEVERITY_LABEL[value]}</span>
                 </label>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="comment-modal__footer">
-          <button type="submit" className="comment-modal__submit-btn" disabled={!isValid || isSubmitting}>
+        <div className={commentModalStyles.footer}>
+          <button type="submit" className={commentModalStyles.submitBtn} disabled={!isValid || isSubmitting}>
             <CheckIcon />
           </button>
         </div>

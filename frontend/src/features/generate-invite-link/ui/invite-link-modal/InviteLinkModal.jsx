@@ -3,7 +3,7 @@ import { CheckIcon } from '@/shared/ui/icons';
 import DateTimePicker from '@/shared/ui/date-time-picker';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import './InviteLinkModal.css';
+import inviteLinkModalStyles from './InviteLinkModal.module.scss';
 
 const isInvalidOrPastDateTime = (value) => {
   if (!value) {
@@ -24,19 +24,19 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
   const [reusable, setReusable] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
   const [localError, setLocalError] = useState('');
-
   const minValue = useMemo(() => new Date(), []);
-
   useBodyScrollLock(isOpen);
 
   const generate = async () => {
     if (!expiresAt) {
       setLocalError('Выберите срок действия ссылки');
+
       return;
     }
 
     if (isInvalidOrPastDateTime(expiresAt)) {
       setLocalError('Срок действия ссылки должен быть в будущем');
+
       return;
     }
 
@@ -83,21 +83,21 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
     <ModalShell
       isOpen={isOpen}
       onClose={handleClose}
-      overlayClassName="invite-link-modal__backdrop"
-      dialogClassName="invite-link-modal"
+      overlayClassName={inviteLinkModalStyles.backdrop}
+      dialogClassName={inviteLinkModalStyles.root}
       ariaLabel="Формирование ссылки"
       title="Пригласительная ссылка"
-      headerClassName="invite-link-modal__head"
-      titleClassName="invite-link-modal__title"
-      closeClassName="invite-link-modal__close"
+      headerClassName={inviteLinkModalStyles.head}
+      titleClassName={inviteLinkModalStyles.title}
+      closeClassName={inviteLinkModalStyles.close}
       closeAriaLabel="Закрыть форму"
       closeDisabled={isSubmitting}
     >
-      <div className="invite-link-modal__content">
+      <div className={inviteLinkModalStyles.content}>
         {!generatedLink && (
           <>
-            <div className="invite-link-modal__section">
-              <h3 className="invite-link-modal__section-title">Срок действия:</h3>
+            <div className={inviteLinkModalStyles.section}>
+              <h3 className={inviteLinkModalStyles.sectionTitle}>Срок действия:</h3>
               <DateTimePicker
                 value={expiresAt}
                 onChange={setExpiresAt}
@@ -105,15 +105,15 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
                 placeholder="Выберите дату и время"
                 hasError={Boolean(localError)}
               />
-              {localError && <p className="invite-link-modal__error">{localError}</p>}
+              {localError && <p className={inviteLinkModalStyles.isError}>{localError}</p>}
             </div>
 
-            <div className="invite-link-modal__section">
-              <h3 className="invite-link-modal__section-title">Тип ссылки:</h3>
-              <div className="invite-link-modal__radios">
-                <label className="invite-link-modal__radio-item">
+            <div className={inviteLinkModalStyles.section}>
+              <h3 className={inviteLinkModalStyles.sectionTitle}>Тип ссылки:</h3>
+              <div className={inviteLinkModalStyles.radios}>
+                <label className={inviteLinkModalStyles.radioItem}>
                   <input
-                    className="invite-link-modal__radio"
+                    className={inviteLinkModalStyles.radio}
                     type="radio"
                     checked={!reusable}
                     onChange={() => setReusable(false)}
@@ -121,9 +121,9 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
                   />
                   <span>Одноразовая</span>
                 </label>
-                <label className="invite-link-modal__radio-item">
+                <label className={inviteLinkModalStyles.radioItem}>
                   <input
-                    className="invite-link-modal__radio"
+                    className={inviteLinkModalStyles.radio}
                     type="radio"
                     checked={reusable}
                     onChange={() => setReusable(true)}
@@ -135,7 +135,7 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
             </div>
 
             <button
-              className="invite-link-modal__submit"
+              className={inviteLinkModalStyles.submit}
               type="button"
               onClick={generate}
               disabled={!expiresAt || isSubmitting}
@@ -145,7 +145,7 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
           </>
         )}
         {generatedLink && (
-          <div className="invite-link-modal__result">
+          <div className={inviteLinkModalStyles.result}>
             <a href={generatedLink} target="_blank" rel="noreferrer">
               {generatedLink}
             </a>

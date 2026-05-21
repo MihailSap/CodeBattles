@@ -21,13 +21,25 @@ import {
 } from '@/entities/notification';
 import { BellIcon, AvatarIcon, AdminIcon, ExitIcon } from '@/shared/ui/icons';
 import NotificationsList from './NotificationsList';
-import './Header.css';
+import headerStyles from './Header.module.scss';
 
 const NAV_LINKS = [
-  { to: ROUTES.dashboard, label: 'Главная' },
-  { to: ROUTES.projects, label: 'Проекты' },
-  { to: ROUTES.reviews, label: 'Ревью' },
-  { to: ROUTES.leaderboard, label: 'Лидерборд' },
+  {
+    to: ROUTES.dashboard,
+    label: 'Главная',
+  },
+  {
+    to: ROUTES.projects,
+    label: 'Проекты',
+  },
+  {
+    to: ROUTES.reviews,
+    label: 'Ревью',
+  },
+  {
+    to: ROUTES.leaderboard,
+    label: 'Лидерборд',
+  },
 ];
 
 const toToastNotification = (notification) => ({
@@ -51,26 +63,28 @@ const Header = () => {
   const toastTimersRef = useRef([]);
   const knownNotificationsRef = useRef(null);
   const wasNotificationsOpenRef = useRef(false);
+
   const {
     data: notifications = [],
     isLoading: isNotificationsLoading,
     isError: isNotificationsError,
-  } = useGetNotificationsQuery(undefined, { skip: !user });
+  } = useGetNotificationsQuery(undefined, {
+    skip: !user,
+  });
+
   const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
-
   useNotificationRouteCompletion();
-
   const isAdmin = user?.role === 'ADMIN';
+
   const unreadNotificationsCount = useMemo(
     () => notifications.filter((notification) => !notification.isRead).length,
     [notifications]
   );
-  const hasUnreadNotifications = unreadNotificationsCount > 0;
 
+  const hasUnreadNotifications = unreadNotificationsCount > 0;
   const displayLogin = user?.login || 'Пользователь';
   const notificationToDelete = notifications.find((notification) => notification.id === notificationToDeleteId);
-
   useBodyScrollLock(isMenuOpen || isNotificationsOpen);
 
   const clearToastTimers = useCallback(() => {
@@ -87,9 +101,11 @@ const Header = () => {
       const showTimerId = window.setTimeout(() => {
         setIsToastVisible(true);
       }, 20);
+
       const hideTimerId = window.setTimeout(() => {
         setIsToastVisible(false);
       }, 4800);
+
       const removeTimerId = window.setTimeout(() => {
         setToastNotification(null);
       }, 5600);
@@ -151,6 +167,7 @@ const Header = () => {
   useEffect(() => {
     if (!user) {
       knownNotificationsRef.current = null;
+
       return;
     }
 
@@ -164,6 +181,7 @@ const Header = () => {
 
     if (!knownNotificationsRef.current) {
       knownNotificationsRef.current = nextKnownNotifications;
+
       return;
     }
 
@@ -198,7 +216,10 @@ const Header = () => {
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
-    navigate(ROUTES.login, { replace: true });
+
+    navigate(ROUTES.login, {
+      replace: true,
+    });
   };
 
   const handleToggleNotifications = () => {
@@ -239,21 +260,23 @@ const Header = () => {
 
   return (
     <>
-      <header className="header">
-        <div className="header__content">
-          <div className="header__left">
-            <Link className="header__logo-link" to={ROUTES.home} aria-label="На главную">
-              <img className="header__logo" src={theme === 'dark' ? logoDark : logoLight} alt="CodeBattles" />
+      <header className={headerStyles.root}>
+        <div className={headerStyles.content}>
+          <div className={headerStyles.left}>
+            <Link className={headerStyles.logoLink} to={ROUTES.home} aria-label="На главную">
+              <img className={headerStyles.logo} src={theme === 'dark' ? logoDark : logoLight} alt="CodeBattles" />
             </Link>
           </div>
 
-          <nav className="header__center" aria-label="Навигация по сайту">
+          <nav className={headerStyles.center} aria-label="Навигация по сайту">
             {NAV_LINKS.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === ROUTES.dashboard}
-                className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
+                className={({ isActive }) =>
+                  [headerStyles.navLink, isActive ? headerStyles.isActive : ''].filter(Boolean).join(' ')
+                }
                 onClick={() => {
                   setIsMenuOpen(false);
                   setIsNotificationsOpen(false);
@@ -264,10 +287,10 @@ const Header = () => {
             ))}
           </nav>
 
-          <div className="header__right">
-            <div className="header__notifications-wrap" ref={notificationsRef}>
+          <div className={headerStyles.right}>
+            <div className={headerStyles.notificationsWrap} ref={notificationsRef}>
               <button
-                className="header__icon-button"
+                className={headerStyles.iconButton}
                 type="button"
                 aria-label="Уведомления"
                 aria-expanded={isNotificationsOpen}
@@ -275,22 +298,24 @@ const Header = () => {
                 onClick={handleToggleNotifications}
               >
                 <BellIcon />
-                {hasUnreadNotifications && <span className="header__notification-dot" aria-hidden="true" />}
+                {hasUnreadNotifications && <span className={headerStyles.notificationDot} aria-hidden="true" />}
               </button>
 
               <div
-                className={`header__notifications-panel ${isNotificationsOpen ? 'header__notifications-panel--open' : ''}`}
+                className={[headerStyles.notificationsPanel, isNotificationsOpen ? headerStyles.isOpen : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 id="header-notifications"
                 role="region"
                 aria-label="Список уведомлений"
                 aria-hidden={!isNotificationsOpen}
               >
-                <div className="header__notifications-head">
+                <div className={headerStyles.notificationsHead}>
                   <div>
-                    <h2 className="header__notifications-title">Уведомления</h2>
+                    <h2 className={headerStyles.notificationsTitle}>Уведомления</h2>
                   </div>
                   {unreadNotificationsCount > 0 && (
-                    <span className="header__notifications-count">{unreadNotificationsCount}</span>
+                    <span className={headerStyles.notificationsCount}>{unreadNotificationsCount}</span>
                   )}
                 </div>
 
@@ -304,31 +329,31 @@ const Header = () => {
               </div>
             </div>
 
-            <div className="header__avatar-wrap" ref={menuRef}>
+            <div className={headerStyles.avatarWrap} ref={menuRef}>
               <button
-                className="header__avatar-button"
+                className={headerStyles.avatarButton}
                 type="button"
                 aria-label="Меню пользователя"
                 aria-expanded={isMenuOpen}
                 onClick={handleToggleMenu}
               >
                 {user?.avatarPath ? (
-                  <img className="header__avatar-image" src={user?.avatarPath} alt={`Аватар ${displayLogin}`} />
+                  <img className={headerStyles.avatarImage} src={user?.avatarPath} alt={`Аватар ${displayLogin}`} />
                 ) : (
                   <AvatarIcon />
                 )}
               </button>
 
               <div
-                className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`}
+                className={[headerStyles.menu, isMenuOpen ? headerStyles.menuOpen : ''].filter(Boolean).join(' ')}
                 role="menu"
                 aria-hidden={!isMenuOpen}
               >
-                <div className="header__menu-theme">
+                <div className={headerStyles.menuTheme}>
                   <ThemeToggle />
                 </div>
                 <Link
-                  className="header__menu-link"
+                  className={headerStyles.menuLink}
                   to={ROUTES.profile}
                   onClick={() => setIsMenuOpen(false)}
                   title="Личный кабинет"
@@ -338,7 +363,7 @@ const Header = () => {
 
                 {isAdmin && (
                   <Link
-                    className="header__menu-link"
+                    className={headerStyles.menuLink}
                     to={ROUTES.admin}
                     onClick={() => setIsMenuOpen(false)}
                     title="Админ панель"
@@ -348,7 +373,7 @@ const Header = () => {
                 )}
 
                 <button
-                  className="header__menu-link header__menu-link--logout"
+                  className={[headerStyles.menuLink, headerStyles.isLogout].join(' ')}
                   type="button"
                   onClick={handleLogout}
                   disabled={isLoading}

@@ -6,8 +6,8 @@ import logoDark from '@/shared/assets/logo-dark.svg';
 import { useTheme } from '@/shared/lib/theme';
 import { ROUTES } from '@/shared/config/routes';
 import { clearAuthMessages, verifyEmailUser } from '@/entities/session';
-import '../../auth/ui/AuthPage.css';
-import './VerifyEmailPage.css';
+import authPageStyles from '../../auth/ui/AuthPage.module.scss';
+import verifyEmailPageStyles from './VerifyEmailPage.module.scss';
 
 const VerifyEmailPage = () => {
   const dispatch = useDispatch();
@@ -19,12 +19,14 @@ const VerifyEmailPage = () => {
 
   useEffect(() => {
     dispatch(clearAuthMessages());
-
     const params = new URLSearchParams(location.search);
     const token = params.get('token')?.trim();
 
     if (!token) {
-      navigate(ROUTES.login, { replace: true });
+      navigate(ROUTES.login, {
+        replace: true,
+      });
+
       return undefined;
     }
 
@@ -45,7 +47,9 @@ const VerifyEmailPage = () => {
           return;
         }
 
-        navigate(isSuccess ? ROUTES.dashboard : ROUTES.login, { replace: true });
+        navigate(isSuccess ? ROUTES.dashboard : ROUTES.login, {
+          replace: true,
+        });
       }, 2000);
     };
 
@@ -61,15 +65,21 @@ const VerifyEmailPage = () => {
   const isError = statusText === 'Не удалось подтвердить почту';
 
   return (
-    <div className="auth-page verify-email-page">
-      <div className="auth-page__bg" role="presentation" aria-hidden="true" />
+    <div className={authPageStyles.root}>
+      <div className={authPageStyles.bg} role="presentation" aria-hidden="true" />
 
-      <img className="verify-email-page__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
+      <img className={verifyEmailPageStyles.logo} src={isDark ? logoDark : logoLight} alt="CodeBattles" />
 
-      <main className="verify-email-page__content">
-        <h1 className="verify-email-page__title">Подтверждение E-Mail</h1>
+      <main className={verifyEmailPageStyles.content}>
+        <h1 className={verifyEmailPageStyles.title}>Подтверждение E-Mail</h1>
         <p
-          className={`verify-email-page__status ${isSuccess ? 'verify-email-page__status--success' : ''} ${isError ? 'verify-email-page__status--error' : ''}`}
+          className={[
+            verifyEmailPageStyles.status,
+            isSuccess ? verifyEmailPageStyles.isSuccess : '',
+            isError ? verifyEmailPageStyles.isError : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
         >
           {statusText}
         </p>

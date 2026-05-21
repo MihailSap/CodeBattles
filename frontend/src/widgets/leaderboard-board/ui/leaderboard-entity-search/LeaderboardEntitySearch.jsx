@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { CheckIcon, SearchIcon } from '@/shared/ui/icons';
-import './LeaderboardEntitySearch.css';
+import leaderboardEntitySearchStyles from './LeaderboardEntitySearch.module.scss';
 
 const LeaderboardEntitySearch = ({
   value,
@@ -33,10 +33,10 @@ const LeaderboardEntitySearch = ({
   }, [isOpen]);
 
   return (
-    <div className="leaderboard-entity-search" ref={rootRef}>
+    <div className={leaderboardEntitySearchStyles.root} ref={rootRef}>
       <SearchIcon />
       <input
-        className="leaderboard-entity-search__input"
+        className={leaderboardEntitySearchStyles.input}
         type="search"
         value={value}
         placeholder={placeholder}
@@ -48,11 +48,11 @@ const LeaderboardEntitySearch = ({
       />
 
       {isOpen && (
-        <div className="leaderboard-entity-search__dropdown">
+        <div className={leaderboardEntitySearchStyles.dropdown}>
           {options.length > 0 ? (
             options.map((option) => (
               <button
-                className="leaderboard-entity-search__option"
+                className={leaderboardEntitySearchStyles.option}
                 key={option.id}
                 type="button"
                 onClick={() => {
@@ -65,7 +65,7 @@ const LeaderboardEntitySearch = ({
               </button>
             ))
           ) : (
-            <div className="leaderboard-entity-search__empty">{emptyText}</div>
+            <div className={leaderboardEntitySearchStyles.isEmpty}>{emptyText}</div>
           )}
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import Editor, { DiffEditor } from '@monaco-editor/react';
-import './CodeViewer.css';
+import codeViewerStyles from './CodeViewer.module.scss';
 
 const RANGE_COLORS = [
   'rgba(99, 102, 241, 0.15)',
@@ -39,6 +39,7 @@ const CodeViewer = memo(
     const decorationsRef = useRef(null);
     const widgetRef = useRef(null);
     const [selectedRange, setSelectedRange] = useState(null);
+
     const [isNarrowScreen, setIsNarrowScreen] = useState(() =>
       typeof window !== 'undefined' ? window.innerWidth <= 500 : false
     );
@@ -55,9 +56,20 @@ const CodeViewer = memo(
       };
     }, []);
 
-    const latestProps = useRef({ comments, onLineClick, onLineContextMenu, canComment });
+    const latestProps = useRef({
+      comments,
+      onLineClick,
+      onLineContextMenu,
+      canComment,
+    });
+
     useEffect(() => {
-      latestProps.current = { comments, onLineClick, onLineContextMenu, canComment };
+      latestProps.current = {
+        comments,
+        onLineClick,
+        onLineContextMenu,
+        canComment,
+      };
     }, [comments, onLineClick, onLineContextMenu, canComment]);
 
     const rootEditorRef = useRef(null);
@@ -76,12 +88,19 @@ const CodeViewer = memo(
 
     const getUniqueRanges = useCallback(() => {
       const rangeMap = new Map();
+
       latestProps.current.comments.forEach((c) => {
         const key = `${c.startLine}-${c.endLine}`;
+
         if (!rangeMap.has(key)) {
-          rangeMap.set(key, { startLine: c.startLine, endLine: c.endLine, isAI: c.authorRole === 'AI' });
+          rangeMap.set(key, {
+            startLine: c.startLine,
+            endLine: c.endLine,
+            isAI: c.authorRole === 'AI',
+          });
         }
       });
+
       return [...rangeMap.values()];
     }, []);
 
@@ -92,6 +111,7 @@ const CodeViewer = memo(
         } catch (err) {
           console.error('Widget removal error:', err);
         }
+
         widgetRef.current = null;
       }
     }, []);
@@ -99,30 +119,36 @@ const CodeViewer = memo(
     const showCommentWidget = useCallback(
       (editor, monaco, lineNumber) => {
         removeCommentWidget(editor);
-
         const domNode = document.createElement('div');
-        domNode.className = 'code-viewer-comment-widget';
+        domNode.className = codeViewerStyles.commentWidget;
         domNode.textContent = 'Комментировать';
 
-        domNode.onmousedown = (e) => {
+        const handleCommentAction = (e) => {
           e.preventDefault();
           e.stopPropagation();
-
           const selection = editor.getSelection();
+
           if (latestProps.current.onLineContextMenu) {
             latestProps.current.onLineContextMenu({
               startLineNumber: selection.startLineNumber,
               endLineNumber: selection.endLineNumber,
             });
           }
+
           removeCommentWidget(editor);
         };
+
+        domNode.onmousedown = handleCommentAction;
+        domNode.ontouchstart = handleCommentAction;
 
         const widget = {
           getId: () => 'comment-widget',
           getDomNode: () => domNode,
           getPosition: () => ({
-            position: { lineNumber, column: 1 },
+            position: {
+              lineNumber,
+              column: 1,
+            },
             preference: monaco.editor.ContentWidgetPositionPreference
               ? lineNumber <= 2
                 ? [
@@ -145,6 +171,7 @@ const CodeViewer = memo(
 
     const injectRangeStyles = useCallback((ranges, selected) => {
       let styleEl = document.getElementById('code-viewer-range-styles');
+
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = 'code-viewer-range-styles';
@@ -152,11 +179,12 @@ const CodeViewer = memo(
       }
 
       let css = '';
+
       ranges.forEach((range, index) => {
         const isAI = range.isAI;
         const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
-
         let color;
+
         if (isAI) {
           color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
         } else {
@@ -166,12 +194,12 @@ const CodeViewer = memo(
 
         css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
       });
+
       styleEl.textContent = css;
     }, []);
 
     const updateDecorations = useCallback(() => {
       if (!editorRef.current || !monacoRef.current) return;
-
       const uniqueRanges = getUniqueRanges();
       const newDecorations = [];
 
@@ -182,8 +210,11 @@ const CodeViewer = memo(
           range: new monacoRef.current.Range(range.startLine, 1, range.endLine, 1),
           options: {
             isWholeLine: true,
-            className: `code-viewer-comment-line range-idx-${index}`,
-            overviewRuler: { color: isAI ? '#8b5cf6' : '#6366f1', position: 1 },
+            className: [codeViewerStyles.commentLine, `range-idx-${index}`].join(' '),
+            overviewRuler: {
+              color: isAI ? '#8b5cf6' : '#6366f1',
+              position: 1,
+            },
           },
         });
 
@@ -191,8 +222,8 @@ const CodeViewer = memo(
           range: new monacoRef.current.Range(range.startLine, 1, range.startLine, 1),
           options: {
             glyphMarginClassName: isAI
-              ? 'code-viewer-comment-glyph code-viewer-comment-glyph--ai'
-              : 'code-viewer-comment-glyph',
+              ? [codeViewerStyles.commentGlyph, codeViewerStyles.isAi].join(' ')
+              : codeViewerStyles.commentGlyph,
           },
         });
       });
@@ -215,7 +246,6 @@ const CodeViewer = memo(
       rootEditorRef.current = editor;
       const isDiffEditor = !!editor.getModifiedEditor;
       const mainEditor = isDiffEditor ? editor.getModifiedEditor() : editor;
-
       editorRef.current = mainEditor;
       monacoRef.current = monaco;
 
@@ -228,6 +258,7 @@ const CodeViewer = memo(
           precondition: 'editorTextFocus',
           run: (ed) => {
             const selection = ed.getSelection();
+
             if (latestProps.current.onLineContextMenu) {
               latestProps.current.onLineContextMenu({
                 startLineNumber: selection.startLineNumber,
@@ -245,8 +276,13 @@ const CodeViewer = memo(
         if ((isGutter || isContent) && e.target.position) {
           const lineNum = e.target.position.lineNumber;
           const range = getUniqueRanges().find((r) => lineNum >= r.startLine && lineNum <= r.endLine);
+
           if (range && latestProps.current.onLineClick) {
-            const newRange = { startLine: range.startLine, endLine: range.endLine };
+            const newRange = {
+              startLine: range.startLine,
+              endLine: range.endLine,
+            };
+
             setSelectedRange(newRange);
             latestProps.current.onLineClick(newRange);
           }
@@ -256,6 +292,7 @@ const CodeViewer = memo(
       mainEditor.onDidChangeCursorSelection((e) => {
         if (!latestProps.current.canComment) return;
         const sel = e.selection;
+
         if (!sel.isEmpty()) {
           showCommentWidget(mainEditor, monaco, sel.startLineNumber);
         } else {
@@ -266,6 +303,7 @@ const CodeViewer = memo(
       mainEditor.onMouseUp(() => {
         if (!latestProps.current.canComment) return;
         const sel = mainEditor.getSelection();
+
         if (sel && !sel.isEmpty()) {
           showCommentWidget(mainEditor, monaco, sel.startLineNumber);
         }
@@ -289,6 +327,7 @@ const CodeViewer = memo(
     useEffect(() => {
       if (editorRef.current && value !== undefined) {
         const model = editorRef.current.getModel();
+
         if (model && model.getValue() !== value) {
           model.setValue(value);
         }
@@ -298,7 +337,9 @@ const CodeViewer = memo(
     const editorOptions = useMemo(
       () => ({
         readOnly: true,
-        minimap: { enabled: false },
+        minimap: {
+          enabled: false,
+        },
         fontSize: isNarrowScreen ? 12 : 14,
         fontWeight: '400',
         wordWrap: 'off',
@@ -320,11 +361,17 @@ const CodeViewer = memo(
     const calculatedHeight = useMemo(() => {
       const lineCount = (value || '').split('\n').length;
       const height = lineCount * 19 + 40;
+
       return Math.min(Math.max(height, 400), 1000);
     }, [value]);
 
     return (
-      <div className="code-viewer-container" style={{ height: `${calculatedHeight}px` }}>
+      <div
+        className={codeViewerStyles.container}
+        style={{
+          height: `${calculatedHeight}px`,
+        }}
+      >
         {isDiff ? (
           <DiffEditor
             language={language}

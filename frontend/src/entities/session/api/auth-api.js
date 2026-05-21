@@ -31,12 +31,16 @@ export const authApi = {
     return authClient.patch('/api/v1/auth/reset-password', payload);
   },
   getNewAccessToken(refreshToken) {
-    return authClient.post('/api/v1/auth/token', { refreshToken });
+    return authClient.post('/api/v1/auth/token', {
+      refreshToken,
+    });
   },
   getNewRefreshToken(refreshToken, accessToken = tokenStorage.getAccessToken()) {
     return authClient.post(
       '/api/v1/auth/refresh',
-      { refreshToken },
+      {
+        refreshToken,
+      },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -47,7 +51,9 @@ export const authApi = {
   logout(refreshToken, accessToken = tokenStorage.getAccessToken()) {
     return authClient.post(
       '/api/v1/auth/logout',
-      { refreshToken },
+      {
+        refreshToken,
+      },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,

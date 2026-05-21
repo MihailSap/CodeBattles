@@ -20,8 +20,8 @@ import { useSnackbar } from '@/shared/lib/hooks';
 import { useSkillsPopup } from '@/widgets/profile-overview';
 import { patchAuthUser } from '@/entities/session';
 import { lazyNamed } from '@/shared/lib';
-import './ProfilePage.css';
-
+import profilePageStyles from './ProfilePage.module.scss';
+import statisticsSectionStyles from '../../../widgets/profile-overview/ui/statistics-section/StatisticsSection.module.scss';
 const ProfileSettingsModal = lazyNamed(() => import('@/features/update-profile-settings'), 'ProfileSettingsModal');
 
 const EMPTY_PROFILE = {
@@ -34,6 +34,7 @@ const EMPTY_PROFILE = {
 
 const EMPTY_SKILLS = SKILL_GROUPS.reduce((accumulator, group) => {
   accumulator[group.key] = [];
+
   return accumulator;
 }, {});
 
@@ -46,16 +47,35 @@ const DEFAULT_STATISTICS = {
 };
 
 const STAT_CARDS = [
-  { key: 'qualityScore', title: 'Оценка качества' },
-  { key: 'aiQualityScore', title: 'Оценка качества от ИИ' },
-  { key: 'usefulnessIndex', title: 'Индекс полезности' },
-  { key: 'reviewDepth', title: 'Глубина ревью' },
+  {
+    key: 'qualityScore',
+    title: 'Оценка качества',
+  },
+  {
+    key: 'aiQualityScore',
+    title: 'Оценка качества от ИИ',
+  },
+  {
+    key: 'usefulnessIndex',
+    title: 'Индекс полезности',
+  },
+  {
+    key: 'reviewDepth',
+    title: 'Глубина ревью',
+  },
 ];
 
-const sortByAlphabet = (values = []) => [...values].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+const sortByAlphabet = (values = []) =>
+  [...values].sort((a, b) =>
+    a.localeCompare(b, 'ru', {
+      sensitivity: 'base',
+    })
+  );
 
 const normalizeSkills = (skillsFromServer) => {
-  const normalized = { ...EMPTY_SKILLS };
+  const normalized = {
+    ...EMPTY_SKILLS,
+  };
 
   SKILL_GROUPS.forEach((group) => {
     const groupSkills = Array.isArray(skillsFromServer?.[group.key]) ? skillsFromServer[group.key] : [];
@@ -85,14 +105,14 @@ const formatRegistrationDate = (value) => {
 
 const getPercentClass = (percent) => {
   if (percent <= 40) {
-    return 'profile-page__accepted-percent--error';
+    return statisticsSectionStyles.isError;
   }
 
   if (percent <= 80) {
-    return 'profile-page__accepted-percent--warning';
+    return statisticsSectionStyles.isWarning;
   }
 
-  return 'profile-page__accepted-percent--success';
+  return statisticsSectionStyles.isSuccess;
 };
 
 const ProfilePage = () => {
@@ -101,6 +121,7 @@ const ProfilePage = () => {
   const { userId: routeUserId } = useParams();
   const fileInputRef = useRef(null);
   const createdAvatarUrlsRef = useRef(new Set());
+
   const profileFallbackRef = useRef({
     name: '',
     email: '',
@@ -108,6 +129,7 @@ const ProfilePage = () => {
     registeredAt: '',
     avatarPath: '',
   });
+
   const [isProfileEditMode, setIsProfileEditMode] = useState(false);
   const [isSkillsEditMode, setIsSkillsEditMode] = useState(false);
   const [profileData, setProfileData] = useState(EMPTY_PROFILE);
@@ -121,6 +143,7 @@ const ProfilePage = () => {
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
+
   const {
     openedSkillsPopup,
     popupDirection,
@@ -130,10 +153,12 @@ const ProfilePage = () => {
     closeSkillsPopup,
     openSkillsPopup,
   } = useSkillsPopup();
+
   const normalizedRouteUserId = routeUserId ? String(routeUserId) : '';
   const isOwnProfile = !normalizedRouteUserId || normalizedRouteUserId === String(userId ?? '');
   const canEditProfile = isOwnProfile;
   const profileQueryArg = isOwnProfile ? 'me' : normalizedRouteUserId;
+
   const {
     data: profilePayload,
     isLoading: isPageLoading,
@@ -142,6 +167,7 @@ const ProfilePage = () => {
     skip: !isOwnProfile && !normalizedRouteUserId,
     refetchOnMountOrArgChange: 60,
   });
+
   const [deleteAvatar] = useDeleteAvatarMutation();
   const [updateProfileSection, { isLoading: isProfileSaving }] = useUpdateProfileSectionMutation();
   const [updateSkillsSection, { isLoading: isSkillsSaving }] = useUpdateSkillsSectionMutation();
@@ -190,6 +216,7 @@ const ProfilePage = () => {
     }
 
     const fallbackProfile = profileFallbackRef.current;
+
     const normalizedProfile = {
       name: profilePayload?.user?.name ?? (isOwnProfile ? fallbackProfile.name : ''),
       email: profilePayload?.user?.email ?? (isOwnProfile ? fallbackProfile.email : ''),
@@ -197,6 +224,7 @@ const ProfilePage = () => {
       registeredAt: profilePayload?.user?.registeredAt ?? (isOwnProfile ? fallbackProfile.registeredAt : ''),
       avatarPath: profilePayload?.user?.avatarPath ?? (isOwnProfile ? fallbackProfile.avatarPath : ''),
     };
+
     const normalizedSkills = normalizeSkills(profilePayload?.skills);
 
     queueMicrotask(() => {
@@ -204,11 +232,14 @@ const ProfilePage = () => {
       setProfileDraft(normalizedProfile);
       setSkillsData(normalizedSkills);
       setSkillsDraft(normalizedSkills);
+
       setStatistics({
         ...DEFAULT_STATISTICS,
         ...(profilePayload?.statistics || {}),
       });
+
       setAchievements(Array.isArray(profilePayload?.achievements) ? profilePayload.achievements : []);
+
       setReceivedAchievementIds(
         Array.isArray(profilePayload?.receivedAchievementIds) ? profilePayload.receivedAchievementIds : []
       );
@@ -250,7 +281,9 @@ const ProfilePage = () => {
         return leftReceived - rightReceived;
       }
 
-      return left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' });
+      return left.name.localeCompare(right.name, 'ru', {
+        sensitivity: 'base',
+      });
     });
   }, [achievements, receivedAchievementIdSet]);
 
@@ -313,6 +346,7 @@ const ProfilePage = () => {
     removeTemporaryAvatarUrl(profileDraft.avatarPath);
     setPendingAvatarFile(null);
     setShouldDeleteAvatar(true);
+
     setProfileDraft((previousState) => ({
       ...previousState,
       avatarPath: '',
@@ -333,9 +367,9 @@ const ProfilePage = () => {
 
     const localPreviewUrl = URL.createObjectURL(file);
     removeTemporaryAvatarUrl(profileDraft.avatarPath);
-
     setPendingAvatarFile(file);
     setShouldDeleteAvatar(false);
+
     setProfileDraft((previousState) => ({
       ...previousState,
       avatarPath: localPreviewUrl,
@@ -377,6 +411,7 @@ const ProfilePage = () => {
           avatarPath: nextProfile.avatarPath,
         })
       );
+
       showSnackbar('Профиль успешно обновлён', 'success');
     } catch {
       showSnackbar('Не удалось сохранить данные профиля', 'error');
@@ -436,9 +471,12 @@ const ProfilePage = () => {
     }
 
     try {
-      const savedSkills = await updateSkillsSection({ userId: profileData.id || userId, skills: skillsDraft }).unwrap();
-      const normalizedSkills = normalizeSkills(savedSkills);
+      const savedSkills = await updateSkillsSection({
+        userId: profileData.id || userId,
+        skills: skillsDraft,
+      }).unwrap();
 
+      const normalizedSkills = normalizeSkills(savedSkills);
       setSkillsData(normalizedSkills);
       setSkillsDraft(normalizedSkills);
       closeSkillsPopup();
@@ -452,16 +490,16 @@ const ProfilePage = () => {
   const isActionBlocked = isPageLoading || isProfileSaving || isSkillsSaving;
 
   return (
-    <div className="profile-page">
+    <div className={profilePageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <main className="profile-page__content">
+      <main className={profilePageStyles.content}>
         {isPageLoading ? (
-          <div className="profile-page__loader">
+          <div className={profilePageStyles.loader}>
             <Spinner />
           </div>
         ) : (
-          <div className="profile-page__grid">
+          <div className={profilePageStyles.grid}>
             <ProfileSection
               canEditProfile={canEditProfile}
               fileInputRef={fileInputRef}
@@ -514,7 +552,7 @@ const ProfilePage = () => {
 
       {canEditProfile && (
         <button
-          className="profile-page__settings-button"
+          className={profilePageStyles.settingsButton}
           type="button"
           onClick={() => setIsSettingsModalOpen(true)}
           aria-label="Открыть настройки профиля"

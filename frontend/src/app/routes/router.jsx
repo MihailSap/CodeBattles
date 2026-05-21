@@ -8,7 +8,6 @@ import AdminPage from '@/pages/admin';
 import RouteErrorPage from '@/pages/route-error';
 import ProtectedRoute from './ui/ProtectedRoute';
 import { store } from '../providers/store';
-
 const AuthPage = lazy(() => import('@/pages/auth'));
 const LandingPage = lazy(() => import('@/pages/landing'));
 const MainPage = lazy(() => import('@/pages/main'));
@@ -48,10 +47,13 @@ const withSuspense = (element) => (
 
 const authLoader = async () => {
   const state = store.getState();
+
   if (state.auth?.isInitialized) {
     return null;
   }
+
   await store.dispatch(initializeAuth());
+
   return null;
 };
 
@@ -63,49 +65,113 @@ const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,
     HydrateFallback: RootFallback,
     children: [
-      { index: true, element: withSuspense(<LandingPage />) },
+      {
+        index: true,
+        element: withSuspense(<LandingPage />),
+      },
       {
         element: <ProtectedRoute />,
         children: [
           {
             element: <AuthorizedLayout />,
             children: [
-              { path: ROUTES.dashboard, element: withSuspense(<MainPage />) },
-              { path: ROUTES.projects, element: withSuspense(<ProjectsPage />) },
-              { path: ROUTES.projectById, element: withSuspense(<ProjectPage />) },
-              { path: ROUTES.organizationById, element: withSuspense(<OrganizationPage />) },
-              { path: ROUTES.projectTaskCreate, element: withSuspense(<TaskCreatePage />) },
-              { path: ROUTES.projectTaskById, element: withSuspense(<TaskPage />) },
-              { path: ROUTES.reviewById, element: withSuspense(<ReviewPage />) },
-              { path: ROUTES.reviews, element: withSuspense(<ReviewsPage />) },
-              { path: ROUTES.leaderboard, element: withSuspense(<LeaderboardPage />) },
-              { path: ROUTES.profile, element: withSuspense(<ProfilePage />) },
-              { path: ROUTES.profileByUserId, element: withSuspense(<ProfilePage />) },
+              {
+                path: ROUTES.dashboard,
+                element: withSuspense(<MainPage />),
+              },
+              {
+                path: ROUTES.projects,
+                element: withSuspense(<ProjectsPage />),
+              },
+              {
+                path: ROUTES.projectById,
+                element: withSuspense(<ProjectPage />),
+              },
+              {
+                path: ROUTES.organizationById,
+                element: withSuspense(<OrganizationPage />),
+              },
+              {
+                path: ROUTES.projectTaskCreate,
+                element: withSuspense(<TaskCreatePage />),
+              },
+              {
+                path: ROUTES.projectTaskById,
+                element: withSuspense(<TaskPage />),
+              },
+              {
+                path: ROUTES.reviewById,
+                element: withSuspense(<ReviewPage />),
+              },
+              {
+                path: ROUTES.reviews,
+                element: withSuspense(<ReviewsPage />),
+              },
+              {
+                path: ROUTES.leaderboard,
+                element: withSuspense(<LeaderboardPage />),
+              },
+              {
+                path: ROUTES.profile,
+                element: withSuspense(<ProfilePage />),
+              },
+              {
+                path: ROUTES.profileByUserId,
+                element: withSuspense(<ProfilePage />),
+              },
             ],
           },
         ],
       },
       {
         element: <ProtectedRoute onlyAdmin />,
-        children: [{ path: ROUTES.admin, element: withSuspense(<AdminPage />) }],
+        children: [
+          {
+            path: ROUTES.admin,
+            element: withSuspense(<AdminPage />),
+          },
+        ],
       },
       {
         element: <ProtectedRoute onlyUnauthorized />,
         children: [
-          { path: ROUTES.login, element: withSuspense(<AuthPage />) },
-          { path: ROUTES.register, element: withSuspense(<AuthPage />) },
-          { path: ROUTES.recovery, element: withSuspense(<RecoveryPage />) },
+          {
+            path: ROUTES.login,
+            element: withSuspense(<AuthPage />),
+          },
+          {
+            path: ROUTES.register,
+            element: withSuspense(<AuthPage />),
+          },
+          {
+            path: ROUTES.recovery,
+            element: withSuspense(<RecoveryPage />),
+          },
         ],
       },
-      { path: ROUTES.verifyEmail, element: withSuspense(<VerifyEmailPage />) },
-      { path: ROUTES.resetPassword, element: withSuspense(<ResetPasswordPage />) },
-      { path: ROUTES.projectJoinByToken, element: withSuspense(<ProjectInviteJoinPage />) },
-      { path: ROUTES.organizationJoinByToken, element: withSuspense(<OrganizationInviteJoinPage />) },
-      { path: '*', element: withSuspense(<NotFoundPage />) },
+      {
+        path: ROUTES.verifyEmail,
+        element: withSuspense(<VerifyEmailPage />),
+      },
+      {
+        path: ROUTES.resetPassword,
+        element: withSuspense(<ResetPasswordPage />),
+      },
+      {
+        path: ROUTES.projectJoinByToken,
+        element: withSuspense(<ProjectInviteJoinPage />),
+      },
+      {
+        path: ROUTES.organizationJoinByToken,
+        element: withSuspense(<OrganizationInviteJoinPage />),
+      },
+      {
+        path: '*',
+        element: withSuspense(<NotFoundPage />),
+      },
     ],
   },
 ]);
 
 const AppRouter = () => <RouterProvider router={router} />;
-
 export default AppRouter;

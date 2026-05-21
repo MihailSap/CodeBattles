@@ -8,18 +8,36 @@ import Spinner from '@/shared/ui/spinner';
 import { REVIEW_SORT, REVIEW_SORT_LABEL, REVIEW_STATUS, REVIEW_STATUS_LABEL } from '@/entities/review';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
-import './ReviewsPage.css';
+import reviewsPageStyles from './ReviewsPage.module.scss';
 
 const STATUS_FILTER_OPTIONS = [
-  { value: '', label: 'Все' },
-  { value: REVIEW_STATUS.NEW, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.NEW] },
-  { value: REVIEW_STATUS.IN_PROGRESS, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.IN_PROGRESS] },
-  { value: REVIEW_STATUS.COMPLETED, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.COMPLETED] },
+  {
+    value: '',
+    label: 'Все',
+  },
+  {
+    value: REVIEW_STATUS.NEW,
+    label: REVIEW_STATUS_LABEL[REVIEW_STATUS.NEW],
+  },
+  {
+    value: REVIEW_STATUS.IN_PROGRESS,
+    label: REVIEW_STATUS_LABEL[REVIEW_STATUS.IN_PROGRESS],
+  },
+  {
+    value: REVIEW_STATUS.COMPLETED,
+    label: REVIEW_STATUS_LABEL[REVIEW_STATUS.COMPLETED],
+  },
 ];
 
 const SORT_OPTIONS = [
-  { value: REVIEW_SORT.NEAREST_FIRST, label: REVIEW_SORT_LABEL[REVIEW_SORT.NEAREST_FIRST] },
-  { value: REVIEW_SORT.FARTHEST_FIRST, label: REVIEW_SORT_LABEL[REVIEW_SORT.FARTHEST_FIRST] },
+  {
+    value: REVIEW_SORT.NEAREST_FIRST,
+    label: REVIEW_SORT_LABEL[REVIEW_SORT.NEAREST_FIRST],
+  },
+  {
+    value: REVIEW_SORT.FARTHEST_FIRST,
+    label: REVIEW_SORT_LABEL[REVIEW_SORT.FARTHEST_FIRST],
+  },
 ];
 
 const groupReviews = (reviews) => {
@@ -56,7 +74,9 @@ const groupReviews = (reviews) => {
     .map((group) => ({
       ...group,
       projects: [...group.projectsMap.values()].sort((left, right) =>
-        left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' })
+        left.title.localeCompare(right.title, 'ru', {
+          sensitivity: 'base',
+        })
       ),
     }))
     .sort((left, right) => {
@@ -68,7 +88,9 @@ const groupReviews = (reviews) => {
         return -1;
       }
 
-      return left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' });
+      return left.title.localeCompare(right.title, 'ru', {
+        sensitivity: 'base',
+      });
     });
 };
 
@@ -77,7 +99,14 @@ const ReviewsPage = () => {
   const { userId } = useAuth();
   const [statusFilter, setStatusFilter] = useState('');
   const [sortDirection, setSortDirection] = useState(REVIEW_SORT.NEAREST_FIRST);
-  const { data: pageData = { items: [], totalItems: 0 }, isLoading } = useGetAssignedReviewsQuery(
+
+  const {
+    data: pageData = {
+      items: [],
+      totalItems: 0,
+    },
+    isLoading,
+  } = useGetAssignedReviewsQuery(
     {
       viewerId: Number(userId),
       params: {
@@ -90,6 +119,7 @@ const ReviewsPage = () => {
       refetchOnMountOrArgChange: 30,
     }
   );
+
   const openReview = useCallback(
     (reviewId) => {
       navigate(ROUTES.reviewById.replace(':reviewId', reviewId));
@@ -100,13 +130,13 @@ const ReviewsPage = () => {
   const groupedReviews = useMemo(() => groupReviews(pageData.items), [pageData.items]);
 
   return (
-    <div className="reviews-page">
-      <main className="reviews-page__content">
-        <section className="reviews-page__controls">
-          <h1 className="reviews-page__title">Активные ревью</h1>
+    <div className={reviewsPageStyles.root}>
+      <main className={reviewsPageStyles.content}>
+        <section className={reviewsPageStyles.controls}>
+          <h1 className={reviewsPageStyles.title}>Активные ревью</h1>
 
-          <div className="reviews-page__controls-row">
-            <div className="reviews-page__filters">
+          <div className={reviewsPageStyles.controlsRow}>
+            <div className={reviewsPageStyles.filters}>
               <ReviewDropdown
                 label="Статус:"
                 placeholder="Все"
@@ -122,24 +152,24 @@ const ReviewsPage = () => {
               />
             </div>
 
-            <p className="reviews-page__total">Всего {pageData.totalItems} ревью</p>
+            <p className={reviewsPageStyles.total}>Всего {pageData.totalItems} ревью</p>
           </div>
         </section>
 
-        <section className="reviews-page__sections">
+        <section className={reviewsPageStyles.sections}>
           {isLoading ? (
-            <div className="reviews-page__loader">
+            <div className={reviewsPageStyles.loader}>
               <Spinner />
             </div>
           ) : groupedReviews.length === 0 ? (
-            <p className="reviews-page__empty">Нет назначенных ревью</p>
+            <p className={reviewsPageStyles.isEmpty}>Нет назначенных ревью</p>
           ) : (
             groupedReviews.map((organization) => (
               <ReviewSection key={organization.id} title={organization.title} reviewsCount={organization.reviewsCount}>
-                <div className="reviews-page__projects-list">
+                <div className={reviewsPageStyles.projectsList}>
                   {organization.projects.map((project) => (
                     <ReviewSection key={project.id} title={project.title} reviewsCount={project.reviews.length} nested>
-                      <div className="reviews-page__reviews-list">
+                      <div className={reviewsPageStyles.list}>
                         {project.reviews.map((review) => (
                           <ReviewCard key={review.id} review={review} onOpen={openReview} />
                         ))}

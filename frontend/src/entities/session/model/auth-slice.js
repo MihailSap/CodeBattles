@@ -17,7 +17,9 @@ const EMPTY_USER = {
 
 const normalizeUser = (user) => {
   if (!user || typeof user !== 'object') {
-    return { ...EMPTY_USER };
+    return {
+      ...EMPTY_USER,
+    };
   }
 
   return {
@@ -35,13 +37,16 @@ export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async 
     return rejectWithValue(getApiErrorMessage(error, 'Не удалось получить данные пользователя', 'currentUser'));
   }
 });
-
 export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { dispatch, rejectWithValue }) => {
   const accessToken = tokenStorage.getAccessToken();
   const refreshToken = tokenStorage.getRefreshToken();
 
   if (!accessToken && !refreshToken) {
-    return { user: normalizeUser(), userId: null, isAuthenticated: false };
+    return {
+      user: normalizeUser(),
+      userId: null,
+      isAuthenticated: false,
+    };
   }
 
   try {
@@ -58,13 +63,10 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { di
     return rejectWithValue(errorMessage || 'Сессия недействительна, войдите снова');
   }
 });
-
 export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { dispatch, rejectWithValue }) => {
   try {
     const response = await authApi.login(payload);
-
     tokenStorage.setTokens(response.data);
-
     const user = await dispatch(fetchCurrentUser()).unwrap();
 
     return {
@@ -78,7 +80,6 @@ export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { di
     return rejectWithValue(getApiErrorMessage(error, 'Ошибка входа', 'login'));
   }
 });
-
 export const registerUser = createAsyncThunk('auth/registerUser', async (payload, { rejectWithValue }) => {
   try {
     await authApi.register(payload);
@@ -91,15 +92,12 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (payload
     return rejectWithValue(getApiErrorMessage(error, 'Ошибка регистрации', 'register'));
   }
 });
-
 export const verifyEmailUser = createAsyncThunk(
   'auth/verifyEmailUser',
   async (token, { dispatch, rejectWithValue }) => {
     try {
       const response = await authApi.verifyEmail(token);
-
       tokenStorage.setTokens(response.data);
-
       const user = await dispatch(fetchCurrentUser()).unwrap();
 
       return {
@@ -114,7 +112,6 @@ export const verifyEmailUser = createAsyncThunk(
     }
   }
 );
-
 export const requestPasswordReset = createAsyncThunk(
   'auth/requestPasswordReset',
   async (email, { rejectWithValue }) => {
@@ -129,7 +126,6 @@ export const requestPasswordReset = createAsyncThunk(
     }
   }
 );
-
 export const resetPasswordByToken = createAsyncThunk(
   'auth/resetPasswordByToken',
   async (payload, { rejectWithValue }) => {
@@ -142,7 +138,6 @@ export const resetPasswordByToken = createAsyncThunk(
     }
   }
 );
-
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
   const refreshToken = tokenStorage.getRefreshToken();
   const accessToken = tokenStorage.getAccessToken();
@@ -157,7 +152,6 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
 
   return null;
 });
-
 export const updateUserLogin = createAsyncThunk(
   'auth/updateUserLogin',
   async (newLogin, { getState, rejectWithValue }) => {
@@ -176,7 +170,6 @@ export const updateUserLogin = createAsyncThunk(
     }
   }
 );
-
 export const updateUserPassword = createAsyncThunk(
   'auth/updateUserPassword',
   async (newPassword, { getState, rejectWithValue }) => {
@@ -373,5 +366,4 @@ const authSlice = createSlice({
 });
 
 export const { clearAuthMessages, patchAuthUser } = authSlice.actions;
-
 export default authSlice.reducer;

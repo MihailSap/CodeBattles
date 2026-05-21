@@ -9,8 +9,8 @@ import { CheckIcon, CrossIcon, DislikeIcon, LikeIcon } from '@/shared/ui/icons';
 import Snackbar from '@/shared/ui/snackbar';
 import { useDebouncedValue, useSnackbar } from '@/shared/lib/hooks';
 import { getApiErrorMessage } from '@/shared/lib';
-import './AdminSystemSettingsTab.css';
-
+import adminSystemSettingsTabStyles from './AdminSystemSettingsTab.module.scss';
+import adminComplaintsTabStyles from '../admin-complaints-tab/AdminComplaintsTab.module.scss';
 const DEADLINE_SAVE_DEBOUNCE_MS = 650;
 const MAX_PROMPT_LENGTH = 5000;
 
@@ -27,6 +27,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
     skip: !isActive,
     refetchOnMountOrArgChange: 30,
   });
+
   const [updateDeadline, updateDeadlineState] = useUpdateAdminReviewDeadlineDaysMutation();
   const [updatePrompt, updatePromptState] = useUpdateAdminAiSystemPromptMutation();
 
@@ -54,10 +55,12 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
     const saveDeadline = async () => {
       try {
         setError('');
+
         const response = await updateDeadline({
           reviewDeadlineDays: debouncedDeadlineDays,
           actor,
         }).unwrap();
+
         setLastSavedDeadlineDays(response.reviewDeadlineDays);
         showSnackbar(`Срок проверки ревью сохранен: ${response.reviewDeadlineDays} дней`, 'success');
       } catch (requestError) {
@@ -66,6 +69,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
           'Не удалось сохранить срок ревью',
           'updateAdminReviewDeadlineDays'
         );
+
         setError(message);
         setReviewDeadlineDays(lastSavedDeadlineDays);
         showSnackbar(message, 'error');
@@ -78,8 +82,8 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
   const queryError = settingsQuery.isError
     ? getApiErrorMessage(settingsQuery.error, 'Не удалось загрузить настройки системы', 'getAdminSystemSettings')
     : '';
-  const visibleError = error || queryError;
 
+  const visibleError = error || queryError;
   const hasPromptChanges = promptDraft !== savedPrompt;
   const stats = settingsQuery.data?.aiFeedbackStats;
   const totalReactions = (stats?.totalLikes || 0) + (stats?.totalDislikes || 0);
@@ -89,10 +93,12 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
   const handlePromptSave = async () => {
     try {
       setError('');
+
       const response = await updatePrompt({
         aiSystemPrompt: promptDraft,
         actor,
       }).unwrap();
+
       setSavedPrompt(response.aiSystemPrompt);
       setPromptDraft(response.aiSystemPrompt);
       showSnackbar('Системный промпт сохранен', 'success');
@@ -102,6 +108,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
         'Не удалось сохранить системный промпт',
         'updateAdminAiSystemPrompt'
       );
+
       setError(message);
       showSnackbar(message, 'error');
     }
@@ -113,11 +120,14 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
 
   if (settingsQuery.isLoading || (settingsQuery.isFetching && !settingsQuery.data)) {
     return (
-      <section className="admin-panel admin-settings" aria-label="Настройки системы">
-        <div className="admin-panel__top">
-          <h2 className="admin-panel__title">Настройки системы</h2>
+      <section
+        className={[adminComplaintsTabStyles.root, adminSystemSettingsTabStyles.root].join(' ')}
+        aria-label="Настройки системы"
+      >
+        <div className={adminComplaintsTabStyles.top}>
+          <h2 className={adminComplaintsTabStyles.title}>Настройки системы</h2>
         </div>
-        <div className="admin-panel__loader">
+        <div className={adminComplaintsTabStyles.loader}>
           <Spinner />
         </div>
       </section>
@@ -125,18 +135,18 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
   }
 
   return (
-    <div className="admin-settings">
+    <div className={adminSystemSettingsTabStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <section className="admin-panel" aria-label="Настройки ревью">
-        <div className="admin-panel__top">
-          <h2 className="admin-panel__title">Настройки системы</h2>
+      <section className={adminComplaintsTabStyles.root} aria-label="Настройки ревью">
+        <div className={adminComplaintsTabStyles.top}>
+          <h2 className={adminComplaintsTabStyles.title}>Настройки системы</h2>
         </div>
 
-        <div className="admin-settings__grid">
-          <label className="admin-settings__field admin-settings__deadline-field">
+        <div className={adminSystemSettingsTabStyles.grid}>
+          <label className={[adminSystemSettingsTabStyles.field, adminSystemSettingsTabStyles.deadlineField].join(' ')}>
             <span>Срок на проверку ревью</span>
-            <div className="admin-settings__number-control">
+            <div className={adminSystemSettingsTabStyles.numberControl}>
               <input
                 type="number"
                 min="1"
@@ -149,7 +159,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
             <small>{updateDeadlineState.isLoading ? 'Сохраняем...' : `Сохранено: ${lastSavedDeadlineDays} дней`}</small>
           </label>
 
-          <label className="admin-settings__field admin-settings__prompt-field">
+          <label className={[adminSystemSettingsTabStyles.field, adminSystemSettingsTabStyles.promptField].join(' ')}>
             <span>Системный промпт AI-модели</span>
             <textarea
               value={promptDraft}
@@ -163,9 +173,9 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
         </div>
 
         {hasPromptChanges && (
-          <div className="admin-settings__prompt-actions">
+          <div className={adminSystemSettingsTabStyles.promptActions}>
             <button
-              className="admin-settings__prompt-button admin-settings__prompt-button--save"
+              className={[adminSystemSettingsTabStyles.promptButton, adminSystemSettingsTabStyles.isSave].join(' ')}
               type="button"
               onClick={handlePromptSave}
               disabled={updatePromptState.isLoading || promptDraft.trim().length === 0}
@@ -174,7 +184,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
               <CheckIcon />
             </button>
             <button
-              className="admin-settings__prompt-button admin-settings__prompt-button--cancel"
+              className={[adminSystemSettingsTabStyles.promptButton, adminSystemSettingsTabStyles.isCancel].join(' ')}
               type="button"
               onClick={handlePromptCancel}
               disabled={updatePromptState.isLoading}
@@ -185,47 +195,67 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
           </div>
         )}
 
-        {visibleError && <p className="admin-panel__error">{visibleError}</p>}
+        {visibleError && <p className={adminComplaintsTabStyles.isError}>{visibleError}</p>}
       </section>
 
-      <section className="admin-panel" aria-label="Статистика реакций на AI-комментарии">
-        <div className="admin-panel__top">
+      <section className={adminComplaintsTabStyles.root} aria-label="Статистика реакций на AI-комментарии">
+        <div className={adminComplaintsTabStyles.top}>
           <div>
-            <h2 className="admin-panel__title">Реакции на AI-комментарии</h2>
-            <p className="admin-panel__subtitle">Последние 30 дней</p>
+            <h2 className={adminComplaintsTabStyles.title}>Реакции на AI-комментарии</h2>
+            <p className={adminComplaintsTabStyles.subtitle}>Последние 30 дней</p>
           </div>
         </div>
 
-        <div className="admin-settings__stats">
-          <div className="admin-settings__stat admin-settings__stat--likes">
+        <div className={adminSystemSettingsTabStyles.stats}>
+          <div className={[adminSystemSettingsTabStyles.stat, adminSystemSettingsTabStyles.isLikes].join(' ')}>
             <LikeIcon filled />
             <span>{stats?.totalLikes || 0}</span>
             <small>суммарно лайков</small>
           </div>
-          <div className="admin-settings__stat admin-settings__stat--dislikes">
+          <div className={[adminSystemSettingsTabStyles.stat, adminSystemSettingsTabStyles.isDislikes].join(' ')}>
             <DislikeIcon filled />
             <span>{stats?.totalDislikes || 0}</span>
             <small>суммарно дизлайков</small>
           </div>
-          <div className="admin-settings__stat admin-settings__stat--ratio">
+          <div className={[adminSystemSettingsTabStyles.stat, adminSystemSettingsTabStyles.isRatio].join(' ')}>
             <div
-              className="admin-settings__ratio-bar"
+              className={adminSystemSettingsTabStyles.ratioBar}
               aria-label={`Лайки ${likesPercent}%, дизлайки ${dislikesPercent}%`}
             >
               <span
-                className="admin-settings__ratio-segment admin-settings__ratio-segment--likes"
-                style={{ width: `${likesPercent}%` }}
+                className={[
+                  adminSystemSettingsTabStyles.ratioSegment,
+                  adminSystemSettingsTabStyles.ratioSegmentLikes,
+                ].join(' ')}
+                style={{
+                  width: `${likesPercent}%`,
+                }}
               />
               <span
-                className="admin-settings__ratio-segment admin-settings__ratio-segment--dislikes"
-                style={{ width: `${dislikesPercent}%` }}
+                className={[
+                  adminSystemSettingsTabStyles.ratioSegment,
+                  adminSystemSettingsTabStyles.ratioSegmentDislikes,
+                ].join(' ')}
+                style={{
+                  width: `${dislikesPercent}%`,
+                }}
               />
             </div>
-            <div className="admin-settings__ratio-legend" aria-hidden="true">
-              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--likes">
+            <div className={adminSystemSettingsTabStyles.ratioLegend} aria-hidden="true">
+              <span
+                className={[
+                  adminSystemSettingsTabStyles.ratioLegendItem,
+                  adminSystemSettingsTabStyles.ratioLegendItemLikes,
+                ].join(' ')}
+              >
                 {likesPercent}% лайков
               </span>
-              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--dislikes">
+              <span
+                className={[
+                  adminSystemSettingsTabStyles.ratioLegendItem,
+                  adminSystemSettingsTabStyles.ratioLegendItemDislikes,
+                ].join(' ')}
+              >
                 {dislikesPercent}% дизлайков
               </span>
             </div>

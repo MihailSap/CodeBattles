@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { CrossIcon } from '@/shared/ui/icons';
-import './Snackbar.css';
+import snackbarStyles from './Snackbar.module.scss';
+
+const TYPE_CLASS = {
+  success: snackbarStyles.isSuccess,
+  error: snackbarStyles.isError,
+};
+
+const normalizeType = (type) => (String(type).toLowerCase().includes('error') ? 'error' : 'success');
 
 const Snackbar = ({ message, type = 'success', onClose }) => {
   const [displayedMessage, setDisplayedMessage] = useState('');
@@ -27,6 +34,7 @@ const Snackbar = ({ message, type = 'success', onClose }) => {
     const frameId = window.requestAnimationFrame(() => {
       setIsVisible(false);
     });
+
     const timeoutId = window.setTimeout(() => {
       setDisplayedMessage('');
     }, 260);
@@ -43,15 +51,21 @@ const Snackbar = ({ message, type = 'success', onClose }) => {
 
   return (
     <div
-      className={`snackbar snackbar--${displayedType} ${isVisible ? 'snackbar--visible' : 'snackbar--hidden'}`}
+      className={[
+        snackbarStyles.root,
+        TYPE_CLASS[normalizeType(displayedType)],
+        isVisible ? snackbarStyles.isVisible : snackbarStyles.isHidden,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       role="status"
       aria-live="polite"
     >
-      <span className="snackbar__message">{displayedMessage}</span>
-      <button className="snackbar__close" type="button" onClick={onClose} aria-label="Закрыть уведомление">
+      <span className={snackbarStyles.message}>{displayedMessage}</span>
+      <button className={snackbarStyles.close} type="button" onClick={onClose} aria-label="Закрыть уведомление">
         <CrossIcon />
       </button>
-      <span className="snackbar__progress" aria-hidden="true" />
+      <span className={snackbarStyles.progress} aria-hidden="true" />
     </div>
   );
 };

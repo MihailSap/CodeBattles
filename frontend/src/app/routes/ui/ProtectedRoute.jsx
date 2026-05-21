@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import Spinner from '@/shared/ui/spinner';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
-import './ProtectedRoute.css';
+import protectedRouteStyles from './ProtectedRoute.module.scss';
 
 const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
   const location = useLocation();
@@ -11,7 +11,7 @@ const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
 
   if (!isInitialized) {
     return (
-      <div className="route-loader-wrapper">
+      <div className={protectedRouteStyles.routeLoaderWrapper}>
         <Spinner />
       </div>
     );
@@ -22,7 +22,15 @@ const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }) => {
   }
 
   if (!onlyUnauthorized && !isAuthenticated) {
-    return <Navigate to={ROUTES.login} replace state={{ from: `${location.pathname}${location.search}` }} />;
+    return (
+      <Navigate
+        to={ROUTES.login}
+        replace
+        state={{
+          from: `${location.pathname}${location.search}`,
+        }}
+      />
+    );
   }
 
   if (onlyAdmin && !isAdmin) {

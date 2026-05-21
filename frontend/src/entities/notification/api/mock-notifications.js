@@ -4,6 +4,7 @@ import { formatNotificationDeadline, getNotificationExpiresAt } from '../lib/not
 const makeDate = (minutesFromNow) => {
   const date = new Date();
   date.setMinutes(date.getMinutes() + minutesFromNow);
+
   return date.toISOString();
 };
 
@@ -14,7 +15,10 @@ const createNotification = (notification) => {
     ...notification,
     isRead: Boolean(notification.isRead),
     createdAt,
-    expiresAt: getNotificationExpiresAt({ ...notification, createdAt }),
+    expiresAt: getNotificationExpiresAt({
+      ...notification,
+      createdAt,
+    }),
   };
 };
 
@@ -223,7 +227,9 @@ export const MOCK_NOTIFICATIONS = [
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_LEADERBOARD,
-      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD },
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.LEADERBOARD,
+      },
     },
   }),
   createNotification({
@@ -257,11 +263,12 @@ export const MOCK_NOTIFICATIONS = [
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_PROFILE,
-      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE },
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.PROFILE,
+      },
     },
   }),
 ];
-
 export const MOCK_REALTIME_NOTIFICATIONS = [
   createNotification({
     id: 'mock-rt-review-204',

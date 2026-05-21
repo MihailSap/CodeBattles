@@ -1,5 +1,4 @@
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/shared/config/auth';
-
 export const tokenStorage = {
   getAccessToken() {
     return localStorage.getItem(ACCESS_TOKEN_KEY);

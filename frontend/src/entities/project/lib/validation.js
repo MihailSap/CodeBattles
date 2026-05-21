@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { TASK_REVIEW_TYPE } from '../model';
-
 const URL_PATTERN = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
 
 const optionalUrlSchema = z
@@ -26,11 +25,9 @@ export const projectCreateFormSchema = z.object({
   stack: z.array(z.unknown()).default([]),
   privacy: z.string().min(1, 'Выберите приватность'),
 });
-
 export const projectSettingsFormSchema = projectCreateFormSchema.extend({
   aiReviewEnabled: z.boolean().default(false),
 });
-
 export const taskCreateFormSchema = z
   .object({
     name: z
@@ -58,7 +55,6 @@ export const taskCreateFormSchema = z
       });
     }
   });
-
 export const taskSettingsFormSchema = z
   .object({
     name: taskCreateFormSchema.shape.name,

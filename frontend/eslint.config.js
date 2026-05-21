@@ -21,6 +21,18 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'padding-line-between-statements': [
+        'error',
+        { blankLine: 'always', prev: '*', next: 'return' },
+        { blankLine: 'always', prev: '*', next: 'multiline-block-like' },
+        { blankLine: 'always', prev: 'multiline-block-like', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'multiline-expression' },
+        { blankLine: 'always', prev: 'multiline-expression', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'multiline-const' },
+        { blankLine: 'always', prev: 'multiline-const', next: '*' },
+        { blankLine: 'always', prev: '*', next: 'multiline-let' },
+        { blankLine: 'always', prev: 'multiline-let', next: '*' },
+      ],
     },
   },
   eslintConfigPrettier,

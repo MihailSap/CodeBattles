@@ -6,15 +6,16 @@ import { ROUTES } from '@/shared/config/routes';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { useGetMyOrganizationsQuery } from '@/entities/project';
 import Spinner from '@/shared/ui/spinner';
-import './OrganizationsSidebar.css';
+import organizationsSidebarStyles from './OrganizationsSidebar.module.scss';
+import mainPageStyles from '../../../pages/main/ui/MainPage.module.scss';
 
 const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
   const { data: items = [], isLoading } = useGetMyOrganizationsQuery(viewerId, {
     skip: !isOpen || !viewerId,
     refetchOnMountOrArgChange: 60,
   });
-  const headerHeight = document.querySelector('.header')?.getBoundingClientRect().height || 0;
 
+  const headerHeight = document.querySelector(`.${mainPageStyles.header}`)?.getBoundingClientRect().height || 0;
   useBodyScrollLock(isOpen);
 
   const sorted = useMemo(
@@ -27,63 +28,97 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
           return leftPriority - rightPriority;
         }
 
-        return left.name.localeCompare(right.name, 'ru', { sensitivity: 'base' });
+        return left.name.localeCompare(right.name, 'ru', {
+          sensitivity: 'base',
+        });
       }),
     [items]
   );
 
   return (
     <div
-      className={`organizations-sidebar__overlay ${isOpen ? 'organizations-sidebar__overlay--open' : 'organizations-sidebar__overlay--closed'}`}
+      className={[
+        organizationsSidebarStyles.overlay,
+        isOpen ? organizationsSidebarStyles.isOpen : organizationsSidebarStyles.isClosed,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       role="presentation"
       onClick={isOpen ? onClose : undefined}
     >
       <aside
-        className={`organizations-sidebar ${isOpen ? 'organizations-sidebar--open' : 'organizations-sidebar--closed'}`}
+        className={[
+          organizationsSidebarStyles.root,
+          isOpen
+            ? organizationsSidebarStyles.organizationsSidebarOpen
+            : organizationsSidebarStyles.organizationsSidebarClosed,
+        ]
+          .filter(Boolean)
+          .join(' ')}
         role="dialog"
         aria-modal="true"
         aria-label="Мои организации"
         onClick={(event) => event.stopPropagation()}
-        style={{ top: `${headerHeight + 30}px`, height: `calc(100vh - ${headerHeight + 60}px)` }}
+        style={{
+          top: `${headerHeight + 30}px`,
+          height: `calc(100vh - ${headerHeight + 60}px)`,
+        }}
       >
-        <div className="organizations-sidebar__head">
-          <h2 className="organizations-sidebar__title">Мои организации</h2>
-          <button className="organizations-sidebar__close" type="button" onClick={onClose} aria-label="Свернуть список">
+        <div className={organizationsSidebarStyles.head}>
+          <h2 className={organizationsSidebarStyles.title}>Мои организации</h2>
+          <button
+            className={organizationsSidebarStyles.close}
+            type="button"
+            onClick={onClose}
+            aria-label="Свернуть список"
+          >
             <CollapseIcon />
           </button>
         </div>
 
-        <ul className="organizations-sidebar__list">
+        <ul className={organizationsSidebarStyles.list}>
           {isLoading ? (
-            <li className="organizations-sidebar__loading">
+            <li className={organizationsSidebarStyles.isLoading}>
               <Spinner />
             </li>
           ) : sorted.length === 0 ? (
-            <li className="organizations-sidebar__empty">Вы еще не создали ни одну организацию</li>
+            <li className={organizationsSidebarStyles.isEmpty}>Вы еще не создали ни одну организацию</li>
           ) : (
             sorted.map((organization, index) => (
               <li
                 key={organization.id}
-                className={`organizations-sidebar__item ${index === sorted.length - 1 ? 'organizations-sidebar__item--last' : ''}`}
+                className={[
+                  organizationsSidebarStyles.item,
+                  index === sorted.length - 1 ? organizationsSidebarStyles.isLast : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               >
                 <Link
-                  className="organizations-sidebar__item-link"
+                  className={organizationsSidebarStyles.itemLink}
                   to={ROUTES.organizationById.replace(':organizationId', organization.id)}
                   onClick={onClose}
                 >
                   <img
-                    className="organizations-sidebar__logo"
+                    className={organizationsSidebarStyles.logo}
                     src={organization.logo}
                     alt={`Логотип ${organization.name}`}
                   />
-                  <div className="organizations-sidebar__meta">
-                    <p className="organizations-sidebar__name">{organization.name}</p>
+                  <div className={organizationsSidebarStyles.meta}>
+                    <p className={organizationsSidebarStyles.name}>{organization.name}</p>
                     <p
-                      className={`organizations-sidebar__role ${organization.role === ORGANIZATION_MEMBER_ROLE.OWNER ? 'organizations-sidebar__role--owner' : 'organizations-sidebar__role--member'}`}
+                      className={[
+                        organizationsSidebarStyles.role,
+                        organization.role === ORGANIZATION_MEMBER_ROLE.OWNER
+                          ? organizationsSidebarStyles.isOwner
+                          : organizationsSidebarStyles.isMember,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                     >
                       {ORGANIZATION_MEMBER_ROLE_LABELS[organization.role]}
                     </p>
-                    <p className="organizations-sidebar__projects">Проектов: {organization.projectsCount}</p>
+                    <p className={organizationsSidebarStyles.projects}>Проектов: {organization.projectsCount}</p>
                   </div>
                 </Link>
               </li>

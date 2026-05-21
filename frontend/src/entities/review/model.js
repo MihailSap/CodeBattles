@@ -3,26 +3,21 @@ export const REVIEW_STATUS = {
   IN_PROGRESS: 'IN_PROGRESS',
   COMPLETED: 'COMPLETED',
 };
-
 export const REVIEW_STATUS_LABEL = {
   [REVIEW_STATUS.NEW]: 'Новое',
   [REVIEW_STATUS.IN_PROGRESS]: 'В работе',
   [REVIEW_STATUS.COMPLETED]: 'Завершено',
 };
-
 export const REVIEW_SORT = {
   NEAREST_FIRST: 'NEAREST_FIRST',
   FARTHEST_FIRST: 'FARTHEST_FIRST',
 };
-
 export const REVIEW_SORT_LABEL = {
   [REVIEW_SORT.NEAREST_FIRST]: 'Сначала ближайшие',
   [REVIEW_SORT.FARTHEST_FIRST]: 'Сначала дальнейшие',
 };
-
 export const REVIEWS_NETWORK_DELAY_MS = 600;
 export const REVIEWS_PAGE_SIZE_DEFAULT = 15;
-
 export const COMMENT_CATEGORY = {
   BUG: 'BUG',
   PERFORMANCE: 'PERFORMANCE',
@@ -33,7 +28,6 @@ export const COMMENT_CATEGORY = {
   REFACTORING: 'REFACTORING',
   OTHER: 'OTHER',
 };
-
 export const COMMENT_CATEGORY_LABEL = {
   [COMMENT_CATEGORY.BUG]: 'Баг',
   [COMMENT_CATEGORY.PERFORMANCE]: 'Производительность',
@@ -44,7 +38,6 @@ export const COMMENT_CATEGORY_LABEL = {
   [COMMENT_CATEGORY.REFACTORING]: 'Предложение по рефакторингу',
   [COMMENT_CATEGORY.OTHER]: 'Другое',
 };
-
 export const COMMENT_CATEGORY_COLOR = {
   [COMMENT_CATEGORY.BUG]: '#f85149',
   [COMMENT_CATEGORY.PERFORMANCE]: '#f0883e',
@@ -55,19 +48,16 @@ export const COMMENT_CATEGORY_COLOR = {
   [COMMENT_CATEGORY.REFACTORING]: '#15c059',
   [COMMENT_CATEGORY.OTHER]: '#ffcc00',
 };
-
 export const COMMENT_SEVERITY = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
 };
-
 export const COMMENT_SEVERITY_LABEL = {
   [COMMENT_SEVERITY.LOW]: 'Низкий',
   [COMMENT_SEVERITY.MEDIUM]: 'Средний',
   [COMMENT_SEVERITY.HIGH]: 'Высокий',
 };
-
 export const REPORT_REASON = {
   OFFENSIVE: 'OFFENSIVE',
   SPAM: 'SPAM',
@@ -75,7 +65,6 @@ export const REPORT_REASON = {
   INCORRECT_LOGIC: 'INCORRECT_LOGIC',
   OTHER: 'OTHER',
 };
-
 export const REPORT_REASON_LABEL = {
   [REPORT_REASON.OFFENSIVE]: 'Оскорбительное поведение',
   [REPORT_REASON.SPAM]: 'Спам',
@@ -83,15 +72,14 @@ export const REPORT_REASON_LABEL = {
   [REPORT_REASON.INCORRECT_LOGIC]: 'Некорректная логика/ошибка',
   [REPORT_REASON.OTHER]: 'Другое',
 };
-
 export const REPORT_REASONS = Object.values(REPORT_REASON);
 
 export const getDeadlineInfo = (deadline, status, reviewedAt) => {
   if (!deadline) return null;
-
   const now = new Date();
   const dDate = new Date(deadline);
   const isCompleted = status === 'COMPLETED';
+
   const dateStr = dDate.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
@@ -103,6 +91,7 @@ export const getDeadlineInfo = (deadline, status, reviewedAt) => {
   if (isCompleted) {
     const reviewedTime = reviewedAt ? new Date(reviewedAt).getTime() : null;
     const isOverdue = reviewedTime ? reviewedTime > dDate.getTime() : false;
+
     return {
       label: isOverdue ? 'Просрочено' : 'Проверено',
       date: dateStr,
@@ -111,13 +100,17 @@ export const getDeadlineInfo = (deadline, status, reviewedAt) => {
   }
 
   const isOverdue = dDate < now;
+
   if (isOverdue) {
-    return { label: 'Просрочено', date: dateStr, isOverdue: true };
+    return {
+      label: 'Просрочено',
+      date: dateStr,
+      isOverdue: true,
+    };
   }
 
   const diffMs = dDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
   let daysLabel = 'дней';
   if (diffDays % 10 === 1 && diffDays % 100 !== 11) daysLabel = 'день';
   else if (diffDays % 10 >= 2 && diffDays % 10 <= 4 && (diffDays % 100 < 12 || diffDays % 100 > 14)) daysLabel = 'дня';

@@ -26,7 +26,13 @@ export const MOCK_USERS = [
     fullName: 'Кузнецова Екатерина Андреевна',
     avatar: avatarPool[1],
   },
-  { id: 12, login: 'alexr', email: 'alex.r@mail.ru', fullName: 'Романов Александр Сергеевич', avatar: avatarPool[2] },
+  {
+    id: 12,
+    login: 'alexr',
+    email: 'alex.r@mail.ru',
+    fullName: 'Романов Александр Сергеевич',
+    avatar: avatarPool[2],
+  },
   {
     id: 13,
     login: 'nikita_dev',
@@ -34,7 +40,13 @@ export const MOCK_USERS = [
     fullName: 'Волков Никита Романович',
     avatar: avatarPool[3],
   },
-  { id: 14, login: 'lina_code', email: 'lina.code@mail.ru', fullName: 'Петрова Алина Олеговна', avatar: avatarPool[4] },
+  {
+    id: 14,
+    login: 'lina_code',
+    email: 'lina.code@mail.ru',
+    fullName: 'Петрова Алина Олеговна',
+    avatar: avatarPool[4],
+  },
   {
     id: 15,
     login: 'max_core',
@@ -42,8 +54,20 @@ export const MOCK_USERS = [
     fullName: 'Соколов Максим Дмитриевич',
     avatar: avatarPool[5],
   },
-  { id: 16, login: 'olga_ui', email: 'olga.ui@mail.ru', fullName: 'Климова Ольга Николаевна', avatar: avatarPool[6] },
-  { id: 17, login: 'denis_ml', email: 'denis.ml@mail.ru', fullName: 'Исаев Денис Артемович', avatar: avatarPool[7] },
+  {
+    id: 16,
+    login: 'olga_ui',
+    email: 'olga.ui@mail.ru',
+    fullName: 'Климова Ольга Николаевна',
+    avatar: avatarPool[6],
+  },
+  {
+    id: 17,
+    login: 'denis_ml',
+    email: 'denis.ml@mail.ru',
+    fullName: 'Исаев Денис Артемович',
+    avatar: avatarPool[7],
+  },
   {
     id: 18,
     login: 'sasha_qa',
@@ -51,7 +75,13 @@ export const MOCK_USERS = [
     fullName: 'Федорова Александра Павловна',
     avatar: avatarPool[8],
   },
-  { id: 19, login: 'tim_ops', email: 'tim.ops@mail.ru', fullName: 'Зорин Тимур Андреевич', avatar: avatarPool[9] },
+  {
+    id: 19,
+    login: 'tim_ops',
+    email: 'tim.ops@mail.ru',
+    fullName: 'Зорин Тимур Андреевич',
+    avatar: avatarPool[9],
+  },
   {
     id: 20,
     login: 'vera_arch',
@@ -59,8 +89,20 @@ export const MOCK_USERS = [
     fullName: 'Борисова Вера Ильинична',
     avatar: avatarPool[0],
   },
-  { id: 21, login: 'igor_api', email: 'igor.api@mail.ru', fullName: 'Павлов Игорь Евгеньевич', avatar: avatarPool[2] },
-  { id: 22, login: 'mira_pm', email: 'mira.pm@mail.ru', fullName: 'Лебедева Мира Аркадьевна', avatar: avatarPool[6] },
+  {
+    id: 21,
+    login: 'igor_api',
+    email: 'igor.api@mail.ru',
+    fullName: 'Павлов Игорь Евгеньевич',
+    avatar: avatarPool[2],
+  },
+  {
+    id: 22,
+    login: 'mira_pm',
+    email: 'mira.pm@mail.ru',
+    fullName: 'Лебедева Мира Аркадьевна',
+    avatar: avatarPool[6],
+  },
   {
     id: 23,
     login: 'artem_data',
@@ -96,7 +138,12 @@ export const MOCK_USERS = [
     fullName: 'Тихонов Кирилл Сергеевич',
     avatar: avatarPool[3],
   },
-  { id: 28, login: 'nina_ui', email: 'nina.ui@mail.ru', fullName: 'Дорофеева Нина Валерьевна', avatar: avatarPool[9] },
+  {
+    id: 28,
+    login: 'nina_ui',
+    email: 'nina.ui@mail.ru',
+    fullName: 'Дорофеева Нина Валерьевна',
+    avatar: avatarPool[9],
+  },
 ];
-
 export const mockUsersById = new Map(MOCK_USERS.map((user) => [user.id, user]));

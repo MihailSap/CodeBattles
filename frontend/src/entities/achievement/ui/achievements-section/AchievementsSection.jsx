@@ -1,40 +1,50 @@
 import { memo } from 'react';
 import { CheckIcon } from '@/shared/ui/icons';
-import './AchievementsSection.css';
+import achievementsSectionStyles from './AchievementsSection.module.scss';
+import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
 
 const AchievementsSection = ({ achievements, canEditProfile, receivedAchievementIdSet }) => {
   return (
-    <section className="profile-page__section profile-page__section--achievements">
-      <div className="profile-page__section-head">
-        <div className="profile-page__section-title-wrap">
-          <h2 className="profile-page__section-title">Достижения</h2>
+    <section className={[profilePageStyles.section, achievementsSectionStyles.isAchievements].join(' ')}>
+      <div className={profilePageStyles.sectionHead}>
+        <div className={profilePageStyles.sectionTitleWrap}>
+          <h2 className={profilePageStyles.sectionTitle}>Достижения</h2>
         </div>
       </div>
 
-      <div className="profile-page__section-body profile-page__achievements-body">
+      <div className={[profilePageStyles.sectionBody, achievementsSectionStyles.body].join(' ')}>
         {achievements.length === 0 && !canEditProfile ? (
-          <p className="profile-page__achievements-empty">Еще не получено ни одного достижения</p>
+          <p className={achievementsSectionStyles.empty}>Еще не получено ни одного достижения</p>
         ) : (
-          <div className="profile-page__achievements-list">
+          <div className={achievementsSectionStyles.list}>
             {achievements.map((achievement) => {
               const isReceived = receivedAchievementIdSet.has(achievement.id);
 
               return (
                 <article
                   key={achievement.id}
-                  className={`profile-page__achievement-item ${isReceived ? 'profile-page__achievement-item--received' : 'profile-page__achievement-item--not-received'}`}
+                  className={[
+                    achievementsSectionStyles.achievementItem,
+                    isReceived ? achievementsSectionStyles.isReceived : achievementsSectionStyles.isNotReceived,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
-                  <img className="profile-page__achievement-image" src={achievement.image} alt={achievement.name} />
-                  <div className="profile-page__achievement-content">
-                    <p className="profile-page__achievement-name">
+                  <img
+                    className={achievementsSectionStyles.achievementImage}
+                    src={achievement.image}
+                    alt={achievement.name}
+                  />
+                  <div className={achievementsSectionStyles.achievementContent}>
+                    <p className={achievementsSectionStyles.achievementName}>
                       {achievement.name}
                       {isReceived && (
-                        <span className="profile-page__achievement-check" aria-label="Получено">
+                        <span className={achievementsSectionStyles.achievementCheck} aria-label="Получено">
                           <CheckIcon />
                         </span>
                       )}
                     </p>
-                    <p className="profile-page__achievement-description">{achievement.description}</p>
+                    <p className={achievementsSectionStyles.achievementDescription}>{achievement.description}</p>
                   </div>
                 </article>
               );

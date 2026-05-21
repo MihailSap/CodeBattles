@@ -1,0 +1,124 @@
+.root {
+  width: min(37.5rem, 100%);
+  margin: 0 auto;
+  padding: 0.3125rem 0.625rem 0.3125rem 0.3125rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  border: 2px solid var(--color-accent-muted);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.root {
+  &:focus-within {
+    border-color: var(--color-accent);
+  }
+}
+
+.root svg {
+  width: 1.5625rem;
+  height: 1.5625rem;
+  color: var(--color-accent);
+}
+
+.input {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  color: var(--color-text-primary);
+  background: transparent;
+}
+
+.input {
+  &::placeholder {
+    color: var(--color-input-placeholder);
+  }
+}
+
+.input {
+  &:focus {
+    outline: none;
+  }
+}
+
+.dropdown {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  border-radius: 10px;
+  border: 2px solid var(--color-accent-muted);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-section);
+  overflow: hidden;
+}
+
+.option {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.625rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1.25rem;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--color-accent);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 1px solid var(--color-leaderboard-border);
+  cursor: pointer;
+}
+
+.option span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.isEmpty {
+  padding: 0.625rem;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .option {
+    &:hover {
+      background: var(--color-accent-hover-bg);
+    }
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .root {
+    padding: 0.3125rem;
+  }
+
+  .root svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .input {
+    font-size: 0.875rem;
+  }
+
+  .option {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    gap: 0.3125rem;
+  }
+}

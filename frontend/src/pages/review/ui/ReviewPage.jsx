@@ -21,8 +21,10 @@ import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getLanguageByFileName, lazyNamed } from '@/shared/lib';
 import { AvatarIcon, CommentIcon } from '@/shared/ui/icons';
-import './ReviewPage.css';
-
+import reviewPageStyles from './ReviewPage.module.scss';
+import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
+import taskPageStyles from '../../task/ui/TaskPage.module.scss';
+import solutionTabStyles from '../../../widgets/solution-workspace/ui/solution-tab/SolutionTab.module.scss';
 const CommentModal = lazyNamed(() => import('@/features/comment-solution'), 'CommentModal');
 const FinalReviewForm = lazyNamed(() => import('@/features/review-solution'), 'FinalReviewForm');
 const ReportModal = lazyNamed(() => import('@/features/report-review'), 'ReportModal');
@@ -31,38 +33,34 @@ const ReviewPage = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
   const { userId, user } = useAuth();
-
   const [task, setTask] = useState(null);
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(true);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedLineRange, setSelectedLineRange] = useState(null);
-
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [contextLineData, setContextLineData] = useState(null);
-
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState(null);
   const [completeNotification] = useCompleteNotificationMutation();
-
   const [fileContentLoading, setFileContentLoading] = useState(false);
   const [fileContentMap, setFileContentMap] = useState({});
-
   const numericUserId = Number(userId);
   const isAdmin = user?.role === 'ADMIN';
 
   const findFileByPath = useCallback((nodes, path) => {
     for (const node of nodes) {
       if (node.path === path) return node;
+
       if (node.children) {
         const found = findFileByPath(node.children, path);
         if (found) return found;
       }
     }
+
     return null;
   }, []);
 
@@ -70,28 +68,35 @@ const ReviewPage = () => {
     const findFirstFileInternal = (nodes) => {
       for (const node of nodes) {
         if (!node.isDirectory) return node;
+
         if (node.children) {
           const found = findFirstFileInternal(node.children);
           if (found) return found;
         }
       }
+
       return null;
     };
 
     try {
       const reviewData = await projectsApi.getReviewById(reviewId);
+
       if (!reviewData) {
-        navigate(ROUTES.reviews, { replace: true });
+        navigate(ROUTES.reviews, {
+          replace: true,
+        });
+
         return;
       }
+
       setReview(reviewData);
 
       const [taskData] = await Promise.all([
         projectsApi.getTaskById(reviewData.projectId, reviewData.taskId),
         projectsApi.getProjectById(reviewData.projectId),
       ]);
-      setTask(taskData);
 
+      setTask(taskData);
       const isUserReviewer = taskData.reviewerIds?.includes(numericUserId);
 
       if (!isUserReviewer && !isAdmin) {
@@ -99,9 +104,10 @@ const ReviewPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'У вас нет доступа к этому ревью',
-            snackbarType: 'error',
+            snackbarType: reviewPageStyles.isError,
           },
         });
+
         return;
       }
 
@@ -111,13 +117,15 @@ const ReviewPage = () => {
             const stillExists = findFileByPath(reviewData.files, prev.path);
             if (stillExists) return stillExists;
           }
+
           const firstFile = findFirstFileInternal(reviewData.files);
+
           return firstFile || reviewData.files[0];
         });
       }
     } catch (err) {
       console.error('Review data load error:', err);
-      showSnackbar('Ошибка загрузки данных ревью', 'error');
+      showSnackbar('Ошибка загрузки данных ревью', reviewPageStyles.isError);
     } finally {
       setLoading(false);
     }
@@ -131,13 +139,25 @@ const ReviewPage = () => {
     async (filePath) => {
       if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
       setFileContentLoading(true);
+
       try {
         const data = await projectsApi.getReviewFileContent(reviewId, filePath);
-        setFileContentMap((prev) => ({ ...prev, [filePath]: data }));
+
+        setFileContentMap((prev) => ({
+          ...prev,
+          [filePath]: data,
+        }));
       } catch (err) {
         console.error('Failed to fetch file content:', err);
-        setFileContentMap((prev) => ({ ...prev, [filePath]: { error: true } }));
-        showSnackbar('Ошибка загрузки содержимого файла', 'error');
+
+        setFileContentMap((prev) => ({
+          ...prev,
+          [filePath]: {
+            error: true,
+          },
+        }));
+
+        showSnackbar('Ошибка загрузки содержимого файла', reviewPageStyles.isError);
       } finally {
         setFileContentLoading(false);
       }
@@ -149,6 +169,7 @@ const ReviewPage = () => {
     (file) => {
       setSelectedFile(file);
       setSelectedLineRange(null);
+
       if (!file.isDirectory) {
         fetchFileContent(file.path);
       }
@@ -164,11 +185,13 @@ const ReviewPage = () => {
 
   const isReviewer = useMemo(() => {
     if (!task?.reviewerIds || userId === null || userId === undefined) return false;
+
     return task.reviewerIds.includes(numericUserId);
   }, [task?.reviewerIds, userId, numericUserId]);
-  const isAdminReadOnlyView = isAdmin && !isReviewer;
 
+  const isAdminReadOnlyView = isAdmin && !isReviewer;
   const isCompleted = review?.status === 'COMPLETED';
+
   const myFinalReview = useMemo(
     () => (review?.finalReviews || []).find((fr) => fr.reviewerId === numericUserId),
     [review?.finalReviews, numericUserId]
@@ -178,16 +201,17 @@ const ReviewPage = () => {
   const isReadOnlyMode = alreadySubmittedReview || isCompleted;
   const canAddNewComments = isReviewer && !isReadOnlyMode;
   const canDiscussThreads = isReviewer && (isCompleted || (!alreadySubmittedReview && !isCompleted));
-
   const taskId = review?.taskId;
 
   const handleLineContextMenu = useCallback(
     (data) => {
       if (!canAddNewComments) return;
+
       setContextLineData({
         startLine: data.startLineNumber,
         endLine: data.endLineNumber,
       });
+
       setIsCommentModalOpen(true);
     },
     [canAddNewComments]
@@ -199,8 +223,8 @@ const ReviewPage = () => {
 
   const handleAddComment = async ({ text, category, severity }) => {
     if (!contextLineData || !selectedFile) return;
-
     setIsCommentSubmitting(true);
+
     try {
       await projectsApi.addReviewComment(taskId, {
         file: selectedFile.path,
@@ -214,11 +238,12 @@ const ReviewPage = () => {
         authorRole: 'Reviewer',
         createdAt: new Date().toISOString(),
       });
+
       await loadData();
       setIsCommentModalOpen(false);
-      showSnackbar('Комментарий добавлен', 'success');
+      showSnackbar('Комментарий добавлен', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка отправки комментария. Попробуйте позже.', 'error');
+      showSnackbar('Ошибка отправки комментария. Попробуйте позже.', reviewPageStyles.isError);
     } finally {
       setIsCommentSubmitting(false);
     }
@@ -233,10 +258,11 @@ const ReviewPage = () => {
         text,
         createdAt: new Date().toISOString(),
       });
+
       await loadData();
-      showSnackbar('Ответ отправлен', 'success');
+      showSnackbar('Ответ отправлен', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка отправки ответа. Попробуйте позже.', 'error');
+      showSnackbar('Ошибка отправки ответа. Попробуйте позже.', reviewPageStyles.isError);
     }
   };
 
@@ -265,9 +291,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.deleteReviewComment(taskId, commentId);
       await loadData();
-      showSnackbar('Комментарий удален', 'success');
+      showSnackbar('Комментарий удален', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка удаления комментария', 'error');
+      showSnackbar('Ошибка удаления комментария', reviewPageStyles.isError);
     }
   };
 
@@ -275,9 +301,9 @@ const ReviewPage = () => {
     try {
       await projectsApi.closeCommentThread(taskId, commentId, 'close');
       await loadData();
-      showSnackbar('Тред закрыт', 'success');
+      showSnackbar('Тред закрыт', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка закрытия треда', 'error');
+      showSnackbar('Ошибка закрытия треда', reviewPageStyles.isError);
     }
   };
 
@@ -285,20 +311,22 @@ const ReviewPage = () => {
     try {
       await projectsApi.closeCommentThread(taskId, commentId, 'open');
       await loadData();
-      showSnackbar('Тред переоткрыт', 'success');
+      showSnackbar('Тред переоткрыт', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка открытия треда', 'error');
+      showSnackbar('Ошибка открытия треда', reviewPageStyles.isError);
     }
   };
 
   const handleFinalSubmit = async (payload) => {
     setIsSubmitting(true);
+
     try {
       await projectsApi.submitFinalReview(taskId, {
         ...payload,
         reviewerId: numericUserId,
         reviewerName: 'Вы',
       });
+
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_REVIEW_RESULT,
         target: {
@@ -307,10 +335,11 @@ const ReviewPage = () => {
           taskId,
         },
       });
+
       await loadData();
-      showSnackbar('Результаты ревью успешно сохранены', 'success');
+      showSnackbar('Результаты ревью успешно сохранены', reviewPageStyles.success);
     } catch {
-      showSnackbar('Ошибка сохранения результатов ревью. Попробуйте позже.', 'error');
+      showSnackbar('Ошибка сохранения результатов ревью. Попробуйте позже.', reviewPageStyles.isError);
     } finally {
       setIsSubmitting(false);
     }
@@ -318,12 +347,17 @@ const ReviewPage = () => {
 
   const handleReportSubmit = async (reason, comment) => {
     setIsSubmitting(true);
+
     try {
-      await projectsApi.reportComment(taskId, reportingCommentId, { reason, comment });
+      await projectsApi.reportComment(taskId, reportingCommentId, {
+        reason,
+        comment,
+      });
+
       setIsReportModalOpen(false);
-      showSnackbar('Жалоба отправлена', 'success');
+      showSnackbar('Жалоба отправлена', reviewPageStyles.success);
     } catch {
-      showSnackbar('Не удалось отправить жалобу', 'error');
+      showSnackbar('Не удалось отправить жалобу', reviewPageStyles.isError);
     } finally {
       setIsSubmitting(false);
     }
@@ -335,10 +369,12 @@ const ReviewPage = () => {
   };
 
   const allComments = useMemo(() => review?.comments || [], [review?.comments]);
+
   const visibleComments = useMemo(
     () => (task?.aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
     [allComments, task?.aiReviewEnabled]
   );
+
   const fileComments = visibleComments.filter((c) => c.file === selectedFile?.path);
   const commentedFiles = [...new Set(visibleComments.map((c) => c.file))];
 
@@ -368,39 +404,44 @@ const ReviewPage = () => {
   }, [isAdminReadOnlyView, task?.assignees, review?.status, review?.finalReviews, review?.revealAuthorAfterReview]);
 
   const commentsCount = visibleComments.length;
-
   const humanComments = useMemo(() => visibleComments.filter((c) => c.authorRole !== 'AI'), [visibleComments]);
+
   const isAllResolved = useMemo(
     () => humanComments.length > 0 && humanComments.every((c) => c.isClosed),
     [humanComments]
   );
+
   const allThreadsResolved = isAllResolved;
 
   const myHistoryComments = useMemo(() => {
     if (!review?.history) return [];
+
     return review.history.flatMap((h) => h.comments || []).filter((c) => c.authorId === numericUserId);
   }, [review?.history, numericUserId]);
 
   const deadlineInfo = useMemo(() => {
     if (!review?.deadline) return null;
     const info = getDeadlineInfo(review.deadline, review.status, review.reviewedAt);
+    let colorClass = reviewPageStyles.isPending;
 
-    let colorClass = 'review-page__deadline--pending';
     if (info.isOverdue) {
-      colorClass = 'review-page__deadline--error';
+      colorClass = reviewPageStyles.deadlineError;
     } else if (review.status === 'COMPLETED') {
-      colorClass = 'review-page__deadline--success';
+      colorClass = reviewPageStyles.isSuccess;
     } else {
-      colorClass = 'review-page__deadline--warning';
+      colorClass = reviewPageStyles.isWarning;
     }
 
-    return { ...info, colorClass };
+    return {
+      ...info,
+      colorClass,
+    };
   }, [review?.deadline, review?.status, review?.reviewedAt]);
 
   if (loading) {
     return (
-      <div className="review-page">
-        <div className="review-page__loader">
+      <div className={reviewPageStyles.root}>
+        <div className={reviewPageStyles.loader}>
           <Spinner />
         </div>
       </div>
@@ -409,8 +450,8 @@ const ReviewPage = () => {
 
   if (!task || !review) {
     return (
-      <div className="review-page">
-        <div className="review-page__loader">Данные не найдены</div>
+      <div className={reviewPageStyles.root}>
+        <div className={reviewPageStyles.loader}>Данные не найдены</div>
       </div>
     );
   }
@@ -418,22 +459,22 @@ const ReviewPage = () => {
   const currentFileContent = fileContentMap[selectedFile?.path];
 
   return (
-    <div className="review-page">
+    <div className={reviewPageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <div className="project-page__content review-page__content">
-        <section className="project-page__info section-card">
-          <div className="project-page__title-row">
-            <div className="project-page__title-wrap">
-              <h1 className="project-page__title">{task?.name}</h1>
+      <div className={[projectPageStyles.content, reviewPageStyles.content2].join(' ')}>
+        <section className={[projectPageStyles.info, reviewPageStyles.sectionCard].join(' ')}>
+          <div className={projectPageStyles.titleRow}>
+            <div className={projectPageStyles.titleWrap}>
+              <h1 className={projectPageStyles.title}>{task?.name}</h1>
             </div>
-            <span className="project-page__role-tag">{REVIEW_STATUS_LABEL[review?.status]}</span>
+            <span className={projectPageStyles.roleTag}>{REVIEW_STATUS_LABEL[review?.status]}</span>
           </div>
 
-          <p className="project-page__organization">{task?.projectName}</p>
+          <p className={projectPageStyles.organization}>{task?.projectName}</p>
 
-          <p className="project-page__description">
-            <span className="project-page__description-label">Загружено: </span>
+          <p className={projectPageStyles.description}>
+            <span className={projectPageStyles.descriptionLabel}>Загружено: </span>
             <span>
               {review?.uploadedAt
                 ? new Date(review.uploadedAt).toLocaleString('ru-RU', {
@@ -447,25 +488,25 @@ const ReviewPage = () => {
             </span>
           </p>
 
-          <p className="project-page__description">
-            <span className="project-page__description-label">Дедлайн: </span>
-            <span className={`review-page__meta-value ${deadlineInfo?.colorClass || ''}`}>
+          <p className={projectPageStyles.description}>
+            <span className={projectPageStyles.descriptionLabel}>Дедлайн: </span>
+            <span className={[reviewPageStyles.metaValue, deadlineInfo?.colorClass || ''].filter(Boolean).join(' ')}>
               {deadlineInfo ? `${deadlineInfo.date} (${deadlineInfo.label})` : '—'}
             </span>
           </p>
 
           {assigneesToReveal && (
-            <div className="task-page__assignees-wrap task-page__offset-section">
-              <h3 className="project-page__description-label">Исполнители:</h3>
-              <div className="task-page__assignees-list">
+            <div className={[taskPageStyles.assigneesWrap, taskPageStyles.offsetSection].join(' ')}>
+              <h3 className={projectPageStyles.descriptionLabel}>Исполнители:</h3>
+              <div className={taskPageStyles.assigneesList}>
                 {assigneesToReveal.map((assignee) => (
-                  <div key={assignee.id} className="task-page__assignee-item">
-                    <span className="task-page__assignee-avatar">
+                  <div key={assignee.id} className={taskPageStyles.assigneeItem}>
+                    <span className={taskPageStyles.assigneeAvatar}>
                       {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
                     </span>
-                    <span className="task-page__assignee-meta">
-                      <span className="task-page__assignee-name">{assignee.fullName}</span>
-                      <span className="task-page__assignee-login">@{assignee.login}</span>
+                    <span className={taskPageStyles.assigneeMeta}>
+                      <span className={taskPageStyles.assigneeName}>{assignee.fullName}</span>
+                      <span className={taskPageStyles.assigneeLogin}>@{assignee.login}</span>
                     </span>
                   </div>
                 ))}
@@ -474,22 +515,29 @@ const ReviewPage = () => {
           )}
 
           {!assigneesToReveal && (
-            <p className="project-page__description task-page__offset-section">
-              <span className="project-page__description-label">Исполнители: </span>
+            <p className={[projectPageStyles.description, taskPageStyles.offsetSection].join(' ')}>
+              <span className={projectPageStyles.descriptionLabel}>Исполнители: </span>
               <span>Анонимно</span>
             </p>
           )}
 
-          <div className="project-page__metrics">
-            <div className="project-page__metric-item">
+          <div className={projectPageStyles.metrics}>
+            <div className={projectPageStyles.metricItem}>
               <CommentIcon />
               <span>Комментариев: {commentsCount}</span>
             </div>
-            <div className="project-page__metric-item">
+            <div className={projectPageStyles.metricItem}>
               <img src={tasksCountIcon} alt="Открытые задачи" />
               <span>
                 <span>Решены все комментарии: </span>
-                <span className={`review-page__metric-value ${isAllResolved ? 'success' : 'error'}`}>
+                <span
+                  className={[
+                    reviewPageStyles.metricValue,
+                    isAllResolved ? reviewPageStyles.success : reviewPageStyles.isError,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
                   {isAllResolved ? 'Да' : 'Нет'}
                 </span>
               </span>
@@ -497,9 +545,9 @@ const ReviewPage = () => {
           </div>
         </section>
 
-        <div className="review-page__workspace">
-          <div className="review-page__col-left">
-            <div className="review-page__card">
+        <div className={reviewPageStyles.workspace}>
+          <div className={reviewPageStyles.colLeft}>
+            <div className={reviewPageStyles.card}>
               <FileTree
                 files={review.files}
                 selectedFile={selectedFile}
@@ -509,16 +557,33 @@ const ReviewPage = () => {
             </div>
           </div>
 
-          <div className="review-page__col-center">
+          <div className={reviewPageStyles.colCenter}>
             {fileContentLoading ? (
-              <div className="review-page__loader" style={{ height: '400px' }}>
+              <div
+                className={reviewPageStyles.loader}
+                style={{
+                  height: '400px',
+                }}
+              >
                 <Spinner />
               </div>
             ) : currentFileContent?.error ? (
-              <div className="review-page__loader" style={{ height: '400px' }}>
-                <div style={{ textAlign: 'center' }}>
+              <div
+                className={reviewPageStyles.loader}
+                style={{
+                  height: '400px',
+                }}
+              >
+                <div
+                  style={{
+                    textAlign: 'center',
+                  }}
+                >
                   <p>Ошибка загрузки файла</p>
-                  <button className="btn-manual" onClick={() => fetchFileContent(selectedFile.path)}>
+                  <button
+                    className={solutionTabStyles.manualButton}
+                    onClick={() => fetchFileContent(selectedFile.path)}
+                  >
                     Повторить
                   </button>
                 </div>
@@ -550,9 +615,9 @@ const ReviewPage = () => {
 
             {isReviewer && alreadySubmittedReview && !isCompleted && (
               <>
-                <div className="review-page__card review-page__submitted-card">
-                  <h3 className="review-page__card-title">Ревью отправлено</h3>
-                  <p className="review-page__submitted-text">
+                <div className={[reviewPageStyles.card, reviewPageStyles.submittedCard].join(' ')}>
+                  <h3 className={reviewPageStyles.cardTitle}>Ревью отправлено</h3>
+                  <p className={reviewPageStyles.submittedText}>
                     Вы уже отправили свой вердикт. Ожидайте завершения ревью другими участниками.
                   </p>
                 </div>
@@ -571,10 +636,12 @@ const ReviewPage = () => {
             )}
           </div>
 
-          <div className="review-page__col-right">
+          <div className={reviewPageStyles.colRight}>
             <CommentsBlock
               comments={displayedComments}
-              currentUser={{ id: numericUserId }}
+              currentUser={{
+                id: numericUserId,
+              }}
               onReply={canDiscussThreads ? handleReply : undefined}
               onLike={canDiscussThreads ? handleLike : undefined}
               onDislike={canDiscussThreads ? handleDislike : undefined}
@@ -591,7 +658,9 @@ const ReviewPage = () => {
             {myHistoryComments.length > 0 && (
               <CommentsBlock
                 comments={myHistoryComments}
-                currentUser={{ id: numericUserId }}
+                currentUser={{
+                  id: numericUserId,
+                }}
                 readOnly
                 isHistory
                 pageContext="review"

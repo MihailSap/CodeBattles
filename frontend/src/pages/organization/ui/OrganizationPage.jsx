@@ -33,7 +33,8 @@ import { sortParticipants, truncateText } from '@/entities/project';
 import { organizationSettingsFormSchema } from '@/entities/organization';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
-import './OrganizationPage.css';
+import organizationPageStyles from './OrganizationPage.module.scss';
+import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
 
 const tabs = {
   projects: 'Проекты',
@@ -54,22 +55,17 @@ const OrganizationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const logoInputRef = useRef(null);
-
   const [activeTab, setActiveTab] = useState('projects');
   const [participantsMode, setParticipantsMode] = useState('members');
   const [projectSearch, setProjectSearch] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
-
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const [isInviteSubmitting, setInviteSubmitting] = useState(false);
-
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-
   const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
-
   const [isCreateProjectOpen, setCreateProjectOpen] = useState(false);
-
   const [requestActionUserId, setRequestActionUserId] = useState(null);
+
   const {
     register: registerSettings,
     handleSubmit: handleSettingsSubmit,
@@ -87,10 +83,15 @@ const OrganizationPage = () => {
     defaultValues: getOrganizationSettingsDefaults(),
     mode: 'onChange',
   });
-  const settingsDraft = useWatch({ control: settingsControl });
+
+  const settingsDraft = useWatch({
+    control: settingsControl,
+  });
+
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const debouncedProjectSearch = useDebouncedValue(projectSearch, 300);
   const numericOrganizationId = Number(organizationId);
+
   const {
     data: organization,
     error: organizationError,
@@ -99,6 +100,7 @@ const OrganizationPage = () => {
   } = useGetOrganizationByIdQuery(numericOrganizationId, {
     refetchOnMountOrArgChange: 30,
   });
+
   const [createProject, { isLoading: isCreateProjectSubmitting }] = useCreateProjectMutation();
   const [leaveOrganization, { isLoading: isLeaveSubmitting }] = useLeaveOrganizationMutation();
   const [deleteOrganization, { isLoading: isDeleteSubmitting }] = useDeleteOrganizationMutation();
@@ -119,10 +121,13 @@ const OrganizationPage = () => {
           snackbarMessage: 'Необходимо присоединиться к организации для просмотра',
         },
       });
+
       return;
     }
 
-    navigate(ROUTES.projects, { replace: true });
+    navigate(ROUTES.projects, {
+      replace: true,
+    });
   }, [navigate, organizationError]);
 
   useEffect(() => {
@@ -149,12 +154,17 @@ const OrganizationPage = () => {
       );
     });
   }, [debouncedProjectSearch, organization?.projects]);
+
   const projectsTotal = projectsList.length;
 
   useEffect(() => {
     if (location.state?.snackbarMessage) {
       showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
-      navigate(location.pathname, { replace: true, state: null });
+
+      navigate(location.pathname, {
+        replace: true,
+        state: null,
+      });
     }
   }, [location.pathname, location.state, navigate, showSnackbar]);
 
@@ -170,12 +180,21 @@ const OrganizationPage = () => {
 
   const availableTabs = useMemo(() => {
     const baseTabs = [
-      { key: 'projects', label: tabs.projects },
-      { key: 'participants', label: tabs.participants },
+      {
+        key: 'projects',
+        label: tabs.projects,
+      },
+      {
+        key: 'participants',
+        label: tabs.participants,
+      },
     ];
 
     if (isOwner) {
-      baseTabs.push({ key: 'settings', label: tabs.settings });
+      baseTabs.push({
+        key: 'settings',
+        label: tabs.settings,
+      });
     }
 
     return baseTabs;
@@ -189,7 +208,9 @@ const OrganizationPage = () => {
   const requestsSource = useMemo(
     () =>
       [...(organization?.joinRequests || [])].sort((left, right) =>
-        String(left.fullName ?? '').localeCompare(String(right.fullName ?? ''), 'ru', { sensitivity: 'base' })
+        String(left.fullName ?? '').localeCompare(String(right.fullName ?? ''), 'ru', {
+          sensitivity: 'base',
+        })
       ),
     [organization?.joinRequests]
   );
@@ -229,6 +250,7 @@ const OrganizationPage = () => {
       return await projectsApi.generateOrganizationInvite(organization.id, payload);
     } catch {
       showSnackbar('Не удалось сформировать ссылку. Попробуйте позже', 'error');
+
       return null;
     } finally {
       setInviteSubmitting(false);
@@ -241,12 +263,19 @@ const OrganizationPage = () => {
     }
 
     try {
-      const result = await createProject({ ...payload, organizationId: organization.id }).unwrap();
+      const result = await createProject({
+        ...payload,
+        organizationId: organization.id,
+      }).unwrap();
+
       const projectId = result?.projectId;
 
       if (projectId) {
         setCreateProjectOpen(false);
-        navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
+
+        navigate(ROUTES.projectById.replace(':projectId', projectId), {
+          replace: true,
+        });
       }
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
@@ -264,6 +293,7 @@ const OrganizationPage = () => {
 
     try {
       await leaveOrganization(organization.id).unwrap();
+
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -285,6 +315,7 @@ const OrganizationPage = () => {
 
     try {
       await deleteOrganization(organization.id).unwrap();
+
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -307,7 +338,11 @@ const OrganizationPage = () => {
     setRequestActionUserId(request.userId);
 
     try {
-      await rejectOrganizationJoinRequest({ organizationId: organization.id, userId: request.userId }).unwrap();
+      await rejectOrganizationJoinRequest({
+        organizationId: organization.id,
+        userId: request.userId,
+      }).unwrap();
+
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.RESOLVE_ORGANIZATION_JOIN_REQUEST,
         target: {
@@ -316,6 +351,7 @@ const OrganizationPage = () => {
           userId: request.userId,
         },
       });
+
       await refetchOrganization().unwrap();
       showSnackbar(`Вы отклонили заявку пользователя @${request.login}`, 'error');
     } catch {
@@ -333,7 +369,11 @@ const OrganizationPage = () => {
     setRequestActionUserId(request.userId);
 
     try {
-      await approveOrganizationJoinRequest({ organizationId: organization.id, userId: request.userId }).unwrap();
+      await approveOrganizationJoinRequest({
+        organizationId: organization.id,
+        userId: request.userId,
+      }).unwrap();
+
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.RESOLVE_ORGANIZATION_JOIN_REQUEST,
         target: {
@@ -342,6 +382,7 @@ const OrganizationPage = () => {
           userId: request.userId,
         },
       });
+
       await refetchOrganization().unwrap();
       showSnackbar(`Вы приняли заявку пользователя @${request.login}`, 'success');
     } catch {
@@ -354,11 +395,16 @@ const OrganizationPage = () => {
   const handleLogoUpload = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const nextUrl = URL.createObjectURL(file);
 
-    setSettingsValue('logoUrl', nextUrl, { shouldDirty: true });
-    setSettingsValue('logoFile', file, { shouldDirty: true, shouldValidate: true });
+    setSettingsValue('logoUrl', nextUrl, {
+      shouldDirty: true,
+    });
+
+    setSettingsValue('logoFile', file, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const handleCancelSettings = () => {
@@ -371,7 +417,6 @@ const OrganizationPage = () => {
 
   const saveSettings = async (settingsDraft) => {
     if (!organization || !settingsDraft) return;
-
     if (!hasSettingsChanges) return;
 
     try {
@@ -384,16 +429,21 @@ const OrganizationPage = () => {
       if (settingsDraft.description !== organization.description) {
         payload.description = settingsDraft.description;
       }
+
       if (settingsDraft.link.trim() !== organization.link) {
         payload.link = settingsDraft.link.trim();
       }
+
       if (settingsDraft.logoFile) {
         payload.logoFile = settingsDraft.logoFile;
       }
 
-      await updateOrganization({ organizationId: organization.id, payload }).unwrap();
-      const fullOrganization = await refetchOrganization().unwrap();
+      await updateOrganization({
+        organizationId: organization.id,
+        payload,
+      }).unwrap();
 
+      const fullOrganization = await refetchOrganization().unwrap();
       resetSettings(getOrganizationSettingsDefaults(fullOrganization));
       showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
@@ -409,8 +459,8 @@ const OrganizationPage = () => {
 
   if (isLoading) {
     return (
-      <div className="project-page">
-        <div className="project-page__loader">
+      <div className={projectPageStyles.root}>
+        <div className={projectPageStyles.loader}>
           <Spinner />
         </div>
       </div>
@@ -426,27 +476,31 @@ const OrganizationPage = () => {
   const shownDescription = isLongDescription && !showFullDescription ? `${description.slice(0, 1000)}...` : description;
 
   return (
-    <div className="project-page organization-page">
+    <div className={projectPageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <main className="project-page__content">
-        <section className="project-page__info section-card">
-          <div className="project-page__title-row">
-            <div className="project-page__title-wrap">
-              <h1 className="project-page__title">{organization.name}</h1>
+      <main className={projectPageStyles.content}>
+        <section className={[projectPageStyles.info, projectPageStyles.sectionCard].join(' ')}>
+          <div className={projectPageStyles.titleRow}>
+            <div className={projectPageStyles.titleWrap}>
+              <h1 className={projectPageStyles.title}>{organization.name}</h1>
             </div>
-            <span className="project-page__role-tag">{PROJECT_MEMBER_ROLE_LABELS[organization.viewerRole]}</span>
+            <span className={projectPageStyles.roleTag}>{PROJECT_MEMBER_ROLE_LABELS[organization.viewerRole]}</span>
           </div>
 
-          <img className="organization-page__logo" src={organization.logoUrl} alt={`Логотип ${organization.name}`} />
+          <img
+            className={organizationPageStyles.logo}
+            src={organization.logoUrl}
+            alt={`Логотип ${organization.name}`}
+          />
 
           {description && (
-            <p className="project-page__description">
-              <span className="project-page__description-label">Описание организации: </span>
+            <p className={projectPageStyles.description}>
+              <span className={projectPageStyles.descriptionLabel}>Описание организации: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
                 <button
-                  className="project-page__description-toggle"
+                  className={projectPageStyles.descriptionToggle}
                   type="button"
                   onClick={() => setShowFullDescription((prev) => !prev)}
                 >
@@ -457,17 +511,17 @@ const OrganizationPage = () => {
           )}
 
           {organization.link && (
-            <a className="project-page__repository" href={organization.link} target="_blank" rel="noreferrer">
+            <a className={projectPageStyles.repository} href={organization.link} target="_blank" rel="noreferrer">
               {truncateText(organization.link, 100)}
             </a>
           )}
 
-          <div className="project-page__metrics">
-            <div className="project-page__metric-item">
+          <div className={projectPageStyles.metrics}>
+            <div className={projectPageStyles.metricItem}>
               <img src={participantsCountIcon} alt="Участники" />
               <span>Участников: {organization.participants.length}</span>
             </div>
-            <div className="project-page__metric-item">
+            <div className={projectPageStyles.metricItem}>
               <img src={projectsCountIcon} alt="Проекты" />
               <span>Проектов: {organization.projects.length}</span>
             </div>
@@ -478,13 +532,13 @@ const OrganizationPage = () => {
 
         {activeTab === 'projects' && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Проекты ({projectsTotal})</span>
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
+                <span className={projectPageStyles.participantsCount}>Проекты ({projectsTotal})</span>
               </div>
 
-              <div className="project-page__controls-right">
-                <label className="project-page__search-field">
+              <div className={projectPageStyles.controlsRight}>
+                <label className={projectPageStyles.searchField}>
                   <SearchIcon />
                   <input
                     type="search"
@@ -496,7 +550,7 @@ const OrganizationPage = () => {
 
                 {isOwner && (
                   <button
-                    className="project-page__action-button project-page__action-button--success"
+                    className={[projectPageStyles.actionButton, projectPageStyles.isSuccess].join(' ')}
                     type="button"
                     onClick={() => setCreateProjectOpen(true)}
                   >
@@ -506,8 +560,8 @@ const OrganizationPage = () => {
               </div>
             </div>
 
-            <section className="section-card project-page__table-section">
-              <div className="project-page__table-row project-page__table-row--head organization-page__projects-row">
+            <section className={[projectPageStyles.sectionCard, projectPageStyles.tableSection].join(' ')}>
+              <div className={[projectPageStyles.tableRow, projectPageStyles.isHead].join(' ')}>
                 <span>Название</span>
                 <span>Количество задач</span>
                 <span>Участники</span>
@@ -517,17 +571,21 @@ const OrganizationPage = () => {
               {projectsList.map((project) => (
                 <div
                   key={project.id}
-                  className="project-page__table-row organization-page__projects-row"
+                  className={projectPageStyles.tableRow}
                   onClick={() => navigate(ROUTES.projectById.replace(':projectId', project.id))}
                   role="presentation"
                 >
-                  <span className="project-page__task-name" title={project.name}>
+                  <span className={projectPageStyles.taskName} title={project.name}>
                     {truncateText(project.name, 55)}
                   </span>
-                  <span className="organization-page__project-tasks">{project.activeTasksCount}</span>
-                  <span className="project-page__assignees">
+                  <span className={organizationPageStyles.projectTasks}>{project.activeTasksCount}</span>
+                  <span className={projectPageStyles.assignees}>
                     {project.participants.slice(0, 6).map((participant) => (
-                      <span key={participant.id} className="project-page__assignee-avatar" title={participant.fullName}>
+                      <span
+                        key={participant.id}
+                        className={projectPageStyles.assigneeAvatar}
+                        title={participant.fullName}
+                      >
                         {participant.avatar ? (
                           <img src={participant.avatar} alt={participant.fullName} />
                         ) : (
@@ -536,55 +594,70 @@ const OrganizationPage = () => {
                       </span>
                     ))}
                     {project.participants.length > 6 && (
-                      <span className="project-page__assignee-more">+{project.participants.length - 6}</span>
+                      <span className={projectPageStyles.assigneeMore}>+{project.participants.length - 6}</span>
                     )}
                   </span>
-                  <span className="project-page__participant-role">
+                  <span className={projectPageStyles.participantRole}>
                     {PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}
                   </span>
                 </div>
               ))}
 
-              {projectsList.length === 0 && <p className="project-page__list-empty">Проекты не найдены</p>}
+              {projectsList.length === 0 && <p className={projectPageStyles.listEmpty}>Проекты не найдены</p>}
             </section>
           </>
         )}
 
         {activeTab === 'participants' && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
                 {isOwner ? (
-                  <div className="project-page__mode-switch organization-page__participants-switch">
+                  <div className={[projectPageStyles.modeSwitch, organizationPageStyles.participantsSwitch].join(' ')}>
                     <span
-                      className={`project-page__mode-thumb ${participantsMode === 'requests' ? 'project-page__mode-thumb--mine' : ''}`}
+                      className={[
+                        projectPageStyles.modeThumb,
+                        participantsMode === 'requests' ? projectPageStyles.isMine : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                     />
                     <button
                       type="button"
-                      className={`project-page__mode-button ${participantsMode === 'members' ? 'project-page__mode-button--active' : ''}`}
+                      className={[
+                        projectPageStyles.modeButton,
+                        participantsMode === 'members' ? projectPageStyles.isActive : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       onClick={() => setParticipantsMode('members')}
                     >
                       Участники ({organization.participants.length})
                     </button>
                     <button
                       type="button"
-                      className={`project-page__mode-button ${participantsMode === 'requests' ? 'project-page__mode-button--active' : ''}`}
+                      className={[
+                        projectPageStyles.modeButton,
+                        participantsMode === 'requests' ? projectPageStyles.isActive : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       onClick={() => setParticipantsMode('requests')}
                     >
                       Заявки ({organization.joinRequests.length})
                     </button>
                   </div>
                 ) : (
-                  <span className="project-page__participants-count">
+                  <span className={projectPageStyles.participantsCount}>
                     Участники ({organization.participants.length})
                   </span>
                 )}
               </div>
 
-              <div className="project-page__controls-right">
+              <div className={projectPageStyles.controlsRight}>
                 {isOwner ? (
                   <button
-                    className="project-page__action-button project-page__action-button--primary"
+                    className={[projectPageStyles.actionButton, projectPageStyles.isPrimary].join(' ')}
                     type="button"
                     onClick={() => setInviteModalOpen(true)}
                   >
@@ -592,7 +665,7 @@ const OrganizationPage = () => {
                   </button>
                 ) : (
                   <button
-                    className="project-page__action-button project-page__action-button--danger"
+                    className={[projectPageStyles.actionButton, projectPageStyles.isDanger].join(' ')}
                     type="button"
                     onClick={() => setLeaveModalOpen(true)}
                   >
@@ -602,23 +675,23 @@ const OrganizationPage = () => {
               </div>
             </div>
 
-            <section className="section-card project-page__participants-list">
+            <section className={[projectPageStyles.sectionCard, projectPageStyles.participantsList].join(' ')}>
               {isOwner && participantsMode === 'requests'
                 ? requestsSource.map((request) => (
-                    <div key={request.id} className="project-page__participant-row">
-                      <div className="project-page__participant-main">
-                        <span className="project-page__participant-avatar">
+                    <div key={request.id} className={projectPageStyles.participantRow}>
+                      <div className={projectPageStyles.participantMain}>
+                        <span className={projectPageStyles.participantAvatar}>
                           {request.avatar ? <img src={request.avatar} alt={request.fullName} /> : <AvatarIcon />}
                         </span>
-                        <span className="project-page__participant-meta">
-                          <span className="project-page__participant-name">{request.fullName}</span>
-                          <span className="project-page__participant-login">@{request.login}</span>
+                        <span className={projectPageStyles.participantMeta}>
+                          <span className={projectPageStyles.participantName}>{request.fullName}</span>
+                          <span className={projectPageStyles.participantLogin}>@{request.login}</span>
                         </span>
                       </div>
 
-                      <div className="organization-page__request-actions">
+                      <div className={organizationPageStyles.requestActions}>
                         <button
-                          className="organization-page__request-button organization-page__request-button--reject"
+                          className={[organizationPageStyles.requestButton, organizationPageStyles.isReject].join(' ')}
                           type="button"
                           onClick={() => handleRejectRequest(request)}
                           disabled={requestActionUserId === request.userId}
@@ -627,7 +700,7 @@ const OrganizationPage = () => {
                           <CrossIcon />
                         </button>
                         <button
-                          className="organization-page__request-button organization-page__request-button--accept"
+                          className={[organizationPageStyles.requestButton, organizationPageStyles.isAccept].join(' ')}
                           type="button"
                           onClick={() => handleApproveRequest(request)}
                           disabled={requestActionUserId === request.userId}
@@ -641,33 +714,33 @@ const OrganizationPage = () => {
                 : participantsSource.map((participant) => (
                     <Link
                       key={participant.id}
-                      className="project-page__participant-row"
+                      className={projectPageStyles.participantRow}
                       to={`${ROUTES.profile}/${participant.id}`}
                     >
-                      <div className="project-page__participant-main">
-                        <span className="project-page__participant-avatar">
+                      <div className={projectPageStyles.participantMain}>
+                        <span className={projectPageStyles.participantAvatar}>
                           {participant.avatar ? (
                             <img src={participant.avatar} alt={participant.fullName} />
                           ) : (
                             <AvatarIcon />
                           )}
                         </span>
-                        <span className="project-page__participant-meta">
-                          <span className="project-page__participant-name">{participant.fullName}</span>
-                          <span className="project-page__participant-login">@{participant.login}</span>
+                        <span className={projectPageStyles.participantMeta}>
+                          <span className={projectPageStyles.participantName}>{participant.fullName}</span>
+                          <span className={projectPageStyles.participantLogin}>@{participant.login}</span>
                         </span>
                       </div>
-                      <span className="project-page__participant-role">
+                      <span className={projectPageStyles.participantRole}>
                         {PROJECT_MEMBER_ROLE_LABELS[participant.role]}
                       </span>
                     </Link>
                   ))}
 
               {isOwner && participantsMode === 'requests' && requestsSource.length === 0 && (
-                <p className="project-page__list-empty">Заявок пока нет</p>
+                <p className={projectPageStyles.listEmpty}>Заявок пока нет</p>
               )}
               {(!isOwner || participantsMode === 'members') && participantsSource.length === 0 && (
-                <p className="project-page__list-empty">Участники не найдены</p>
+                <p className={projectPageStyles.listEmpty}>Участники не найдены</p>
               )}
             </section>
           </>
@@ -675,14 +748,14 @@ const OrganizationPage = () => {
 
         {activeTab === 'settings' && isOwner && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Настройки</span>
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
+                <span className={projectPageStyles.participantsCount}>Настройки</span>
               </div>
 
-              <div className="project-page__controls-right">
+              <div className={projectPageStyles.controlsRight}>
                 <button
-                  className="project-page__action-button project-page__action-button--danger"
+                  className={[projectPageStyles.actionButton, projectPageStyles.isDanger].join(' ')}
                   type="button"
                   onClick={() => setDeleteModalOpen(true)}
                 >
@@ -691,46 +764,59 @@ const OrganizationPage = () => {
               </div>
             </div>
 
-            <form className="section-card project-page__settings" onSubmit={handleSaveSettings}>
-              <div className="project-page__settings-field">
+            <form
+              className={[projectPageStyles.sectionCard, projectPageStyles.settings].join(' ')}
+              onSubmit={handleSaveSettings}
+            >
+              <div className={projectPageStyles.settingsField}>
                 <label>Название</label>
                 <input
-                  className={`project-page__settings-input ${settingsNameError ? 'project-page__settings-input--error' : ''}`}
+                  className={[
+                    projectPageStyles.settingsInput,
+                    settingsNameError ? projectPageStyles.settingsInputError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   maxLength={100}
                   {...registerSettings('name')}
                 />
-                {settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
+                {settingsNameError && <p className={projectPageStyles.settingsError}>{settingsNameError}</p>}
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <label>Описание</label>
                 <textarea
-                  className="project-page__settings-input project-page__settings-textarea"
+                  className={[projectPageStyles.settingsInput, projectPageStyles.settingsTextarea].join(' ')}
                   maxLength={3000}
                   {...registerSettings('description')}
                 />
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <label>Ссылка</label>
                 <input
-                  className={`project-page__settings-input ${settingsLinkError ? 'project-page__settings-input--error' : ''}`}
+                  className={[
+                    projectPageStyles.settingsInput,
+                    settingsLinkError ? projectPageStyles.settingsInputError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   maxLength={500}
                   {...registerSettings('link')}
                 />
-                {settingsLinkError && <p className="project-page__settings-error">{settingsLinkError}</p>}
+                {settingsLinkError && <p className={projectPageStyles.settingsError}>{settingsLinkError}</p>}
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <label>Логотип</label>
-                <div className="organization-page__settings-logo-wrap">
+                <div className={organizationPageStyles.settingsLogoWrap}>
                   <img
-                    className="organization-page__settings-logo"
+                    className={organizationPageStyles.settingsLogo}
                     src={settingsDraft.logoUrl}
                     alt="Логотип организации"
                   />
                   <button
-                    className="organization-page__settings-logo-upload"
+                    className={organizationPageStyles.settingsLogoUpload}
                     type="button"
                     onClick={() => logoInputRef.current?.click()}
                   >
@@ -741,16 +827,16 @@ const OrganizationPage = () => {
               </div>
 
               {hasSettingsChanges && (
-                <div className="project-page__settings-actions">
+                <div className={projectPageStyles.settingsActions}>
                   <button
-                    className="project-page__settings-action project-page__settings-action--save"
+                    className={[projectPageStyles.settingsAction, projectPageStyles.isSave].join(' ')}
                     type="submit"
                     disabled={isSettingsSubmitting || !isSettingsValid}
                   >
                     <CheckIcon />
                   </button>
                   <button
-                    className="project-page__settings-action project-page__settings-action--cancel"
+                    className={[projectPageStyles.settingsAction, projectPageStyles.isCancel].join(' ')}
                     type="button"
                     onClick={handleCancelSettings}
                     disabled={isSettingsSubmitting}

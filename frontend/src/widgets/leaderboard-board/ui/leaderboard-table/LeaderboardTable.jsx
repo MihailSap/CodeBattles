@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { LEADERBOARD_METRIC_COLUMNS } from '@/entities/leaderboard';
 import { ROUTES } from '@/shared/config/routes';
 import { AvatarIcon } from '@/shared/ui/icons';
-import './LeaderboardTable.css';
+import leaderboardTableStyles from './LeaderboardTable.module.scss';
 
 const formatMetric = (value, type) => {
   if (type === 'percent') {
@@ -19,37 +19,37 @@ const formatMetric = (value, type) => {
 
 const getRankClass = (rank) => {
   if (rank === 1) {
-    return 'leaderboard-table__rank--gold';
+    return leaderboardTableStyles.rankGold;
   }
 
   if (rank === 2) {
-    return 'leaderboard-table__rank--silver';
+    return leaderboardTableStyles.rankSilver;
   }
 
   if (rank === 3) {
-    return 'leaderboard-table__rank--bronze';
+    return leaderboardTableStyles.rankBronze;
   }
 
   return '';
 };
 
 const getRowClass = ({ rank, isCurrentUser }) => {
-  const classes = ['leaderboard-table__row'];
+  const classes = [leaderboardTableStyles.row];
 
   if (rank === 1) {
-    classes.push('leaderboard-table__row--gold');
+    classes.push(leaderboardTableStyles.isGold);
   }
 
   if (rank === 2) {
-    classes.push('leaderboard-table__row--silver');
+    classes.push(leaderboardTableStyles.isSilver);
   }
 
   if (rank === 3) {
-    classes.push('leaderboard-table__row--bronze');
+    classes.push(leaderboardTableStyles.isBronze);
   }
 
   if (isCurrentUser) {
-    classes.push('leaderboard-table__row--current');
+    classes.push(leaderboardTableStyles.isCurrent);
   }
 
   return classes.join(' ');
@@ -58,10 +58,12 @@ const getRowClass = ({ rank, isCurrentUser }) => {
 const LeaderboardTable = forwardRef(
   ({ entries, currentUserEntry, category, currentUserId, canResetRatings, onResetRating }, ref) => {
     const columns = LEADERBOARD_METRIC_COLUMNS[category];
+
     const tableRows = useMemo(
       () => (currentUserEntry ? [...entries, currentUserEntry] : entries),
       [currentUserEntry, entries]
     );
+
     const gridTemplateColumns = useMemo(
       () =>
         `max-content minmax(max-content, 1fr) repeat(${columns.length}, max-content)${canResetRatings ? ' max-content' : ''}`,
@@ -69,22 +71,31 @@ const LeaderboardTable = forwardRef(
     );
 
     if (!tableRows.length) {
-      return <div className="leaderboard-table leaderboard-table--empty">Пользователи не найдены</div>;
+      return (
+        <div className={[leaderboardTableStyles.root, leaderboardTableStyles.isEmpty].join(' ')}>
+          Пользователи не найдены
+        </div>
+      );
     }
 
     return (
-      <div className="leaderboard-table">
-        <div className="leaderboard-table__scroll">
-          <div className="leaderboard-table__inner" style={{ gridTemplateColumns }}>
-            <div className="leaderboard-table__row leaderboard-table__row--head">
-              <div className="leaderboard-table__cell">Место</div>
-              <div className="leaderboard-table__cell leaderboard-table__cell--user">Пользователь</div>
+      <div className={leaderboardTableStyles.root}>
+        <div className={leaderboardTableStyles.scroll}>
+          <div
+            className={leaderboardTableStyles.inner}
+            style={{
+              gridTemplateColumns,
+            }}
+          >
+            <div className={[leaderboardTableStyles.row, leaderboardTableStyles.isHead].join(' ')}>
+              <div className={leaderboardTableStyles.cell}>Место</div>
+              <div className={[leaderboardTableStyles.cell, leaderboardTableStyles.isUser].join(' ')}>Пользователь</div>
               {columns.map((column) => (
-                <div className="leaderboard-table__cell" key={column.key}>
+                <div className={leaderboardTableStyles.cell} key={column.key}>
                   {column.label}
                 </div>
               ))}
-              {canResetRatings && <div className="leaderboard-table__cell">Действие</div>}
+              {canResetRatings && <div className={leaderboardTableStyles.cell}>Действие</div>}
             </div>
 
             {entries.map((entry) => {
@@ -93,33 +104,38 @@ const LeaderboardTable = forwardRef(
 
               return (
                 <Link
-                  className={getRowClass({ rank: entry.rank, isCurrentUser })}
+                  className={getRowClass({
+                    rank: entry.rank,
+                    isCurrentUser,
+                  })}
                   key={entry.id}
                   to={ROUTES.profileByUserId.replace(':userId', entry.id)}
                 >
                   <div
-                    className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(entry.rank)}`}
+                    className={[leaderboardTableStyles.cell, leaderboardTableStyles.rank, getRankClass(entry.rank)]
+                      .filter(Boolean)
+                      .join(' ')}
                     ref={isCurrentUser ? ref : null}
                   >
                     {entry.rank}
                   </div>
-                  <div className="leaderboard-table__cell leaderboard-table__cell--user">
-                    <span className="leaderboard-table__avatar">
+                  <div className={[leaderboardTableStyles.cell, leaderboardTableStyles.isUser].join(' ')}>
+                    <span className={leaderboardTableStyles.avatar}>
                       {entry.avatar ? <img src={entry.avatar} alt={`Аватар ${displayName}`} /> : <AvatarIcon />}
                     </span>
-                    <span className="leaderboard-table__name" title={displayName}>
+                    <span className={leaderboardTableStyles.name} title={displayName}>
                       {displayName}
                     </span>
                   </div>
                   {columns.map((column) => (
-                    <div className="leaderboard-table__cell" key={column.key}>
+                    <div className={leaderboardTableStyles.cell} key={column.key}>
                       {formatMetric(entry.metrics[column.key], column.type)}
                     </div>
                   ))}
                   {canResetRatings && (
-                    <div className="leaderboard-table__cell">
+                    <div className={leaderboardTableStyles.cell}>
                       <button
-                        className="leaderboard-table__reset-button"
+                        className={leaderboardTableStyles.resetButton}
                         type="button"
                         onClick={(event) => {
                           event.preventDefault();
@@ -138,23 +154,34 @@ const LeaderboardTable = forwardRef(
             {currentUserEntry && (
               <>
                 <div
-                  className="leaderboard-table__separator"
-                  style={{ gridColumn: `1 / ${columns.length + (canResetRatings ? 4 : 3)}` }}
+                  className={leaderboardTableStyles.separator}
+                  style={{
+                    gridColumn: `1 / ${columns.length + (canResetRatings ? 4 : 3)}`,
+                  }}
                 >
                   •••
                 </div>
                 <Link
-                  className={getRowClass({ rank: currentUserEntry.rank, isCurrentUser: true })}
+                  className={getRowClass({
+                    rank: currentUserEntry.rank,
+                    isCurrentUser: true,
+                  })}
                   to={ROUTES.profileByUserId.replace(':userId', currentUserEntry.id)}
                 >
                   <div
-                    className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(currentUserEntry.rank)}`}
+                    className={[
+                      leaderboardTableStyles.cell,
+                      leaderboardTableStyles.rank,
+                      getRankClass(currentUserEntry.rank),
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     ref={ref}
                   >
                     {currentUserEntry.rank}
                   </div>
-                  <div className="leaderboard-table__cell leaderboard-table__cell--user">
-                    <span className="leaderboard-table__avatar">
+                  <div className={[leaderboardTableStyles.cell, leaderboardTableStyles.isUser].join(' ')}>
+                    <span className={leaderboardTableStyles.avatar}>
                       {currentUserEntry.avatar ? (
                         <img
                           src={currentUserEntry.avatar}
@@ -165,21 +192,21 @@ const LeaderboardTable = forwardRef(
                       )}
                     </span>
                     <span
-                      className="leaderboard-table__name"
+                      className={leaderboardTableStyles.name}
                       title={currentUserEntry.name || `@${currentUserEntry.login}`}
                     >
                       {currentUserEntry.name || `@${currentUserEntry.login}`}
                     </span>
                   </div>
                   {columns.map((column) => (
-                    <div className="leaderboard-table__cell" key={column.key}>
+                    <div className={leaderboardTableStyles.cell} key={column.key}>
                       {formatMetric(currentUserEntry.metrics[column.key], column.type)}
                     </div>
                   ))}
                   {canResetRatings && (
-                    <div className="leaderboard-table__cell">
+                    <div className={leaderboardTableStyles.cell}>
                       <button
-                        className="leaderboard-table__reset-button"
+                        className={leaderboardTableStyles.resetButton}
                         type="button"
                         onClick={(event) => {
                           event.preventDefault();
@@ -202,5 +229,4 @@ const LeaderboardTable = forwardRef(
 );
 
 LeaderboardTable.displayName = 'LeaderboardTable';
-
 export default memo(LeaderboardTable);

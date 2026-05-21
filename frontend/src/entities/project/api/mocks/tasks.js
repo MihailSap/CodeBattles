@@ -4,6 +4,7 @@ const makeDate = (daysFromNow, hour, minute) => {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
   date.setHours(hour, minute, 0, 0);
+
   return date.toISOString();
 };
 

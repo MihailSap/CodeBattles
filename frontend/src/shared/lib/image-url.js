@@ -2,6 +2,7 @@ import { API_BASE_URL } from '@/shared/config/api';
 
 export const getImageUrl = (imagePath) => {
   if (!imagePath) return '';
+
   if (imagePath.startsWith('http') || imagePath.startsWith('blob:') || imagePath.startsWith('data:')) {
     return imagePath;
   }

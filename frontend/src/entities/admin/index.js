@@ -5,7 +5,6 @@ export {
   ADMIN_EVENT_TYPE_LABELS,
   ADMIN_EVENT_TYPE_OPTIONS,
 } from './model/constants';
-
 export {
   useGetAdminComplaintsQuery,
   useGetAdminEventsQuery,

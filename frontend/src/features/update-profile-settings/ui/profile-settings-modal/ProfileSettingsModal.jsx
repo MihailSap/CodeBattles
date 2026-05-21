@@ -9,7 +9,7 @@ import { useSnackbar } from '@/shared/lib/hooks';
 import Snackbar from '@/shared/ui/snackbar';
 import { CrossIcon, RefreshCycleIcon } from '@/shared/ui/icons';
 import ModalShell from '@/shared/ui/modal-shell';
-import './ProfileSettingsModal.css';
+import profileSettingsModalStyles from './ProfileSettingsModal.module.scss';
 
 const initialPasswordForm = {
   currentPassword: '',
@@ -30,6 +30,7 @@ const initialLinkedAccounts = {
 
 const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const { userId } = useAuth();
+
   const {
     register,
     handleSubmit,
@@ -45,6 +46,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     defaultValues: initialPasswordForm,
     mode: 'onChange',
   });
+
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationsSaving, setIsNotificationsSaving] = useState(false);
@@ -53,7 +55,6 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const [isLinkActionLoading, setIsLinkActionLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
@@ -169,10 +170,12 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
 
     try {
       const nextState = await profileSettingsApi.unlinkAccount(provider);
+
       setLinkedAccounts({
         ...initialLinkedAccounts,
         ...nextState,
       });
+
       showSnackbar('Аккаунт отвязан', 'success');
     } catch {
       showSnackbar('Не удалось отвязать аккаунт', 'error');
@@ -186,10 +189,12 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
 
     try {
       const nextState = await profileSettingsApi.linkAccount(provider);
+
       setLinkedAccounts({
         ...initialLinkedAccounts,
         ...nextState,
       });
+
       showSnackbar('Интеграция готова к подключению backend', 'success');
     } catch {
       showSnackbar('Не удалось привязать аккаунт', 'error');
@@ -210,30 +215,30 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     <ModalShell
       isOpen={isOpen}
       onClose={onClose}
-      overlayClassName="profile-settings-modal__overlay"
-      dialogClassName="profile-settings-modal"
+      overlayClassName={profileSettingsModalStyles.overlay}
+      dialogClassName={profileSettingsModalStyles.root}
       ariaLabelledBy="profile-settings-modal-title"
       title="Настройки профиля"
       titleId="profile-settings-modal-title"
-      headerClassName="profile-settings-modal__header"
-      titleClassName="profile-settings-modal__title"
-      closeClassName="profile-settings-modal__close"
+      headerClassName={profileSettingsModalStyles.header}
+      titleClassName={profileSettingsModalStyles.title}
+      closeClassName={profileSettingsModalStyles.close}
       closeAriaLabel="Закрыть настройки профиля"
     >
       {loadError ? (
-        <div className="profile-settings-modal__load-error" role="alert">
+        <div className={profileSettingsModalStyles.loadError} role="alert">
           {loadError}
         </div>
       ) : (
-        <div className="profile-settings-modal__grid">
-          <section className="profile-settings-modal__section profile-settings-modal__section--security">
-            <h3 className="profile-settings-modal__section-title">Безопасность</h3>
+        <div className={profileSettingsModalStyles.grid}>
+          <section className={[profileSettingsModalStyles.section, profileSettingsModalStyles.isSecurity].join(' ')}>
+            <h3 className={profileSettingsModalStyles.sectionTitle}>Безопасность</h3>
 
-            <form className="profile-settings-modal__security-form" onSubmit={handleSubmit(submitPassword)}>
-              <div className="profile-settings-modal__inputs">
-                <div className="profile-settings-modal__input-group">
+            <form className={profileSettingsModalStyles.securityForm} onSubmit={handleSubmit(submitPassword)}>
+              <div className={profileSettingsModalStyles.inputs}>
+                <div className={profileSettingsModalStyles.inputGroup}>
                   <input
-                    className="profile-settings-modal__input"
+                    className={profileSettingsModalStyles.input}
                     type="password"
                     placeholder="Введите текущий пароль"
                     maxLength={50}
@@ -242,12 +247,17 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                     {...register('currentPassword')}
                   />
                   {getPasswordFieldError('currentPassword') && (
-                    <p className="profile-settings-modal__input-error">{getPasswordFieldError('currentPassword')}</p>
+                    <p className={profileSettingsModalStyles.isError}>{getPasswordFieldError('currentPassword')}</p>
                   )}
                 </div>
-                <div className="profile-settings-modal__input-group">
+                <div className={profileSettingsModalStyles.inputGroup}>
                   <input
-                    className={`profile-settings-modal__input ${getPasswordFieldError('password') ? 'profile-settings-modal__input--error' : ''}`}
+                    className={[
+                      profileSettingsModalStyles.input,
+                      getPasswordFieldError('password') ? profileSettingsModalStyles.isError : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     type="password"
                     placeholder="Введите новый пароль"
                     maxLength={50}
@@ -256,13 +266,18 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                     {...register('password')}
                   />
                   {getPasswordFieldError('password') && (
-                    <p className="profile-settings-modal__input-error">{getPasswordFieldError('password')}</p>
+                    <p className={profileSettingsModalStyles.isError}>{getPasswordFieldError('password')}</p>
                   )}
                 </div>
 
-                <div className="profile-settings-modal__input-group">
+                <div className={profileSettingsModalStyles.inputGroup}>
                   <input
-                    className={`profile-settings-modal__input ${getPasswordFieldError('confirmPassword') ? 'profile-settings-modal__input--error' : ''}`}
+                    className={[
+                      profileSettingsModalStyles.input,
+                      getPasswordFieldError('confirmPassword') ? profileSettingsModalStyles.isError : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     type="password"
                     placeholder="Повторите новый пароль"
                     maxLength={50}
@@ -271,13 +286,13 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                     {...register('confirmPassword')}
                   />
                   {getPasswordFieldError('confirmPassword') && (
-                    <p className="profile-settings-modal__input-error">{getPasswordFieldError('confirmPassword')}</p>
+                    <p className={profileSettingsModalStyles.isError}>{getPasswordFieldError('confirmPassword')}</p>
                   )}
                 </div>
               </div>
 
               <button
-                className="profile-settings-modal__action-button profile-settings-modal__action-button--reset"
+                className={[profileSettingsModalStyles.actionButton, profileSettingsModalStyles.isReset].join(' ')}
                 type="submit"
                 disabled={!isPasswordFormValid || isPasswordSubmitting}
               >
@@ -286,11 +301,13 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
             </form>
           </section>
 
-          <section className="profile-settings-modal__section profile-settings-modal__section--notifications">
-            <h3 className="profile-settings-modal__section-title">Уведомления</h3>
+          <section
+            className={[profileSettingsModalStyles.section, profileSettingsModalStyles.isNotifications].join(' ')}
+          >
+            <h3 className={profileSettingsModalStyles.sectionTitle}>Уведомления</h3>
 
-            <div className="profile-settings-modal__notifications">
-              <label className="profile-settings-modal__checkbox-row">
+            <div className={profileSettingsModalStyles.notifications}>
+              <label className={profileSettingsModalStyles.checkboxRow}>
                 <input
                   type="checkbox"
                   checked={Boolean(notifications.reviewAssignments)}
@@ -300,7 +317,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                 <span>Назначение на ревью</span>
               </label>
 
-              <label className="profile-settings-modal__checkbox-row">
+              <label className={profileSettingsModalStyles.checkboxRow}>
                 <input
                   type="checkbox"
                   checked={Boolean(notifications.newComments)}
@@ -310,7 +327,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                 <span>Новые комментарии к моим решениям</span>
               </label>
 
-              <label className="profile-settings-modal__checkbox-row">
+              <label className={profileSettingsModalStyles.checkboxRow}>
                 <input
                   type="checkbox"
                   checked={Boolean(notifications.achievements)}
@@ -322,17 +339,17 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
             </div>
           </section>
 
-          <section className="profile-settings-modal__section profile-settings-modal__section--accounts">
-            <h3 className="profile-settings-modal__section-title">Связанные аккаунты</h3>
+          <section className={[profileSettingsModalStyles.section, profileSettingsModalStyles.isAccounts].join(' ')}>
+            <h3 className={profileSettingsModalStyles.sectionTitle}>Связанные аккаунты</h3>
 
-            <div className="profile-settings-modal__accounts-grid">
-              <article className="profile-settings-modal__account profile-settings-modal__account--github">
-                <h4 className="profile-settings-modal__account-title">GitHub</h4>
+            <div className={profileSettingsModalStyles.accountsGrid}>
+              <article className={[profileSettingsModalStyles.account, profileSettingsModalStyles.isGithub].join(' ')}>
+                <h4 className={profileSettingsModalStyles.accountTitle}>GitHub</h4>
                 {isGithubLinked ? (
-                  <div className="profile-settings-modal__account-row">
-                    <span className="profile-settings-modal__account-login">{linkedAccounts.githubLogin}</span>
+                  <div className={profileSettingsModalStyles.accountRow}>
+                    <span className={profileSettingsModalStyles.accountLogin}>{linkedAccounts.githubLogin}</span>
                     <button
-                      className="profile-settings-modal__unlink-button"
+                      className={profileSettingsModalStyles.unlinkButton}
                       type="button"
                       onClick={() => handleUnlinkAccount('github')}
                       disabled={isLinkActionLoading || isLinkedAccountsLoading}
@@ -343,7 +360,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                   </div>
                 ) : (
                   <button
-                    className="profile-settings-modal__action-button profile-settings-modal__action-button--link"
+                    className={[profileSettingsModalStyles.actionButton, profileSettingsModalStyles.isLink].join(' ')}
                     type="button"
                     onClick={() => handleLinkAccount('github')}
                     disabled={isLinkActionLoading || isLinkedAccountsLoading}
@@ -353,13 +370,13 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                 )}
               </article>
 
-              <article className="profile-settings-modal__account profile-settings-modal__account--gitlab">
-                <h4 className="profile-settings-modal__account-title">GitLab</h4>
+              <article className={[profileSettingsModalStyles.account, profileSettingsModalStyles.isGitlab].join(' ')}>
+                <h4 className={profileSettingsModalStyles.accountTitle}>GitLab</h4>
                 {isGitlabLinked ? (
-                  <div className="profile-settings-modal__account-row">
-                    <span className="profile-settings-modal__account-login">{linkedAccounts.gitlabLogin}</span>
+                  <div className={profileSettingsModalStyles.accountRow}>
+                    <span className={profileSettingsModalStyles.accountLogin}>{linkedAccounts.gitlabLogin}</span>
                     <button
-                      className="profile-settings-modal__unlink-button"
+                      className={profileSettingsModalStyles.unlinkButton}
                       type="button"
                       onClick={() => handleUnlinkAccount('gitlab')}
                       disabled={isLinkActionLoading || isLinkedAccountsLoading}
@@ -370,7 +387,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                   </div>
                 ) : (
                   <button
-                    className="profile-settings-modal__action-button profile-settings-modal__action-button--link"
+                    className={[profileSettingsModalStyles.actionButton, profileSettingsModalStyles.isLink].join(' ')}
                     type="button"
                     onClick={() => handleLinkAccount('gitlab')}
                     disabled={isLinkActionLoading || isLinkedAccountsLoading}

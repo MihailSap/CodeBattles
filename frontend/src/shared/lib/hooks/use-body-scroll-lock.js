@@ -7,7 +7,6 @@ export const useBodyScrollLock = (isLocked) => {
     }
 
     const previousOverflow = document.body.style.overflow;
-
     document.body.style.overflow = 'hidden';
 
     return () => {

@@ -1,15 +1,17 @@
 import { useState, memo, useMemo } from 'react';
 import { AIIcon, LikeIcon, DislikeIcon, DeleteIcon, ComplaintIcon } from '@/shared/ui/icons';
 import { COMMENT_CATEGORY_LABEL, COMMENT_CATEGORY_COLOR } from '@/entities/review';
-import './CommentsBlock.css';
+import commentsBlockStyles from './CommentsBlock.module.scss';
 
 const getDisplayName = (comment, currentUserId) => {
   if (comment.authorRole === 'AI') return 'AI';
   if (comment.authorRole === 'System') return 'Система';
   if (comment.authorId === currentUserId) return 'Вы';
+
   if (comment.authorRole === 'Reviewer') {
     return comment.revealName ? comment.authorName : `Ревьюер ${comment.reviewerIndex || ''}`;
   }
+
   return comment.authorName || 'Пользователь';
 };
 
@@ -33,12 +35,10 @@ const CommentThread = memo(
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
     const [isReplySubmitting, setIsReplySubmitting] = useState(false);
-
     const isAI = comment.authorRole === 'AI';
     const isSystem = comment.authorRole === 'System';
     const isMine = comment.authorId === currentUser?.id;
     const maxDepthReached = level >= 5;
-
     const displayName = getDisplayName(comment, currentUser?.id);
 
     const handleReplySubmit = async () => {
@@ -53,14 +53,12 @@ const CommentThread = memo(
     };
 
     const hasReplies = comment.replies && comment.replies.length > 0;
-
     const likedBy = Array.isArray(comment.likedBy) ? comment.likedBy : [];
     const dislikedBy = Array.isArray(comment.dislikedBy) ? comment.dislikedBy : [];
     const likesCount = likedBy.length;
     const dislikesCount = dislikedBy.length;
     const userLiked = likedBy.includes(currentUser?.id);
     const userDisliked = dislikedBy.includes(currentUser?.id);
-
     const canReplyHere = !readOnly && !isSystem && !comment.isClosed && !maxDepthReached && allowReply && onReply;
     const canLike = !isMine && !isSystem && onLike;
     const canDislike = !isMine && !isSystem && isAI && onDislike;
@@ -83,10 +81,10 @@ const CommentThread = memo(
 
     if (isSystem) {
       return (
-        <div className={`comment-thread level-${level}`}>
-          <div className="comment-system-message">
-            <span className="comment-system-text">{comment.text}</span>
-            <span className="comment-system-date">
+        <div className={commentsBlockStyles.thread}>
+          <div className={commentsBlockStyles.message}>
+            <span className={commentsBlockStyles.text}>{comment.text}</span>
+            <span className={commentsBlockStyles.commentSystemDate}>
               {new Date(comment.createdAt).toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
@@ -100,19 +98,31 @@ const CommentThread = memo(
     }
 
     return (
-      <div className={`comment-thread level-${level}`}>
+      <div className={commentsBlockStyles.thread}>
         <div
-          className={`comment-container ${comment.isClosed ? 'comment-container--closed' : ''} ${isAI ? 'comment-container--ai' : ''}`}
+          className={[
+            commentsBlockStyles.commentContainer,
+            comment.isClosed ? commentsBlockStyles.isClosed : '',
+            isAI ? commentsBlockStyles.isAi : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
         >
-          <div className="comment-header">
-            <div className="comment-author">
+          <div className={commentsBlockStyles.header}>
+            <div className={commentsBlockStyles.commentAuthor}>
               {isAI && (
-                <span className="comment-author-ai-icon">
+                <span className={commentsBlockStyles.aiIcon}>
                   <AIIcon />
                 </span>
               )}
-              <span className={`comment-author-name ${isMine ? 'comment-author-name--mine' : ''}`}>{displayName}</span>
-              <span className="comment-date">
+              <span
+                className={[commentsBlockStyles.commentAuthorName, isMine ? commentsBlockStyles.isMine : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {displayName}
+              </span>
+              <span className={commentsBlockStyles.date}>
                 {new Date(comment.createdAt).toLocaleString('ru-RU', {
                   day: '2-digit',
                   month: '2-digit',
@@ -121,10 +131,10 @@ const CommentThread = memo(
                 })}
               </span>
             </div>
-            <div className="comment-actions-top">
+            <div className={commentsBlockStyles.actionsTop}>
               {comment.category && (
                 <span
-                  className="comment-category-tag"
+                  className={commentsBlockStyles.categoryTag}
                   style={{
                     backgroundColor: `${COMMENT_CATEGORY_COLOR[comment.category]}20`,
                     color: COMMENT_CATEGORY_COLOR[comment.category],
@@ -135,69 +145,97 @@ const CommentThread = memo(
               )}
               {level === 1 && !isAI && (
                 <>
-                  {comment.isClosed && <span className="comment-status-closed">Решено</span>}
+                  {comment.isClosed && <span className={commentsBlockStyles.statusClosed}>Решено</span>}
                   {canCloseThread && (
-                    <button className="comment-close-btn" type="button" onClick={() => onCloseThread(comment.id)}>
+                    <button
+                      className={commentsBlockStyles.closeBtn}
+                      type="button"
+                      onClick={() => onCloseThread(comment.id)}
+                    >
                       Закрыть тред
                     </button>
                   )}
                   {canReopenThread && (
-                    <button className="comment-reopen-btn" type="button" onClick={() => onReopenThread(comment.id)}>
+                    <button
+                      className={commentsBlockStyles.reopenBtn}
+                      type="button"
+                      onClick={() => onReopenThread(comment.id)}
+                    >
                       Открыть тред
                     </button>
                   )}
                 </>
               )}
               {hasReplies && (
-                <button className="comment-toggle-btn" type="button" onClick={() => setIsExpanded(!isExpanded)}>
+                <button
+                  className={commentsBlockStyles.toggleBtn}
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                >
                   {isExpanded ? '▾' : '▸'}
                 </button>
               )}
             </div>
           </div>
 
-          <div className="comment-body">{comment.text}</div>
+          <div className={commentsBlockStyles.body}>{comment.text}</div>
 
-          <div className="comment-footer">
+          <div className={commentsBlockStyles.footer}>
             {canReplyHere ? (
-              <button className="comment-action-btn" type="button" onClick={() => setIsReplying(!isReplying)}>
+              <button
+                className={commentsBlockStyles.actionBtn}
+                type="button"
+                onClick={() => setIsReplying(!isReplying)}
+              >
                 Ответить
               </button>
             ) : (
               <span />
             )}
 
-            <div className="comment-footer-right">
+            <div className={commentsBlockStyles.footerRight}>
               <button
-                className={`comment-icon-btn ${userLiked ? 'active' : ''}`}
+                className={[commentsBlockStyles.iconBtn, userLiked ? commentsBlockStyles.isActive : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 type="button"
                 onClick={() => canLike && onLike(comment.id)}
                 disabled={!canLike}
               >
                 <LikeIcon filled={userLiked} />
-                {likesCount > 0 && <span className="comment-count">{likesCount}</span>}
+                {likesCount > 0 && <span className={commentsBlockStyles.count}>{likesCount}</span>}
               </button>
 
               {isAI && (
                 <button
-                  className={`comment-icon-btn ${userDisliked ? 'active' : ''}`}
+                  className={[commentsBlockStyles.iconBtn, userDisliked ? commentsBlockStyles.isActive : '']
+                    .filter(Boolean)
+                    .join(' ')}
                   type="button"
                   onClick={() => canDislike && onDislike(comment.id)}
                   disabled={!canDislike}
                 >
                   <DislikeIcon filled={userDisliked} />
-                  {dislikesCount > 0 && <span className="comment-count">{dislikesCount}</span>}
+                  {dislikesCount > 0 && <span className={commentsBlockStyles.count}>{dislikesCount}</span>}
                 </button>
               )}
 
               {canDelete && (
-                <button className="comment-icon-btn error" type="button" onClick={() => onDelete(comment.id)}>
+                <button
+                  className={[commentsBlockStyles.iconBtn, commentsBlockStyles.isError].join(' ')}
+                  type="button"
+                  onClick={() => onDelete(comment.id)}
+                >
                   <DeleteIcon />
                 </button>
               )}
 
               {canReport && !canDelete && (
-                <button className="comment-icon-btn warning" type="button" onClick={() => onReport(comment.id)}>
+                <button
+                  className={[commentsBlockStyles.iconBtn, commentsBlockStyles.isWarning].join(' ')}
+                  type="button"
+                  onClick={() => onReport(comment.id)}
+                >
                   <ComplaintIcon />
                 </button>
               )}
@@ -205,19 +243,19 @@ const CommentThread = memo(
           </div>
 
           {isReplying && (
-            <div className="comment-reply-form">
+            <div className={commentsBlockStyles.form}>
               <textarea
-                className="comment-textarea"
+                className={commentsBlockStyles.textarea}
                 placeholder="Ваш ответ (минимум 15 символов)..."
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
               />
-              <div className="comment-reply-actions">
-                <button className="btn-cancel" type="button" onClick={() => setIsReplying(false)}>
+              <div className={commentsBlockStyles.actions}>
+                <button className={commentsBlockStyles.cancelButton} type="button" onClick={() => setIsReplying(false)}>
                   Отмена
                 </button>
                 <button
-                  className="btn-submit"
+                  className={commentsBlockStyles.submitButton}
                   type="button"
                   disabled={replyText.length < 15 || isReplySubmitting}
                   onClick={handleReplySubmit}
@@ -230,7 +268,7 @@ const CommentThread = memo(
         </div>
 
         {isExpanded && hasReplies && (
-          <div className="comment-replies">
+          <div className={commentsBlockStyles.replies}>
             {comment.replies.map((reply) => (
               <CommentThread
                 key={reply.id}
@@ -284,17 +322,23 @@ const CommentsBlock = memo(
 
     if (!comments || comments.length === 0) {
       return (
-        <div className={`comments-block ${isHistory ? 'comments-block--history' : ''}`}>
-          <h3 className="comments-block-title">{title}</h3>
-          <div className="comments-block-empty">{emptyText}</div>
+        <div
+          className={[commentsBlockStyles.root, isHistory ? commentsBlockStyles.isHistory : '']
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <h3 className={commentsBlockStyles.title}>{title}</h3>
+          <div className={commentsBlockStyles.empty}>{emptyText}</div>
         </div>
       );
     }
 
     return (
-      <div className={`comments-block ${isHistory ? 'comments-block--history' : ''}`}>
-        <h3 className="comments-block-title">{title}</h3>
-        <div className="comments-block-list">
+      <div
+        className={[commentsBlockStyles.root, isHistory ? commentsBlockStyles.isHistory : ''].filter(Boolean).join(' ')}
+      >
+        <h3 className={commentsBlockStyles.title}>{title}</h3>
+        <div className={commentsBlockStyles.list}>
           {sortedHuman.map((comment) => (
             <CommentThread
               key={comment.id}
@@ -316,7 +360,7 @@ const CommentsBlock = memo(
 
           {aiComments.length > 0 && (
             <>
-              <div className="comments-block-ai-divider">
+              <div className={commentsBlockStyles.aiDivider}>
                 <span>AI-комментарии</span>
               </div>
               {aiComments.map((comment) => (

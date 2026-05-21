@@ -1,0 +1,455 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.root {
+  width: min(70rem, 90%);
+  max-height: min(100vh - 9.375rem, 57.5rem);
+  overflow: auto;
+  border: 2px solid var(--color-accent);
+  border-radius: 25px;
+  box-shadow: var(--shadow-accent-strong);
+  background-color: var(--color-surface);
+  padding: 1.875rem 2.5rem;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-danger);
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.close svg {
+  width: 100%;
+  height: 100%;
+}
+
+.grid {
+  margin-top: 1.875rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 2.5rem;
+  row-gap: 1.875rem;
+}
+
+.section {
+  border-radius: 10px;
+  box-shadow: var(--shadow-section);
+  padding: 1.25rem;
+  background: var(--color-page-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.loadError {
+  border: 2px solid var(--color-danger-border);
+  border-radius: 10px;
+  padding: 0.875rem;
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+[data-theme='dark'] .section.isSecurity {
+  box-shadow: var(--shadow-success-soft);
+}
+
+.section {
+  &.isNotifications {
+    grid-column: auto;
+  }
+
+  &.isAccounts {
+    grid-column: 1 / -1;
+  }
+}
+
+.sectionTitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--color-text-primary);
+}
+
+.section.isSecurity .sectionTitle {
+  color: var(--color-success);
+}
+
+.securityForm {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inputs {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inputGroup {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  border: 2px solid var(--color-success-control-border);
+  box-shadow: var(--shadow-success-focus);
+  border-radius: 10px;
+  padding: 0.625rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.input {
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+}
+
+.input {
+  &:focus {
+    outline: none;
+    border-color: var(--color-success-control-border-active);
+  }
+}
+
+.input {
+  &.isError {
+    background-color: var(--color-danger-surface);
+    border-color: var(--color-danger-border);
+    box-shadow: var(--shadow-danger-focus);
+  }
+}
+
+.input.isError:focus {
+  border-color: var(--color-danger-border-active);
+}
+
+.inputError {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-danger);
+}
+
+.actionButton {
+  border-radius: 10px;
+  border: 2px solid var(--color-success);
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton {
+  &.isReset {
+    align-self: center;
+    margin-top: 1.875rem;
+    padding: 0.03125rem 2.5rem;
+  }
+}
+
+.actionButton.isReset svg {
+  width: 2.1875rem;
+  height: 2.1875rem;
+}
+
+.actionButton {
+  &.isLink {
+    display: flex;
+    margin: 1.25rem auto 0;
+    padding: 0.1875rem 1.125rem;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+}
+
+.actionButton:disabled,
+.unlinkButton:disabled,
+.close:disabled,
+.checkboxRow input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.notifications {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.checkboxRow {
+  padding: 0.625rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9375rem;
+}
+
+.checkboxRow input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.checkboxRow span {
+  font-weight: 400;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.accountsGrid {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.account {
+  border: 2px solid;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.account {
+  &.isGithub {
+    background: var(--color-brand-github-bg);
+    border-color: var(--color-brand-github-bg);
+  }
+}
+
+.account {
+  &.isGitlab {
+    background: var(--color-surface);
+    border-color: var(--color-brand-gitlab);
+  }
+}
+
+.accountTitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1.5rem;
+  text-align: center;
+  color: var(--color-text-inverse);
+}
+
+.account.isGitlab .accountTitle {
+  color: var(--color-brand-gitlab);
+}
+
+.accountRow {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.accountLogin {
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--color-text-inverse);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.account.isGitlab .accountLogin {
+  color: var(--color-text-primary);
+}
+
+.unlinkButton {
+  border: none;
+  padding: 0;
+  width: 1.5625rem;
+  height: 1.5625rem;
+  background: transparent;
+  color: var(--color-danger);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.unlinkButton svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .actionButton:hover:enabled {
+    background: transparent;
+    color: var(--color-success);
+    border-color: var(--color-success);
+  }
+}
+
+@media (max-width: 50rem) {
+  .root {
+    padding: 1.5rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    &.isAccounts {
+      grid-column: auto;
+    }
+  }
+
+  .accountsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .overlay {
+    padding: 0.75rem;
+  }
+
+  .root {
+    padding: 1.125rem;
+    max-height: 70vh;
+  }
+
+  .title,
+  .sectionTitle,
+  .accountTitle {
+    font-size: 1.125rem;
+  }
+
+  .close {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .grid {
+    margin-top: 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .section {
+    padding: 0.9375rem;
+  }
+
+  .securityForm {
+    margin-top: 0.9375rem;
+  }
+
+  .inputs {
+    gap: 0.9375rem;
+  }
+
+  .input {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .inputError {
+    font-size: 0.75rem;
+  }
+
+  .actionButton {
+    &.isReset {
+      padding: 0.03125rem 1.875rem;
+      margin-top: 1.25rem;
+    }
+  }
+
+  .actionButton.isReset svg {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+
+  .notifications {
+    margin-top: 0.9375rem;
+    gap: 0.5rem;
+  }
+
+  .checkboxRow {
+    padding: 0.3125rem;
+    gap: 0.625rem;
+  }
+
+  .checkboxRow input {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  .checkboxRow span {
+    font-size: 0.875rem;
+  }
+
+  .accountsGrid {
+    margin-top: 0.9375rem;
+    gap: 0.9375rem;
+  }
+
+  .account {
+    padding: 0.9375rem;
+  }
+
+  .actionButton {
+    &.isLink {
+      margin-top: 0.9375rem;
+      padding: 0.1875rem 0.8125rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .accountRow {
+    margin-top: 0.9375rem;
+  }
+
+  .accountLogin {
+    font-size: 1rem;
+  }
+
+  .unlinkButton {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}

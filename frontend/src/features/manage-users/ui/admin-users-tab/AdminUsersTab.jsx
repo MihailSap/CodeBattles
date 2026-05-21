@@ -11,8 +11,7 @@ import {
 } from '@/entities/user';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getApiErrorMessage } from '@/shared/lib';
-import './AdminUsersTab.css';
-
+import adminUsersTabStyles from './AdminUsersTab.module.scss';
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 450;
 
@@ -23,6 +22,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const [error, setError] = useState('');
   const [confirmState, setConfirmState] = useState(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
   const usersQuery = useGetUsersQuery(
     {
       page,
@@ -34,14 +34,15 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
       refetchOnMountOrArgChange: 30,
     }
   );
+
   const [deleteUser, deleteUserState] = useDeleteUserMutation();
   const [makeAdmin, makeAdminState] = useMakeAdminMutation();
   const [makeNotAdmin, makeNotAdminState] = useMakeNotAdminMutation();
   const [enableUser, enableUserState] = useEnableUserMutation();
-
   const users = Array.isArray(usersQuery.data?.content) ? usersQuery.data.content : [];
   const totalPages = Number.isFinite(usersQuery.data?.totalPages) ? usersQuery.data.totalPages : 0;
   const isLoading = usersQuery.isLoading || usersQuery.isFetching;
+
   const isSubmittingAction =
     deleteUserState.isLoading || makeAdminState.isLoading || makeNotAdminState.isLoading || enableUserState.isLoading;
 
@@ -106,6 +107,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
         if (confirmState.targetUser.id === currentUserId) {
           await onSelfDelete();
+
           return;
         }
 
@@ -121,6 +123,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
         if (confirmState.targetUser.id === currentUserId && !confirmState.shouldBeAdmin) {
           await onSelfDemote();
+
           return;
         }
 
@@ -156,14 +159,14 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const hasUsers = users.length > 0;
 
   return (
-    <section className="admin-users" aria-label="Управление пользователями">
+    <section className={adminUsersTabStyles.root} aria-label="Управление пользователями">
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <div className="admin-users__top">
-        <h2 className="admin-users__title">Пользователи</h2>
-        <label className="admin-users__search-wrap">
+      <div className={adminUsersTabStyles.top}>
+        <h2 className={adminUsersTabStyles.title}>Пользователи</h2>
+        <label className={adminUsersTabStyles.searchWrap}>
           <input
-            className="admin-users__search-input"
+            className={adminUsersTabStyles.searchInput}
             type="text"
             placeholder="Введите логин или E-Mail"
             value={searchInput}
@@ -172,8 +175,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
         </label>
       </div>
 
-      <div className="admin-users__table-wrap">
-        <table className="admin-users__table">
+      <div className={adminUsersTabStyles.tableWrap}>
+        <table className={adminUsersTabStyles.table}>
           <thead>
             <tr>
               <th>ID</th>
@@ -186,8 +189,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
           <tbody>
             {isLoading && (
               <tr>
-                <td className="admin-users__loading-cell" colSpan={5}>
-                  <div className="admin-users__table-loader">
+                <td className={adminUsersTabStyles.loadingCell} colSpan={5}>
+                  <div className={adminUsersTabStyles.tableLoader}>
                     <Spinner />
                   </div>
                 </td>
@@ -196,7 +199,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
             {!isLoading && !hasUsers && (
               <tr>
-                <td className="admin-users__empty-cell" colSpan={5}>
+                <td className={adminUsersTabStyles.emptyCell} colSpan={5}>
                   Пользователи для отображения не найдены
                 </td>
               </tr>
@@ -211,14 +214,20 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
                 return (
                   <tr
                     key={targetUser.id}
-                    className={`admin-users__row ${isAdmin ? 'admin-users__row--admin' : ''} ${isCurrentUser ? 'admin-users__row--me' : ''}`}
+                    className={[
+                      adminUsersTabStyles.row,
+                      isAdmin ? adminUsersTabStyles.isAdmin : '',
+                      isCurrentUser ? adminUsersTabStyles.isMe : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
                     <td>{targetUser.id}</td>
                     <td>{targetUser.login || '—'}</td>
                     <td>{targetUser.email || '—'}</td>
                     <td>
                       <input
-                        className="admin-users__checkbox"
+                        className={adminUsersTabStyles.checkbox}
                         type="checkbox"
                         checked={isAdmin}
                         onChange={(event) => {
@@ -228,9 +237,9 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
                       />
                     </td>
                     <td>
-                      <div className="admin-users__actions">
+                      <div className={adminUsersTabStyles.actions}>
                         <button
-                          className="admin-users__action-button admin-users__action-button--delete"
+                          className={[adminUsersTabStyles.actionButton, adminUsersTabStyles.isDelete].join(' ')}
                           type="button"
                           aria-label={`Удалить пользователя ${targetUser.login || targetUser.id}`}
                           onClick={() => openDeleteConfirm(targetUser)}
@@ -240,7 +249,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
                         </button>
                         {!targetUser.enabled && (
                           <button
-                            className="admin-users__action-button admin-users__action-button--approve"
+                            className={[adminUsersTabStyles.actionButton, adminUsersTabStyles.isApprove].join(' ')}
                             type="button"
                             aria-label={`Подтвердить пользователя ${targetUser.login || targetUser.id}`}
                             onClick={() => openEnableConfirm(targetUser)}
@@ -258,20 +267,20 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
         </table>
       </div>
 
-      {error && <p className="admin-users__error">{error}</p>}
+      {error && <p className={adminUsersTabStyles.isError}>{error}</p>}
 
-      <div className="admin-users__pagination">
+      <div className={adminUsersTabStyles.pagination}>
         <button
-          className="admin-users__pagination-button"
+          className={adminUsersTabStyles.paginationButton}
           type="button"
           onClick={() => setPage((currentPage) => currentPage - 1)}
           disabled={!canGoPrev || isLoading}
         >
           ←
         </button>
-        <p className="admin-users__pagination-label">{currentPageLabel}</p>
+        <p className={adminUsersTabStyles.paginationLabel}>{currentPageLabel}</p>
         <button
-          className="admin-users__pagination-button"
+          className={adminUsersTabStyles.paginationButton}
           type="button"
           onClick={() => setPage((currentPage) => currentPage + 1)}
           disabled={!canGoNext || isLoading}

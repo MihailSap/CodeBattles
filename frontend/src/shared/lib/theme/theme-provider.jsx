@@ -2,7 +2,6 @@
 import { createContext, useEffect, useContext, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectTheme, toggleTheme } from './model/theme-slice';
-
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {

@@ -1,7 +1,6 @@
 import { ACHIEVEMENTS, MOCK_RECEIVED_ACHIEVEMENT_IDS } from '@/entities/achievement';
 import { httpClient } from '@/shared/api';
 import { getImageUrl } from '@/shared/lib';
-
 export const profileApi = {
   async getProfilePageData(userId = 'me') {
     const url = userId === 'me' ? '/api/v1/profile/me' : `/api/v1/profile/${userId}`;
@@ -42,12 +41,11 @@ export const profileApi = {
       achievements: Array.isArray(user.achievements) && user.achievements.length > 0 ? user.achievements : ACHIEVEMENTS,
     };
   },
-
   async updateProfileSection(payload) {
     const formData = new FormData();
     formData.append('name', payload.name);
-
     const avatarFile = payload.avatar || payload.avatarFile;
+
     if (avatarFile instanceof File) {
       formData.append('avatar', avatarFile);
     }
@@ -60,32 +58,42 @@ export const profileApi = {
       avatarPath: getImageUrl(user.avatarPath || user.avatar || user.avatarFileTitle),
     };
   },
-
   async updateSkillsSection(userId, skills) {
     if (!userId) return skills;
 
     const stackRequests = [
-      ...(skills.languages || []).map((name) => ({ title: name, type: 'LANGUAGES' })),
-      ...(skills.frameworks || []).map((name) => ({ title: name, type: 'FRAMEWORKS' })),
-      ...(skills.tools || []).map((name) => ({ title: name, type: 'TOOLS' })),
+      ...(skills.languages || []).map((name) => ({
+        title: name,
+        type: 'LANGUAGES',
+      })),
+      ...(skills.frameworks || []).map((name) => ({
+        title: name,
+        type: 'FRAMEWORKS',
+      })),
+      ...(skills.tools || []).map((name) => ({
+        title: name,
+        type: 'TOOLS',
+      })),
     ];
 
     await httpClient.patch(`/api/v1/users/stack/${userId}`, stackRequests);
+
     return skills;
   },
-
   async uploadAvatar(file) {
     const formData = new FormData();
     formData.append('file', file);
-
     const response = await httpClient.post('/api/v1/profile/me/avatar', formData);
+
     return {
       avatarPath: getImageUrl(response.data.avatarPath),
     };
   },
-
   async deleteAvatar() {
     await httpClient.delete('/api/v1/profile/me/avatar');
-    return { avatarPath: '' };
+
+    return {
+      avatarPath: '',
+    };
   },
 };

@@ -10,7 +10,6 @@ import {
   sortJoinRequests,
   sortTasks,
 } from '../lib/sorting';
-
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const parseBackendMessage = (message) => {
@@ -35,7 +34,6 @@ const toDomainError = (error) => {
   const backendMessage = response?.data?.message;
   const parsed = parseBackendMessage(backendMessage);
   const nextError = new Error(response?.data?.message || error?.message || 'Request failed');
-
   nextError.status = parsed?.status || response?.status || 500;
   nextError.code = parsed?.code;
   nextError.raw = error;
@@ -50,6 +48,7 @@ const toDomainError = (error) => {
 const request = async (config) => {
   try {
     const response = await httpClient(config);
+
     return response.data;
   } catch (error) {
     throw toDomainError(error);
@@ -199,16 +198,41 @@ const mapCreateOrganizationPayload = (payload) => {
   if (payload.link) formData.append('link', payload.link);
   if (payload.description) formData.append('description', payload.description);
   if (payload.logoFile) formData.append('logo', payload.logoFile);
+
   return formData;
 };
 
 const mapUpdateProjectPayload = (payload) => ({
-  ...(payload.name !== undefined ? { name: payload.name } : {}),
-  ...(payload.description !== undefined ? { description: payload.description } : {}),
-  ...(payload.repositoryUrl !== undefined ? { repositoryUrl: payload.repositoryUrl } : {}),
-  ...(payload.stack !== undefined ? { stack: payload.stack } : {}),
-  ...(payload.privacy !== undefined ? { isPrivate: payload.privacy === PROJECT_PRIVACY.PRIVATE } : {}),
-  ...(payload.aiReviewEnabled !== undefined ? { aiReviewEnable: Boolean(payload.aiReviewEnabled) } : {}),
+  ...(payload.name !== undefined
+    ? {
+        name: payload.name,
+      }
+    : {}),
+  ...(payload.description !== undefined
+    ? {
+        description: payload.description,
+      }
+    : {}),
+  ...(payload.repositoryUrl !== undefined
+    ? {
+        repositoryUrl: payload.repositoryUrl,
+      }
+    : {}),
+  ...(payload.stack !== undefined
+    ? {
+        stack: payload.stack,
+      }
+    : {}),
+  ...(payload.privacy !== undefined
+    ? {
+        isPrivate: payload.privacy === PROJECT_PRIVACY.PRIVATE,
+      }
+    : {}),
+  ...(payload.aiReviewEnabled !== undefined
+    ? {
+        aiReviewEnable: Boolean(payload.aiReviewEnabled),
+      }
+    : {}),
 });
 
 const toBackendLocalDateTime = (value) => {
@@ -233,21 +257,22 @@ const makeDate = (daysFromNow, hour, minute) => {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
   date.setHours(hour, minute, 0, 0);
+
   return date.toISOString();
 };
 
 import { MOCK_PROJECTS, MOCK_TASKS, mockUsersById } from './mocks';
 import { MOCK_REVIEWS_STORE, MOCK_ASSIGNED_REVIEWS } from './mocks/reviews';
 import { MOCK_LARGE_FILE_TREE } from './mocks/content';
-
 const taskMockStore = new Map();
 const reviewMockStore = MOCK_REVIEWS_STORE;
-
 const getMockTaskKey = (projectId) => String(projectId);
+
 const MOCK_TASKS_BY_PROJECT = MOCK_TASKS.reduce((accumulator, task) => {
   const key = String(task.projectId);
   const current = accumulator.get(key) || [];
   accumulator.set(key, [...current, task]);
+
   return accumulator;
 }, new Map());
 
@@ -276,6 +301,7 @@ const normalizeTaskRecord = (task) => ({
 const hydrateMockTask = (task, project) => {
   const participants = project?.participants || [];
   const participantsById = new Map(participants.map((participant) => [Number(participant.id), participant]));
+
   const resolveParticipant = (id) =>
     mapParticipant(participantsById.get(Number(id)) || mockUsersById.get(Number(id)) || createFallbackParticipant(id));
 
@@ -307,20 +333,27 @@ const seedMockTasksForProject = (projectId, participants = [], projectViewerRole
   }
 
   const actualMockProject = MOCK_PROJECTS.find((p) => p.id === Number(projectId));
+
   const mockProject = {
     participants,
     viewerRole: projectViewerRole,
     name: actualMockProject?.name || 'Unknown Project',
     privacy: actualMockProject?.privacy || 'PRIVATE',
   };
+
   const hydrated = seedTasks.map((task) => hydrateMockTask(task, mockProject));
   taskMockStore.set(key, hydrated);
+
   return hydrated.map(normalizeTaskRecord);
 };
 
 export const projectsApi = {
   async getProjectUsers(projectId) {
-    const response = await request({ method: 'GET', url: `/api/v1/projects/${projectId}/participants` });
+    const response = await request({
+      method: 'GET',
+      url: `/api/v1/projects/${projectId}/participants`,
+    });
+
     return (response || []).map((user) => ({
       id: user.id,
       login: user.login,
@@ -330,10 +363,10 @@ export const projectsApi = {
       role: user.role,
     }));
   },
-
   async getProjectById(projectId) {
     const projId = Number(projectId);
     const mockProj = MOCK_PROJECTS.find((p) => p.id === projId);
+
     if (mockProj) {
       const viewerRole = mockProj.viewerRole || PROJECT_MEMBER_ROLE.OWNER;
       const sortedParticipants = sortParticipants(mockProj.participants || []);
@@ -347,10 +380,18 @@ export const projectsApi = {
       };
     }
 
-    const project = await request({ method: 'GET', url: `/api/v1/projects/${projectId}` });
+    const project = await request({
+      method: 'GET',
+      url: `/api/v1/projects/${projectId}`,
+    });
+
     const participants = await this.getProjectUsers(projectId);
+
     const tasks = project.canSeeTasks
-      ? await request({ method: 'GET', url: `/api/v1/tasks/tasks/by-project/${project.id}` }).catch(() => [])
+      ? await request({
+          method: 'GET',
+          url: `/api/v1/tasks/tasks/by-project/${project.id}`,
+        }).catch(() => [])
       : [];
 
     const viewerRole = project.viewerRole || PROJECT_MEMBER_ROLE.GUEST;
@@ -374,14 +415,20 @@ export const projectsApi = {
       tasks: sortTasks(normalizedTasks),
     };
   },
-
   async getTaskById(projectId, taskId) {
     if (!isMockProjectId(projectId)) {
-      const task = await request({ method: 'GET', url: `/api/v1/tasks/tasks/${taskId}` });
+      const task = await request({
+        method: 'GET',
+        url: `/api/v1/tasks/tasks/${taskId}`,
+      });
+
       const participants = await this.getProjectUsers(task.projectId || projectId).catch(() => []);
-      const project = await request({ method: 'GET', url: `/api/v1/projects/${task.projectId || projectId}` }).catch(
-        () => null
-      );
+
+      const project = await request({
+        method: 'GET',
+        url: `/api/v1/projects/${task.projectId || projectId}`,
+      }).catch(() => null);
+
       const viewerRole = project?.viewerRole || task.permissions?.viewerRole || PROJECT_MEMBER_ROLE.GUEST;
       const sortedParticipants = sortParticipants(participants || []);
 
@@ -408,30 +455,47 @@ export const projectsApi = {
     }
 
     const project = await this.getProjectById(projectId);
+
     return hydrateMockTask(task, project);
   },
-
   async createProject(payload) {
-    const data = await request({ method: 'POST', url: '/api/v1/projects', data: mapCreateProjectPayload(payload) });
-    return { accepted: true, projectId: data?.id };
-  },
+    const data = await request({
+      method: 'POST',
+      url: '/api/v1/projects',
+      data: mapCreateProjectPayload(payload),
+    });
 
+    return {
+      accepted: true,
+      projectId: data?.id,
+    };
+  },
   async updateProject(projectId, payload) {
-    return request({ method: 'PATCH', url: `/api/v1/projects/${projectId}`, data: mapUpdateProjectPayload(payload) });
+    return request({
+      method: 'PATCH',
+      url: `/api/v1/projects/${projectId}`,
+      data: mapUpdateProjectPayload(payload),
+    });
   },
-
   async deleteProject(projectId) {
-    const result = await request({ method: 'DELETE', url: `/api/v1/projects/${projectId}` });
-    return { deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true) };
-  },
+    const result = await request({
+      method: 'DELETE',
+      url: `/api/v1/projects/${projectId}`,
+    });
 
+    return {
+      deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true),
+    };
+  },
   async createTask(projectId, payload) {
     if (isMockProjectId(projectId)) {
       const project = await this.getProjectById(projectId);
       const key = getMockTaskKey(projectId);
       const tasks = taskMockStore.get(key) || [];
+
       const nextId =
         Math.max(0, ...MOCK_TASKS.map((task) => Number(task.id)), ...tasks.map((task) => Number(task.id))) + 1;
+
       const nextTask = hydrateMockTask(
         {
           id: nextId,
@@ -444,7 +508,11 @@ export const projectsApi = {
       );
 
       taskMockStore.set(key, [...tasks, nextTask]);
-      return { accepted: true, taskId: nextId };
+
+      return {
+        accepted: true,
+        taskId: nextId,
+      };
     }
 
     const data = await request({
@@ -456,9 +524,12 @@ export const projectsApi = {
         deadline: toBackendLocalDateTime(payload.deadline),
       },
     });
-    return { accepted: true, taskId: data?.id };
-  },
 
+    return {
+      accepted: true,
+      taskId: data?.id,
+    };
+  },
   async updateTask(taskId, payload) {
     for (const [key, tasks] of taskMockStore.entries()) {
       const index = tasks.findIndex((item) => Number(item.id) === Number(taskId));
@@ -475,6 +546,7 @@ export const projectsApi = {
       const nextTasks = [...tasks];
       nextTasks[index] = nextTask;
       taskMockStore.set(key, nextTasks);
+
       return clone(nextTask);
     }
 
@@ -483,32 +555,48 @@ export const projectsApi = {
       url: `/api/v1/tasks/tasks/${taskId}`,
       data: {
         ...payload,
-        ...(payload.deadline !== undefined ? { deadline: toBackendLocalDateTime(payload.deadline) } : {}),
+        ...(payload.deadline !== undefined
+          ? {
+              deadline: toBackendLocalDateTime(payload.deadline),
+            }
+          : {}),
       },
     });
 
     return data;
   },
-
   async deleteTask(taskId) {
     for (const [key, tasks] of taskMockStore.entries()) {
       const nextTasks = tasks.filter((item) => Number(item.id) !== Number(taskId));
 
       if (nextTasks.length !== tasks.length) {
         taskMockStore.set(key, nextTasks);
-        return { deleted: true };
+
+        return {
+          deleted: true,
+        };
       }
     }
 
-    const result = await request({ method: 'DELETE', url: `/api/v1/tasks/tasks/${taskId}` });
-    return { deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true) };
-  },
+    const result = await request({
+      method: 'DELETE',
+      url: `/api/v1/tasks/tasks/${taskId}`,
+    });
 
+    return {
+      deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true),
+    };
+  },
   async leaveProject(projectId) {
-    const result = await request({ method: 'POST', url: `/api/v1/projects/${projectId}/leave` });
-    return { left: Boolean(result?.isLeft ?? result?.left ?? true) };
-  },
+    const result = await request({
+      method: 'POST',
+      url: `/api/v1/projects/${projectId}/leave`,
+    });
 
+    return {
+      left: Boolean(result?.isLeft ?? result?.left ?? true),
+    };
+  },
   async generateProjectInvite(projectId, payload) {
     const data = await request({
       method: 'POST',
@@ -518,17 +606,24 @@ export const projectsApi = {
         expiresAt: toBackendLocalDateTime(payload.expiresAt),
       },
     });
-    return { ...data, link: `${window.location.origin}/projects/join/${data.token}` };
-  },
 
+    return {
+      ...data,
+      link: `${window.location.origin}/projects/join/${data.token}`,
+    };
+  },
   async joinByInvite(token) {
-    return request({ method: 'POST', url: `/api/v1/project-invites/${token}/join` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/project-invites/${token}/join`,
+    });
   },
-
   async getInviteInfo(token) {
-    return request({ method: 'GET', url: `/api/v1/project-invites/${token}` });
+    return request({
+      method: 'GET',
+      url: `/api/v1/project-invites/${token}`,
+    });
   },
-
   async generateOrganizationInvite(organizationId, payload) {
     const data = await request({
       method: 'POST',
@@ -538,17 +633,24 @@ export const projectsApi = {
         expiresAt: toBackendLocalDateTime(payload.expiresAt),
       },
     });
-    return { ...data, link: `${window.location.origin}/organizations/join/${data.token}` };
-  },
 
+    return {
+      ...data,
+      link: `${window.location.origin}/organizations/join/${data.token}`,
+    };
+  },
   async joinOrganizationByInvite(token) {
-    return request({ method: 'POST', url: `/api/v1/organizations/join/${token}` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/organizations/join/${token}`,
+    });
   },
-
   async getOrganizationInviteInfo(token) {
-    return request({ method: 'GET', url: `/api/v1/organizations/invites/${token}` });
+    return request({
+      method: 'GET',
+      url: `/api/v1/organizations/invites/${token}`,
+    });
   },
-
   async getProjectsDashboard(params = {}) {
     const { search = '' } = params;
 
@@ -576,6 +678,7 @@ export const projectsApi = {
 
     const allWithoutOrg = sortProjects([...apiProjectsWithoutOrg, ...mockProjectsWithoutOrg]).filter((p) => {
       if (!normalizedSearch) return true;
+
       return (
         p.name.toLowerCase().includes(normalizedSearch) ||
         (p.description || '').toLowerCase().includes(normalizedSearch)
@@ -594,6 +697,7 @@ export const projectsApi = {
     }));
 
     const mockOrgsMap = new Map();
+
     MOCK_PROJECTS.forEach((p) => {
       if (p.organizationId && !mockOrgsMap.has(p.organizationId)) {
         mockOrgsMap.set(p.organizationId, {
@@ -626,13 +730,13 @@ export const projectsApi = {
 
       const existingIds = new Set(org.projects.map((p) => p.id));
       const uniqueMocks = orgMocks.filter((p) => !existingIds.has(p.id));
-
       org.projects = sortProjects([...org.projects, ...uniqueMocks]);
     });
 
     const organizationsWithProjects = sortOrganizations(
       allOrganizations.filter((org) => {
         if (!normalizedSearch) return org.projects;
+
         return (
           org.name.toLowerCase().includes(normalizedSearch) ||
           (org.description || '').toLowerCase().includes(normalizedSearch)
@@ -647,21 +751,23 @@ export const projectsApi = {
       organizationsTotal: organizationsWithProjects.length,
     };
   },
-
   async getOrganizationProjects(organizationId, params = {}) {
     const { search = '' } = params;
+
     const response = await request({
       method: 'GET',
       url: '/api/v1/projects',
     });
 
     const normalizedSearch = search.trim().toLowerCase();
+
     const filtered = sortProjects(
       (response || [])
         .filter((project) => Number(project.organizationId) === Number(organizationId))
         .map(mapProjectListItem)
     ).filter((p) => {
       if (!normalizedSearch) return true;
+
       return (
         p.name.toLowerCase().includes(normalizedSearch) ||
         (p.description || '').toLowerCase().includes(normalizedSearch)
@@ -685,10 +791,13 @@ export const projectsApi = {
       total: mapped.length,
     };
   },
-
   async getMyOrganizations(viewerId) {
     void viewerId;
-    const response = await request({ method: 'GET', url: '/api/v1/organizations/my' });
+
+    const response = await request({
+      method: 'GET',
+      url: '/api/v1/organizations/my',
+    });
 
     const sorted = sortOrganizations(
       (response || []).map((org) =>
@@ -700,9 +809,11 @@ export const projectsApi = {
 
     return sorted;
   },
-
   async getOrganizationById(organizationId) {
-    const organization = await request({ method: 'GET', url: `/api/v1/organizations/${organizationId}` });
+    const organization = await request({
+      method: 'GET',
+      url: `/api/v1/organizations/${organizationId}`,
+    });
 
     return {
       id: organization.id,
@@ -737,10 +848,8 @@ export const projectsApi = {
       ),
     };
   },
-
   async updateOrganization(organizationId, payload) {
     const formData = new FormData();
-
     if (payload.name !== undefined) formData.append('name', payload.name);
     if (payload.link !== undefined) formData.append('link', payload.link);
     if (payload.description !== undefined) formData.append('description', payload.description);
@@ -755,25 +864,40 @@ export const projectsApi = {
       data: formData,
     });
   },
-
   async leaveOrganization(organizationId) {
-    const result = await request({ method: 'POST', url: `/api/v1/organizations/${organizationId}/leave` });
-    return { left: Boolean(result?.isLeft ?? result?.left ?? true) };
-  },
+    const result = await request({
+      method: 'POST',
+      url: `/api/v1/organizations/${organizationId}/leave`,
+    });
 
+    return {
+      left: Boolean(result?.isLeft ?? result?.left ?? true),
+    };
+  },
   async deleteOrganization(organizationId) {
-    const result = await request({ method: 'DELETE', url: `/api/v1/organizations/${organizationId}` });
-    return { deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true) };
-  },
+    const result = await request({
+      method: 'DELETE',
+      url: `/api/v1/organizations/${organizationId}`,
+    });
 
+    return {
+      deleted: Boolean(result?.isDeleted ?? result?.deleted ?? true),
+    };
+  },
   async searchProjectsForJoin(viewerId, params = {}) {
     void viewerId;
     const { query = '' } = params;
-    const response = await request({ method: 'GET', url: '/api/v1/projects/public/search' });
+
+    const response = await request({
+      method: 'GET',
+      url: '/api/v1/projects/public/search',
+    });
 
     const normalizedSearch = query.trim().toLowerCase();
+
     const filtered = sortProjectsByName((response || []).map(mapProjectListItem)).filter((p) => {
       if (!normalizedSearch) return true;
+
       return (
         p.name.toLowerCase().includes(normalizedSearch) ||
         (p.description || '').toLowerCase().includes(normalizedSearch)
@@ -785,17 +909,27 @@ export const projectsApi = {
       total: filtered.length,
     };
   },
-
   async searchOrganizations(viewerId, params = {}) {
     void viewerId;
     const { query = '' } = params;
-    const response = await request({ method: 'GET', url: '/api/v1/organizations/search' });
+
+    const response = await request({
+      method: 'GET',
+      url: '/api/v1/organizations/search',
+    });
 
     const normalizedSearch = query.trim().toLowerCase();
+
     const filtered = sortOrganizationsByName(
-      (response || []).map((org) => mapOrganizationListItem({ ...org, isAdmin: false }))
+      (response || []).map((org) =>
+        mapOrganizationListItem({
+          ...org,
+          isAdmin: false,
+        })
+      )
     ).filter((o) => {
       if (!normalizedSearch) return true;
+
       return (
         o.name.toLowerCase().includes(normalizedSearch) ||
         (o.description || '').toLowerCase().includes(normalizedSearch)
@@ -807,38 +941,42 @@ export const projectsApi = {
       total: filtered.length,
     };
   },
-
   async joinPublicProject(projectId) {
-    return request({ method: 'POST', url: `/api/v1/projects/${projectId}/join` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/projects/${projectId}/join`,
+    });
   },
-
   async requestOrganizationAccess(organizationId) {
-    return request({ method: 'POST', url: `/api/v1/organizations/${organizationId}/join-requests` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/organizations/${organizationId}/join-requests`,
+    });
   },
-
   async approveOrganizationJoinRequest(organizationId, requestUserId) {
     return request({
       method: 'POST',
       url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/approve`,
     });
   },
-
   async rejectOrganizationJoinRequest(organizationId, requestUserId) {
     return request({
       method: 'POST',
       url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/reject`,
     });
   },
-
   async createOrganization(payload) {
     const data = await request({
       method: 'POST',
       url: '/api/v1/organizations',
       data: mapCreateOrganizationPayload(payload),
     });
-    return { accepted: true, organizationId: data?.id };
-  },
 
+    return {
+      accepted: true,
+      organizationId: data?.id,
+    };
+  },
   async submitSolution(taskId, payload) {
     const nextReview = {
       id: Date.now(),
@@ -854,25 +992,34 @@ export const projectsApi = {
       aiEvaluation: {
         qualityScore: 4.2,
         cyclomaticComplexity: 'B (Хорошо)',
-        solidViolations: { count: 2, severity: 'Не критично' },
+        solidViolations: {
+          count: 2,
+          severity: 'Не критично',
+        },
       },
       aiReviewEvaluation: null,
     };
+
     reviewMockStore.set(Number(taskId), nextReview);
-    await this.updateTask(taskId, { status: TASK_STATUS.IN_REVIEW });
+
+    await this.updateTask(taskId, {
+      status: TASK_STATUS.IN_REVIEW,
+    });
+
     return nextReview;
   },
-
   async getReviewByTaskId(taskId) {
     const review = reviewMockStore.get(Number(taskId));
+
     if (!review) {
       return null;
     }
+
     return clone(review);
   },
-
   async getReviewById(reviewId) {
     const numId = Number(reviewId);
+
     for (const [, review] of reviewMockStore) {
       if (review.id === numId) {
         return {
@@ -881,14 +1028,15 @@ export const projectsApi = {
         };
       }
     }
+
     return null;
   },
-
   async getReviewFileContent(reviewIdOrTaskId, filePath) {
     let review = reviewMockStore.get(Number(reviewIdOrTaskId));
 
     if (!review) {
       const numId = Number(reviewIdOrTaskId);
+
       for (const [, r] of reviewMockStore) {
         if (r.id === numId) {
           review = r;
@@ -902,11 +1050,13 @@ export const projectsApi = {
     const findFile = (nodes) => {
       for (const node of nodes) {
         if (node.path === filePath) return node;
+
         if (node.children) {
           const found = findFile(node.children);
           if (found) return found;
         }
       }
+
       return null;
     };
 
@@ -921,44 +1071,57 @@ export const projectsApi = {
       isDiff: !!file.isDiff,
     };
   },
-
   async submitFinalReview(taskId, payload) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
     const filtered = (review.finalReviews || []).filter((item) => item.reviewerId !== payload.reviewerId);
+
     filtered.push({
       id: Date.now(),
       ...payload,
     });
+
     review.finalReviews = filtered;
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async finishReview(taskId) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
     review.status = 'COMPLETED';
     reviewMockStore.set(Number(taskId), review);
-    await this.updateTask(taskId, { status: TASK_STATUS.DONE });
+
+    await this.updateTask(taskId, {
+      status: TASK_STATUS.DONE,
+    });
+
     return clone(review);
   },
-
   async resubmitSolution(taskId, payload) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
-    review.history.push({ ...clone(review), isHistory: true });
+
+    review.history.push({
+      ...clone(review),
+      isHistory: true,
+    });
+
     review.status = 'WAITING';
     review.files = payload.files || [];
     review.finalReviews = [];
     reviewMockStore.set(Number(taskId), review);
-    await this.updateTask(taskId, { status: TASK_STATUS.IN_REVIEW });
+
+    await this.updateTask(taskId, {
+      status: TASK_STATUS.IN_REVIEW,
+    });
+
     return clone(review);
   },
-
   async addReviewComment(taskId, payload) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
+
     const nextComment = {
       id: Date.now(),
       ...payload,
@@ -969,30 +1132,38 @@ export const projectsApi = {
       dislikedBy: [],
       isClosed: false,
     };
+
     review.comments.push(nextComment);
+
     if (review.status === 'NEW' || review.status === 'WAITING') {
       review.status = 'IN_PROGRESS';
       const assigned = MOCK_ASSIGNED_REVIEWS.find((r) => r.id === Number(taskId));
       if (assigned) assigned.status = 'IN_PROGRESS';
     }
+
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async replyToReviewComment(taskId, commentId, payload) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
+
     const findComment = (comments, id) => {
       for (const c of comments) {
         if (c.id === id) return c;
+
         if (c.replies) {
           const found = findComment(c.replies, id);
           if (found) return found;
         }
       }
+
       return null;
     };
+
     const parent = findComment(review.comments, commentId);
+
     if (parent) {
       parent.replies.push({
         id: Date.now(),
@@ -1004,29 +1175,36 @@ export const projectsApi = {
         dislikedBy: [],
       });
     }
+
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async toggleCommentLike(taskId, commentId, userId, isDislike = false) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
+
     const findComment = (comments, id) => {
       for (const c of comments) {
         if (c.id === id) return c;
+
         if (c.replies) {
           const found = findComment(c.replies, id);
           if (found) return found;
         }
       }
+
       return null;
     };
+
     const target = findComment(review.comments, commentId);
+
     if (target) {
       if (!Array.isArray(target.likedBy)) target.likedBy = [];
       if (!Array.isArray(target.dislikedBy)) target.dislikedBy = [];
       const list = isDislike ? target.dislikedBy : target.likedBy;
       const oppositeList = isDislike ? target.likedBy : target.dislikedBy;
+
       if (list.includes(userId)) {
         const idx = list.indexOf(userId);
         if (idx > -1) list.splice(idx, 1);
@@ -1036,18 +1214,21 @@ export const projectsApi = {
         if (oppIdx > -1) oppositeList.splice(oppIdx, 1);
       }
     }
+
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async closeCommentThread(taskId, commentId, action = 'close') {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
     const target = review.comments.find((c) => c.id === commentId);
+
     if (target) {
       const closing = action === 'close';
       target.isClosed = closing;
       if (!target.replies) target.replies = [];
+
       target.replies.push({
         id: Date.now(),
         text: closing ? '--Тред был закрыт--' : '--Тред был возобновлен--',
@@ -1060,33 +1241,39 @@ export const projectsApi = {
         replies: [],
       });
     }
+
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async deleteReviewComment(taskId, commentId) {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
 
     const filterComment = (comments, id) => {
       const filtered = comments.filter((c) => c.id !== id);
+
       filtered.forEach((c) => {
         if (c.replies) {
           c.replies = filterComment(c.replies, id);
         }
       });
+
       return filtered;
     };
 
     review.comments = filterComment(review.comments, commentId);
     reviewMockStore.set(Number(taskId), review);
+
     return clone(review);
   },
-
   async reportComment(taskId, commentId, payload) {
     void taskId;
     void commentId;
     void payload;
-    return { success: true };
+
+    return {
+      success: true,
+    };
   },
 };

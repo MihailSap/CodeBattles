@@ -1,21 +1,30 @@
-import './EntityTabs.css';
+import entityTabsStyles from './EntityTabs.module.scss';
 
 const EntityTabs = ({ tabs, activeKey, onChange }) => {
   const activeTabIndex = tabs.findIndex((tab) => tab.key === activeKey);
 
   return (
-    <div className="entity-tabs__wrap">
-      <div className="entity-tabs" style={{ '--tabs-count': tabs.length }}>
+    <div className={entityTabsStyles.wrap}>
+      <div
+        className={entityTabsStyles.root}
+        style={{
+          '--tabs-count': tabs.length,
+        }}
+      >
         <span
-          className="entity-tabs__slider"
-          style={{ transform: `translateX(${Math.max(0, activeTabIndex) * 100}%)` }}
+          className={entityTabsStyles.slider}
+          style={{
+            transform: `translateX(${Math.max(0, activeTabIndex) * 100}%)`,
+          }}
           aria-hidden="true"
         />
 
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            className={`entity-tabs__tab ${activeKey === tab.key ? 'entity-tabs__tab--active' : ''}`}
+            className={[entityTabsStyles.tab, activeKey === tab.key ? entityTabsStyles.isActive : '']
+              .filter(Boolean)
+              .join(' ')}
             type="button"
             onClick={() => onChange(tab.key)}
           >

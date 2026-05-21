@@ -1,28 +1,34 @@
 import { useMemo, useRef, useState } from 'react';
 import { UnwrapIcon } from '@/shared/ui/icons';
-import './ReviewSection.css';
+import reviewSectionStyles from './ReviewSection.module.scss';
 
 const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nested = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [maxHeight, setMaxHeight] = useState(defaultOpen ? 'none' : '0px');
   const contentRef = useRef(null);
 
-  const sectionClassName = useMemo(() => `review-section ${nested ? 'review-section--nested' : ''}`, [nested]);
+  const sectionClassName = useMemo(
+    () => [reviewSectionStyles.root, nested ? reviewSectionStyles.isNested : ''].filter(Boolean).join(' '),
+    [nested]
+  );
 
   const handleToggle = () => {
     const contentNode = contentRef.current;
 
     if (!contentNode) {
       setIsOpen((prevState) => !prevState);
+
       return;
     }
 
     if (isOpen) {
       setMaxHeight(`${contentNode.scrollHeight}px`);
+
       window.requestAnimationFrame(() => {
         setIsOpen(false);
         setMaxHeight('0px');
       });
+
       return;
     }
 
@@ -33,20 +39,26 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
   return (
     <section className={sectionClassName}>
       <button
-        className={`review-section__header ${isOpen ? '' : 'review-section__header--collapsed'}`}
+        className={[reviewSectionStyles.header, isOpen ? '' : reviewSectionStyles.isCollapsed]
+          .filter(Boolean)
+          .join(' ')}
         type="button"
         onClick={handleToggle}
       >
-        <span className={`review-section__arrow ${isOpen ? 'review-section__arrow--open' : ''}`}>
+        <span
+          className={[reviewSectionStyles.arrow, isOpen ? reviewSectionStyles.isOpen : ''].filter(Boolean).join(' ')}
+        >
           <UnwrapIcon />
         </span>
-        <span className="review-section__title">{title}</span>
-        <span className="review-section__tag">{reviewsCount}</span>
+        <span className={reviewSectionStyles.title}>{title}</span>
+        <span className={reviewSectionStyles.tag}>{reviewsCount}</span>
       </button>
 
       <div
-        className={`review-section__body ${isOpen ? 'review-section__body--open' : ''}`}
-        style={{ maxHeight }}
+        className={[reviewSectionStyles.body, isOpen ? reviewSectionStyles.isOpen : ''].filter(Boolean).join(' ')}
+        style={{
+          maxHeight,
+        }}
         onTransitionEnd={(event) => {
           if (event.propertyName !== 'max-height') {
             return;
@@ -57,7 +69,7 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
           }
         }}
       >
-        <div className="review-section__content" ref={contentRef}>
+        <div className={reviewSectionStyles.content} ref={contentRef}>
           {children}
         </div>
       </div>

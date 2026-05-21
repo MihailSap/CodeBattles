@@ -1,4 +1,6 @@
-const AdminPagination = ({ page, totalPages, isLoading = false, onChange, className = 'admin-panel' }) => {
+import adminUsersTabStyles from '../../manage-users/ui/admin-users-tab/AdminUsersTab.module.scss';
+
+const AdminPagination = ({ page, totalPages, isLoading = false, onChange }) => {
   const canGoPrev = page > 0;
   const canGoNext = totalPages > 0 && page < totalPages - 1;
   const currentPageLabel = totalPages < 1 ? '0/0' : `${page + 1}/${totalPages}`;
@@ -8,9 +10,9 @@ const AdminPagination = ({ page, totalPages, isLoading = false, onChange, classN
   }
 
   return (
-    <div className={`${className}__pagination`} aria-label="Пагинация">
+    <div className={adminUsersTabStyles.pagination} aria-label="Пагинация">
       <button
-        className={`${className}__pagination-button`}
+        className={adminUsersTabStyles.paginationButton}
         type="button"
         onClick={() => onChange(page - 1)}
         disabled={!canGoPrev || isLoading}
@@ -19,10 +21,10 @@ const AdminPagination = ({ page, totalPages, isLoading = false, onChange, classN
         ←
       </button>
 
-      <p className={`${className}__pagination-label`}>{currentPageLabel}</p>
+      <p className={adminUsersTabStyles.paginationLabel}>{currentPageLabel}</p>
 
       <button
-        className={`${className}__pagination-button`}
+        className={adminUsersTabStyles.paginationButton}
         type="button"
         onClick={() => onChange(page + 1)}
         disabled={!canGoNext || isLoading}

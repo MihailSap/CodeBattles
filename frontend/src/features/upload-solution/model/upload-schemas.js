@@ -1,11 +1,9 @@
 import { z } from 'zod';
-
 export const gitUploadFormSchema = z.object({
   repository: z.string().min(1, 'Выберите репозиторий'),
   targetBranch: z.string().min(1, 'Выберите целевую ветку'),
   pullRequest: z.string().min(1, 'Выберите Pull Request'),
 });
-
 export const solutionUploadFormSchema = z
   .object({
     activeTab: z.enum(['manual', 'files', 'archive']),

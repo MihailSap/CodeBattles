@@ -51,7 +51,10 @@ const ModalShell = ({
         aria-modal="true"
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
-        style={{ position: 'relative', zIndex: 1 }}
+        style={{
+          position: 'relative',
+          zIndex: 1,
+        }}
       >
         {title ? (
           <div className={headerClassName}>

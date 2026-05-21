@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { CheckIcon, CommentIcon } from '@/shared/ui/icons';
 import { REVIEW_STATUS, REVIEW_STATUS_LABEL } from '../../model';
-import './ReviewCard.css';
+import reviewCardStyles from './ReviewCard.module.scss';
 
 const formatDate = (value) =>
   new Date(value).toLocaleDateString('ru-RU', {
@@ -12,14 +12,14 @@ const formatDate = (value) =>
 
 const getStatusClassName = (status) => {
   if (status === REVIEW_STATUS.IN_PROGRESS) {
-    return 'review-card__status--in-progress';
+    return reviewCardStyles.isInProgress;
   }
 
   if (status === REVIEW_STATUS.COMPLETED) {
-    return 'review-card__status--completed';
+    return reviewCardStyles.isCompleted;
   }
 
-  return 'review-card__status--new';
+  return reviewCardStyles.isNew;
 };
 
 const getDeadlineMeta = (review) => {
@@ -27,20 +27,30 @@ const getDeadlineMeta = (review) => {
   const reviewedTime = review.reviewedAt ? new Date(review.reviewedAt).getTime() : null;
 
   if (review.checkedByReviewer && reviewedTime && reviewedTime <= deadlineTime) {
-    return { text: 'Проверено вовремя', className: 'review-card__deadline-value--success' };
+    return {
+      text: 'Проверено вовремя',
+      className: reviewCardStyles.isSuccess,
+    };
   }
 
   if (review.checkedByReviewer && reviewedTime && reviewedTime > deadlineTime) {
-    return { text: 'Просрочено', className: 'review-card__deadline-value--error' };
+    return {
+      text: 'Просрочено',
+      className: reviewCardStyles.isError,
+    };
   }
 
   const nowTime = Date.now();
 
   if (nowTime > deadlineTime) {
-    return { text: 'Просрочено', className: 'review-card__deadline-value--error' };
+    return {
+      text: 'Просрочено',
+      className: reviewCardStyles.isError,
+    };
   }
 
   const daysLeft = Math.max(1, Math.ceil((deadlineTime - nowTime) / (24 * 60 * 60 * 1000)));
+
   const suffix =
     daysLeft % 10 === 1 && daysLeft % 100 !== 11
       ? 'день'
@@ -50,15 +60,17 @@ const getDeadlineMeta = (review) => {
 
   return {
     text: `${daysLeft} ${suffix}`,
-    className: 'review-card__deadline-value--warning',
+    className: reviewCardStyles.isWarning,
   };
 };
 
 const ReviewCard = ({ review, onClick, onOpen }) => {
   const deadlineMeta = useMemo(() => getDeadlineMeta(review), [review]);
+
   const handleClick = useCallback(() => {
     if (onOpen) {
       onOpen(review.id);
+
       return;
     }
 
@@ -66,40 +78,40 @@ const ReviewCard = ({ review, onClick, onOpen }) => {
   }, [onClick, onOpen, review.id]);
 
   return (
-    <button className="review-card" type="button" onClick={handleClick}>
-      <div className="review-card__top">
-        <div className="review-card__title-wrap">
-          <h3 className="review-card__title">{review.taskName}</h3>
+    <button className={reviewCardStyles.root} type="button" onClick={handleClick}>
+      <div className={reviewCardStyles.top}>
+        <div className={reviewCardStyles.titleWrap}>
+          <h3 className={reviewCardStyles.title}>{review.taskName}</h3>
           {review.checkedByReviewer && deadlineMeta.text === 'Проверено вовремя' && (
-            <span className="review-card__checked-icon">
+            <span className={reviewCardStyles.checkedIcon}>
               <CheckIcon />
             </span>
           )}
         </div>
 
-        <div className="review-card__meta-right">
+        <div className={reviewCardStyles.metaRight}>
           {review.status !== REVIEW_STATUS.NEW && (
-            <span className="review-card__comments">
-              <span className="review-card__comments-count">{review.commentsCount}</span>
-              <span className="review-card__comments-icon">
+            <span className={reviewCardStyles.comments}>
+              <span className={reviewCardStyles.commentsCount}>{review.commentsCount}</span>
+              <span className={reviewCardStyles.commentsIcon}>
                 <CommentIcon />
               </span>
             </span>
           )}
-          <span className={`review-card__status ${getStatusClassName(review.status)}`}>
+          <span className={[reviewCardStyles.status, getStatusClassName(review.status)].filter(Boolean).join(' ')}>
             {REVIEW_STATUS_LABEL[review.status]}
           </span>
         </div>
       </div>
 
-      <div className="review-card__bottom">
-        <p className="review-card__meta-line">
-          <span className="review-card__label">Загружено:</span>
-          <span className="review-card__value">{formatDate(review.uploadedAt)}</span>
+      <div className={reviewCardStyles.bottom}>
+        <p className={reviewCardStyles.metaLine}>
+          <span className={reviewCardStyles.label}>Загружено:</span>
+          <span className={reviewCardStyles.value}>{formatDate(review.uploadedAt)}</span>
         </p>
-        <p className="review-card__meta-line">
-          <span className="review-card__label">Срок проверки:</span>
-          <span className="review-card__value">
+        <p className={reviewCardStyles.metaLine}>
+          <span className={reviewCardStyles.label}>Срок проверки:</span>
+          <span className={reviewCardStyles.value}>
             <span className={deadlineMeta.className}>
               {formatDate(review.responseDeadline)} ({deadlineMeta.text})
             </span>

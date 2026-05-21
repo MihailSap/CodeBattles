@@ -19,7 +19,7 @@ import {
 } from '@/entities/leaderboard';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
-import './LeaderboardPage.css';
+import leaderboardPageStyles from './LeaderboardPage.module.scss';
 
 const getEntityConfig = (scope) => {
   if (scope === LEADERBOARD_SCOPE.ORGANIZATIONS) {
@@ -58,6 +58,7 @@ const LeaderboardPage = () => {
   const isEntityScope = activeScope !== LEADERBOARD_SCOPE.GLOBAL;
   const entityConfig = useMemo(() => getEntityConfig(activeScope), [activeScope]);
   const canResetRatings = user?.role === 'ADMIN';
+
   const leaderboardParams = useMemo(
     () => ({
       scope: activeScope,
@@ -71,6 +72,7 @@ const LeaderboardPage = () => {
     }),
     [activeScope, category, currentUserId, debouncedUserSearch, period, selectedEntity?.id]
   );
+
   const entitySearchParams = useMemo(
     () => ({
       viewerId: currentUserId,
@@ -80,25 +82,34 @@ const LeaderboardPage = () => {
     }),
     [canResetRatings, currentUserId, debouncedEntitySearch]
   );
+
   const {
-    data: leaderboard = { content: [], currentUserEntry: null },
+    data: leaderboard = {
+      content: [],
+      currentUserEntry: null,
+    },
     isLoading: isLeaderboardInitialLoading,
     isFetching: isLeaderboardFetching,
   } = useGetLeaderboardQuery(leaderboardParams, {
     skip: isEntityScope && !selectedEntity,
     refetchOnMountOrArgChange: 30,
   });
+
   const organizationsSearchQuery = useSearchLeaderboardOrganizationsQuery(entitySearchParams, {
     skip: activeScope !== LEADERBOARD_SCOPE.ORGANIZATIONS,
     refetchOnMountOrArgChange: 60,
   });
+
   const projectsSearchQuery = useSearchLeaderboardProjectsQuery(entitySearchParams, {
     skip: activeScope !== LEADERBOARD_SCOPE.PROJECTS,
     refetchOnMountOrArgChange: 60,
   });
+
   const [resetUserRating, { isLoading: isResetRatingSubmitting }] = useResetUserRatingMutation();
+
   const activeEntityQuery =
     activeScope === LEADERBOARD_SCOPE.ORGANIZATIONS ? organizationsSearchQuery : projectsSearchQuery;
+
   const entityOptions = activeEntityQuery.data || [];
   const isEntitiesLoading = activeEntityQuery.isLoading || activeEntityQuery.isFetching;
   const isLeaderboardLoading = isLeaderboardInitialLoading || isLeaderboardFetching;
@@ -108,7 +119,11 @@ const LeaderboardPage = () => {
       return;
     }
 
-    currentUserRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    currentUserRowRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+
     queueMicrotask(() => setShouldScrollToCurrent(false));
   }, [isLeaderboardLoading, leaderboard, shouldScrollToCurrent]);
 
@@ -146,17 +161,17 @@ const LeaderboardPage = () => {
   const entityEmptyText = debouncedEntitySearch ? entityConfig.searchEmptyText : entityConfig.emptyText;
 
   return (
-    <div className="leaderboard-page">
-      <main className="leaderboard-page__content">
-        <h1 className="leaderboard-page__title">Лидерборд</h1>
+    <div className={leaderboardPageStyles.root}>
+      <main className={leaderboardPageStyles.content}>
+        <h1 className={leaderboardPageStyles.title}>Лидерборд</h1>
 
-        <section className="leaderboard-page__section">
-          <div className="leaderboard-page__tabs">
+        <section className={leaderboardPageStyles.section}>
+          <div className={leaderboardPageStyles.tabs}>
             <EntityTabs tabs={LEADERBOARD_TABS} activeKey={activeScope} onChange={handleScopeChange} />
           </div>
 
           {isEntityScope && (
-            <div className="leaderboard-page__entity-block">
+            <div className={leaderboardPageStyles.block}>
               <LeaderboardEntitySearch
                 value={entitySearch}
                 placeholder={entityConfig.placeholder}
@@ -165,6 +180,7 @@ const LeaderboardPage = () => {
                 emptyText={isEntitiesLoading ? 'Загрузка...' : entityEmptyText}
                 onValueChange={(value) => {
                   setEntitySearch(value);
+
                   if (selectedEntity && value !== selectedEntity.name) {
                     setSelectedEntity(null);
                   }
@@ -173,7 +189,7 @@ const LeaderboardPage = () => {
               />
 
               {!selectedEntity && (
-                <p className="leaderboard-page__entity-message">
+                <p className={leaderboardPageStyles.message}>
                   {hasEntityMemberships || isEntitiesLoading ? entityConfig.initialText : entityConfig.emptyText}
                 </p>
               )}
@@ -182,7 +198,7 @@ const LeaderboardPage = () => {
 
           {(!isEntityScope || selectedEntity) && (
             <>
-              <div className="leaderboard-page__controls">
+              <div className={leaderboardPageStyles.controls}>
                 <LeaderboardControls
                   period={period}
                   category={category}
@@ -195,12 +211,12 @@ const LeaderboardPage = () => {
               </div>
 
               {isLeaderboardLoading ? (
-                <div className="leaderboard-page__loader">
+                <div className={leaderboardPageStyles.loader}>
                   <Spinner />
                 </div>
               ) : (
                 <>
-                  <div className="leaderboard-page__table">
+                  <div className={leaderboardPageStyles.table}>
                     <LeaderboardTable
                       ref={currentUserRowRef}
                       entries={leaderboard.content}

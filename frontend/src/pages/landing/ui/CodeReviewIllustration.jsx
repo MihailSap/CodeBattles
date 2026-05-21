@@ -1,23 +1,24 @@
 import { AIIcon, CheckIcon, CommentIcon } from '@/shared/ui/icons';
+import landingPageStyles from './LandingPage.module.scss';
 
 const CodeReviewIllustration = () => (
-  <div className="landing-hero-art" aria-hidden="true">
-    <div className="landing-hero-art__panel landing-hero-art__panel--code">
-      <div className="landing-hero-art__bar">
+  <div className={landingPageStyles.landingHeroArt} aria-hidden="true">
+    <div className={[landingPageStyles.panel, landingPageStyles.isCode].join(' ')}>
+      <div className={landingPageStyles.bar}>
         <span />
         <span />
         <span />
       </div>
-      <div className="landing-hero-art__line landing-hero-art__line--wide" />
-      <div className="landing-hero-art__line landing-hero-art__line--accent" />
-      <div className="landing-hero-art__line landing-hero-art__line--short" />
-      <div className="landing-hero-art__comment">
+      <div className={[landingPageStyles.line, landingPageStyles.isWide].join(' ')} />
+      <div className={[landingPageStyles.line, landingPageStyles.isAccent].join(' ')} />
+      <div className={[landingPageStyles.line, landingPageStyles.isShort].join(' ')} />
+      <div className={landingPageStyles.comment}>
         <CommentIcon />
         <span>inline review</span>
       </div>
     </div>
 
-    <div className="landing-hero-art__panel landing-hero-art__panel--ai">
+    <div className={[landingPageStyles.panel, landingPageStyles.isAi].join(' ')}>
       <AIIcon />
       <div>
         <strong>AI score</strong>
@@ -25,7 +26,7 @@ const CodeReviewIllustration = () => (
       </div>
     </div>
 
-    <div className="landing-hero-art__panel landing-hero-art__panel--thread">
+    <div className={[landingPageStyles.panel, landingPageStyles.isThread].join(' ')}>
       <CheckIcon />
       <span>SOLID: ok</span>
     </div>

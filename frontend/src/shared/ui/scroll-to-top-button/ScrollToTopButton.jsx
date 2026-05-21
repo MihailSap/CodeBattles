@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UnwrapIcon } from '@/shared/ui/icons';
-import './ScrollToTopButton.css';
+import scrollToTopButtonStyles from './ScrollToTopButton.module.scss';
 
 const ScrollToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -10,19 +10,25 @@ const ScrollToTopButton = () => {
       setIsVisible(window.scrollY > 520);
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, {
+      passive: true,
+    });
+
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   };
 
   return (
     isVisible && (
-      <button onClick={scrollToTop} className="scroll-to-top-button">
+      <button onClick={scrollToTop} className={scrollToTopButtonStyles.root}>
         <UnwrapIcon />
       </button>
     )

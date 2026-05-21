@@ -1,39 +1,102 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
-import './CodeEditor.css';
+import codeEditorStyles from './CodeEditor.module.scss';
 
 const LANGUAGES = [
-  { value: 'javascript', label: 'JavaScript' },
-  { value: 'typescript', label: 'TypeScript' },
-  { value: 'python', label: 'Python' },
-  { value: 'java', label: 'Java' },
-  { value: 'csharp', label: 'C#' },
-  { value: 'cpp', label: 'C++' },
-  { value: 'go', label: 'Go' },
-  { value: 'rust', label: 'Rust' },
-  { value: 'swift', label: 'Swift' },
-  { value: 'kotlin', label: 'Kotlin' },
-  { value: 'php', label: 'PHP' },
-  { value: 'ruby', label: 'Ruby' },
-  { value: 'html', label: 'HTML' },
-  { value: 'css', label: 'CSS' },
-  { value: 'sql', label: 'SQL' },
-  { value: 'yaml', label: 'YAML' },
-  { value: 'json', label: 'JSON' },
-  { value: 'markdown', label: 'Markdown' },
-  { value: 'shell', label: 'Shell' },
-  { value: 'xml', label: 'XML' },
-  { value: 'plaintext', label: 'Plain Text' },
+  {
+    value: 'javascript',
+    label: 'JavaScript',
+  },
+  {
+    value: 'typescript',
+    label: 'TypeScript',
+  },
+  {
+    value: 'python',
+    label: 'Python',
+  },
+  {
+    value: 'java',
+    label: 'Java',
+  },
+  {
+    value: 'csharp',
+    label: 'C#',
+  },
+  {
+    value: 'cpp',
+    label: 'C++',
+  },
+  {
+    value: 'go',
+    label: 'Go',
+  },
+  {
+    value: 'rust',
+    label: 'Rust',
+  },
+  {
+    value: 'swift',
+    label: 'Swift',
+  },
+  {
+    value: 'kotlin',
+    label: 'Kotlin',
+  },
+  {
+    value: 'php',
+    label: 'PHP',
+  },
+  {
+    value: 'ruby',
+    label: 'Ruby',
+  },
+  {
+    value: 'html',
+    label: 'HTML',
+  },
+  {
+    value: 'css',
+    label: 'CSS',
+  },
+  {
+    value: 'sql',
+    label: 'SQL',
+  },
+  {
+    value: 'yaml',
+    label: 'YAML',
+  },
+  {
+    value: 'json',
+    label: 'JSON',
+  },
+  {
+    value: 'markdown',
+    label: 'Markdown',
+  },
+  {
+    value: 'shell',
+    label: 'Shell',
+  },
+  {
+    value: 'xml',
+    label: 'XML',
+  },
+  {
+    value: 'plaintext',
+    label: 'Plain Text',
+  },
 ];
 
 const CodeEditor = ({ value, onChange, language, onLanguageChange }) => {
   return (
-    <div className="code-editor-container">
-      <div className="code-editor-header">
+    <div className={codeEditorStyles.container}>
+      <div className={codeEditorStyles.header}>
         <ReviewDropdown label="Язык:" options={LANGUAGES} value={language} onChange={onLanguageChange} />
       </div>
-      <div className="code-editor-wrapper">
+      <div className={codeEditorStyles.wrapper}>
         <Editor
           height="350px"
           language={language}
@@ -41,7 +104,9 @@ const CodeEditor = ({ value, onChange, language, onLanguageChange }) => {
           onChange={onChange}
           theme="vs-dark"
           options={{
-            minimap: { enabled: false },
+            minimap: {
+              enabled: false,
+            },
             fontSize: 14,
             fontWeight: '400',
             wordWrap: 'off',

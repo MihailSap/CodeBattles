@@ -71,27 +71,108 @@ const middleNames = [
 ];
 
 export const MOCK_LEADERBOARD_ORGANIZATIONS = [
-  { id: 1, name: 'CodeBattles Core', lastActivityAt: '2026-05-14T18:10:00.000Z' },
-  { id: 2, name: 'Frontend Guild', lastActivityAt: '2026-05-13T15:30:00.000Z' },
-  { id: 3, name: 'Review Masters', lastActivityAt: '2026-05-12T11:45:00.000Z' },
-  { id: 4, name: 'Spring Lab', lastActivityAt: '2026-05-10T09:20:00.000Z' },
-  { id: 5, name: 'AI Quality Crew', lastActivityAt: '2026-05-09T17:00:00.000Z' },
-  { id: 6, name: 'Open Source Arena', lastActivityAt: '2026-05-07T12:00:00.000Z' },
-  { id: 7, name: 'Mobile Practice', lastActivityAt: '2026-05-05T16:40:00.000Z' },
-  { id: 8, name: 'Data Engineering Hub', lastActivityAt: '2026-05-03T10:15:00.000Z' },
+  {
+    id: 1,
+    name: 'CodeBattles Core',
+    lastActivityAt: '2026-05-14T18:10:00.000Z',
+  },
+  {
+    id: 2,
+    name: 'Frontend Guild',
+    lastActivityAt: '2026-05-13T15:30:00.000Z',
+  },
+  {
+    id: 3,
+    name: 'Review Masters',
+    lastActivityAt: '2026-05-12T11:45:00.000Z',
+  },
+  {
+    id: 4,
+    name: 'Spring Lab',
+    lastActivityAt: '2026-05-10T09:20:00.000Z',
+  },
+  {
+    id: 5,
+    name: 'AI Quality Crew',
+    lastActivityAt: '2026-05-09T17:00:00.000Z',
+  },
+  {
+    id: 6,
+    name: 'Open Source Arena',
+    lastActivityAt: '2026-05-07T12:00:00.000Z',
+  },
+  {
+    id: 7,
+    name: 'Mobile Practice',
+    lastActivityAt: '2026-05-05T16:40:00.000Z',
+  },
+  {
+    id: 8,
+    name: 'Data Engineering Hub',
+    lastActivityAt: '2026-05-03T10:15:00.000Z',
+  },
 ];
-
 export const MOCK_LEADERBOARD_PROJECTS = [
-  { id: 1, organizationId: 1, name: 'Battle Platform', lastActivityAt: '2026-05-14T20:15:00.000Z' },
-  { id: 2, organizationId: 1, name: 'Review Analytics', lastActivityAt: '2026-05-13T18:35:00.000Z' },
-  { id: 3, organizationId: 2, name: 'Design System', lastActivityAt: '2026-05-12T13:25:00.000Z' },
-  { id: 4, organizationId: 2, name: 'Frontend Toolkit', lastActivityAt: '2026-05-11T21:10:00.000Z' },
-  { id: 5, organizationId: 3, name: 'Quality Radar', lastActivityAt: '2026-05-10T14:50:00.000Z' },
-  { id: 6, organizationId: 4, name: 'Spring Gateway', lastActivityAt: '2026-05-09T16:15:00.000Z' },
-  { id: 7, organizationId: 5, name: 'AI Reviewer', lastActivityAt: '2026-05-08T19:45:00.000Z' },
-  { id: 8, organizationId: 6, name: 'Community Tasks', lastActivityAt: '2026-05-06T12:30:00.000Z' },
-  { id: 9, organizationId: 7, name: 'Mobile Review', lastActivityAt: '2026-05-04T17:05:00.000Z' },
-  { id: 10, organizationId: 8, name: 'Data Checks', lastActivityAt: '2026-05-02T08:40:00.000Z' },
+  {
+    id: 1,
+    organizationId: 1,
+    name: 'Battle Platform',
+    lastActivityAt: '2026-05-14T20:15:00.000Z',
+  },
+  {
+    id: 2,
+    organizationId: 1,
+    name: 'Review Analytics',
+    lastActivityAt: '2026-05-13T18:35:00.000Z',
+  },
+  {
+    id: 3,
+    organizationId: 2,
+    name: 'Design System',
+    lastActivityAt: '2026-05-12T13:25:00.000Z',
+  },
+  {
+    id: 4,
+    organizationId: 2,
+    name: 'Frontend Toolkit',
+    lastActivityAt: '2026-05-11T21:10:00.000Z',
+  },
+  {
+    id: 5,
+    organizationId: 3,
+    name: 'Quality Radar',
+    lastActivityAt: '2026-05-10T14:50:00.000Z',
+  },
+  {
+    id: 6,
+    organizationId: 4,
+    name: 'Spring Gateway',
+    lastActivityAt: '2026-05-09T16:15:00.000Z',
+  },
+  {
+    id: 7,
+    organizationId: 5,
+    name: 'AI Reviewer',
+    lastActivityAt: '2026-05-08T19:45:00.000Z',
+  },
+  {
+    id: 8,
+    organizationId: 6,
+    name: 'Community Tasks',
+    lastActivityAt: '2026-05-06T12:30:00.000Z',
+  },
+  {
+    id: 9,
+    organizationId: 7,
+    name: 'Mobile Review',
+    lastActivityAt: '2026-05-04T17:05:00.000Z',
+  },
+  {
+    id: 10,
+    organizationId: 8,
+    name: 'Data Checks',
+    lastActivityAt: '2026-05-02T08:40:00.000Z',
+  },
 ];
 
 const getMemberships = (id) => {
@@ -106,6 +187,7 @@ const getMemberships = (id) => {
     (id % MOCK_LEADERBOARD_ORGANIZATIONS.length) + 1,
     ((id + 2) % MOCK_LEADERBOARD_ORGANIZATIONS.length) + 1,
   ];
+
   const projectIds = [(id % MOCK_LEADERBOARD_PROJECTS.length) + 1, ((id + 3) % MOCK_LEADERBOARD_PROJECTS.length) + 1];
 
   if (id <= 105) {
@@ -153,25 +235,30 @@ const createStats = (id, index, periodMultiplier) => {
   };
 };
 
-export const MOCK_LEADERBOARD_USERS = Array.from({ length: 120 }, (_, index) => {
-  const id = index + 1;
-  const memberships = getMemberships(id);
-  const firstName = firstNames[index % firstNames.length];
-  const lastName = lastNames[index % lastNames.length];
-  const middleName = middleNames[index % middleNames.length];
-  const name = id === 57 ? 'Муравьев Илья Германович' : `${lastName} ${firstName} ${middleName}`;
+export const MOCK_LEADERBOARD_USERS = Array.from(
+  {
+    length: 120,
+  },
+  (_, index) => {
+    const id = index + 1;
+    const memberships = getMemberships(id);
+    const firstName = firstNames[index % firstNames.length];
+    const lastName = lastNames[index % lastNames.length];
+    const middleName = middleNames[index % middleNames.length];
+    const name = id === 57 ? 'Муравьев Илья Германович' : `${lastName} ${firstName} ${middleName}`;
 
-  return {
-    id,
-    name,
-    login: id === 57 ? 'imimorgo5' : `code_player_${String(id).padStart(3, '0')}`,
-    avatar: avatarPool[index % avatarPool.length],
-    organizationIds: memberships.organizationIds,
-    projectIds: memberships.projectIds,
-    stats: {
-      allTime: createStats(id, index, 1),
-      days30: createStats(id, index, 0.34),
-      days7: createStats(id, index, 0.11),
-    },
-  };
-});
+    return {
+      id,
+      name,
+      login: id === 57 ? 'imimorgo5' : `code_player_${String(id).padStart(3, '0')}`,
+      avatar: avatarPool[index % avatarPool.length],
+      organizationIds: memberships.organizationIds,
+      projectIds: memberships.projectIds,
+      stats: {
+        allTime: createStats(id, index, 1),
+        days30: createStats(id, index, 0.34),
+        days7: createStats(id, index, 0.11),
+      },
+    };
+  }
+);

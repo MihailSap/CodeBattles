@@ -4,8 +4,7 @@ import DatePicker from 'react-datepicker';
 import { registerLocale } from 'react-datepicker';
 import { ru } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
-import './DateTimePicker.css';
-
+import dateTimePickerStyles from './DateTimePicker.module.scss';
 registerLocale('ru', ru);
 
 const DatePickerPopperContainer = ({ children }) => {
@@ -41,6 +40,7 @@ const roundUpToInterval = (date, intervalMinutes) => {
 
 const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = false, onBlur, disabled = false }) => {
   const intervalMinutes = 5;
+
   const selectedDate = useMemo(() => {
     if (!value) {
       return null;
@@ -61,11 +61,13 @@ const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = 
   const handleChange = (date) => {
     if (!date) {
       onChange('');
+
       return;
     }
 
     if (date.getTime() < effectiveMinDateTime.getTime()) {
       onChange(effectiveMinDateTime.toISOString());
+
       return;
     }
 
@@ -98,11 +100,13 @@ const DateTimePicker = ({ value, onChange, minDateTime, placeholder, hasError = 
       placeholderText={placeholder}
       minDate={effectiveMinDateTime}
       filterTime={filterTime}
-      className={`date-time-picker__input ${hasError ? 'date-time-picker__input--error' : ''}`}
-      calendarClassName="date-time-picker__calendar"
-      popperClassName="date-time-picker__popper"
+      className={[dateTimePickerStyles.input, hasError ? dateTimePickerStyles.isError : ''].filter(Boolean).join(' ')}
+      calendarClassName={dateTimePickerStyles.calendar}
+      popperClassName={dateTimePickerStyles.popper}
       popperPlacement="bottom-start"
-      popperProps={{ strategy: 'fixed' }}
+      popperProps={{
+        strategy: 'fixed',
+      }}
       popperContainer={DatePickerPopperContainer}
       showPopperArrow={false}
       autoComplete="off"

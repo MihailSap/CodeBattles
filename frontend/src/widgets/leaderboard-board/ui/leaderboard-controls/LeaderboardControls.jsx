@@ -1,7 +1,7 @@
 import { LEADERBOARD_CATEGORY_OPTIONS, LEADERBOARD_PERIOD_OPTIONS } from '@/entities/leaderboard';
 import { SearchIcon } from '@/shared/ui/icons';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
-import './LeaderboardControls.css';
+import leaderboardControlsStyles from './LeaderboardControls.module.scss';
 
 const LeaderboardControls = ({
   period,
@@ -16,14 +16,15 @@ const LeaderboardControls = ({
     value: option.key,
     label: option.label,
   }));
+
   const categoryDropdownOptions = LEADERBOARD_CATEGORY_OPTIONS.map((option) => ({
     value: option.key,
     label: option.label,
   }));
 
   return (
-    <div className="leaderboard-controls">
-      <div className="leaderboard-controls__dropdowns">
+    <div className={leaderboardControlsStyles.root}>
+      <div className={leaderboardControlsStyles.dropdowns}>
         <ReviewDropdown label="Период:" value={period} options={periodDropdownOptions} onChange={onPeriodChange} />
 
         <ReviewDropdown
@@ -34,8 +35,8 @@ const LeaderboardControls = ({
         />
       </div>
 
-      <div className="leaderboard-controls__actions">
-        <label className="leaderboard-controls__search">
+      <div className={leaderboardControlsStyles.actions}>
+        <label className={leaderboardControlsStyles.search}>
           <SearchIcon />
           <input
             type="search"
@@ -45,7 +46,7 @@ const LeaderboardControls = ({
           />
         </label>
 
-        <button className="leaderboard-controls__my-rating" type="button" onClick={onMyRatingClick}>
+        <button className={leaderboardControlsStyles.myRating} type="button" onClick={onMyRatingClick}>
           Мой рейтинг
         </button>
       </div>

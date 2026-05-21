@@ -5,7 +5,7 @@ import { ProjectSkillsSelector } from '@/entities/stack';
 import ModalShell from '@/shared/ui/modal-shell';
 import { PROJECT_PRIVACY, PROJECT_PRIVACY_LABELS, projectCreateFormSchema } from '@/entities/project';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import './ProjectCreateModal.css';
+import projectCreateModalStyles from './ProjectCreateModal.module.scss';
 
 const initialState = {
   name: '',
@@ -68,50 +68,54 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
     <ModalShell
       isOpen={isOpen}
       onClose={handleClose}
-      overlayClassName="project-create-modal__backdrop"
-      dialogClassName="project-create-modal"
+      overlayClassName={projectCreateModalStyles.backdrop}
+      dialogClassName={projectCreateModalStyles.root}
       ariaLabel="Создание проекта"
       title="Создание проекта"
-      headerClassName="project-create-modal__head"
-      titleClassName="project-create-modal__title"
-      closeClassName="project-create-modal__close"
+      headerClassName={projectCreateModalStyles.head}
+      titleClassName={projectCreateModalStyles.title}
+      closeClassName={projectCreateModalStyles.close}
       closeAriaLabel="Закрыть форму"
     >
-      <form className="project-create-modal__content" onSubmit={handleSubmit(submit)}>
-        <div className="project-create-modal__fields">
-          <div className="project-create-modal__field">
+      <form className={projectCreateModalStyles.content} onSubmit={handleSubmit(submit)}>
+        <div className={projectCreateModalStyles.fields}>
+          <div className={projectCreateModalStyles.field}>
             <input
-              className={`project-create-modal__input ${nameError ? 'project-create-modal__input--error' : ''}`}
+              className={[projectCreateModalStyles.input, nameError ? projectCreateModalStyles.isError : '']
+                .filter(Boolean)
+                .join(' ')}
               type="text"
               placeholder="Название*"
               maxLength={100}
               {...register('name')}
             />
-            {nameError && <p className="project-create-modal__error">{nameError}</p>}
+            {nameError && <p className={projectCreateModalStyles.error}>{nameError}</p>}
           </div>
 
-          <div className="project-create-modal__field">
+          <div className={projectCreateModalStyles.field}>
             <textarea
-              className="project-create-modal__input project-create-modal__textarea"
+              className={[projectCreateModalStyles.input, projectCreateModalStyles.textarea].join(' ')}
               placeholder="Описание"
               maxLength={3000}
               {...register('description')}
             />
           </div>
 
-          <div className="project-create-modal__field">
+          <div className={projectCreateModalStyles.field}>
             <input
-              className={`project-create-modal__input ${repositoryError ? 'project-create-modal__input--error' : ''}`}
+              className={[projectCreateModalStyles.input, repositoryError ? projectCreateModalStyles.isError : '']
+                .filter(Boolean)
+                .join(' ')}
               type="text"
               placeholder="Ссылка на репозиторий"
               maxLength={500}
               {...register('repositoryUrl')}
             />
-            {repositoryError && <p className="project-create-modal__error">{repositoryError}</p>}
+            {repositoryError && <p className={projectCreateModalStyles.error}>{repositoryError}</p>}
           </div>
         </div>
 
-        <div className="project-create-modal__section">
+        <div className={projectCreateModalStyles.section}>
           <Controller
             control={control}
             name="stack"
@@ -127,13 +131,13 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
           />
         </div>
 
-        <div className="project-create-modal__section">
-          <h3 className="project-create-modal__section-title">Приватность:</h3>
-          <div className="project-create-modal__radio-row">
+        <div className={projectCreateModalStyles.section}>
+          <h3 className={projectCreateModalStyles.sectionTitle}>Приватность:</h3>
+          <div className={projectCreateModalStyles.radioRow}>
             {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
-              <label className="project-create-modal__radio-item" key={privacyValue}>
+              <label className={projectCreateModalStyles.radioItem} key={privacyValue}>
                 <input
-                  className="project-create-modal__radio"
+                  className={projectCreateModalStyles.radio}
                   type="radio"
                   value={privacyValue}
                   {...register('privacy')}
@@ -144,7 +148,7 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
           </div>
         </div>
 
-        <button className="project-create-modal__submit" type="submit" disabled={!isValid || isSubmitting}>
+        <button className={projectCreateModalStyles.submit} type="submit" disabled={!isValid || isSubmitting}>
           <CheckIcon />
         </button>
       </form>

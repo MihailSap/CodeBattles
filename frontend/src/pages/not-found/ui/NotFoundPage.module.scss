@@ -1,0 +1,79 @@
+.root {
+  min-height: 100vh;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.35)),
+    url('../../../shared/assets/auth-background-light.png');
+  background-size: cover;
+  background-position: 20%;
+  z-index: -1;
+}
+
+[data-theme='dark'] .bg {
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15)),
+    url('../../../shared/assets/auth-background-dark.png');
+}
+
+.card {
+  width: min(40rem, 100%);
+  border-radius: 20px;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  background-color: var(--color-surface-panel);
+  box-shadow: var(--shadow-elevated-card);
+  text-align: center;
+}
+
+.code {
+  font-size: clamp(3.875rem, 14vw, 8.125rem);
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.title {
+  margin-top: 0.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  color: var(--color-text-primary);
+}
+
+.text {
+  margin: 1rem auto 0;
+  color: var(--color-text-muted);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.45;
+}
+
+.actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.link {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  border: 2px solid var(--color-accent);
+  border-radius: 10px;
+  padding: 0.5rem 1.75rem;
+  background-color: var(--color-accent);
+  color: var(--color-surface-panel);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link {
+    &:hover {
+      background-color: var(--color-surface);
+      color: var(--color-accent);
+    }
+  }
+}

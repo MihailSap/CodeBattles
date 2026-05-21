@@ -16,7 +16,7 @@ import { useAuth } from '@/entities/session';
 import { clearAuthMessages, fetchCurrentUser, loginUser, registerUser } from '@/entities/session';
 import { loginFormSchema, registerFormSchema } from '@/entities/session';
 import { tokenStorage } from '@/shared/lib';
-import './AuthPage.css';
+import authPageStyles from './AuthPage.module.scss';
 
 const initialForm = {
   login: '',
@@ -32,10 +32,10 @@ const AuthPage = () => {
   const { isLoading, error } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
   const activeSchema = useMemo(() => (isLoginMode ? loginFormSchema : registerFormSchema), [isLoginMode]);
+
   const {
     register,
     handleSubmit,
@@ -46,7 +46,9 @@ const AuthPage = () => {
     defaultValues: initialForm,
     mode: 'onChange',
   });
+
   const postLoginRedirect = location.state?.from || ROUTES.dashboard;
+
   const resetFormState = () => {
     reset(initialForm);
     setRegistrationCompleted(false);
@@ -70,7 +72,9 @@ const AuthPage = () => {
     }
 
     const timeoutId = setTimeout(() => {
-      navigate(ROUTES.login, { replace: true });
+      navigate(ROUTES.login, {
+        replace: true,
+      });
     }, 5000);
 
     return () => {
@@ -90,7 +94,10 @@ const AuthPage = () => {
     let isActive = true;
 
     const finalizeOAuth = async () => {
-      tokenStorage.setTokens({ accessToken, refreshToken });
+      tokenStorage.setTokens({
+        accessToken,
+        refreshToken,
+      });
 
       try {
         await dispatch(fetchCurrentUser()).unwrap();
@@ -99,7 +106,9 @@ const AuthPage = () => {
           return;
         }
 
-        navigate(ROUTES.dashboard, { replace: true });
+        navigate(ROUTES.dashboard, {
+          replace: true,
+        });
       } catch {
         tokenStorage.clearTokens();
 
@@ -107,7 +116,9 @@ const AuthPage = () => {
           return;
         }
 
-        navigate(ROUTES.login, { replace: true });
+        navigate(ROUTES.login, {
+          replace: true,
+        });
       }
     };
 
@@ -170,7 +181,9 @@ const AuthPage = () => {
     const result = await dispatch(action);
 
     if (loginUser.fulfilled.match(result)) {
-      navigate(postLoginRedirect, { replace: true });
+      navigate(postLoginRedirect, {
+        replace: true,
+      });
     }
 
     if (registerUser.fulfilled.match(result)) {
@@ -189,45 +202,51 @@ const AuthPage = () => {
   const isSubmitDisabled = isLoading || !isValid;
 
   return (
-    <div className="auth-page">
-      <div className="auth-page__bg" role="presentation" aria-hidden="true" />
+    <div className={authPageStyles.root}>
+      <div className={authPageStyles.bg} role="presentation" aria-hidden="true" />
 
-      <header className="auth-header">
-        <Link className="auth-header__logo-link" to={ROUTES.home}>
-          <img className="auth-header__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
+      <header className={authPageStyles.authHeader}>
+        <Link className={authPageStyles.logoLink} to={ROUTES.home}>
+          <img className={authPageStyles.logo} src={isDark ? logoDark : logoLight} alt="CodeBattles" />
         </Link>
-        <div className="auth-header__toggle">
+        <div className={authPageStyles.toggle}>
           <ThemeToggle />
         </div>
-        <div className="auth-header__spacer" />
+        <div className={authPageStyles.spacer} />
       </header>
 
-      <div className="auth-content">
-        <section className="auth-content__left" />
+      <div className={authPageStyles.authContent}>
+        <section className={authPageStyles.left} />
 
-        <section className="auth-content__right">
-          <div className="auth-form-wrap">
-            <div className="auth-form-card">
+        <section className={authPageStyles.right}>
+          <div className={authPageStyles.wrap}>
+            <div className={authPageStyles.card}>
               {registrationCompleted ? (
-                <p className="auth-register-success">
+                <p className={authPageStyles.registerSuccess}>
                   Для завершения регистрации необходимо перейти по ссылке из письма, которое было отправлено на
                   указанный E-Mail.
                 </p>
               ) : (
                 <>
-                  <div className="auth-mode-switch">
+                  <div className={authPageStyles.authModeSwitch}>
                     <span
-                      className={`auth-mode-switch__thumb ${isLoginMode ? 'auth-mode-switch__thumb--login' : ''}`}
+                      className={[authPageStyles.thumb, isLoginMode ? authPageStyles.isLogin : '']
+                        .filter(Boolean)
+                        .join(' ')}
                     />
                     <button
-                      className={`auth-mode-switch__option ${!isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
+                      className={[authPageStyles.option, !isLoginMode ? authPageStyles.isActive : '']
+                        .filter(Boolean)
+                        .join(' ')}
                       type="button"
                       onClick={() => changeMode('register')}
                     >
                       Регистрация
                     </button>
                     <button
-                      className={`auth-mode-switch__option ${isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
+                      className={[authPageStyles.option, isLoginMode ? authPageStyles.isActive : '']
+                        .filter(Boolean)
+                        .join(' ')}
                       type="button"
                       onClick={() => changeMode('login')}
                     >
@@ -235,12 +254,14 @@ const AuthPage = () => {
                     </button>
                   </div>
 
-                  <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-                    <div className="auth-form-inputs">
+                  <form className={authPageStyles.authForm} onSubmit={handleSubmit(onSubmit)}>
+                    <div className={authPageStyles.inputs}>
                       {!isLoginMode && (
-                        <div className="auth-input-group">
+                        <div className={authPageStyles.group}>
                           <input
-                            className={`auth-input ${getFieldError('login') ? 'auth-input--error' : ''}`}
+                            className={[authPageStyles.authInput, getFieldError('login') ? authPageStyles.isError : '']
+                              .filter(Boolean)
+                              .join(' ')}
                             name="login"
                             type="text"
                             placeholder="Придумайте логин"
@@ -248,13 +269,15 @@ const AuthPage = () => {
                             autoComplete="username"
                             {...registerField('login')}
                           />
-                          {getFieldError('login') && <p className="auth-input-error">{getFieldError('login')}</p>}
+                          {getFieldError('login') && <p className={authPageStyles.isError}>{getFieldError('login')}</p>}
                         </div>
                       )}
 
-                      <div className="auth-input-group">
+                      <div className={authPageStyles.group}>
                         <input
-                          className={`auth-input ${getFieldError('email') ? 'auth-input--error' : ''}`}
+                          className={[authPageStyles.authInput, getFieldError('email') ? authPageStyles.isError : '']
+                            .filter(Boolean)
+                            .join(' ')}
                           name="email"
                           type="text"
                           inputMode="email"
@@ -263,12 +286,14 @@ const AuthPage = () => {
                           autoComplete="email"
                           {...registerField('email')}
                         />
-                        {getFieldError('email') && <p className="auth-input-error">{getFieldError('email')}</p>}
+                        {getFieldError('email') && <p className={authPageStyles.isError}>{getFieldError('email')}</p>}
                       </div>
 
-                      <div className="auth-input-group">
+                      <div className={authPageStyles.group}>
                         <input
-                          className={`auth-input ${getFieldError('password') ? 'auth-input--error' : ''}`}
+                          className={[authPageStyles.authInput, getFieldError('password') ? authPageStyles.isError : '']
+                            .filter(Boolean)
+                            .join(' ')}
                           name="password"
                           type="password"
                           placeholder={isLoginMode ? 'Введите пароль' : 'Придумайте пароль'}
@@ -276,13 +301,20 @@ const AuthPage = () => {
                           autoComplete={isLoginMode ? 'current-password' : 'new-password'}
                           {...registerField('password')}
                         />
-                        {getFieldError('password') && <p className="auth-input-error">{getFieldError('password')}</p>}
+                        {getFieldError('password') && (
+                          <p className={authPageStyles.isError}>{getFieldError('password')}</p>
+                        )}
                       </div>
 
                       {!isLoginMode && (
-                        <div className="auth-input-group">
+                        <div className={authPageStyles.group}>
                           <input
-                            className={`auth-input ${getFieldError('confirmPassword') ? 'auth-input--error' : ''}`}
+                            className={[
+                              authPageStyles.authInput,
+                              getFieldError('confirmPassword') ? authPageStyles.isError : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
                             name="confirmPassword"
                             type="password"
                             placeholder="Повторите пароль"
@@ -291,37 +323,37 @@ const AuthPage = () => {
                             {...registerField('confirmPassword')}
                           />
                           {getFieldError('confirmPassword') && (
-                            <p className="auth-input-error">{getFieldError('confirmPassword')}</p>
+                            <p className={authPageStyles.isError}>{getFieldError('confirmPassword')}</p>
                           )}
                         </div>
                       )}
                     </div>
 
-                    <div className="auth-social">
+                    <div className={authPageStyles.authSocial}>
                       <button
-                        className="auth-social__button auth-social__button--github"
+                        className={[authPageStyles.button, authPageStyles.isGithub].join(' ')}
                         type="button"
                         onClick={handleGitHubAuth}
                       >
                         <span>Продолжить с GitHub</span>
                         <img src={isDark ? GitHubIconDark : GitHubIconLight} alt="GitHub" />
                       </button>
-                      <button className="auth-social__button auth-social__button--gitlab" type="button">
+                      <button className={[authPageStyles.button, authPageStyles.isGitlab].join(' ')} type="button">
                         <span>Продолжить с GitLab</span>
                         <img src={GitLabIcon} alt="GitLab" />
                       </button>
                     </div>
 
                     {isLoginMode && (
-                      <p className="auth-recovery-text">
+                      <p className={authPageStyles.text}>
                         Забыли пароль?{' '}
-                        <Link className="auth-recovery-link" to={ROUTES.recovery}>
+                        <Link className={authPageStyles.link} to={ROUTES.recovery}>
                           Восстановить
                         </Link>
                       </p>
                     )}
 
-                    <button className="auth-submit" type="submit" disabled={isSubmitDisabled}>
+                    <button className={authPageStyles.submit} type="submit" disabled={isSubmitDisabled}>
                       {!isLoading && (isLoginMode ? 'Войти' : 'Зарегистрироваться')}
                       {isLoading && (isLoginMode ? 'Вход...' : 'Регистрация...')}
                     </button>
@@ -330,7 +362,7 @@ const AuthPage = () => {
               )}
             </div>
 
-            {error && <div className="auth-server-error">{error}</div>}
+            {error && <div className={authPageStyles.serverError}>{error}</div>}
           </div>
         </section>
       </div>

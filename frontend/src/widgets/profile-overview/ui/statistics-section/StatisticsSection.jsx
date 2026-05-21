@@ -1,25 +1,28 @@
 import { StarIcon } from '@/shared/ui/icons';
-import './StatisticsSection.css';
+import statisticsSectionStyles from './StatisticsSection.module.scss';
+import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
 
 const StatisticsSection = ({ acceptedDecisionsPercent, getPercentClass, statCards, statistics }) => {
   return (
-    <section className="profile-page__section profile-page__section--statistics">
-      <div className="profile-page__section-head">
-        <div className="profile-page__section-title-wrap">
-          <h2 className="profile-page__section-title">Статистика</h2>
+    <section className={[profilePageStyles.section, statisticsSectionStyles.isStatistics].join(' ')}>
+      <div className={profilePageStyles.sectionHead}>
+        <div className={profilePageStyles.sectionTitleWrap}>
+          <h2 className={profilePageStyles.sectionTitle}>Статистика</h2>
         </div>
       </div>
 
-      <div className="profile-page__section-body profile-page__statistics-body">
-        <div className="profile-page__statistics-grid">
+      <div className={[profilePageStyles.sectionBody, statisticsSectionStyles.body].join(' ')}>
+        <div className={statisticsSectionStyles.grid}>
           {statCards.map((card) => {
             const value = Math.max(0, Math.min(5, Number(statistics[card.key]) || 0));
 
             return (
-              <div key={card.key} className="profile-page__stat-card">
-                <p className="profile-page__stat-title">{card.title}</p>
-                <div className="profile-page__stars-row">
-                  {Array.from({ length: 5 }).map((_, index) => (
+              <div key={card.key} className={statisticsSectionStyles.statCard}>
+                <p className={statisticsSectionStyles.statTitle}>{card.title}</p>
+                <div className={statisticsSectionStyles.starsRow}>
+                  {Array.from({
+                    length: 5,
+                  }).map((_, index) => (
                     <StarIcon key={`${card.key}-${index + 1}`} filled={index + 1 <= value} />
                   ))}
                 </div>
@@ -28,9 +31,13 @@ const StatisticsSection = ({ acceptedDecisionsPercent, getPercentClass, statCard
           })}
         </div>
 
-        <div className="profile-page__accepted-block">
-          <p className="profile-page__stat-title">Принятые решения</p>
-          <p className={`profile-page__accepted-percent ${getPercentClass(acceptedDecisionsPercent)}`}>
+        <div className={statisticsSectionStyles.acceptedBlock}>
+          <p className={statisticsSectionStyles.statTitle}>Принятые решения</p>
+          <p
+            className={[statisticsSectionStyles.acceptedPercent, getPercentClass(acceptedDecisionsPercent)]
+              .filter(Boolean)
+              .join(' ')}
+          >
             {acceptedDecisionsPercent}%
           </p>
         </div>

@@ -1,7 +1,7 @@
-import './Spinner.css';
+import spinnerStyles from './Spinner.module.scss';
 
 const Spinner = () => {
-  return <div className="spinner" aria-label="Загрузка" />;
+  return <div className={spinnerStyles.root} aria-label="Загрузка" />;
 };
 
 export default Spinner;

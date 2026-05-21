@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const DEFAULT_SNACKBAR = { message: '', type: 'success' };
+const DEFAULT_SNACKBAR = {
+  message: '',
+  type: 'success',
+};
+
 const DEFAULT_DURATION = 3000;
 
 export const useSnackbar = (duration = DEFAULT_DURATION) => {
@@ -22,7 +26,11 @@ export const useSnackbar = (duration = DEFAULT_DURATION) => {
   const showSnackbar = useCallback(
     (message, type = 'success') => {
       clearAutoClose();
-      setSnackbar({ message, type });
+
+      setSnackbar({
+        message,
+        type,
+      });
 
       timeoutRef.current = window.setTimeout(() => {
         setSnackbar(DEFAULT_SNACKBAR);
@@ -38,5 +46,9 @@ export const useSnackbar = (duration = DEFAULT_DURATION) => {
     };
   }, [clearAutoClose]);
 
-  return { snackbar, showSnackbar, closeSnackbar };
+  return {
+    snackbar,
+    showSnackbar,
+    closeSnackbar,
+  };
 };

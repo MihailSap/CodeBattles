@@ -1,18 +1,18 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { UnwrapIcon, FileIcon } from '@/shared/ui/icons';
-import './FileTree.css';
+import fileTreeStyles from './FileTree.module.scss';
 
 const sortTreeNodes = (nodes) =>
   [...nodes].sort((a, b) => {
     if (a.isDirectory === b.isDirectory) {
       return a.name.localeCompare(b.name);
     }
+
     return a.isDirectory ? -1 : 1;
   });
 
 const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedFilesSet }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-
   const sortedChildren = useMemo(() => (node.children ? sortTreeNodes(node.children) : []), [node.children]);
 
   const handleToggle = useCallback((e) => {
@@ -23,6 +23,7 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
   const handleSelect = useCallback(
     (e) => {
       e.stopPropagation();
+
       if (!node.isDirectory) {
         onSelectFile(node);
       } else {
@@ -36,33 +37,37 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
   const hasComment = commentedFilesSet.has(node.path);
 
   return (
-    <div className="file-tree-node-wrapper">
+    <div className={fileTreeStyles.wrapper}>
       <div
-        className={`file-tree-node ${isSelected ? 'file-tree-node--selected' : ''}`}
-        style={{ paddingLeft: `${level * 25 + 5}px` }}
+        className={[fileTreeStyles.node, isSelected ? fileTreeStyles.isSelected : ''].filter(Boolean).join(' ')}
+        style={{
+          paddingLeft: `${level * 25 + 5}px`,
+        }}
         onClick={handleSelect}
         title={node.name}
       >
-        <div className="file-tree-node__icon">
+        <div className={fileTreeStyles.icon}>
           {node.isDirectory ? (
             <span
-              className="file-tree-node__folder-icon"
-              style={{ transform: isExpanded ? 'none' : 'matrix(0, -1, 1, 0, 0, 0)' }}
+              className={fileTreeStyles.folderIcon}
+              style={{
+                transform: isExpanded ? 'none' : 'matrix(0, -1, 1, 0, 0, 0)',
+              }}
             >
               <UnwrapIcon />
             </span>
           ) : (
-            <span className="file-tree-node__file-icon">
+            <span className={fileTreeStyles.fileIcon}>
               <FileIcon />
             </span>
           )}
         </div>
-        <div className="file-tree-node__name">{node.name}</div>
-        {!node.isDirectory && hasComment && <div className="file-tree-node__comment-dot" />}
+        <div className={fileTreeStyles.name}>{node.name}</div>
+        {!node.isDirectory && hasComment && <div className={fileTreeStyles.commentDot} />}
       </div>
 
       {node.isDirectory && isExpanded && sortedChildren.length > 0 && (
-        <div className="file-tree-node__children">
+        <div className={fileTreeStyles.children}>
           {sortedChildren.map((child) => (
             <FileTreeNode
               key={child.path}
@@ -87,7 +92,7 @@ const FileTree = ({ files, selectedFile, onSelectFile, commentedFiles = [] }) =>
   const commentedFilesSet = useMemo(() => new Set(commentedFiles), [commentedFiles]);
 
   return (
-    <div className="file-tree">
+    <div className={fileTreeStyles.root}>
       {sortedFiles.map((node) => (
         <FileTreeNode
           key={node.path}

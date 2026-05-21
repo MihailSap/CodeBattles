@@ -1,6 +1,6 @@
 import { useTheme } from '@/shared/lib/theme';
 import { MoonIcon, SunIcon } from '@/shared/ui/icons';
-import './ThemeToggle.css';
+import themeToggleStyles from './ThemeToggle.module.scss';
 
 export const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
@@ -8,18 +8,20 @@ export const ThemeToggle = () => {
 
   return (
     <button
-      className={`theme-toggle ${isDark ? 'theme-toggle--dark' : 'theme-toggle--light'}`}
+      className={[themeToggleStyles.root, isDark ? themeToggleStyles.isDark : themeToggleStyles.isLight]
+        .filter(Boolean)
+        .join(' ')}
       onClick={toggleTheme}
       type="button"
       aria-label="Сменить тему"
     >
-      <span className="theme-toggle__icon theme-toggle__icon--sun" aria-hidden="true">
+      <span className={[themeToggleStyles.icon, themeToggleStyles.isSun].join(' ')} aria-hidden="true">
         <SunIcon />
       </span>
-      <span className="theme-toggle__icon theme-toggle__icon--moon" aria-hidden="true">
+      <span className={[themeToggleStyles.icon, themeToggleStyles.isMoon].join(' ')} aria-hidden="true">
         <MoonIcon />
       </span>
-      <span className="theme-toggle__thumb" aria-hidden="true" />
+      <span className={themeToggleStyles.thumb} aria-hidden="true" />
     </button>
   );
 };

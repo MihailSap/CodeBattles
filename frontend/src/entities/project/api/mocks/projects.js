@@ -1,6 +1,5 @@
 import { PROJECT_MEMBER_ROLE, PROJECT_PRIVACY } from '../../model';
 import { MOCK_USERS } from './users';
-
 export const MOCK_PROJECTS = [
   {
     id: 9999,

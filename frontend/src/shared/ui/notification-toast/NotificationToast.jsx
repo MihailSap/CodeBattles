@@ -1,5 +1,5 @@
 import { BellIcon, CrossIcon } from '@/shared/ui/icons';
-import './NotificationToast.css';
+import notificationToastStyles from './NotificationToast.module.scss';
 
 const NotificationToast = ({ notification, isVisible, onClose }) => {
   if (!notification) {
@@ -8,24 +8,31 @@ const NotificationToast = ({ notification, isVisible, onClose }) => {
 
   return (
     <div
-      className={`notification-toast ${isVisible ? 'notification-toast--visible' : ''}`}
+      className={[notificationToastStyles.root, isVisible ? notificationToastStyles.isVisible : '']
+        .filter(Boolean)
+        .join(' ')}
       role="status"
       aria-live="polite"
     >
-      <span className="notification-toast__icon" aria-hidden="true">
+      <span className={notificationToastStyles.icon} aria-hidden="true">
         <BellIcon />
       </span>
-      <div className="notification-toast__content">
-        <div className="notification-toast__meta">
-          <strong className="notification-toast__title">{notification.title}</strong>
-          <span className="notification-toast__time">{notification.time}</span>
+      <div className={notificationToastStyles.content}>
+        <div className={notificationToastStyles.meta}>
+          <strong className={notificationToastStyles.title}>{notification.title}</strong>
+          <span className={notificationToastStyles.time}>{notification.time}</span>
         </div>
-        <p className="notification-toast__text">{notification.text}</p>
+        <p className={notificationToastStyles.text}>{notification.text}</p>
       </div>
-      <button className="notification-toast__close" type="button" onClick={onClose} aria-label="Закрыть уведомление">
+      <button
+        className={notificationToastStyles.close}
+        type="button"
+        onClick={onClose}
+        aria-label="Закрыть уведомление"
+      >
         <CrossIcon />
       </button>
-      <span className="notification-toast__progress" aria-hidden="true" />
+      <span className={notificationToastStyles.progress} aria-hidden="true" />
     </div>
   );
 };

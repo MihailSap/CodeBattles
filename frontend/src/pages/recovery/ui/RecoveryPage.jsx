@@ -11,8 +11,8 @@ import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, requestPasswordReset } from '@/entities/session';
 import { recoveryFormSchema } from '@/entities/session';
-import '../../auth/ui/AuthPage.css';
-import './RecoveryPage.css';
+import authPageStyles from '../../auth/ui/AuthPage.module.scss';
+import recoveryPageStyles from './RecoveryPage.module.scss';
 
 const RecoveryPage = () => {
   const dispatch = useDispatch();
@@ -20,15 +20,17 @@ const RecoveryPage = () => {
   const { isLoading, error } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-
   const [isCompleted, setIsCompleted] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitted, isValid, touchedFields },
   } = useForm({
     resolver: zodResolver(recoveryFormSchema),
-    defaultValues: { email: '' },
+    defaultValues: {
+      email: '',
+    },
     mode: 'onChange',
   });
 
@@ -46,7 +48,9 @@ const RecoveryPage = () => {
     }
 
     const timeoutId = setTimeout(() => {
-      navigate(ROUTES.login, { replace: true });
+      navigate(ROUTES.login, {
+        replace: true,
+      });
     }, 3000);
 
     return () => {
@@ -73,43 +77,45 @@ const RecoveryPage = () => {
   const isSubmitDisabled = isLoading || !isValid;
 
   return (
-    <div className="auth-page recovery-page">
-      <div className="auth-page__bg" role="presentation" aria-hidden="true" />
+    <div className={authPageStyles.root}>
+      <div className={authPageStyles.bg} role="presentation" aria-hidden="true" />
 
-      <header className="auth-header">
-        <Link className="auth-header__logo-link" to={ROUTES.login}>
-          <img className="auth-header__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
+      <header className={authPageStyles.authHeader}>
+        <Link className={authPageStyles.logoLink} to={ROUTES.login}>
+          <img className={authPageStyles.logo} src={isDark ? logoDark : logoLight} alt="CodeBattles" />
         </Link>
-        <div className="auth-header__toggle">
+        <div className={authPageStyles.toggle}>
           <ThemeToggle />
         </div>
-        <div className="auth-header__spacer" />
+        <div className={authPageStyles.spacer} />
       </header>
 
-      <div className="auth-content">
-        <section className="auth-content__left" />
+      <div className={authPageStyles.authContent}>
+        <section className={authPageStyles.left} />
 
-        <section className="auth-content__right">
-          <div className="auth-form-wrap">
-            <div className="auth-form-card recovery-card">
+        <section className={authPageStyles.right}>
+          <div className={authPageStyles.wrap}>
+            <div className={authPageStyles.card}>
               {isCompleted ? (
-                <p className="recovery-card__success">Ссылка для сброса пароля отправлена на указанный E-Mail.</p>
+                <p className={recoveryPageStyles.isSuccess}>Ссылка для сброса пароля отправлена на указанный E-Mail.</p>
               ) : (
-                <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-                  <div className="recovery-card__top">
-                    <Link className="recovery-card__back" to={ROUTES.login}>
+                <form className={authPageStyles.authForm} onSubmit={handleSubmit(onSubmit)}>
+                  <div className={recoveryPageStyles.top}>
+                    <Link className={recoveryPageStyles.back} to={ROUTES.login}>
                       ← Назад
                     </Link>
-                    <h1 className="recovery-card__title">Восстановление пароля</h1>
-                    <p className="recovery-card__description">
+                    <h1 className={recoveryPageStyles.title}>Восстановление пароля</h1>
+                    <p className={recoveryPageStyles.description}>
                       Введите E-Mail, указанный при регистрации, на него будет отправлена ссылка для сброса пароля
                     </p>
                   </div>
 
-                  <div className="auth-form-inputs recovery-card__inputs">
-                    <div className="auth-input-group">
+                  <div className={[authPageStyles.inputs, recoveryPageStyles.inputs].join(' ')}>
+                    <div className={authPageStyles.group}>
                       <input
-                        className={`auth-input ${shownEmailError ? 'auth-input--error' : ''}`}
+                        className={[authPageStyles.authInput, shownEmailError ? authPageStyles.isError : '']
+                          .filter(Boolean)
+                          .join(' ')}
                         name="email"
                         type="text"
                         inputMode="email"
@@ -118,18 +124,18 @@ const RecoveryPage = () => {
                         maxLength={255}
                         {...emailField}
                       />
-                      {shownEmailError && <p className="auth-input-error">{shownEmailError}</p>}
+                      {shownEmailError && <p className={authPageStyles.isError}>{shownEmailError}</p>}
                     </div>
                   </div>
 
-                  <button className="auth-submit" type="submit" disabled={isSubmitDisabled}>
+                  <button className={authPageStyles.submit} type="submit" disabled={isSubmitDisabled}>
                     {isLoading ? 'Отправка...' : 'Отправить'}
                   </button>
                 </form>
               )}
             </div>
 
-            {error && !isCompleted && <div className="auth-server-error">{error}</div>}
+            {error && !isCompleted && <div className={authPageStyles.serverError}>{error}</div>}
           </div>
         </section>
       </div>

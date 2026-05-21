@@ -3,18 +3,21 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StarIcon, CheckIcon } from '@/shared/ui/icons';
 import { finalReviewFormSchema } from '../../model/final-review-schema';
-import './FinalReviewForm.css';
-
+import finalReviewFormStyles from './FinalReviewForm.module.scss';
+import reviewResultsSidebarStyles from '../../../../widgets/review-workspace/ui/review-results-sidebar/ReviewResultsSidebar.module.scss';
 const STORAGE_KEY_PREFIX = 'codebattles_final_review_';
 
 const StarSelector = ({ value, onChange, disabled = false }) => {
   const [hoverValue, setHoverValue] = useState(0);
 
   return (
-    <div className="star-selector" onMouseLeave={() => setHoverValue(0)}>
-      {Array.from({ length: 5 }).map((_, i) => {
+    <div className={finalReviewFormStyles.starSelector} onMouseLeave={() => setHoverValue(0)}>
+      {Array.from({
+        length: 5,
+      }).map((_, i) => {
         const ratingValue = i + 1;
         const isFilled = ratingValue <= (hoverValue || value);
+
         const starColor =
           hoverValue && ratingValue <= hoverValue
             ? 'var(--color-rating-star-hover)'
@@ -26,7 +29,7 @@ const StarSelector = ({ value, onChange, disabled = false }) => {
           <button
             key={ratingValue}
             type="button"
-            className="star-selector__btn"
+            className={finalReviewFormStyles.btn}
             onClick={() => !disabled && onChange(ratingValue)}
             onMouseEnter={() => !disabled && setHoverValue(ratingValue)}
             disabled={disabled}
@@ -41,10 +44,13 @@ const StarSelector = ({ value, onChange, disabled = false }) => {
 
 const StarDisplay = ({ value }) => {
   const rounded = Math.round(value);
+
   return (
-    <div className="star-selector star-selector--readonly">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i + 1} className="star-selector__btn star-selector__btn--readonly">
+    <div className={[finalReviewFormStyles.starSelector, finalReviewFormStyles.isReadonly].join(' ')}>
+      {Array.from({
+        length: 5,
+      }).map((_, i) => (
+        <span key={i + 1} className={[finalReviewFormStyles.btn, finalReviewFormStyles.btnReadonly].join(' ')}>
           <StarIcon filled={i < rounded} />
         </span>
       ))}
@@ -62,6 +68,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     } catch (error) {
       console.warn('Failed to parse saved final review form:', error);
     }
+
     return null;
   }, [storageKey]);
 
@@ -79,6 +86,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     }
 
     const saved = loadSavedForm();
+
     return (
       saved || {
         architecture: 0,
@@ -97,7 +105,11 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     defaultValues: getInitialForm(),
     mode: 'onChange',
   });
-  const form = useWatch({ control }) || getInitialForm();
+
+  const form =
+    useWatch({
+      control,
+    }) || getInitialForm();
 
   useEffect(() => {
     reset(getInitialForm());
@@ -117,6 +129,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     const scores = [form.architecture, form.readability, form.testability, form.scalability];
     const filled = scores.filter((s) => s > 0);
     if (filled.length === 0) return 0;
+
     return Math.round(filled.reduce((a, b) => a + b, 0) / filled.length);
   }, [form.architecture, form.readability, form.testability, form.scalability]);
 
@@ -124,7 +137,12 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
 
   const submit = async () => {
     if (isSubmitting) return;
-    await onSubmit({ ...form, overallScore });
+
+    await onSubmit({
+      ...form,
+      overallScore,
+    });
+
     try {
       localStorage.removeItem(storageKey);
     } catch (error) {
@@ -133,12 +151,12 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
   };
 
   return (
-    <div className="final-review-form-wrapper review-results-sidebar__block">
-      <h3 className="review-results-sidebar__title">Итоговое ревью</h3>
-      <form className="final-review-form" onSubmit={handleSubmit(submit)}>
-        <div className="final-review-form__fields">
-          <div className="final-review-form__field">
-            <span className="final-review-form__label">Оценка архитектуры:</span>
+    <div className={[finalReviewFormStyles.wrapper, reviewResultsSidebarStyles.block].join(' ')}>
+      <h3 className={reviewResultsSidebarStyles.title}>Итоговое ревью</h3>
+      <form className={finalReviewFormStyles.root} onSubmit={handleSubmit(submit)}>
+        <div className={finalReviewFormStyles.fields}>
+          <div className={finalReviewFormStyles.field}>
+            <span className={finalReviewFormStyles.label}>Оценка архитектуры:</span>
             <Controller
               control={control}
               name="architecture"
@@ -147,8 +165,8 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
               )}
             />
           </div>
-          <div className="final-review-form__field">
-            <span className="final-review-form__label">Оценка читаемости:</span>
+          <div className={finalReviewFormStyles.field}>
+            <span className={finalReviewFormStyles.label}>Оценка читаемости:</span>
             <Controller
               control={control}
               name="readability"
@@ -157,8 +175,8 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
               )}
             />
           </div>
-          <div className="final-review-form__field">
-            <span className="final-review-form__label">Оценка тестируемости:</span>
+          <div className={finalReviewFormStyles.field}>
+            <span className={finalReviewFormStyles.label}>Оценка тестируемости:</span>
             <Controller
               control={control}
               name="testability"
@@ -167,8 +185,8 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
               )}
             />
           </div>
-          <div className="final-review-form__field">
-            <span className="final-review-form__label">Оценка масштабируемости:</span>
+          <div className={finalReviewFormStyles.field}>
+            <span className={finalReviewFormStyles.label}>Оценка масштабируемости:</span>
             <Controller
               control={control}
               name="scalability"
@@ -178,60 +196,60 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             />
           </div>
 
-          <div className="final-review-form__field">
-            <span className="final-review-form__label">Общая оценка качества:</span>
+          <div className={finalReviewFormStyles.field}>
+            <span className={finalReviewFormStyles.label}>Общая оценка качества:</span>
             <StarDisplay value={overallScore} />
           </div>
 
-          <div className="final-review-form__field-vertical">
-            <span className="final-review-form__label">Общие замечания (мин. 20 символов):</span>
+          <div className={finalReviewFormStyles.fieldVertical}>
+            <span className={finalReviewFormStyles.label}>Общие замечания (мин. 20 символов):</span>
             <textarea
-              className="final-review-form__textarea"
+              className={finalReviewFormStyles.textarea}
               placeholder="Оставьте ваш комментарий к решению..."
               disabled={isReadOnly}
               {...register('comment')}
             />
             {form.comment.length > 0 && form.comment.trim().length < 20 && (
-              <span className="final-review-form__char-count">{form.comment.trim().length}/20</span>
+              <span className={finalReviewFormStyles.charCount}>{form.comment.trim().length}/20</span>
             )}
           </div>
 
-          <div className="final-review-form__field-vertical">
-            <span className="final-review-form__label">Вердикт:</span>
-            <div className="final-review-form__radios">
-              <label className="final-review-form__radio-label">
+          <div className={finalReviewFormStyles.fieldVertical}>
+            <span className={finalReviewFormStyles.label}>Вердикт:</span>
+            <div className={finalReviewFormStyles.radios}>
+              <label className={finalReviewFormStyles.radioLabel}>
                 <input
                   type="radio"
-                  className="final-review-form__radio-input"
+                  className={finalReviewFormStyles.radioInput}
                   name="verdict"
                   value="APPROVED"
                   disabled={isReadOnly}
                   {...register('verdict')}
                 />
-                <span className="final-review-form__verdict-text final-review-form__verdict-text--approved">
+                <span className={[finalReviewFormStyles.verdictText, finalReviewFormStyles.isApproved].join(' ')}>
                   Одобрить
                 </span>
               </label>
-              <label className="final-review-form__radio-label">
+              <label className={finalReviewFormStyles.radioLabel}>
                 <input
                   type="radio"
-                  className="final-review-form__radio-input"
+                  className={finalReviewFormStyles.radioInput}
                   name="verdict"
                   value="REWORK"
                   disabled={isReadOnly}
                   {...register('verdict')}
                 />
-                <span className="final-review-form__verdict-text final-review-form__verdict-text--rework">
+                <span className={[finalReviewFormStyles.verdictText, finalReviewFormStyles.isRework].join(' ')}>
                   На доработку
                 </span>
               </label>
             </div>
           </div>
 
-          <label className="final-review-form__checkbox-label">
+          <label className={finalReviewFormStyles.checkboxLabel}>
             <input
               type="checkbox"
-              className="final-review-form__checkbox"
+              className={finalReviewFormStyles.checkbox}
               disabled={isReadOnly}
               {...register('revealName')}
             />
@@ -240,7 +258,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
         </div>
 
         {!isReadOnly && (
-          <button type="submit" className="final-review-form__submit-btn" disabled={!isFormValid || isSubmitting}>
+          <button type="submit" className={finalReviewFormStyles.submitBtn} disabled={!isFormValid || isSubmitting}>
             <CheckIcon />
           </button>
         )}

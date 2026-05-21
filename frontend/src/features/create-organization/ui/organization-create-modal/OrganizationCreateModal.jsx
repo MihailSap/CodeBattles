@@ -7,7 +7,7 @@ import { CheckIcon } from '@/shared/ui/icons';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { organizationCreateFormSchema } from '@/entities/organization';
-import './OrganizationCreateModal.css';
+import organizationCreateModalStyles from './OrganizationCreateModal.module.scss';
 
 const initialForm = {
   name: '',
@@ -19,6 +19,7 @@ const initialForm = {
 const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   const [logoPreview, setLogoPreview] = useState('');
   const inputRef = useRef(null);
+
   const {
     register,
     handleSubmit,
@@ -70,7 +71,13 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
     }
 
     const nextUrl = URL.createObjectURL(file);
-    setValue('logoFile', file, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+
+    setValue('logoFile', file, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
     setLogoPreview(nextUrl);
   };
 
@@ -79,7 +86,12 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
       URL.revokeObjectURL(logoPreview);
     }
 
-    setValue('logoFile', null, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+    setValue('logoFile', null, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+
     setLogoPreview('');
 
     if (inputRef.current) {
@@ -103,23 +115,25 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
     <ModalShell
       isOpen={isOpen}
       onClose={handleClose}
-      overlayClassName="organization-create-modal__overlay"
-      dialogClassName="organization-create-modal"
+      overlayClassName={organizationCreateModalStyles.overlay}
+      dialogClassName={organizationCreateModalStyles.root}
       ariaLabel="Создание организации"
       title="Создание организации"
-      headerClassName="organization-create-modal__head"
-      titleClassName="organization-create-modal__title"
-      closeClassName="organization-create-modal__close"
+      headerClassName={organizationCreateModalStyles.head}
+      titleClassName={organizationCreateModalStyles.title}
+      closeClassName={organizationCreateModalStyles.close}
       closeAriaLabel="Закрыть форму"
     >
-      <form className="organization-create-modal__form" onSubmit={handleSubmit(submit)}>
-        <div className="organization-create-modal__main">
-          <div className="organization-create-modal__left">
-            <div className="organization-create-modal__logo-box">
-              <div className="organization-create-modal__logo-actions">
+      <form className={organizationCreateModalStyles.form} onSubmit={handleSubmit(submit)}>
+        <div className={organizationCreateModalStyles.main}>
+          <div className={organizationCreateModalStyles.left}>
+            <div className={organizationCreateModalStyles.logoBox}>
+              <div className={organizationCreateModalStyles.logoActions}>
                 {logoPreview ? (
                   <button
-                    className="organization-create-modal__icon-btn organization-create-modal__icon-btn--delete"
+                    className={[organizationCreateModalStyles.iconBtn, organizationCreateModalStyles.isDelete].join(
+                      ' '
+                    )}
                     type="button"
                     onClick={handleLogoClear}
                     aria-label="Удалить логотип"
@@ -130,7 +144,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
                   <span />
                 )}
                 <button
-                  className="organization-create-modal__icon-btn organization-create-modal__icon-btn--upload"
+                  className={[organizationCreateModalStyles.iconBtn, organizationCreateModalStyles.isUpload].join(' ')}
                   type="button"
                   onClick={() => inputRef.current?.click()}
                   aria-label="Загрузить логотип"
@@ -139,41 +153,45 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
                 </button>
               </div>
               {logoPreview ? (
-                <img className="organization-create-modal__logo" src={logoPreview} alt="Логотип организации" />
+                <img className={organizationCreateModalStyles.logo} src={logoPreview} alt="Логотип организации" />
               ) : (
-                <span className="organization-create-modal__logo-placeholder">Логотип*</span>
+                <span className={organizationCreateModalStyles.logoPlaceholder}>Логотип*</span>
               )}
             </div>
             <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleLogoUpload} />
-            {logoError && <p className="organization-create-modal__error">{logoError}</p>}
+            {logoError && <p className={organizationCreateModalStyles.error}>{logoError}</p>}
           </div>
 
-          <div className="organization-create-modal__right">
-            <div className="organization-create-modal__field">
+          <div className={organizationCreateModalStyles.right}>
+            <div className={organizationCreateModalStyles.field}>
               <input
-                className={`organization-create-modal__input ${nameError ? 'organization-create-modal__input--error' : ''}`}
+                className={[organizationCreateModalStyles.input, nameError ? organizationCreateModalStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 type="text"
                 placeholder="Название*"
                 maxLength={100}
                 {...register('name')}
               />
-              {nameError && <p className="organization-create-modal__error">{nameError}</p>}
+              {nameError && <p className={organizationCreateModalStyles.error}>{nameError}</p>}
             </div>
 
-            <div className="organization-create-modal__field">
+            <div className={organizationCreateModalStyles.field}>
               <input
-                className={`organization-create-modal__input ${linkError ? 'organization-create-modal__input--error' : ''}`}
+                className={[organizationCreateModalStyles.input, linkError ? organizationCreateModalStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 type="text"
                 placeholder="Ссылка на организацию"
                 maxLength={500}
                 {...register('link')}
               />
-              {linkError && <p className="organization-create-modal__error">{linkError}</p>}
+              {linkError && <p className={organizationCreateModalStyles.error}>{linkError}</p>}
             </div>
 
-            <div className="organization-create-modal__field">
+            <div className={organizationCreateModalStyles.field}>
               <textarea
-                className="organization-create-modal__input organization-create-modal__textarea"
+                className={[organizationCreateModalStyles.input, organizationCreateModalStyles.textarea].join(' ')}
                 placeholder="Описание"
                 maxLength={3000}
                 {...register('description')}
@@ -183,7 +201,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) =>
         </div>
 
         <button
-          className="organization-create-modal__submit"
+          className={organizationCreateModalStyles.submit}
           type="submit"
           disabled={!isValid || isSubmitting || !getValues('logoFile')}
         >

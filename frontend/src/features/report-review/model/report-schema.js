@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { REPORT_REASON } from '@/entities/review';
-
 export const reportFormSchema = z
   .object({
     selectedReason: z.string().min(1, 'Выберите причину жалобы'),

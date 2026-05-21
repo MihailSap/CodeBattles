@@ -53,10 +53,10 @@ export const MOCK_LARGE_FILE_TREE = [
                 isDirectory: false,
               },
               {
-                path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.css',
-                name: 'ArchitectureDiagram.css',
+                path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.module.scss',
+                name: 'ArchitectureDiagram.module.scss',
                 isDirectory: false,
-                content: '.arch-diagram__wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; }',
+                content: '.wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; }',
               },
               {
                 path: 'src/components/ArchitectureDiagram/hooks.js',
@@ -135,7 +135,6 @@ export const MOCK_LARGE_FILE_TREE = [
     content: '# Mock Project\nThis is a mock project for testing.\n',
   },
 ];
-
 export const MOCK_LARGE_CODE = `import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchArchitectureData, updateNodePosition } from '../../store/architectureSlice';
@@ -143,7 +142,7 @@ import { NodeRenderer } from './NodeRenderer';
 import { ConnectionLine } from './ConnectionLine';
 import { DiagramControls } from './DiagramControls';
 import { parseArchitectureConfig } from '../../utils/parser';
-import './ArchitectureDiagram.css';
+import styles from './ArchitectureDiagram.module.scss';
 
 export const ArchitectureDiagram = ({ configId, initialZoom = 1 }) => {
   const dispatch = useDispatch();
@@ -185,23 +184,23 @@ export const ArchitectureDiagram = ({ configId, initialZoom = 1 }) => {
   }, [selectedNode]);
 
   if (isDataLoading) {
-    return <div className="arch-diagram__loader">Loading architecture data...</div>;
+    return <div className={styles.loader}>Loading architecture data...</div>;
   }
 
   if (!nodes.length) {
-    return <div className="arch-diagram__empty">No architecture config found.</div>;
+    return <div className={styles.empty}>No architecture config found.</div>;
   }
 
   return (
-    <div className="arch-diagram__wrapper">
+    <div className={styles.wrapper}>
       <DiagramControls zoom={zoom} onZoomChange={setZoom} />
       
       <div 
-        className="arch-diagram__canvas"
+        className={styles.canvas}
         onWheel={handleWheel}
         style={{ transform: \`scale(\${zoom}) translate(\${pan.x}px, \${pan.y}px)\` }}
       >
-        <svg className="arch-diagram__edges" width="100%" height="100%">
+        <svg className={styles.edges} width="100%" height="100%">
           {edges.map(edge => (
             <ConnectionLine 
               key={edge.id} 
@@ -212,7 +211,7 @@ export const ArchitectureDiagram = ({ configId, initialZoom = 1 }) => {
           ))}
         </svg>
         
-        <div className="arch-diagram__nodes">
+        <div className={styles.nodes}>
           {nodes.map(node => (
             <NodeRenderer
               key={node.id}
@@ -230,7 +229,6 @@ export const ArchitectureDiagram = ({ configId, initialZoom = 1 }) => {
 
 export default ArchitectureDiagram;
 `;
-
 export const MOCK_LARGE_COMMENTS = [
   {
     id: 1001,
@@ -367,7 +365,6 @@ export const MOCK_LARGE_COMMENTS = [
     replies: [],
   },
 ];
-
 export const MOCK_REWORK_HISTORY_COMMENTS = [
   {
     id: 801,

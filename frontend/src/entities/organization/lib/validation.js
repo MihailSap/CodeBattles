@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 const URL_PATTERN = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
 
 const optionalUrlSchema = z
@@ -16,9 +15,10 @@ export const organizationCreateFormSchema = z.object({
     .max(100, 'Название организации должно быть короче 100 символов'),
   link: optionalUrlSchema,
   description: z.string().max(3000, 'Описание должно быть не длиннее 3000 символов').default(''),
-  logoFile: z.instanceof(File, { message: 'Загрузите логотип' }),
+  logoFile: z.instanceof(File, {
+    message: 'Загрузите логотип',
+  }),
 });
-
 export const organizationSettingsFormSchema = z.object({
   name: organizationCreateFormSchema.shape.name,
   link: optionalUrlSchema,

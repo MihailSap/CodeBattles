@@ -1,13 +1,12 @@
 import { ADMIN_COMPLAINT_DECISION, ADMIN_COMPLAINT_PENALTY_POINTS, ADMIN_EVENT_TYPE } from '../model/constants';
-
 const clone = (value) => JSON.parse(JSON.stringify(value));
-
 const now = new Date('2026-05-21T11:20:00+05:00');
 
 const makeIso = (daysAgo, hours = 0) => {
   const date = new Date(now);
   date.setDate(date.getDate() - daysAgo);
   date.setHours(date.getHours() - hours);
+
   return date.toISOString();
 };
 
@@ -37,7 +36,11 @@ const usersPenaltyState = new Map([
 
 let eventSequence = 30;
 
-const DEFAULT_ADMIN_ACTOR = { id: 1, login: 'admin_anna', fullName: 'Анна Админова' };
+const DEFAULT_ADMIN_ACTOR = {
+  id: 1,
+  login: 'admin_anna',
+  fullName: 'Анна Админова',
+};
 
 const MOCK_AI_FEEDBACK_COMMENTS = [
   {
@@ -157,120 +160,264 @@ let complaints = [
     id: 1,
     commentId: 8101,
     commentText: 'Ты вообще читал задачу? Такой код только время команды тратит.',
-    commentAuthor: { id: 23, login: 'max_refactor', fullName: 'Максим Орлов' },
-    target: { kind: 'review', title: 'Review #452: REST API для турниров', url: '/reviews/452' },
+    commentAuthor: {
+      id: 23,
+      login: 'max_refactor',
+      fullName: 'Максим Орлов',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #452: REST API для турниров',
+      url: '/reviews/452',
+    },
     reason: 'Оскорбительный тон',
-    reportedBy: { id: 8, login: 'nina_dev', fullName: 'Нина Волкова' },
+    reportedBy: {
+      id: 8,
+      login: 'nina_dev',
+      fullName: 'Нина Волкова',
+    },
     createdAt: makeIso(0, 1),
   },
   {
     id: 2,
     commentId: 8102,
     commentText: 'Можно было бы не копировать чужое решение из прошлого баттла.',
-    commentAuthor: { id: 31, login: 'frontend_ilya', fullName: 'Илья Соколов' },
-    target: { kind: 'task', title: 'Задача #118: Очередь задач', url: '/projects/3/tasks/118' },
+    commentAuthor: {
+      id: 31,
+      login: 'frontend_ilya',
+      fullName: 'Илья Соколов',
+    },
+    target: {
+      kind: 'task',
+      title: 'Задача #118: Очередь задач',
+      url: '/projects/3/tasks/118',
+    },
     reason: 'Обвинение без доказательств',
-    reportedBy: { id: 12, login: 'elena_code', fullName: 'Елена Романова' },
+    reportedBy: {
+      id: 12,
+      login: 'elena_code',
+      fullName: 'Елена Романова',
+    },
     createdAt: makeIso(0, 3),
   },
   {
     id: 3,
     commentId: 8103,
     commentText: 'AI уже написал лучше, чем ты. Удали и начни заново.',
-    commentAuthor: { id: 42, login: 'stack_runner', fullName: 'Артем Ким' },
-    target: { kind: 'review', title: 'Review #443: Auth flow', url: '/reviews/443' },
+    commentAuthor: {
+      id: 42,
+      login: 'stack_runner',
+      fullName: 'Артем Ким',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #443: Auth flow',
+      url: '/reviews/443',
+    },
     reason: 'Токсичный комментарий',
-    reportedBy: { id: 18, login: 'qa_maria', fullName: 'Мария Котова' },
+    reportedBy: {
+      id: 18,
+      login: 'qa_maria',
+      fullName: 'Мария Котова',
+    },
     createdAt: makeIso(1, 0),
   },
   {
     id: 4,
     commentId: 8104,
     commentText: 'Этот подход ломает кеширование на повторном запросе. Нужен invalidate по taskId.',
-    commentAuthor: { id: 54, login: 'redux_doc', fullName: 'Антон Ковалев' },
-    target: { kind: 'task', title: 'Задача #126: RTK Query cache', url: '/projects/5/tasks/126' },
+    commentAuthor: {
+      id: 54,
+      login: 'redux_doc',
+      fullName: 'Антон Ковалев',
+    },
+    target: {
+      kind: 'task',
+      title: 'Задача #126: RTK Query cache',
+      url: '/projects/5/tasks/126',
+    },
     reason: 'Спам жалоба, комментарий кажется нормальным',
-    reportedBy: { id: 21, login: 'dasha_fullstack', fullName: 'Дарья Петрова' },
+    reportedBy: {
+      id: 21,
+      login: 'dasha_fullstack',
+      fullName: 'Дарья Петрова',
+    },
     createdAt: makeIso(1, 4),
   },
   {
     id: 5,
     commentId: 8105,
     commentText: 'Без тестов этот PR нельзя принимать, даже если демо выглядит нормально.',
-    commentAuthor: { id: 77, login: 'test_first', fullName: 'Сергей Лебедев' },
-    target: { kind: 'review', title: 'Review #439: UI notifications', url: '/reviews/439' },
+    commentAuthor: {
+      id: 77,
+      login: 'test_first',
+      fullName: 'Сергей Лебедев',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #439: UI notifications',
+      url: '/reviews/439',
+    },
     reason: 'Неуважительный тон',
-    reportedBy: { id: 34, login: 'ui_vika', fullName: 'Виктория Сергеева' },
+    reportedBy: {
+      id: 34,
+      login: 'ui_vika',
+      fullName: 'Виктория Сергеева',
+    },
     createdAt: makeIso(2, 2),
   },
   {
     id: 6,
     commentId: 8106,
     commentText: 'Если снова отправишь такое без линтера, ревью не имеет смысла.',
-    commentAuthor: { id: 23, login: 'max_refactor', fullName: 'Максим Орлов' },
-    target: { kind: 'review', title: 'Review #438: Leaderboard filters', url: '/reviews/438' },
+    commentAuthor: {
+      id: 23,
+      login: 'max_refactor',
+      fullName: 'Максим Орлов',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #438: Leaderboard filters',
+      url: '/reviews/438',
+    },
     reason: 'Давление на автора',
-    reportedBy: { id: 43, login: 'rustam_js', fullName: 'Рустам Галиев' },
+    reportedBy: {
+      id: 43,
+      login: 'rustam_js',
+      fullName: 'Рустам Галиев',
+    },
     createdAt: makeIso(2, 5),
   },
   {
     id: 7,
     commentId: 8107,
     commentText: 'Пожалуйста, вынеси повторяющуюся проверку в helper, сейчас это сложно читать.',
-    commentAuthor: { id: 19, login: 'clean_code', fullName: 'Ольга Миронова' },
-    target: { kind: 'task', title: 'Задача #104: Парсер логов', url: '/projects/2/tasks/104' },
+    commentAuthor: {
+      id: 19,
+      login: 'clean_code',
+      fullName: 'Ольга Миронова',
+    },
+    target: {
+      kind: 'task',
+      title: 'Задача #104: Парсер логов',
+      url: '/projects/2/tasks/104',
+    },
     reason: 'Жалоба на спорный комментарий',
-    reportedBy: { id: 55, login: 'roman_api', fullName: 'Роман Васильев' },
+    reportedBy: {
+      id: 55,
+      login: 'roman_api',
+      fullName: 'Роман Васильев',
+    },
     createdAt: makeIso(3, 1),
   },
   {
     id: 8,
     commentId: 8108,
     commentText: 'Ты опять игнорируешь требования по доступности.',
-    commentAuthor: { id: 42, login: 'stack_runner', fullName: 'Артем Ким' },
-    target: { kind: 'review', title: 'Review #431: Profile settings', url: '/reviews/431' },
+    commentAuthor: {
+      id: 42,
+      login: 'stack_runner',
+      fullName: 'Артем Ким',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #431: Profile settings',
+      url: '/reviews/431',
+    },
     reason: 'Резкая формулировка',
-    reportedBy: { id: 29, login: 'a11y_lena', fullName: 'Лена Аксенова' },
+    reportedBy: {
+      id: 29,
+      login: 'a11y_lena',
+      fullName: 'Лена Аксенова',
+    },
     createdAt: makeIso(4, 6),
   },
   {
     id: 9,
     commentId: 8109,
     commentText: 'Этот if можно заменить ранним return, тогда ветвление будет проще.',
-    commentAuthor: { id: 64, login: 'sergey_node', fullName: 'Сергей Фомин' },
-    target: { kind: 'task', title: 'Задача #97: Webhook events', url: '/projects/7/tasks/97' },
+    commentAuthor: {
+      id: 64,
+      login: 'sergey_node',
+      fullName: 'Сергей Фомин',
+    },
+    target: {
+      kind: 'task',
+      title: 'Задача #97: Webhook events',
+      url: '/projects/7/tasks/97',
+    },
     reason: 'Ошибочная жалоба',
-    reportedBy: { id: 15, login: 'pm_alex', fullName: 'Алексей Павлов' },
+    reportedBy: {
+      id: 15,
+      login: 'pm_alex',
+      fullName: 'Алексей Павлов',
+    },
     createdAt: makeIso(5, 0),
   },
   {
     id: 10,
     commentId: 8110,
     commentText: 'Такой код нельзя показывать новичкам, он закрепляет плохие привычки.',
-    commentAuthor: { id: 88, login: 'mentor_old', fullName: 'Павел Титов' },
-    target: { kind: 'review', title: 'Review #428: Invite links', url: '/reviews/428' },
+    commentAuthor: {
+      id: 88,
+      login: 'mentor_old',
+      fullName: 'Павел Титов',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #428: Invite links',
+      url: '/reviews/428',
+    },
     reason: 'Уничижительная формулировка',
-    reportedBy: { id: 73, login: 'newbie_sasha', fullName: 'Саша Белова' },
+    reportedBy: {
+      id: 73,
+      login: 'newbie_sasha',
+      fullName: 'Саша Белова',
+    },
     createdAt: makeIso(5, 3),
   },
   {
     id: 11,
     commentId: 8111,
     commentText: 'Сравнение дат через строки здесь рискованное, лучше нормализовать Date.',
-    commentAuthor: { id: 91, login: 'date_guard', fullName: 'Кирилл Егоров' },
-    target: { kind: 'task', title: 'Задача #92: Calendar sync', url: '/projects/8/tasks/92' },
+    commentAuthor: {
+      id: 91,
+      login: 'date_guard',
+      fullName: 'Кирилл Егоров',
+    },
+    target: {
+      kind: 'task',
+      title: 'Задача #92: Calendar sync',
+      url: '/projects/8/tasks/92',
+    },
     reason: 'Спор по содержанию',
-    reportedBy: { id: 45, login: 'ivan_tz', fullName: 'Иван Морозов' },
+    reportedBy: {
+      id: 45,
+      login: 'ivan_tz',
+      fullName: 'Иван Морозов',
+    },
     createdAt: makeIso(6, 2),
   },
   {
     id: 12,
     commentId: 8112,
     commentText: 'Похоже на автогенерацию без понимания, но баг с null все равно надо закрыть.',
-    commentAuthor: { id: 31, login: 'frontend_ilya', fullName: 'Илья Соколов' },
-    target: { kind: 'review', title: 'Review #420: Task details', url: '/reviews/420' },
+    commentAuthor: {
+      id: 31,
+      login: 'frontend_ilya',
+      fullName: 'Илья Соколов',
+    },
+    target: {
+      kind: 'review',
+      title: 'Review #420: Task details',
+      url: '/reviews/420',
+    },
     reason: 'Сомнительное обвинение',
-    reportedBy: { id: 62, login: 'katya_backend', fullName: 'Катя Смирнова' },
+    reportedBy: {
+      id: 62,
+      login: 'katya_backend',
+      fullName: 'Катя Смирнова',
+    },
     createdAt: makeIso(7, 1),
   },
 ];
@@ -293,8 +440,16 @@ let events = [
     type: ADMIN_EVENT_TYPE.LEADERBOARD_RATING_RESET,
     createdAt: makeIso(2, 7),
     actor: DEFAULT_ADMIN_ACTOR,
-    targetUser: { id: 31, login: 'frontend_ilya', fullName: 'Илья Соколов' },
-    scope: { type: 'PROJECT', name: 'CodeBattles Frontend Arena', url: '/projects/5' },
+    targetUser: {
+      id: 31,
+      login: 'frontend_ilya',
+      fullName: 'Илья Соколов',
+    },
+    scope: {
+      type: 'PROJECT',
+      name: 'CodeBattles Frontend Arena',
+      url: '/projects/5',
+    },
     details: 'Рейтинг пользователя обнулен в рамках проектного лидерборда',
   },
   {
@@ -336,7 +491,6 @@ export const adminApi = {
       params.size
     );
   },
-
   async resolveComplaint(complaintId, payload) {
     const complaint = complaints.find((item) => Number(item.id) === Number(complaintId));
 
@@ -345,7 +499,6 @@ export const adminApi = {
     }
 
     complaints = complaints.filter((item) => Number(item.id) !== Number(complaintId));
-
     const moderator = payload.moderator || DEFAULT_ADMIN_ACTOR;
     const isApproved = payload.decision === ADMIN_COMPLAINT_DECISION.APPROVE;
     let consequence = 'Жалоба отклонена, комментарий оставлен без изменений';
@@ -354,6 +507,7 @@ export const adminApi = {
       const previousApprovedCount = usersPenaltyState.get(complaint.commentAuthor.id) || 0;
       const nextApprovedCount = previousApprovedCount + 1;
       usersPenaltyState.set(complaint.commentAuthor.id, nextApprovedCount);
+
       consequence =
         previousApprovedCount === 0
           ? 'Комментарий удален. Первое подтверждение жалобы: предупреждение без штрафа'
@@ -377,11 +531,9 @@ export const adminApi = {
       consequence,
     };
   },
-
   async getSystemSettings() {
     return clone(settings);
   },
-
   async updateReviewDeadlineDays(payload) {
     const previousValue = settings.reviewDeadlineDays;
     const nextValue = Math.max(1, Number(payload.reviewDeadlineDays) || 14);
@@ -401,7 +553,6 @@ export const adminApi = {
 
     return clone(settings);
   },
-
   async updateAiSystemPrompt(payload) {
     const previousPrompt = settings.aiSystemPrompt;
     const nextPrompt = String(payload.aiSystemPrompt || '').trim();
@@ -421,7 +572,6 @@ export const adminApi = {
 
     return clone(settings);
   },
-
   async getEvents(params = {}) {
     const dateFrom = params.dateFrom ? new Date(`${params.dateFrom}T00:00:00`).getTime() : null;
     const dateTo = params.dateTo ? new Date(`${params.dateTo}T23:59:59`).getTime() : null;

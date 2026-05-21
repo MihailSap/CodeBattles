@@ -20,8 +20,7 @@ import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { lazyNamed } from '@/shared/lib';
-import './ProjectsPage.css';
-
+import projectsPageStyles from './ProjectsPage.module.scss';
 const JoinSearchModal = lazyNamed(() => import('@/features/join-project'), 'JoinSearchModal');
 const OrganizationCreateModal = lazyNamed(() => import('@/features/create-organization'), 'OrganizationCreateModal');
 const ProjectCreateModal = lazyNamed(() => import('@/features/create-project'), 'ProjectCreateModal');
@@ -48,29 +47,38 @@ const ProjectsPage = () => {
     searchParams.get('view') === VIEW_MODE_SEARCH_PARAM[VIEW_MODE.WITHOUT_ORGANIZATION]
       ? VIEW_MODE.WITHOUT_ORGANIZATION
       : VIEW_MODE.WITH_ORGANIZATION;
+
   const [search, setSearch] = useState('');
   const debaouncedSearch = useDebouncedValue(search, 300);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   const [createProjectOrganizationId, setCreateProjectOrganizationId] = useState(null);
-
   const [isOrganizationCreateOpen, setOrganizationCreateOpen] = useState(false);
-
   const [isProjectsSearchOpen, setProjectsSearchOpen] = useState(false);
   const [isOrganizationsSearchOpen, setOrganizationsSearchOpen] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
-
   const [carouselStart, setCarouselStart] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(2);
   const [carouselViewportWidth, setCarouselViewportWidth] = useState(0);
   const carouselViewportRef = useRef(null);
+
   const {
-    data: dashboard = { withoutOrganizationProjects: [], organizationsWithProjects: [] },
+    data: dashboard = {
+      withoutOrganizationProjects: [],
+      organizationsWithProjects: [],
+    },
     isLoading,
     isError,
     refetch: refetchDashboard,
-  } = useGetProjectsDashboardQuery({ search: debaouncedSearch }, { refetchOnMountOrArgChange: 30 });
+  } = useGetProjectsDashboardQuery(
+    {
+      search: debaouncedSearch,
+    },
+    {
+      refetchOnMountOrArgChange: 30,
+    }
+  );
+
   const [createProject, { isLoading: isProjectCreateSubmitting }] = useCreateProjectMutation();
   const [createOrganization, { isLoading: isOrganizationCreateSubmitting }] = useCreateOrganizationMutation();
   const [joinPublicProject] = useJoinPublicProjectMutation();
@@ -84,9 +92,12 @@ const ProjectsPage = () => {
         (currentParams) => {
           const nextParams = new URLSearchParams(currentParams);
           nextParams.set('view', VIEW_MODE_SEARCH_PARAM[nextViewMode]);
+
           return nextParams;
         },
-        { replace: true }
+        {
+          replace: true,
+        }
       );
     },
     [setSearchParams]
@@ -101,7 +112,11 @@ const ProjectsPage = () => {
   useEffect(() => {
     if (location.state?.snackbarMessage) {
       showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
-      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      });
     }
   }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
@@ -141,6 +156,7 @@ const ProjectsPage = () => {
 
     const contentWidth = carouselViewportWidth - CAROUSEL_PADDING * 2;
     const slideWidth = cardsPerView === 1 ? contentWidth : (contentWidth - 20) / 2;
+
     return boundedCarouselStart * (slideWidth + 20);
   }, [boundedCarouselStart, cardsPerView, carouselViewportWidth, organizationsWithProjects.length]);
 
@@ -157,7 +173,6 @@ const ProjectsPage = () => {
 
     const frameId = window.requestAnimationFrame(updateCarouselMetrics);
     const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateCarouselMetrics);
-
     resizeObserver?.observe(carouselViewport);
     window.addEventListener('resize', updateCarouselMetrics);
 
@@ -186,16 +201,21 @@ const ProjectsPage = () => {
           ...payload,
           organizationId: createProjectOrganizationId,
         }).unwrap();
+
         const projectId = result?.projectId;
 
         if (projectId) {
           setProjectCreateOpen(false);
           setCreateProjectOrganizationId(null);
-          navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
+
+          navigate(ROUTES.projectById.replace(':projectId', projectId), {
+            replace: true,
+          });
         }
       } catch (error) {
         if (error?.code === 'PROJECT_NAME_CONFLICT') {
           showSnackbar('Проект с таким названием уже существует', 'error');
+
           return;
         }
 
@@ -209,6 +229,7 @@ const ProjectsPage = () => {
     async (payload) => {
       if (!payload.logoPreview) {
         showSnackbar('Прикрепите лого организации', 'error');
+
         return;
       }
 
@@ -218,11 +239,15 @@ const ProjectsPage = () => {
 
         if (organizationId) {
           setOrganizationCreateOpen(false);
-          navigate(ROUTES.organizationById.replace(':organizationId', organizationId), { replace: true });
+
+          navigate(ROUTES.organizationById.replace(':organizationId', organizationId), {
+            replace: true,
+          });
         }
       } catch (error) {
         if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
           showSnackbar('Организация с таким названием существует', 'error');
+
           return;
         }
 
@@ -234,14 +259,30 @@ const ProjectsPage = () => {
 
   const fetchProjectsForJoin = useCallback(
     async ({ query }) => {
-      return searchProjectsForJoin({ viewerId: Number(userId), params: { query } }, true).unwrap();
+      return searchProjectsForJoin(
+        {
+          viewerId: Number(userId),
+          params: {
+            query,
+          },
+        },
+        true
+      ).unwrap();
     },
     [searchProjectsForJoin, userId]
   );
 
   const fetchOrganizationsForJoin = useCallback(
     async ({ query }) => {
-      return searchOrganizations({ viewerId: Number(userId), params: { query } }, true).unwrap();
+      return searchOrganizations(
+        {
+          viewerId: Number(userId),
+          params: {
+            query,
+          },
+        },
+        true
+      ).unwrap();
     },
     [searchOrganizations, userId]
   );
@@ -277,18 +318,23 @@ const ProjectsPage = () => {
   }, []);
 
   return (
-    <div className="projects-page">
+    <div className={projectsPageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <main className="projects-page__content">
-        <section className="projects-page__toolbar-wrap">
-          <div className="projects-page__toolbar">
+      <main className={projectsPageStyles.content}>
+        <section className={projectsPageStyles.toolbarWrap}>
+          <div className={projectsPageStyles.toolbar}>
             <div
-              className={`projects-page__toolbar-left ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? '' : 'projects-page__toolbar-left--hidden'}`}
+              className={[
+                projectsPageStyles.toolbarLeft,
+                viewMode === VIEW_MODE.WITH_ORGANIZATION ? '' : projectsPageStyles.isHidden,
+              ]
+                .filter(Boolean)
+                .join(' ')}
             >
               {viewMode === VIEW_MODE.WITH_ORGANIZATION && (
                 <button
-                  className="projects-page__side-action projects-page__side-action--org"
+                  className={[projectsPageStyles.sideAction, projectsPageStyles.isOrg].join(' ')}
                   type="button"
                   onClick={() => setSidebarOpen(true)}
                 >
@@ -297,19 +343,34 @@ const ProjectsPage = () => {
               )}
             </div>
 
-            <div className="projects-page__switch" role="tablist" aria-label="Режим просмотра проектов">
+            <div className={projectsPageStyles.switch} role="tablist" aria-label="Режим просмотра проектов">
               <span
-                className={`projects-page__switch-thumb ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-thumb--with-org' : ''}`}
+                className={[
+                  projectsPageStyles.switchThumb,
+                  viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? projectsPageStyles.isWithOrg : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               />
               <button
-                className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
+                className={[
+                  projectsPageStyles.switchOption,
+                  viewMode === VIEW_MODE.WITH_ORGANIZATION ? projectsPageStyles.isActive : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 type="button"
                 onClick={() => handleViewModeChange(VIEW_MODE.WITH_ORGANIZATION)}
               >
                 С организацией
               </button>
               <button
-                className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
+                className={[
+                  projectsPageStyles.switchOption,
+                  viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? projectsPageStyles.isActive : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 type="button"
                 onClick={() => handleViewModeChange(VIEW_MODE.WITHOUT_ORGANIZATION)}
               >
@@ -317,10 +378,10 @@ const ProjectsPage = () => {
               </button>
             </div>
 
-            <div className="projects-page__search-wrap">
+            <div className={projectsPageStyles.searchWrap}>
               <SearchIcon />
               <input
-                className="projects-page__search"
+                className={projectsPageStyles.search}
                 type="search"
                 placeholder="Поиск"
                 value={search}
@@ -331,19 +392,19 @@ const ProjectsPage = () => {
         </section>
 
         {isLoading ? (
-          <div className="projects-page__loader">
+          <div className={projectsPageStyles.loader}>
             <Spinner />
           </div>
         ) : viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? (
           <>
-            <section className="projects-page__section-wrap">
-              <div className="projects-page__section">
-                <h1 className="projects-page__title">Мои проекты</h1>
+            <section className={projectsPageStyles.sectionWrap}>
+              <div className={projectsPageStyles.section}>
+                <h1 className={projectsPageStyles.title}>Мои проекты</h1>
 
                 {noOrganizationProjects.length === 0 ? (
-                  <p className="projects-page__empty">У вас пока нет проектов</p>
+                  <p className={projectsPageStyles.isEmpty}>У вас пока нет проектов</p>
                 ) : (
-                  <div className="projects-page__projects-grid">
+                  <div className={projectsPageStyles.grid}>
                     {noOrganizationProjects.map((project) => (
                       <ProjectCard key={project.id} project={project} onOpen={openProject} />
                     ))}
@@ -352,9 +413,9 @@ const ProjectsPage = () => {
               </div>
             </section>
 
-            <div className="projects-page__actions">
+            <div className={projectsPageStyles.actions}>
               <button
-                className="projects-page__side-action projects-page__side-action--create"
+                className={[projectsPageStyles.sideAction, projectsPageStyles.isCreate].join(' ')}
                 type="button"
                 onClick={() => {
                   setCreateProjectOrganizationId(null);
@@ -364,7 +425,7 @@ const ProjectsPage = () => {
                 Создать проект
               </button>
               <button
-                className="projects-page__side-action projects-page__side-action--join"
+                className={[projectsPageStyles.sideAction, projectsPageStyles.isJoin].join(' ')}
                 type="button"
                 onClick={() => setProjectsSearchOpen(true)}
               >
@@ -374,11 +435,17 @@ const ProjectsPage = () => {
           </>
         ) : (
           <>
-            <section className="projects-page__organizations-wrap">
-              <div className="projects-page__arrow-slot">
+            <section className={projectsPageStyles.organizationsWrap}>
+              <div className={projectsPageStyles.arrowSlot}>
                 {shouldShowArrows && (
                   <button
-                    className={`projects-page__arrow projects-page__arrow--left ${canSlideLeft ? '' : 'projects-page__arrow--disabled'}`}
+                    className={[
+                      projectsPageStyles.arrow,
+                      projectsPageStyles.isLeft,
+                      canSlideLeft ? '' : projectsPageStyles.isDisabled,
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     type="button"
                     onClick={() => canSlideLeft && setCarouselStart(boundedCarouselStart - 1)}
                     disabled={!canSlideLeft}
@@ -389,18 +456,26 @@ const ProjectsPage = () => {
                 )}
               </div>
 
-              <div className="projects-page__organizations-viewport" ref={carouselViewportRef}>
+              <div className={projectsPageStyles.organizationsViewport} ref={carouselViewportRef}>
                 {organizationsWithProjects.length === 0 ? (
-                  <p className="projects-page__empty projects-page__empty--org">
+                  <p className={[projectsPageStyles.isEmpty, projectsPageStyles.emptyOrg].join(' ')}>
                     Создайте свою организацию или присоединитесь к существующей
                   </p>
                 ) : (
                   <div
-                    className={`projects-page__organizations-track ${cardsPerView === 1 ? 'projects-page__organizations-track--single' : 'projects-page__organizations-track--double'} ${organizationsWithProjects.length === 1 ? 'projects-page__organizations-track--single-item' : ''}`}
-                    style={{ transform: `translateX(-${trackOffset}px)` }}
+                    className={[
+                      projectsPageStyles.organizationsTrack,
+                      cardsPerView === 1 ? projectsPageStyles.isSingle : projectsPageStyles.isDouble,
+                      organizationsWithProjects.length === 1 ? projectsPageStyles.isSingleItem : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    style={{
+                      transform: `translateX(-${trackOffset}px)`,
+                    }}
                   >
                     {organizationsWithProjects.map((organization) => (
-                      <div className="projects-page__organizations-slide" key={organization.id}>
+                      <div className={projectsPageStyles.organizationsSlide} key={organization.id}>
                         <OrganizationProjectsCard
                           organization={organization}
                           onProjectOpen={openProject}
@@ -412,10 +487,12 @@ const ProjectsPage = () => {
                 )}
               </div>
 
-              <div className="projects-page__arrow-slot">
+              <div className={projectsPageStyles.arrowSlot}>
                 {shouldShowArrows && (
                   <button
-                    className={`projects-page__arrow ${canSlideRight ? '' : 'projects-page__arrow--disabled'}`}
+                    className={[projectsPageStyles.arrow, canSlideRight ? '' : projectsPageStyles.isDisabled]
+                      .filter(Boolean)
+                      .join(' ')}
                     type="button"
                     onClick={() => canSlideRight && setCarouselStart(boundedCarouselStart + 1)}
                     disabled={!canSlideRight}
@@ -427,16 +504,16 @@ const ProjectsPage = () => {
               </div>
             </section>
 
-            <div className="projects-page__actions">
+            <div className={projectsPageStyles.actions}>
               <button
-                className="projects-page__side-action projects-page__side-action--create"
+                className={[projectsPageStyles.sideAction, projectsPageStyles.isCreate].join(' ')}
                 type="button"
                 onClick={() => setOrganizationCreateOpen(true)}
               >
                 Создать организацию
               </button>
               <button
-                className="projects-page__side-action projects-page__side-action--join"
+                className={[projectsPageStyles.sideAction, projectsPageStyles.isJoin].join(' ')}
                 type="button"
                 onClick={() => setOrganizationsSearchOpen(true)}
               >

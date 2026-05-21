@@ -5,7 +5,7 @@ import Spinner from '@/shared/ui/spinner';
 import { ACCESS_ERROR_CODE } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
-import './OrganizationInviteJoinPage.css';
+import projectInviteJoinPageStyles from '../../project-invite-join/ui/ProjectInviteJoinPage.module.scss';
 
 const OrganizationInviteJoinPage = () => {
   const { token } = useParams();
@@ -50,6 +50,7 @@ const OrganizationInviteJoinPage = () => {
                 snackbarType: 'success',
               },
             });
+
             return;
           }
         }
@@ -73,7 +74,7 @@ const OrganizationInviteJoinPage = () => {
 
   if (!isInitialized) {
     return (
-      <div className="project-invite-page">
+      <div className={projectInviteJoinPageStyles.projectInvitePage}>
         <Spinner />
       </div>
     );
@@ -81,12 +82,18 @@ const OrganizationInviteJoinPage = () => {
 
   if (!isAuthenticated) {
     return (
-      <Navigate to={ROUTES.login} replace state={{ from: ROUTES.organizationJoinByToken.replace(':token', token) }} />
+      <Navigate
+        to={ROUTES.login}
+        replace
+        state={{
+          from: ROUTES.organizationJoinByToken.replace(':token', token),
+        }}
+      />
     );
   }
 
   return (
-    <div className="project-invite-page">
+    <div className={projectInviteJoinPageStyles.projectInvitePage}>
       <Spinner />
     </div>
   );

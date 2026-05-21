@@ -12,9 +12,18 @@ import { ROUTES } from '@/shared/config/routes';
 import { getApiErrorMessage } from '@/shared/lib';
 import { formatAdminDateTime } from '../../lib/pagination';
 import AdminPagination from '../AdminPagination';
-import './AdminEventsLogTab.css';
-
+import adminEventsLogTabStyles from './AdminEventsLogTab.module.scss';
+import adminComplaintsTabStyles from '../admin-complaints-tab/AdminComplaintsTab.module.scss';
 const PAGE_SIZE = 8;
+
+const EVENT_TYPE_CLASS = {
+  [ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_CREATED]: adminEventsLogTabStyles.isCommentComplaintCreated,
+  [ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_APPROVED]: adminEventsLogTabStyles.isCommentComplaintApproved,
+  [ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_REJECTED]: adminEventsLogTabStyles.isCommentComplaintRejected,
+  [ADMIN_EVENT_TYPE.LEADERBOARD_RATING_RESET]: adminEventsLogTabStyles.isLeaderboardRatingReset,
+  [ADMIN_EVENT_TYPE.SYSTEM_REVIEW_DEADLINE_CHANGED]: adminEventsLogTabStyles.isSystemReviewDeadlineChanged,
+  [ADMIN_EVENT_TYPE.SYSTEM_AI_PROMPT_CHANGED]: adminEventsLogTabStyles.isSystemAiPromptChanged,
+};
 
 const getProfileUrl = (userId) => ROUTES.profileByUserId.replace(':userId', userId);
 
@@ -31,7 +40,9 @@ const UserLink = ({ user }) => {
 };
 
 const EventField = ({ label, children, wide = false }) => (
-  <div className={`admin-events__field ${wide ? 'admin-events__field--wide' : ''}`}>
+  <div
+    className={[adminEventsLogTabStyles.field, wide ? adminEventsLogTabStyles.isWide : ''].filter(Boolean).join(' ')}
+  >
     <dt>{label}</dt>
     <dd>{children || '—'}</dd>
   </div>
@@ -163,22 +174,26 @@ const AdminEventsLogTab = ({ isActive }) => {
     : '';
 
   return (
-    <section className="admin-panel admin-events" aria-label="Журнал событий">
+    <section className={adminComplaintsTabStyles.root} aria-label="Журнал событий">
       <div>
-        <h2 className="admin-panel__title">Журнал событий</h2>
+        <h2 className={adminComplaintsTabStyles.title}>Журнал событий</h2>
       </div>
 
-      <div className="admin-events__filters">
+      <div className={adminEventsLogTabStyles.filters}>
         <ReviewDropdown
           label="Тип"
           value={type}
           options={ADMIN_EVENT_TYPE_OPTIONS}
+          rootClassName={adminEventsLogTabStyles.typeFilter}
+          labelClassName={adminEventsLogTabStyles.typeLabel}
+          triggerClassName={adminEventsLogTabStyles.typeTrigger}
+          menuClassName={adminEventsLogTabStyles.typeMenu}
           onChange={(nextType) => {
             setType(nextType);
             setPage(0);
           }}
         />
-        <label className="admin-events__date-field">
+        <label className={adminEventsLogTabStyles.dateField}>
           <span>С даты</span>
           <input
             type="date"
@@ -189,7 +204,7 @@ const AdminEventsLogTab = ({ isActive }) => {
             }}
           />
         </label>
-        <label className="admin-events__date-field">
+        <label className={adminEventsLogTabStyles.dateField}>
           <span>По дату</span>
           <input
             type="date"
@@ -201,7 +216,7 @@ const AdminEventsLogTab = ({ isActive }) => {
           />
         </label>
         <button
-          className="admin-events__reset"
+          className={adminEventsLogTabStyles.reset}
           type="button"
           onClick={() => {
             setType('');
@@ -215,26 +230,31 @@ const AdminEventsLogTab = ({ isActive }) => {
         </button>
       </div>
 
-      <div className="admin-events__list">
+      <div className={adminEventsLogTabStyles.list}>
         {isLoading && (
-          <div className="admin-panel__loader">
+          <div className={adminComplaintsTabStyles.loader}>
             <Spinner />
           </div>
         )}
 
         {!isLoading && events.length === 0 && (
-          <div className="admin-panel__empty">События по выбранным фильтрам не найдены</div>
+          <div className={adminComplaintsTabStyles.isEmpty}>События по выбранным фильтрам не найдены</div>
         )}
 
         {!isLoading &&
           events.map((event) => (
-            <article className={`admin-events__item admin-events__item--${event.type.toLowerCase()}`} key={event.id}>
-              <header className="admin-events__item-head">
-                <span className="admin-events__type">{ADMIN_EVENT_TYPE_LABELS[event.type] || event.type}</span>
+            <article
+              className={[adminEventsLogTabStyles.item, EVENT_TYPE_CLASS[event.type]].filter(Boolean).join(' ')}
+              key={event.id}
+            >
+              <header className={adminEventsLogTabStyles.itemHead}>
+                <span className={adminEventsLogTabStyles.type}>
+                  {ADMIN_EVENT_TYPE_LABELS[event.type] || event.type}
+                </span>
                 <time dateTime={event.createdAt}>{formatAdminDateTime(event.createdAt)}</time>
               </header>
 
-              <dl className="admin-events__fields">
+              <dl className={adminEventsLogTabStyles.fields}>
                 <EventField
                   label={event.type === ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_CREATED ? 'Жалобу отправил' : 'Кем'}
                 >
@@ -246,7 +266,7 @@ const AdminEventsLogTab = ({ isActive }) => {
           ))}
       </div>
 
-      {error && <p className="admin-panel__error">{error}</p>}
+      {error && <p className={adminComplaintsTabStyles.isError}>{error}</p>}
 
       <AdminPagination page={page} totalPages={totalPages} isLoading={isLoading} onChange={setPage} />
     </section>

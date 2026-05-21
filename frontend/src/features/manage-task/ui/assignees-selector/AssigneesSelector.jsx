@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AvatarIcon } from '@/shared/ui/icons';
 import { useVisibleItems } from '@/shared/lib/hooks';
-import './AssigneesSelector.css';
-
+import assigneesSelectorStyles from './AssigneesSelector.module.scss';
 const USERS_CHUNK_SIZE = 10;
 const POPUP_WIDTH = 420;
 const POPUP_MAX_HEIGHT = 320;
@@ -16,7 +15,6 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
   const [search, setSearch] = useState('');
   const [popupStyle, setPopupStyle] = useState({});
   const [isPopupOpenUp, setIsPopupOpenUp] = useState(false);
-
   const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
   const safeSelectedUserIds = useMemo(() => (Array.isArray(selectedUserIds) ? selectedUserIds : []), [selectedUserIds]);
 
@@ -24,7 +22,11 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
     () =>
       safeUsers
         .filter((user) => safeSelectedUserIds.includes(user.id))
-        .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' })),
+        .sort((left, right) =>
+          left.fullName.localeCompare(right.fullName, 'ru', {
+            sensitivity: 'base',
+          })
+        ),
     [safeSelectedUserIds, safeUsers]
   );
 
@@ -42,7 +44,11 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
           user.fullName.toLowerCase().includes(normalizedSearch) || user.login.toLowerCase().includes(normalizedSearch)
         );
       })
-      .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' }));
+      .sort((left, right) =>
+        left.fullName.localeCompare(right.fullName, 'ru', {
+          sensitivity: 'base',
+        })
+      );
   }, [safeSelectedUserIds, safeUsers, search]);
 
   const { visibleItems, hasMore, sentinelRef } = useVisibleItems(availableUsers, USERS_CHUNK_SIZE);
@@ -58,19 +64,20 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
     const rootRect = rootElement.getBoundingClientRect();
     const triggerRect = triggerElement.getBoundingClientRect();
     const width = Math.min(POPUP_WIDTH, window.innerWidth - VIEWPORT_PADDING * 2);
+
     const leftInViewport = Math.min(
       window.innerWidth - width - VIEWPORT_PADDING,
       Math.max(VIEWPORT_PADDING, triggerRect.left + triggerRect.width - width)
     );
-    const left = leftInViewport + triggerRect.width / 2;
 
+    const left = leftInViewport + triggerRect.width / 2;
     const spaceBelow = window.innerHeight - triggerRect.bottom - VIEWPORT_PADDING;
     const spaceAbove = triggerRect.top - VIEWPORT_PADDING;
     const shouldOpenUp = spaceBelow < 220 && spaceAbove > spaceBelow;
     const availableHeight = shouldOpenUp ? spaceAbove - 8 : spaceBelow - 8;
     const maxHeight = Math.max(120, Math.min(POPUP_MAX_HEIGHT, availableHeight));
-
     setIsPopupOpenUp(shouldOpenUp);
+
     setPopupStyle(
       shouldOpenUp
         ? {
@@ -154,6 +161,7 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
 
     if (safeSelectedUserIds.includes(userId)) {
       onChange(safeSelectedUserIds.filter((id) => id !== userId));
+
       return;
     }
 
@@ -169,11 +177,11 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
   };
 
   return (
-    <div className="assignees-selector" ref={rootRef}>
-      <div className="assignees-selector__head">
-        <h3 className="assignees-selector__title">{title}</h3>
+    <div className={assigneesSelectorStyles.root} ref={rootRef}>
+      <div className={assigneesSelectorStyles.head}>
+        <h3 className={assigneesSelectorStyles.title}>{title}</h3>
         <button
-          className="assignees-selector__clear"
+          className={assigneesSelectorStyles.clear}
           type="button"
           onClick={clearAll}
           disabled={disabled || safeSelectedUserIds.length === 0}
@@ -182,11 +190,11 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
         </button>
       </div>
 
-      <div className="assignees-selector__selected-list">
+      <div className={assigneesSelectorStyles.selectedList}>
         {selectedUsers.map((user) => (
           <button
             key={user.id}
-            className="assignees-selector__selected-item"
+            className={assigneesSelectorStyles.selectedItem}
             type="button"
             onClick={() => toggleUser(user.id)}
             disabled={disabled}
@@ -196,10 +204,10 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
           </button>
         ))}
 
-        {selectedUsers.length === 0 && <span className="assignees-selector__empty">Не выбрано</span>}
+        {selectedUsers.length === 0 && <span className={assigneesSelectorStyles.isEmpty}>Не выбрано</span>}
         <button
           ref={triggerRef}
-          className="assignees-selector__open"
+          className={assigneesSelectorStyles.isOpen}
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
           disabled={disabled}
@@ -211,39 +219,41 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
       {isOpen && (
         <div
           ref={popupRef}
-          className={`assignees-selector__popup ${isPopupOpenUp ? 'assignees-selector__popup--top' : ''}`}
+          className={[assigneesSelectorStyles.popup, isPopupOpenUp ? assigneesSelectorStyles.isTop : '']
+            .filter(Boolean)
+            .join(' ')}
           role="dialog"
           aria-label={`Выбор: ${title.toLowerCase()}`}
           style={popupStyle}
         >
           <input
-            className="assignees-selector__search"
+            className={assigneesSelectorStyles.search}
             type="text"
             placeholder="Поиск по имени или логину"
             value={search}
             onChange={(event) => setSearch(event.target.value.slice(0, 100))}
           />
 
-          <div className="assignees-selector__users">
+          <div className={assigneesSelectorStyles.users}>
             {visibleItems.map((user) => (
               <button
-                className="assignees-selector__user"
+                className={assigneesSelectorStyles.user}
                 key={user.id}
                 type="button"
                 onClick={() => toggleUser(user.id)}
               >
-                <span className="assignees-selector__avatar">
+                <span className={assigneesSelectorStyles.avatar}>
                   {user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}
                 </span>
-                <span className="assignees-selector__meta">
-                  <span className="assignees-selector__name">{user.fullName}</span>
-                  <span className="assignees-selector__login">@{user.login}</span>
+                <span className={assigneesSelectorStyles.meta}>
+                  <span className={assigneesSelectorStyles.name}>{user.fullName}</span>
+                  <span className={assigneesSelectorStyles.login}>@{user.login}</span>
                 </span>
               </button>
             ))}
 
-            {visibleItems.length === 0 && <p className="assignees-selector__not-found">Ничего не найдено</p>}
-            {hasMore && <div ref={sentinelRef} className="assignees-selector__sentinel" />}
+            {visibleItems.length === 0 && <p className={assigneesSelectorStyles.notFound}>Ничего не найдено</p>}
+            {hasMore && <div ref={sentinelRef} className={assigneesSelectorStyles.sentinel} />}
           </div>
         </div>
       )}

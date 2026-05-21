@@ -1,5 +1,4 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-
 export const getQueryError = (error) => ({
   status: error?.status || error?.response?.status || 'CUSTOM_ERROR',
   data: error?.response?.data || error?.message || error,
@@ -8,9 +7,13 @@ export const getQueryError = (error) => ({
 
 export const toQueryResult = async (request) => {
   try {
-    return { data: await request() };
+    return {
+      data: await request(),
+    };
   } catch (error) {
-    return { error: getQueryError(error) };
+    return {
+      error: getQueryError(error),
+    };
   }
 };
 

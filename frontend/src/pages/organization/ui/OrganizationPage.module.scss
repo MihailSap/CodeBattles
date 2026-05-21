@@ -1,0 +1,149 @@
+.logo {
+  margin-top: 0.9375rem;
+  width: 12.5rem;
+  height: 12.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--color-accent);
+  object-fit: cover;
+}
+
+.projectTasks {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.participantsSwitch {
+  width: 29.375rem;
+}
+
+.requestActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.requestButton {
+  padding: 0.03125rem 1.25rem;
+  border-radius: 7px;
+  border: 2px solid;
+  background: transparent;
+  color: var(--color-text-inverse);
+  cursor: pointer;
+}
+
+.requestButton svg {
+  width: 1.875rem;
+  height: 1.875rem;
+  display: block;
+}
+
+.requestButton {
+  &.isReject {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+}
+
+.requestButton {
+  &.isAccept {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+  }
+}
+
+.settingsLogoWrap {
+  width: 12.5rem;
+  height: 12.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--color-accent);
+  overflow: hidden;
+  position: relative;
+}
+
+.settingsLogo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settingsLogoUpload {
+  position: absolute;
+  right: 0.625rem;
+  top: 0.625rem;
+  border: none;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.3125rem;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settingsLogoUpload img {
+  width: 100%;
+  height: 100%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .requestButton {
+    &:hover {
+      background: var(--color-page-bg);
+    }
+  }
+
+  .requestButton.isAccept:hover {
+    color: var(--color-success);
+  }
+
+  .requestButton.isReject:hover {
+    color: var(--color-danger);
+  }
+
+  .settingsLogoUpload {
+    &:hover {
+      background-color: var(--color-accent-hover-bg);
+    }
+  }
+}
+
+@media (max-width: 46.875rem) {
+  .participantsSwitch {
+    width: 100%;
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .logo,
+  .settingsLogoWrap {
+    width: 10.625rem;
+    height: 10.625rem;
+  }
+
+  .projectTasks {
+    font-size: 0.875rem;
+  }
+
+  .requestButton {
+    padding: 0.03125rem 0.9375rem;
+  }
+
+  .requestButton svg {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+
+  .settingsLogoUpload {
+    width: 2.1875rem;
+    height: 2.1875rem;
+  }
+}
+
+@media (max-width: 21.875rem) {
+  .requestActions {
+    flex-direction: column;
+  }
+}

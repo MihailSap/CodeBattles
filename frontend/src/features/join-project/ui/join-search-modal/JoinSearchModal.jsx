@@ -3,7 +3,7 @@ import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import Spinner from '@/shared/ui/spinner';
-import './JoinSearchModal.css';
+import joinSearchModalStyles from './JoinSearchModal.module.scss';
 
 const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }) => {
   const [query, setQuery] = useState('');
@@ -12,7 +12,6 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess })
   const [pendingRequestIds, setPendingRequestIds] = useState([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
   useBodyScrollLock(true);
 
   useEffect(() => {
@@ -22,7 +21,9 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess })
       setIsLoading(true);
 
       try {
-        const result = await fetchItems({ query: debouncedQuery });
+        const result = await fetchItems({
+          query: debouncedQuery,
+        });
 
         if (!isMounted) {
           return;
@@ -57,7 +58,10 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess })
       return;
     }
 
-    const result = await fetchItems({ query: debouncedQuery });
+    const result = await fetchItems({
+      query: debouncedQuery,
+    });
+
     setItems((prev) => [...prev, ...result.data]);
     setHasMore(result.hasMore);
   };
@@ -75,46 +79,48 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess })
     <ModalShell
       isOpen
       onClose={onClose}
-      overlayClassName="join-search-modal__overlay"
-      dialogClassName="join-search-modal"
+      overlayClassName={joinSearchModalStyles.overlay}
+      dialogClassName={joinSearchModalStyles.root}
       ariaLabel={title}
       title={title}
-      headerClassName="join-search-modal__head"
-      titleClassName="join-search-modal__title"
-      closeClassName="join-search-modal__close"
+      headerClassName={joinSearchModalStyles.head}
+      titleClassName={joinSearchModalStyles.title}
+      closeClassName={joinSearchModalStyles.close}
       closeAriaLabel="Закрыть окно"
     >
-      <div className="join-search-modal__content">
+      <div className={joinSearchModalStyles.content}>
         <input
-          className="join-search-modal__search"
+          className={joinSearchModalStyles.search}
           type="search"
           placeholder="Поиск по названию и описанию"
           value={query}
           onChange={(event) => setQuery(event.target.value.slice(0, 120))}
         />
 
-        <ul className="join-search-modal__list" onScroll={handleScroll}>
+        <ul className={joinSearchModalStyles.list} onScroll={handleScroll}>
           {isLoading ? (
-            <li className="join-search-modal__loading">
+            <li className={joinSearchModalStyles.isLoading}>
               <Spinner />
             </li>
           ) : items.length === 0 ? (
-            <li className="join-search-modal__empty">Ничего не найдено</li>
+            <li className={joinSearchModalStyles.isEmpty}>Ничего не найдено</li>
           ) : (
             items.map((item, index) => (
               <li
                 key={item.id}
-                className={`join-search-modal__item ${index === items.length - 1 ? 'join-search-modal__item--last' : ''}`}
+                className={[joinSearchModalStyles.item, index === items.length - 1 ? joinSearchModalStyles.isLast : '']
+                  .filter(Boolean)
+                  .join(' ')}
               >
                 {mode === 'projects' ? (
-                  <div className="join-search-modal__item-row">
-                    <div className="join-search-modal__main">
-                      <p className="join-search-modal__name">{item.name}</p>
-                      <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
-                      <p className="join-search-modal__value">Открытых задач: {item.openTasksCount}</p>
+                  <div className={joinSearchModalStyles.itemRow}>
+                    <div className={joinSearchModalStyles.main}>
+                      <p className={joinSearchModalStyles.name}>{item.name}</p>
+                      <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount}</p>
+                      <p className={joinSearchModalStyles.value}>Открытых задач: {item.openTasksCount}</p>
                     </div>
                     <button
-                      className="join-search-modal__action"
+                      className={joinSearchModalStyles.action}
                       type="button"
                       onClick={async () => {
                         await onJoin(item.id);
@@ -125,20 +131,20 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess })
                     </button>
                   </div>
                 ) : (
-                  <div className="join-search-modal__item-row">
-                    <div className="join-search-modal__organization">
-                      <img className="join-search-modal__logo" src={item.logo} alt={`Логотип ${item.name}`} />
-                      <div className="join-search-modal__main">
-                        <p className="join-search-modal__name">{item.name}</p>
-                        <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
-                        <p className="join-search-modal__value">Проектов: {item.projectsCount}</p>
+                  <div className={joinSearchModalStyles.itemRow}>
+                    <div className={joinSearchModalStyles.organization}>
+                      <img className={joinSearchModalStyles.logo} src={item.logo} alt={`Логотип ${item.name}`} />
+                      <div className={joinSearchModalStyles.main}>
+                        <p className={joinSearchModalStyles.name}>{item.name}</p>
+                        <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount}</p>
+                        <p className={joinSearchModalStyles.value}>Проектов: {item.projectsCount}</p>
                       </div>
                     </div>
                     {item.hasPendingRequest || pendingRequestIds.includes(item.id) ? (
-                      <span className="join-search-modal__status">Запрос отправлен</span>
+                      <span className={joinSearchModalStyles.status}>Запрос отправлен</span>
                     ) : (
                       <button
-                        className="join-search-modal__action"
+                        className={joinSearchModalStyles.action}
                         type="button"
                         onClick={async () => {
                           await onRequestAccess(item.id);

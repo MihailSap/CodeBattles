@@ -7,7 +7,7 @@ import { useAuth } from '@/entities/session';
 import { AdminUsersTab } from '@/features/manage-users';
 import { AdminComplaintsTab, AdminEventsLogTab, AdminSystemSettingsTab } from '@/features/manage-admin';
 import { fetchCurrentUser, logoutUser } from '@/entities/session';
-import './AdminPage.css';
+import adminPageStyles from './AdminPage.module.scss';
 
 const TABS = [
   {
@@ -36,6 +36,7 @@ const AdminPage = () => {
   const requestedTab = searchParams.get('tab');
   const activeTab = TABS.some((tab) => tab.key === requestedTab) ? requestedTab : TABS[0].key;
   const currentUserId = user?.id ?? null;
+
   const moderator = useMemo(
     () => ({
       id: user?.id ?? null,
@@ -47,17 +48,26 @@ const AdminPage = () => {
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
-    navigate(ROUTES.login, { replace: true });
+
+    navigate(ROUTES.login, {
+      replace: true,
+    });
   };
 
   const handleSelfDemote = async () => {
     await dispatch(fetchCurrentUser());
-    navigate(ROUTES.dashboard, { replace: true });
+
+    navigate(ROUTES.dashboard, {
+      replace: true,
+    });
   };
 
   const handleSelfDelete = async () => {
     await dispatch(logoutUser());
-    navigate(ROUTES.login, { replace: true });
+
+    navigate(ROUTES.login, {
+      replace: true,
+    });
   };
 
   const handleTabChange = (tabKey) => {
@@ -65,23 +75,28 @@ const AdminPage = () => {
       (currentParams) => {
         const nextParams = new URLSearchParams(currentParams);
         nextParams.set('tab', tabKey);
+
         return nextParams;
       },
-      { replace: true }
+      {
+        replace: true,
+      }
     );
   };
 
   return (
-    <div className="admin-page">
-      <header className="admin-header">
-        <div className="admin-header__title-block">
-          <h1 className="admin-header__title">Админ-панель</h1>
-          <nav className="admin-tabs" aria-label="Вкладки админ-панели">
+    <div className={adminPageStyles.root}>
+      <header className={adminPageStyles.adminHeader}>
+        <div className={adminPageStyles.titleBlock}>
+          <h1 className={adminPageStyles.title}>Админ-панель</h1>
+          <nav className={adminPageStyles.adminTabs} aria-label="Вкладки админ-панели">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
-                className={`admin-tabs__button ${activeTab === tab.key ? 'admin-tabs__button--active' : ''}`}
+                className={[adminPageStyles.button, activeTab === tab.key ? adminPageStyles.isActive : '']
+                  .filter(Boolean)
+                  .join(' ')}
                 onClick={() => handleTabChange(tab.key)}
               >
                 {tab.label}
@@ -90,20 +105,20 @@ const AdminPage = () => {
           </nav>
         </div>
 
-        <div className="admin-header__actions">
+        <div className={adminPageStyles.actions}>
           <ThemeToggle />
-          <div className="admin-header__links-container">
-            <Link className="admin-header__link" to={ROUTES.dashboard}>
+          <div className={adminPageStyles.linksContainer}>
+            <Link className={adminPageStyles.link} to={ROUTES.dashboard}>
               На главную
             </Link>
-            <button className="admin-header__logout" type="button" onClick={handleLogout} disabled={isLoading}>
+            <button className={adminPageStyles.logout} type="button" onClick={handleLogout} disabled={isLoading}>
               Выйти
             </button>
           </div>
         </div>
       </header>
 
-      <main className="admin-content">
+      <main className={adminPageStyles.content}>
         {activeTab === 'users' && (
           <AdminUsersTab
             isActive={activeTab === 'users'}

@@ -11,8 +11,8 @@ import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, resetPasswordByToken } from '@/entities/session';
 import { resetPasswordFormSchema } from '@/entities/session';
-import '../../auth/ui/AuthPage.css';
-import './ResetPasswordPage.css';
+import authPageStyles from '../../auth/ui/AuthPage.module.scss';
+import resetPasswordPageStyles from './ResetPasswordPage.module.scss';
 
 const ResetPasswordPage = () => {
   const dispatch = useDispatch();
@@ -23,6 +23,7 @@ const ResetPasswordPage = () => {
   const isDark = theme === 'dark';
   const [resultMessage, setResultMessage] = useState('');
   const [resultType, setResultType] = useState('');
+
   const {
     register,
     handleSubmit,
@@ -46,7 +47,9 @@ const ResetPasswordPage = () => {
     dispatch(clearAuthMessages());
 
     if (!token) {
-      navigate(ROUTES.login, { replace: true });
+      navigate(ROUTES.login, {
+        replace: true,
+      });
     }
 
     return () => {
@@ -60,7 +63,9 @@ const ResetPasswordPage = () => {
     }
 
     const timeoutId = setTimeout(() => {
-      navigate(ROUTES.login, { replace: true });
+      navigate(ROUTES.login, {
+        replace: true,
+      });
     }, 2000);
 
     return () => {
@@ -94,6 +99,7 @@ const ResetPasswordPage = () => {
     if (resetPasswordByToken.fulfilled.match(result)) {
       setResultMessage('Пароль успешно изменён.');
       setResultType('success');
+
       return;
     }
 
@@ -105,41 +111,48 @@ const ResetPasswordPage = () => {
   const showConfirmPasswordError = getPasswordError('confirmPassword');
 
   return (
-    <div className="auth-page reset-password-page">
-      <div className="auth-page__bg" role="presentation" aria-hidden="true" />
+    <div className={authPageStyles.root}>
+      <div className={authPageStyles.bg} role="presentation" aria-hidden="true" />
 
-      <header className="auth-header">
-        <Link className="auth-header__logo-link" to={ROUTES.login}>
-          <img className="auth-header__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
+      <header className={authPageStyles.authHeader}>
+        <Link className={authPageStyles.logoLink} to={ROUTES.login}>
+          <img className={authPageStyles.logo} src={isDark ? logoDark : logoLight} alt="CodeBattles" />
         </Link>
-        <div className="auth-header__toggle">
+        <div className={authPageStyles.toggle}>
           <ThemeToggle />
         </div>
-        <div className="auth-header__spacer" />
+        <div className={authPageStyles.spacer} />
       </header>
 
-      <div className="auth-content">
-        <section className="auth-content__left" />
+      <div className={authPageStyles.authContent}>
+        <section className={authPageStyles.left} />
 
-        <section className="auth-content__right">
-          <div className="auth-form-wrap">
-            <div className="auth-form-card reset-password-card">
+        <section className={authPageStyles.right}>
+          <div className={authPageStyles.wrap}>
+            <div className={[authPageStyles.card, resetPasswordPageStyles.root].join(' ')}>
               {resultMessage ? (
                 <p
-                  className={`reset-password-card__result ${resultType === 'success' ? 'reset-password-card__result--success' : 'reset-password-card__result--error'}`}
+                  className={[
+                    resetPasswordPageStyles.result,
+                    resultType === 'success' ? resetPasswordPageStyles.isSuccess : resetPasswordPageStyles.isError,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   {resultMessage}
                 </p>
               ) : (
-                <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
-                  <div className="reset-password-card__top">
-                    <h1 className="reset-password-card__title">Восстановление пароля</h1>
+                <form className={authPageStyles.authForm} onSubmit={handleSubmit(onSubmit)}>
+                  <div className={resetPasswordPageStyles.top}>
+                    <h1 className={resetPasswordPageStyles.title}>Восстановление пароля</h1>
                   </div>
 
-                  <div className="auth-form-inputs reset-password-card__inputs">
-                    <div className="auth-input-group">
+                  <div className={[authPageStyles.inputs, resetPasswordPageStyles.inputs].join(' ')}>
+                    <div className={authPageStyles.group}>
                       <input
-                        className={`auth-input ${showPasswordError ? 'auth-input--error' : ''}`}
+                        className={[authPageStyles.authInput, showPasswordError ? authPageStyles.isError : '']
+                          .filter(Boolean)
+                          .join(' ')}
                         name="password"
                         type="password"
                         placeholder="Придумайте пароль"
@@ -147,12 +160,14 @@ const ResetPasswordPage = () => {
                         autoComplete="new-password"
                         {...registerPasswordField('password')}
                       />
-                      {showPasswordError && <p className="auth-input-error">{showPasswordError}</p>}
+                      {showPasswordError && <p className={authPageStyles.isError}>{showPasswordError}</p>}
                     </div>
 
-                    <div className="auth-input-group">
+                    <div className={authPageStyles.group}>
                       <input
-                        className={`auth-input ${showConfirmPasswordError ? 'auth-input--error' : ''}`}
+                        className={[authPageStyles.authInput, showConfirmPasswordError ? authPageStyles.isError : '']
+                          .filter(Boolean)
+                          .join(' ')}
                         name="confirmPassword"
                         type="password"
                         placeholder="Повторите пароль"
@@ -160,11 +175,11 @@ const ResetPasswordPage = () => {
                         autoComplete="new-password"
                         {...registerPasswordField('confirmPassword')}
                       />
-                      {showConfirmPasswordError && <p className="auth-input-error">{showConfirmPasswordError}</p>}
+                      {showConfirmPasswordError && <p className={authPageStyles.isError}>{showConfirmPasswordError}</p>}
                     </div>
                   </div>
 
-                  <button className="auth-submit" type="submit" disabled={isLoading || !isValid}>
+                  <button className={authPageStyles.submit} type="submit" disabled={isLoading || !isValid}>
                     {isLoading ? 'Отправка...' : 'Отправить'}
                   </button>
                 </form>

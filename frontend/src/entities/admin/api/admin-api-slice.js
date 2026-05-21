@@ -1,9 +1,20 @@
 import { baseApi, toQueryResult } from '@/shared/api';
 import { adminApi } from './admin-api';
 
-const adminComplaintsListTag = { type: 'AdminComplaint', id: 'LIST' };
-const adminEventsListTag = { type: 'AdminEvent', id: 'LIST' };
-const adminSettingsTag = { type: 'AdminSettings', id: 'CURRENT' };
+const adminComplaintsListTag = {
+  type: 'AdminComplaint',
+  id: 'LIST',
+};
+
+const adminEventsListTag = {
+  type: 'AdminEvent',
+  id: 'LIST',
+};
+
+const adminSettingsTag = {
+  type: 'AdminSettings',
+  id: 'CURRENT',
+};
 
 export const adminApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -33,7 +44,6 @@ export const adminApiSlice = baseApi.injectEndpoints({
     }),
   }),
 });
-
 export const {
   useGetAdminComplaintsQuery,
   useGetAdminEventsQuery,

@@ -4,7 +4,6 @@ import { tokenStorage } from '@/shared/lib';
 import { isNotificationExpired } from '../lib/notification-utils';
 import { NOTIFICATION_TYPE } from '../model/constants';
 import { MOCK_NOTIFICATIONS, MOCK_REALTIME_NOTIFICATIONS } from './mock-notifications';
-
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const mockListeners = new Set();
 const mockStore = new Map(MOCK_NOTIFICATIONS.map((notification) => [notification.id, clone(notification)]));
@@ -60,6 +59,7 @@ const upsertMockNotification = (incomingNotification) => {
     if (groupedNotification) {
       const threadReplyCount = (groupedNotification.threadReplyCount || 1) + (notification.threadReplyCount || 1);
       const taskName = groupedNotification.target?.taskName || notification.target?.taskName || 'задаче';
+
       const mergedNotification = {
         ...groupedNotification,
         createdAt: notification.createdAt,
@@ -73,11 +73,13 @@ const upsertMockNotification = (incomingNotification) => {
       };
 
       mockStore.set(groupedNotification.id, mergedNotification);
+
       return mergedNotification;
     }
   }
 
   mockStore.set(notification.id, notification);
+
   return notification;
 };
 
@@ -137,7 +139,10 @@ const subscribeBackendNotifications = (listener) => {
     try {
       listener(JSON.parse(event.data));
     } catch {
-      listener({ type: 'notification.unknown', raw: event.data });
+      listener({
+        type: 'notification.unknown',
+        raw: event.data,
+      });
     }
   });
 
@@ -153,32 +158,42 @@ export const notificationsApi = {
     }
 
     const response = await httpClient.get('/api/v1/notifications');
+
     return response.data || [];
   },
-
   async markAllRead() {
     if (isMockMode()) {
       mockStore.forEach((notification, id) => {
-        mockStore.set(id, { ...notification, isRead: true });
+        mockStore.set(id, {
+          ...notification,
+          isRead: true,
+        });
       });
 
-      return { updatedCount: mockStore.size };
+      return {
+        updatedCount: mockStore.size,
+      };
     }
 
     const response = await httpClient.patch('/api/v1/notifications/read-all');
+
     return response.data;
   },
-
   async deleteNotification(notificationId) {
     if (isMockMode()) {
       mockStore.delete(notificationId);
-      return { id: notificationId };
+
+      return {
+        id: notificationId,
+      };
     }
 
     await httpClient.delete(`/api/v1/notifications/${notificationId}`);
-    return { id: notificationId };
-  },
 
+    return {
+      id: notificationId,
+    };
+  },
   async completeNotification(payload) {
     if (isMockMode()) {
       const deletedIds = [];
@@ -190,13 +205,19 @@ export const notificationsApi = {
         }
       });
 
-      return { deletedIds };
+      return {
+        deletedIds,
+      };
     }
 
     const response = await httpClient.post('/api/v1/notifications/complete', payload);
-    return response.data || { deletedIds: [] };
-  },
 
+    return (
+      response.data || {
+        deletedIds: [],
+      }
+    );
+  },
   subscribe(listener) {
     if (isMockMode()) {
       return subscribeMockNotifications(listener);

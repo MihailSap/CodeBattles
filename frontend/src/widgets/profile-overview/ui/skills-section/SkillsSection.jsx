@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom';
 import { CheckIcon, CrossIcon, PencilIcon } from '@/shared/ui/icons';
-import './SkillsSection.css';
+import skillsSectionStyles from './SkillsSection.module.scss';
+import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
 
 const SkillsSection = ({
   canEditProfile,
@@ -19,13 +20,13 @@ const SkillsSection = ({
   skillsDraftByGroup,
 }) => {
   return (
-    <section className="profile-page__section profile-page__section--skills">
-      <div className="profile-page__section-head">
-        <div className="profile-page__section-title-wrap">
-          <h2 className="profile-page__section-title">Стек</h2>
+    <section className={[profilePageStyles.section, skillsSectionStyles.isSkills].join(' ')}>
+      <div className={profilePageStyles.sectionHead}>
+        <div className={profilePageStyles.sectionTitleWrap}>
+          <h2 className={profilePageStyles.sectionTitle}>Стек</h2>
           {canEditProfile && !isSkillsEditMode && (
             <button
-              className="profile-page__edit-button"
+              className={profilePageStyles.editButton}
               type="button"
               onClick={onSkillsEditStart}
               disabled={isActionBlocked}
@@ -37,18 +38,18 @@ const SkillsSection = ({
         </div>
       </div>
 
-      <div className="profile-page__section-body profile-page__skills-body">
+      <div className={[profilePageStyles.sectionBody, skillsSectionStyles.body].join(' ')}>
         {(isSkillsEditMode ? skillsDraftByGroup : skillsByGroup).map((group) => {
           const popupId = `profile-skills-popup-${group.key}`;
           const isPopupOpen = openedSkillsPopup === group.key;
 
           return (
-            <div className="profile-page__skill-group" key={group.key}>
-              <div className="profile-page__skill-group-head">
-                <h3 className="profile-page__skill-title">{group.title}</h3>
+            <div className={skillsSectionStyles.skillGroup} key={group.key}>
+              <div className={skillsSectionStyles.skillGroupHead}>
+                <h3 className={skillsSectionStyles.skillTitle}>{group.title}</h3>
                 {canEditProfile && isSkillsEditMode && (
                   <button
-                    className="profile-page__clear-button"
+                    className={skillsSectionStyles.clearButton}
                     type="button"
                     onClick={() => onClearGroup(group.key)}
                     disabled={isActionBlocked}
@@ -58,13 +59,18 @@ const SkillsSection = ({
                 )}
               </div>
 
-              <div className="profile-page__skills-list">
+              <div className={skillsSectionStyles.list}>
                 {group.selected.length === 0 && !(canEditProfile && isSkillsEditMode) ? (
-                  <span className="profile-page__empty">Не указано</span>
+                  <span className={skillsSectionStyles.isEmpty}>Не указано</span>
                 ) : (
                   group.selected.map((skillName) => (
                     <button
-                      className={`profile-page__skill-tag ${canEditProfile && isSkillsEditMode ? 'profile-page__skill-tag--editable' : ''}`}
+                      className={[
+                        skillsSectionStyles.skillTag,
+                        canEditProfile && isSkillsEditMode ? skillsSectionStyles.isEditable : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
                       type="button"
                       key={skillName}
                       onClick={() =>
@@ -78,9 +84,9 @@ const SkillsSection = ({
                 )}
 
                 {canEditProfile && isSkillsEditMode && (
-                  <div className="profile-page__skills-popup-wrap">
+                  <div className={skillsSectionStyles.popupWrap}>
                     <button
-                      className="profile-page__add-skill-button"
+                      className={skillsSectionStyles.addSkillButton}
                       type="button"
                       data-skills-add="true"
                       onClick={(event) => onOpenSkillsPopup(group.key, event)}
@@ -98,7 +104,7 @@ const SkillsSection = ({
                       createPortal(
                         <div
                           id={popupId}
-                          className="profile-page__skills-popup profile-page__skills-popup--portal"
+                          className={[skillsSectionStyles.popup, skillsSectionStyles.isPortal].join(' ')}
                           data-skills-popup="true"
                           role="dialog"
                           aria-label={`Выбор навыков: ${group.title}`}
@@ -113,7 +119,7 @@ const SkillsSection = ({
                             const isChecked = group.selected.includes(skillName);
 
                             return (
-                              <label key={skillName} className="profile-page__skills-option">
+                              <label key={skillName} className={skillsSectionStyles.option}>
                                 <input
                                   type="checkbox"
                                   checked={isChecked}
@@ -136,9 +142,9 @@ const SkillsSection = ({
       </div>
 
       {canEditProfile && isSkillsEditMode && (
-        <div className="profile-page__actions">
+        <div className={profilePageStyles.actions}>
           <button
-            className="profile-page__action profile-page__action--save"
+            className={[profilePageStyles.action, profilePageStyles.isSave].join(' ')}
             type="button"
             onClick={onSkillsSave}
             disabled={isActionBlocked}
@@ -147,7 +153,7 @@ const SkillsSection = ({
             <CheckIcon />
           </button>
           <button
-            className="profile-page__action profile-page__action--cancel"
+            className={[profilePageStyles.action, profilePageStyles.isCancel].join(' ')}
             type="button"
             onClick={onSkillsEditCancel}
             disabled={isActionBlocked}

@@ -16,12 +16,35 @@ import poraByVOtpuskImage from '@/shared/assets/achievement-pora-by-v-otpusk-ico
 import skolkoSkolkoImage from '@/shared/assets/achievement-skolko-skolko-icon.svg';
 import nelovkoVyshloImage from '@/shared/assets/achievement-nelovko-vyshlo-icon.svg';
 import zvukSvobodyImage from '@/shared/assets/achievement-zvuk-svobody-icon.svg';
-
 export const ACHIEVEMENTS = [
-  { id: 1, image: nachaloNachalImage, name: 'Начало начал', description: 'Сдать первую задачу', visible: true },
-  { id: 2, image: pervayaKrovImage, name: 'Первая кровь', description: 'Отправить первое ревью', visible: true },
-  { id: 3, image: daTySeniorImage, name: 'Да ты Сеньор', description: 'Отправить на ревью 50 задач', visible: true },
-  { id: 4, image: legendaRevyuImage, name: 'Легенда ревью', description: 'Завершить 100 ревью', visible: true },
+  {
+    id: 1,
+    image: nachaloNachalImage,
+    name: 'Начало начал',
+    description: 'Сдать первую задачу',
+    visible: true,
+  },
+  {
+    id: 2,
+    image: pervayaKrovImage,
+    name: 'Первая кровь',
+    description: 'Отправить первое ревью',
+    visible: true,
+  },
+  {
+    id: 3,
+    image: daTySeniorImage,
+    name: 'Да ты Сеньор',
+    description: 'Отправить на ревью 50 задач',
+    visible: true,
+  },
+  {
+    id: 4,
+    image: legendaRevyuImage,
+    name: 'Легенда ревью',
+    description: 'Завершить 100 ревью',
+    visible: true,
+  },
   {
     id: 5,
     image: vlyublyonVIIImage,
@@ -78,10 +101,34 @@ export const ACHIEVEMENTS = [
     description: 'Отправить ревью без inline-комментария',
     visible: false,
   },
-  { id: 13, image: deloHrabryhImage, name: 'Дело храбрых', description: 'Отправить жалобу на ревью', visible: false },
-  { id: 14, image: opytnyyYuzerImage, name: 'Опытный юзер', description: 'Набрать 500 баллов', visible: true },
-  { id: 15, image: poraByVOtpuskImage, name: 'Пора бы в отпуск…', description: 'Набрать 5000 баллов', visible: true },
-  { id: 16, image: skolkoSkolkoImage, name: 'Сколько? Сколько?', description: 'Набрать 10000 баллов', visible: true },
+  {
+    id: 13,
+    image: deloHrabryhImage,
+    name: 'Дело храбрых',
+    description: 'Отправить жалобу на ревью',
+    visible: false,
+  },
+  {
+    id: 14,
+    image: opytnyyYuzerImage,
+    name: 'Опытный юзер',
+    description: 'Набрать 500 баллов',
+    visible: true,
+  },
+  {
+    id: 15,
+    image: poraByVOtpuskImage,
+    name: 'Пора бы в отпуск…',
+    description: 'Набрать 5000 баллов',
+    visible: true,
+  },
+  {
+    id: 16,
+    image: skolkoSkolkoImage,
+    name: 'Сколько? Сколько?',
+    description: 'Набрать 10000 баллов',
+    visible: true,
+  },
   {
     id: 17,
     image: nelovkoVyshloImage,
@@ -89,7 +136,12 @@ export const ACHIEVEMENTS = [
     description: 'Получить отрицательное количество баллов',
     visible: false,
   },
-  { id: 18, image: zvukSvobodyImage, name: 'Звук свободы', description: 'Не сдать задачу вовремя', visible: false },
+  {
+    id: 18,
+    image: zvukSvobodyImage,
+    name: 'Звук свободы',
+    description: 'Не сдать задачу вовремя',
+    visible: false,
+  },
 ];
-
 export const MOCK_RECEIVED_ACHIEVEMENT_IDS = [1, 2, 5, 7, 8];

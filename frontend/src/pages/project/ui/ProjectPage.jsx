@@ -41,8 +41,7 @@ import {
   sortTasks,
   truncateText,
 } from '@/entities/project';
-import './ProjectPage.css';
-
+import projectPageStyles from './ProjectPage.module.scss';
 const InviteLinkModal = lazyNamed(() => import('@/features/generate-invite-link'), 'InviteLinkModal');
 const ProjectSkillsSelector = lazyNamed(() => import('@/entities/stack'), 'ProjectSkillsSelector');
 
@@ -61,6 +60,19 @@ const getProjectSettingsDefaults = (project) => ({
   aiReviewEnabled: Boolean(project?.aiReviewEnabled),
 });
 
+const TASK_STATUS_CLASS = {
+  [TASK_STATUS.IN_PROGRESS]: projectPageStyles.isInProgress,
+  [TASK_STATUS.IN_REVIEW]: projectPageStyles.isInReview,
+  [TASK_STATUS.REWORK]: projectPageStyles.isRework,
+  [TASK_STATUS.DONE]: projectPageStyles.isDone,
+};
+
+const DEADLINE_TONE_CLASS = {
+  success: projectPageStyles.isSuccess,
+  warning: projectPageStyles.isWarning,
+  error: projectPageStyles.isError,
+};
+
 const ProjectPage = () => {
   const { userId } = useAuth();
   const { projectId } = useParams();
@@ -75,6 +87,7 @@ const ProjectPage = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
   const {
     control: settingsControl,
     register: registerSettings,
@@ -91,18 +104,25 @@ const ProjectPage = () => {
     defaultValues: getProjectSettingsDefaults(),
     mode: 'onChange',
   });
-  const settingsDraft = useWatch({ control: settingsControl });
+
+  const settingsDraft = useWatch({
+    control: settingsControl,
+  });
+
   const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
+
   const {
     data: project,
     error: projectError,
     isLoading,
     refetch: refetchProject,
-  } = useGetProjectByIdQuery(projectId, { refetchOnMountOrArgChange: 30 });
+  } = useGetProjectByIdQuery(projectId, {
+    refetchOnMountOrArgChange: 30,
+  });
+
   const [updateProject, { isLoading: isSettingsSubmitting }] = useUpdateProjectMutation();
   const [leaveProject, { isLoading: isLeaveSubmitting }] = useLeaveProjectMutation();
   const [deleteProject, { isLoading: isDeleteSubmitting }] = useDeleteProjectMutation();
-
   const isOwner = project?.viewerRole === PROJECT_MEMBER_ROLE.OWNER;
 
   useEffect(() => {
@@ -125,6 +145,7 @@ const ProjectPage = () => {
           snackbarMessage: 'Необходимо присоединиться к проекту для просмотра',
         },
       });
+
       return;
     }
 
@@ -135,16 +156,23 @@ const ProjectPage = () => {
           snackbarMessage: 'Необходимо присоединиться к организации для просмотра проекта',
         },
       });
+
       return;
     }
 
-    navigate(ROUTES.projects, { replace: true });
+    navigate(ROUTES.projects, {
+      replace: true,
+    });
   }, [navigate, projectError]);
 
   useEffect(() => {
     if (location.state?.snackbarMessage) {
       showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
-      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+
+      navigate(`${location.pathname}${location.search}`, {
+        replace: true,
+        state: null,
+      });
     }
   }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
@@ -179,7 +207,6 @@ const ProjectPage = () => {
   }, [allTasks, isOwner, project, debouncedTaskSearch, tasksMode, userId]);
 
   const participants = useMemo(() => sortParticipants(project?.participants || []), [project?.participants]);
-
   const openTasksCount = useMemo(() => allTasks.filter((task) => task.status !== TASK_STATUS.DONE).length, [allTasks]);
 
   const currentUserTaskCount = useMemo(
@@ -192,18 +219,28 @@ const ProjectPage = () => {
 
   const availableTabs = useMemo(() => {
     const baseTabs = [
-      { key: 'tasks', label: tabs.tasks },
-      { key: 'participants', label: tabs.participants },
+      {
+        key: 'tasks',
+        label: tabs.tasks,
+      },
+      {
+        key: 'participants',
+        label: tabs.participants,
+      },
     ];
 
     if (isOwner) {
-      baseTabs.push({ key: 'settings', label: tabs.settings });
+      baseTabs.push({
+        key: 'settings',
+        label: tabs.settings,
+      });
     }
 
     return baseTabs;
   }, [isOwner]);
 
   const requestedTab = searchParams.get('tab');
+
   const activeTab = availableTabs.some((tab) => tab.key === requestedTab)
     ? requestedTab
     : availableTabs[0]?.key || 'tasks';
@@ -213,9 +250,12 @@ const ProjectPage = () => {
       (currentParams) => {
         const nextParams = new URLSearchParams(currentParams);
         nextParams.set('tab', tabKey);
+
         return nextParams;
       },
-      { replace: true }
+      {
+        replace: true,
+      }
     );
   };
 
@@ -252,6 +292,7 @@ const ProjectPage = () => {
       return await projectsApi.generateProjectInvite(project.id, payload);
     } catch {
       showSnackbar('Не удалось сформировать ссылку. Попробуйте позже', 'error');
+
       return null;
     } finally {
       setInviteSubmitting(false);
@@ -269,24 +310,34 @@ const ProjectPage = () => {
       if (settingsDraft.name.trim() !== project.name) {
         payload.name = settingsDraft.name.trim();
       }
+
       if (settingsDraft.repositoryUrl.trim() !== project.repositoryUrl) {
         payload.repositoryUrl = settingsDraft.repositoryUrl.trim();
       }
+
       if (settingsDraft.description !== project.description) {
         payload.description = settingsDraft.description;
       }
+
       if (JSON.stringify(settingsDraft.stack) !== JSON.stringify(project.stack)) {
         payload.stack = settingsDraft.stack;
       }
+
       if (settingsDraft.privacy !== project.privacy) {
         payload.privacy = settingsDraft.privacy;
       }
+
       if (settingsDraft.aiReviewEnabled !== project.aiReviewEnabled) {
         payload.aiReviewEnabled = settingsDraft.aiReviewEnabled;
       }
 
-      await updateProject({ projectId: project.id, payload }).unwrap();
+      await updateProject({
+        projectId: project.id,
+        payload,
+      }).unwrap();
+
       const fullProject = await refetchProject().unwrap();
+
       resetSettings({
         name: fullProject.name,
         repositoryUrl: fullProject.repositoryUrl,
@@ -295,6 +346,7 @@ const ProjectPage = () => {
         privacy: fullProject.privacy,
         aiReviewEnabled: Boolean(fullProject.aiReviewEnabled),
       });
+
       showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
       if (error?.code === 'PROJECT_NAME_CONFLICT') {
@@ -306,6 +358,7 @@ const ProjectPage = () => {
   };
 
   const handleSaveSettings = handleSettingsSubmit(saveSettings);
+
   const handleCancelSettings = () => {
     resetSettings(getProjectSettingsDefaults(project));
   };
@@ -313,6 +366,7 @@ const ProjectPage = () => {
   const handleLeaveProject = async () => {
     try {
       await leaveProject(project.id).unwrap();
+
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -323,12 +377,14 @@ const ProjectPage = () => {
     } catch {
       showSnackbar('Не удалось выйти из проекта', 'error');
     }
+
     setLeaveModalOpen(false);
   };
 
   const handleDeleteProject = async () => {
     try {
       await deleteProject(project.id).unwrap();
+
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -339,13 +395,14 @@ const ProjectPage = () => {
     } catch {
       showSnackbar('Не удалось удалить проект', 'error');
     }
+
     setDeleteModalOpen(false);
   };
 
   if (isLoading) {
     return (
-      <div className="project-page">
-        <div className="project-page__loader">
+      <div className={projectPageStyles.root}>
+        <div className={projectPageStyles.loader}>
           <Spinner />
         </div>
       </div>
@@ -361,30 +418,30 @@ const ProjectPage = () => {
   const shownDescription = isLongDescription && !showFullDescription ? `${description.slice(0, 1000)}...` : description;
 
   return (
-    <div className="project-page">
+    <div className={projectPageStyles.root}>
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
-      <main className="project-page__content">
-        <section className="project-page__info section-card">
-          <div className="project-page__title-row">
-            <div className="project-page__title-wrap">
-              <h1 className="project-page__title">{project.name}</h1>
+      <main className={projectPageStyles.content}>
+        <section className={[projectPageStyles.info, projectPageStyles.sectionCard].join(' ')}>
+          <div className={projectPageStyles.titleRow}>
+            <div className={projectPageStyles.titleWrap}>
+              <h1 className={projectPageStyles.title}>{project.name}</h1>
               {project.privacy === PROJECT_PRIVACY.PRIVATE && (
-                <img src={privateIcon} alt="Приватный проект" className="project-page__private-icon" />
+                <img src={privateIcon} alt="Приватный проект" className={projectPageStyles.privateIcon} />
               )}
             </div>
-            <span className="project-page__role-tag">{PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}</span>
+            <span className={projectPageStyles.roleTag}>{PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}</span>
           </div>
 
-          {project.organizationName && <p className="project-page__organization">{project.organizationName}</p>}
+          {project.organizationName && <p className={projectPageStyles.organization}>{project.organizationName}</p>}
 
           {description && (
-            <p className="project-page__description">
-              <span className="project-page__description-label">Описание проекта: </span>
+            <p className={projectPageStyles.description}>
+              <span className={projectPageStyles.descriptionLabel}>Описание проекта: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
                 <button
-                  className="project-page__description-toggle"
+                  className={projectPageStyles.descriptionToggle}
                   type="button"
                   onClick={() => setShowFullDescription((prev) => !prev)}
                 >
@@ -395,31 +452,31 @@ const ProjectPage = () => {
           )}
 
           {project.repositoryUrl && (
-            <a className="project-page__repository" href={project.repositoryUrl} target="_blank" rel="noreferrer">
+            <a className={projectPageStyles.repository} href={project.repositoryUrl} target="_blank" rel="noreferrer">
               {truncateText(project.repositoryUrl, 100)}
             </a>
           )}
 
           {project.stack.length > 0 && (
-            <div className="project-page__stack-list">
+            <div className={projectPageStyles.stackList}>
               {project.stack.map((skill) => (
-                <span key={skill} className="project-page__stack-tag">
+                <span key={skill} className={projectPageStyles.stackTag}>
                   {skill}
                 </span>
               ))}
             </div>
           )}
 
-          <div className="project-page__metrics">
-            <div className="project-page__metric-item">
+          <div className={projectPageStyles.metrics}>
+            <div className={projectPageStyles.metricItem}>
               <img src={participantsCountIcon} alt="Участники" />
               <span>Участников: {project.participants.length}</span>
             </div>
-            <div className="project-page__metric-item">
+            <div className={projectPageStyles.metricItem}>
               <img src={tasksCountIcon} alt="Открытые задачи" />
               <span>Открытых задач: {openTasksCount}</span>
             </div>
-            <div className="project-page__metric-item">
+            <div className={projectPageStyles.metricItem}>
               <img src={lastActivityIcon} alt="Последняя активность" />
               <span>Последняя активность: {formatLastActivity(project.lastActivityAt)}</span>
             </div>
@@ -430,36 +487,42 @@ const ProjectPage = () => {
 
         {activeTab === 'tasks' && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
                 {isOwner ? (
-                  <div className="project-page__mode-switch">
+                  <div className={projectPageStyles.modeSwitch}>
                     <span
-                      className={`project-page__mode-thumb ${tasksMode === 'mine' ? 'project-page__mode-thumb--mine' : ''}`}
+                      className={[projectPageStyles.modeThumb, tasksMode === 'mine' ? projectPageStyles.isMine : '']
+                        .filter(Boolean)
+                        .join(' ')}
                     />
                     <button
                       type="button"
-                      className={`project-page__mode-button ${tasksMode === 'all' ? 'project-page__mode-button--active' : ''}`}
+                      className={[projectPageStyles.modeButton, tasksMode === 'all' ? projectPageStyles.isActive : '']
+                        .filter(Boolean)
+                        .join(' ')}
                       onClick={() => setTasksMode('all')}
                     >
                       Все задачи ({openTasksCount})
                     </button>
                     <button
                       type="button"
-                      className={`project-page__mode-button ${tasksMode === 'mine' ? 'project-page__mode-button--active' : ''}`}
+                      className={[projectPageStyles.modeButton, tasksMode === 'mine' ? projectPageStyles.isActive : '']
+                        .filter(Boolean)
+                        .join(' ')}
                       onClick={() => setTasksMode('mine')}
                     >
                       Мои задачи ({currentUserTaskCount})
                     </button>
                   </div>
                 ) : (
-                  <span className="project-page__my-tasks">Задачи ({currentUserTaskCount})</span>
+                  <span className={projectPageStyles.myTasks}>Задачи ({currentUserTaskCount})</span>
                 )}
               </div>
 
-              <div className="project-page__controls-right">
+              <div className={projectPageStyles.controlsRight}>
                 {project.canSeeTasks && (
-                  <label className="project-page__search-field">
+                  <label className={projectPageStyles.searchField}>
                     <SearchIcon />
                     <input
                       type="search"
@@ -472,7 +535,7 @@ const ProjectPage = () => {
 
                 {isOwner && (
                   <button
-                    className="project-page__action-button project-page__action-button--success"
+                    className={[projectPageStyles.actionButton, projectPageStyles.isSuccess].join(' ')}
                     type="button"
                     onClick={() => navigate(`${ROUTES.projects}/${project.id}/tasks/create`)}
                   >
@@ -483,12 +546,12 @@ const ProjectPage = () => {
             </div>
 
             {!project.canSeeTasks ? (
-              <section className="section-card project-page__empty-state">
+              <section className={[projectPageStyles.sectionCard, projectPageStyles.emptyState].join(' ')}>
                 Для просмотра задач необходимо присоединиться к проекту
               </section>
             ) : (
-              <section className="section-card project-page__table-section">
-                <div className="project-page__table-row project-page__table-row--head">
+              <section className={[projectPageStyles.sectionCard, projectPageStyles.tableSection].join(' ')}>
+                <div className={[projectPageStyles.tableRow, projectPageStyles.isHead].join(' ')}>
                   <span>Название</span>
                   <span>Статус</span>
                   <span>Исполнители</span>
@@ -498,37 +561,46 @@ const ProjectPage = () => {
                 {visibleTasksSource.map((task) => (
                   <div
                     key={task.id}
-                    className="project-page__table-row"
+                    className={projectPageStyles.tableRow}
                     onClick={() =>
                       navigate(ROUTES.projectTaskById.replace(':projectId', project.id).replace(':taskId', task.id))
                     }
                     role="presentation"
                   >
-                    <span className="project-page__task-name" title={task.name}>
+                    <span className={projectPageStyles.taskName} title={task.name}>
                       {truncateText(task.name, 50)}
                     </span>
                     <span
-                      className={`project-page__task-status project-page__task-status--${task.status.toLowerCase()}`}
+                      className={[projectPageStyles.taskStatus, TASK_STATUS_CLASS[task.status]]
+                        .filter(Boolean)
+                        .join(' ')}
                     >
                       {TASK_STATUS_LABELS[task.status]}
                     </span>
-                    <span className="project-page__assignees">
+                    <span className={projectPageStyles.assignees}>
                       {task.assignees.slice(0, 6).map((assignee) => (
-                        <span key={assignee.id} className="project-page__assignee-avatar" title={assignee.fullName}>
+                        <span key={assignee.id} className={projectPageStyles.assigneeAvatar} title={assignee.fullName}>
                           {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
                         </span>
                       ))}
                       {task.assignees.length > 6 && (
-                        <span className="project-page__assignee-more">+{task.assignees.length - 6}</span>
+                        <span className={projectPageStyles.assigneeMore}>+{task.assignees.length - 6}</span>
                       )}
                     </span>
-                    <span className={`project-page__deadline ${getDeadlineToneClass(task.deadline, task.status)}`}>
+                    <span
+                      className={[
+                        projectPageStyles.deadline,
+                        DEADLINE_TONE_CLASS[getDeadlineToneClass(task.deadline, task.status)],
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
                       {formatDeadline(task.deadline)}
                     </span>
                   </div>
                 ))}
 
-                {visibleTasksSource.length === 0 && <p className="project-page__list-empty">Задачи не найдены</p>}
+                {visibleTasksSource.length === 0 && <p className={projectPageStyles.listEmpty}>Задачи не найдены</p>}
               </section>
             )}
           </>
@@ -536,15 +608,15 @@ const ProjectPage = () => {
 
         {activeTab === 'participants' && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Участники ({project.participants.length})</span>
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
+                <span className={projectPageStyles.participantsCount}>Участники ({project.participants.length})</span>
               </div>
 
-              <div className="project-page__controls-right">
+              <div className={projectPageStyles.controlsRight}>
                 {isOwner ? (
                   <button
-                    className="project-page__action-button project-page__action-button--primary"
+                    className={[projectPageStyles.actionButton, projectPageStyles.isPrimary].join(' ')}
                     type="button"
                     onClick={() => setInviteModalOpen(true)}
                   >
@@ -553,7 +625,7 @@ const ProjectPage = () => {
                 ) : (
                   project.canSeeTasks && (
                     <button
-                      className="project-page__action-button project-page__action-button--danger"
+                      className={[projectPageStyles.actionButton, projectPageStyles.isDanger].join(' ')}
                       type="button"
                       onClick={() => setLeaveModalOpen(true)}
                     >
@@ -564,27 +636,29 @@ const ProjectPage = () => {
               </div>
             </div>
 
-            <section className="section-card project-page__participants-list">
+            <section className={[projectPageStyles.sectionCard, projectPageStyles.participantsList].join(' ')}>
               {participants.map((participant) => (
                 <Link
                   key={participant.id}
-                  className="project-page__participant-row"
+                  className={projectPageStyles.participantRow}
                   to={`${ROUTES.profile}/${participant.id}`}
                 >
-                  <div className="project-page__participant-main">
-                    <span className="project-page__participant-avatar">
+                  <div className={projectPageStyles.participantMain}>
+                    <span className={projectPageStyles.participantAvatar}>
                       {participant.avatar ? (
                         <img src={participant.avatar} alt={participant.fullName} />
                       ) : (
                         <AvatarIcon />
                       )}
                     </span>
-                    <span className="project-page__participant-meta">
-                      <span className="project-page__participant-name">{participant.fullName}</span>
-                      <span className="project-page__participant-login">@{participant.login}</span>
+                    <span className={projectPageStyles.participantMeta}>
+                      <span className={projectPageStyles.participantName}>{participant.fullName}</span>
+                      <span className={projectPageStyles.participantLogin}>@{participant.login}</span>
                     </span>
                   </div>
-                  <span className="project-page__participant-role">{PROJECT_MEMBER_ROLE_LABELS[participant.role]}</span>
+                  <span className={projectPageStyles.participantRole}>
+                    {PROJECT_MEMBER_ROLE_LABELS[participant.role]}
+                  </span>
                 </Link>
               ))}
             </section>
@@ -593,14 +667,14 @@ const ProjectPage = () => {
 
         {activeTab === 'settings' && isOwner && settingsDraft && (
           <>
-            <div className="project-page__controls">
-              <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Настройки</span>
+            <div className={projectPageStyles.controls}>
+              <div className={projectPageStyles.controlsLeft}>
+                <span className={projectPageStyles.participantsCount}>Настройки</span>
               </div>
 
-              <div className="project-page__controls-right">
+              <div className={projectPageStyles.controlsRight}>
                 <button
-                  className="project-page__action-button project-page__action-button--danger"
+                  className={[projectPageStyles.actionButton, projectPageStyles.isDanger].join(' ')}
                   type="button"
                   onClick={() => setDeleteModalOpen(true)}
                 >
@@ -609,37 +683,52 @@ const ProjectPage = () => {
               </div>
             </div>
 
-            <form className="section-card project-page__settings" onSubmit={handleSaveSettings}>
-              <div className="project-page__settings-field">
+            <form
+              className={[projectPageStyles.sectionCard, projectPageStyles.settings].join(' ')}
+              onSubmit={handleSaveSettings}
+            >
+              <div className={projectPageStyles.settingsField}>
                 <label>Название</label>
                 <input
-                  className={`project-page__settings-input ${settingsNameError ? 'project-page__settings-input--error' : ''}`}
+                  className={[
+                    projectPageStyles.settingsInput,
+                    settingsNameError ? projectPageStyles.settingsInputError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   maxLength={100}
                   {...registerSettings('name')}
                 />
-                {settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
+                {settingsNameError && <p className={projectPageStyles.settingsError}>{settingsNameError}</p>}
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <label>Ссылка на репозиторий</label>
                 <input
-                  className={`project-page__settings-input ${settingsRepositoryError ? 'project-page__settings-input--error' : ''}`}
+                  className={[
+                    projectPageStyles.settingsInput,
+                    settingsRepositoryError ? projectPageStyles.settingsInputError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   maxLength={500}
                   {...registerSettings('repositoryUrl')}
                 />
-                {settingsRepositoryError && <p className="project-page__settings-error">{settingsRepositoryError}</p>}
+                {settingsRepositoryError && (
+                  <p className={projectPageStyles.settingsError}>{settingsRepositoryError}</p>
+                )}
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <label>Описание</label>
                 <textarea
-                  className="project-page__settings-input project-page__settings-textarea"
+                  className={[projectPageStyles.settingsInput, projectPageStyles.settingsTextarea].join(' ')}
                   maxLength={3000}
                   {...registerSettings('description')}
                 />
               </div>
 
-              <div className="project-page__settings-field">
+              <div className={projectPageStyles.settingsField}>
                 <Suspense fallback={null}>
                   <Controller
                     control={settingsControl}
@@ -647,7 +736,7 @@ const ProjectPage = () => {
                     render={({ field }) => (
                       <ProjectSkillsSelector
                         title="Технологический стек:"
-                        titleClassName="project-page__settings-title"
+                        titleClassName={projectPageStyles.settingsTitle}
                         value={field.value}
                         onChange={field.onChange}
                         forceOpenUp
@@ -657,11 +746,11 @@ const ProjectPage = () => {
                 </Suspense>
               </div>
 
-              <div className="project-page__settings-field">
-                <h3 className="project-page__settings-title">Приватность</h3>
-                <div className="project-page__privacy-row">
+              <div className={projectPageStyles.settingsField}>
+                <h3 className={projectPageStyles.settingsTitle}>Приватность</h3>
+                <div className={projectPageStyles.privacyRow}>
                   {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
-                    <label key={privacyValue} className="project-page__privacy-item">
+                    <label key={privacyValue} className={projectPageStyles.privacyItem}>
                       <input type="radio" value={privacyValue} {...registerSettings('privacy')} />
                       <span>{PROJECT_PRIVACY_LABELS[privacyValue]}</span>
                     </label>
@@ -669,17 +758,17 @@ const ProjectPage = () => {
                 </div>
               </div>
 
-              <div className="project-page__settings-field">
-                <label className="project-page__ai-check">
+              <div className={projectPageStyles.settingsField}>
+                <label className={projectPageStyles.aiCheck}>
                   <input type="checkbox" {...registerSettings('aiReviewEnabled')} />
                   <span>Включить AI-ревью</span>
                 </label>
               </div>
 
               {hasSettingsChanges && (
-                <div className="project-page__settings-actions">
+                <div className={projectPageStyles.settingsActions}>
                   <button
-                    className="project-page__settings-action project-page__settings-action--save"
+                    className={[projectPageStyles.settingsAction, projectPageStyles.isSave].join(' ')}
                     type="submit"
                     disabled={!isSettingsValid || isSettingsSubmitting}
                     aria-label="Сохранить изменения"
@@ -687,7 +776,7 @@ const ProjectPage = () => {
                     <CheckIcon />
                   </button>
                   <button
-                    className="project-page__settings-action project-page__settings-action--cancel"
+                    className={[projectPageStyles.settingsAction, projectPageStyles.isCancel].join(' ')}
                     type="button"
                     onClick={handleCancelSettings}
                     disabled={isSettingsSubmitting}
