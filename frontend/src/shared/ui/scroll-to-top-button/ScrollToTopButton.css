@@ -12,7 +12,7 @@
     padding: 12px;
     cursor: pointer;
     z-index: var(--z-fixed-action);
-    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    --transition-extra: transform var(--transition-fast);
 }
 
 .scroll-to-top-button svg {

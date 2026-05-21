@@ -38,7 +38,7 @@
   align-items: center;
   gap: 5px;
   background: var(--color-surface);
-  transition: border-color var(--transition-fast);
+
 }
 
 .leaderboard-controls__search:focus-within {
@@ -79,7 +79,7 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 .leaderboard-controls__my-rating:active {

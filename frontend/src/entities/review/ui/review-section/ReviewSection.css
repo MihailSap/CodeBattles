@@ -14,7 +14,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .review-section__header--collapsed {
@@ -25,7 +25,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  transition: transform var(--transition-fast);
+  --transition-extra: transform var(--transition-fast);
 }
 
 .review-section__arrow svg {
@@ -60,7 +60,7 @@
 .review-section__body {
   max-height: 0;
   overflow: hidden;
-  transition: max-height var(--duration-medium) ease;
+  --transition-extra: max-height var(--duration-medium) ease;
 }
 
 .review-section__content {

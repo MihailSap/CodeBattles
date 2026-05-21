@@ -15,7 +15,8 @@
   padding: 5px;
   cursor: pointer;
   border-radius: 7px;
-  transition: var(--transition-fast);
+  --color-transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
   color: var(--color-accent);
 }
 

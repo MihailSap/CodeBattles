@@ -44,7 +44,7 @@
   background: transparent;
   color: var(--color-danger);
   cursor: pointer;
-  transition: color var(--transition-fast);
+
 }
 
 .join-search-modal__close svg {
@@ -72,7 +72,7 @@
   font-size: 18px;
   font-weight: 400;
   color: var(--color-text-primary);
-  transition: border-color var(--transition-fast);
+
 }
 
 .join-search-modal__search::placeholder {
@@ -161,7 +161,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
   white-space: nowrap;
 }
 

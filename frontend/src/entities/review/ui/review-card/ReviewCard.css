@@ -7,7 +7,7 @@
   box-shadow: var(--shadow-review-card);
   text-align: left;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .review-card__top {

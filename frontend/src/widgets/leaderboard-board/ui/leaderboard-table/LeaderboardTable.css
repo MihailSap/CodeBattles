@@ -38,7 +38,7 @@
   text-align: center;
   min-width: 0;
   border-top: 1px solid var(--color-leaderboard-border);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +163,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 @media (hover: hover) and (pointer: fine) {

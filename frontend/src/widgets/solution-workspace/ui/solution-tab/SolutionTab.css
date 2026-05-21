@@ -124,7 +124,7 @@
   color: var(--color-text-inverse);
   background-color: var(--color-success);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .btn-manual {
@@ -136,7 +136,7 @@
   color: var(--color-text-inverse);
   background-color: var(--color-accent);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .btn-finish {
@@ -148,7 +148,7 @@
   color: var(--color-text-inverse);
   background-color: var(--color-success);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .solution-tab__content {
@@ -257,7 +257,7 @@
 [data-theme='dark'] .solution-tab__upload-block,
 [data-theme='dark'] .solution-tab__file-tree-card,
 [data-theme='dark'] .solution-tab__card {
-  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
+  box-shadow: var(--shadow-section), inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 26%, transparent);
 }
 
 [data-theme='dark'] .solution-tab__file-tree-card {

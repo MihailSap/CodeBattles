@@ -1,4 +1,5 @@
 @import '../../project/ui/ProjectPage.css';
+@import '../../task/ui/TaskPage.css';
 
 .review-page {
   display: flex;
@@ -176,9 +177,9 @@
   margin: 0;
 }
 
-[data-theme='dark'] .section-card,
+[data-theme='dark'] .review-page .section-card,
 [data-theme='dark'] .review-page__card {
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+  box-shadow: var(--shadow-section), inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 @media (max-width: 1024px) {

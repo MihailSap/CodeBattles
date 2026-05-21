@@ -31,7 +31,10 @@ export const baseApi = createApi({
     'Profile',
     'Users',
     'Leaderboard',
-    'Notification'
+    'Notification',
+    'AdminComplaint',
+    'AdminEvent',
+    'AdminSettings'
   ],
   endpoints: () => ({})
 });

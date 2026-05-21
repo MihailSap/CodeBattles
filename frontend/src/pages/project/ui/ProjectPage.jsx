@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import privateIcon from '@/shared/assets/private-icon.svg';
 import participantsCountIcon from '@/shared/assets/participants-count-icon.svg';
 import tasksCountIcon from '@/shared/assets/tasks-count-icon.svg';
@@ -48,7 +48,7 @@ const ProjectPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('tasks');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tasksMode, setTasksMode] = useState('all');
   const [taskSearch, setTaskSearch] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -118,9 +118,9 @@ const ProjectPage = () => {
   useEffect(() => {
     if (location.state?.snackbarMessage) {
       showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
-      navigate(location.pathname, { replace: true, state: null });
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate, showSnackbar]);
+  }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
   const allTasks = useMemo(() => sortTasks(project?.tasks || []), [project?.tasks]);
 
@@ -173,6 +173,17 @@ const ProjectPage = () => {
 
     return baseTabs;
   }, [isOwner]);
+
+  const requestedTab = searchParams.get('tab');
+  const activeTab = availableTabs.some((tab) => tab.key === requestedTab) ? requestedTab : availableTabs[0]?.key || 'tasks';
+
+  const handleTabChange = (tabKey) => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.set('tab', tabKey);
+      return nextParams;
+    }, { replace: true });
+  };
 
   const settingsNameError = useMemo(() => validateProjectName(settingsDraft?.name || ''), [settingsDraft?.name]);
   const settingsRepositoryError = useMemo(() => validateRepositoryUrl(settingsDraft?.repositoryUrl || ''), [settingsDraft?.repositoryUrl]);
@@ -363,7 +374,7 @@ const ProjectPage = () => {
           </div>
         </section>
 
-        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
+        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={handleTabChange} />
 
         {activeTab === 'tasks' && (
           <>

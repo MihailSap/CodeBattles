@@ -51,7 +51,7 @@
   border: none;
   color: var(--color-danger);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
   border-radius: 8px;
 }
 
@@ -116,7 +116,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .solution-upload-modal__add-btn--bottom {
@@ -185,7 +185,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .solution-upload-modal__archive-item {
@@ -217,7 +217,7 @@
   background-color: var(--color-success);
   border: 2px solid var(--color-success);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;

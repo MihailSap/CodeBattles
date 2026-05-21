@@ -37,7 +37,7 @@
   text-underline-offset: 3px;
   cursor: pointer;
   flex-shrink: 0;
-  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+
 }
 
 .profile-page__skills-list {
@@ -64,7 +64,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 120%;
-  transition: background-color var(--transition-fast);
+
 }
 
 .profile-page__skill-tag--editable {
@@ -85,7 +85,7 @@
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+
 }
 
 .profile-page__skills-popup {

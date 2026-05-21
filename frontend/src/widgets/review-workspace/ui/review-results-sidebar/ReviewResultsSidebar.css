@@ -132,7 +132,7 @@
 }
 
 [data-theme='dark'] .review-results-sidebar__block {
-  border: 1px solid color-mix(in srgb, var(--color-accent) 24%, transparent);
+  box-shadow: var(--shadow-section), inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 
 [data-theme='dark'] .review-results-sidebar__text {

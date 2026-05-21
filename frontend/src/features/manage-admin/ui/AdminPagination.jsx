@@ -1,0 +1,37 @@
+const AdminPagination = ({ page, totalPages, isLoading = false, onChange, className = 'admin-panel' }) => {
+  const canGoPrev = page > 0;
+  const canGoNext = totalPages > 0 && page < totalPages - 1;
+  const currentPageLabel = totalPages < 1 ? '0/0' : `${page + 1}/${totalPages}`;
+
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className={`${className}__pagination`} aria-label="Пагинация">
+      <button
+        className={`${className}__pagination-button`}
+        type="button"
+        onClick={() => onChange(page - 1)}
+        disabled={!canGoPrev || isLoading}
+        aria-label="Предыдущая страница"
+      >
+        ←
+      </button>
+
+      <p className={`${className}__pagination-label`}>{currentPageLabel}</p>
+
+      <button
+        className={`${className}__pagination-button`}
+        type="button"
+        onClick={() => onChange(page + 1)}
+        disabled={!canGoNext || isLoading}
+        aria-label="Следующая страница"
+      >
+        →
+      </button>
+    </div>
+  );
+};
+
+export default AdminPagination;

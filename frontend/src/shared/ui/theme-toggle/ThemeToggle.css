@@ -11,7 +11,7 @@
   justify-content: space-between;
   position: relative;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+
 }
 
 .theme-toggle__icon {
@@ -22,7 +22,7 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: color var(--transition-fast);
+
 }
 
 .theme-toggle__icon svg {
@@ -39,7 +39,7 @@
   top: 2px;
   left: 2px;
   z-index: 1;
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  --transition-extra: transform var(--transition-fast);
 }
 
 .theme-toggle--light .theme-toggle__thumb {

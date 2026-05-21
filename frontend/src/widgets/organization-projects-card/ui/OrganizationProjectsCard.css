@@ -51,7 +51,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 .organization-projects-card__create--stub {

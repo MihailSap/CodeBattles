@@ -67,7 +67,7 @@
   padding: 8px 28px;
   background-color: var(--color-accent);
   color: var(--color-surface-panel);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 @media (hover: hover) and (pointer: fine) {

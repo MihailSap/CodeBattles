@@ -9,7 +9,7 @@
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-accent);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+
 }
 
 .date-time-picker__input::placeholder {

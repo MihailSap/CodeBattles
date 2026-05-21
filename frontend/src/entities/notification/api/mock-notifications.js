@@ -154,6 +154,46 @@ export const MOCK_NOTIFICATIONS = [
     }
   }),
   createNotification({
+    id: 'mock-review-expired-without-decision-9802',
+    type: NOTIFICATION_TYPE.REVIEW_EXPIRED_WITHOUT_DECISION,
+    title: 'Ревью не проведено',
+    text: 'Ни один из ревьюеров не проверил ваше решение в срок. Вы можете переотправить решение на проверку повторно.',
+    createdAt: makeDate(-196),
+    target: {
+      kind: NOTIFICATION_TARGET_KIND.TASK,
+      projectId: 9999,
+      taskId: 9802
+    },
+    completion: {
+      action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.TASK,
+        projectId: 9999,
+        taskId: 9802
+      }
+    }
+  }),
+  createNotification({
+    id: 'mock-ai-review-completed-9904',
+    type: NOTIFICATION_TYPE.AI_REVIEW_COMPLETED,
+    title: 'AI-ревью завершено',
+    text: 'Ваше решение было проверено. Вы можете посмотреть комментарии и оценки.',
+    createdAt: makeDate(-205),
+    target: {
+      kind: NOTIFICATION_TARGET_KIND.TASK,
+      projectId: 9999,
+      taskId: 9904
+    },
+    completion: {
+      action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
+      target: {
+        kind: NOTIFICATION_TARGET_KIND.TASK,
+        projectId: 9999,
+        taskId: 9904
+      }
+    }
+  }),
+  createNotification({
     id: 'mock-thread-task-9903',
     type: NOTIFICATION_TYPE.THREAD_REPLY,
     title: 'Ответ в треде',

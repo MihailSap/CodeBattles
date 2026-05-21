@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Spinner from '@/shared/ui/spinner';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
+import Snackbar from '@/shared/ui/snackbar';
 import {
   useDeleteUserMutation,
   useEnableUserMutation,
@@ -8,6 +9,7 @@ import {
   useMakeAdminMutation,
   useMakeNotAdminMutation
 } from '@/entities/user';
+import { useSnackbar } from '@/shared/lib/hooks';
 import { getApiErrorMessage } from '@/shared/lib';
 import './AdminUsersTab.css';
 
@@ -20,6 +22,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [error, setError] = useState('');
   const [confirmState, setConfirmState] = useState(null);
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const usersQuery = useGetUsersQuery(
     {
       page,
@@ -104,6 +107,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
           await onSelfDelete();
           return;
         }
+
+        showSnackbar('Пользователь удален', 'success');
       }
 
       if (confirmState.type === 'role') {
@@ -117,13 +122,23 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
           await onSelfDemote();
           return;
         }
+
+        showSnackbar(
+          confirmState.shouldBeAdmin
+            ? 'Пользователь назначен администратором'
+            : 'Роль администратора снята',
+          'success'
+        );
       }
 
       if (confirmState.type === 'enable') {
         await enableUser(confirmState.targetUser.id).unwrap();
+        showSnackbar('Почта пользователя подтверждена', 'success');
       }
     } catch (requestError) {
-      setError(getApiErrorMessage(requestError, 'Не удалось выполнить действие', 'adminUserAction'));
+      const message = getApiErrorMessage(requestError, 'Не удалось выполнить действие', 'adminUserAction');
+      setError(message);
+      showSnackbar(message, 'error');
     } finally {
       setConfirmState(null);
     }
@@ -143,6 +158,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
 
   return (
     <section className="admin-users" aria-label="Управление пользователями">
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
+
       <div className="admin-users__top">
         <h2 className="admin-users__title">Пользователи</h2>
         <label className="admin-users__search-wrap">

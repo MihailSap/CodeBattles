@@ -1,5 +1,5 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   useCreateOrganizationMutation,
   useCreateProjectMutation,
@@ -31,14 +31,22 @@ const VIEW_MODE = {
   WITH_ORGANIZATION: 'WITH_ORGANIZATION'
 };
 
+const VIEW_MODE_SEARCH_PARAM = {
+  [VIEW_MODE.WITH_ORGANIZATION]: 'with-organization',
+  [VIEW_MODE.WITHOUT_ORGANIZATION]: 'without-organization'
+};
+
 const CAROUSEL_PADDING = 10;
 
 const ProjectsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { userId } = useAuth();
 
-  const [viewMode, setViewMode] = useState(VIEW_MODE.WITH_ORGANIZATION);
+  const viewMode = searchParams.get('view') === VIEW_MODE_SEARCH_PARAM[VIEW_MODE.WITHOUT_ORGANIZATION]
+    ? VIEW_MODE.WITHOUT_ORGANIZATION
+    : VIEW_MODE.WITH_ORGANIZATION;
   const [search, setSearch] = useState('');
   const debaouncedSearch = useDebouncedValue(search, 300);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
@@ -72,6 +80,14 @@ const ProjectsPage = () => {
   const [searchProjectsForJoin] = useLazySearchProjectsForJoinQuery();
   const [searchOrganizations] = useLazySearchOrganizationsQuery();
 
+  const handleViewModeChange = useCallback((nextViewMode) => {
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.set('view', VIEW_MODE_SEARCH_PARAM[nextViewMode]);
+      return nextParams;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   useEffect(() => {
     if (isError) {
       showSnackbar('Не удалось загрузить список проектов', 'error');
@@ -81,9 +97,9 @@ const ProjectsPage = () => {
   useEffect(() => {
     if (location.state?.snackbarMessage) {
       showSnackbar(location.state.snackbarMessage, location.state.snackbarType || 'success');
-      navigate(location.pathname, { replace: true, state: null });
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
     }
-  }, [location.pathname, location.state, navigate, showSnackbar]);
+  }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
   const noOrganizationProjects = useMemo(() => dashboard.withoutOrganizationProjects, [dashboard.withoutOrganizationProjects]);
 
@@ -255,14 +271,14 @@ const ProjectsPage = () => {
               <button
                 className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
                 type="button"
-                onClick={() => setViewMode(VIEW_MODE.WITH_ORGANIZATION)}
+                onClick={() => handleViewModeChange(VIEW_MODE.WITH_ORGANIZATION)}
               >
                 С организацией
               </button>
               <button
                 className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
                 type="button"
-                onClick={() => setViewMode(VIEW_MODE.WITHOUT_ORGANIZATION)}
+                onClick={() => handleViewModeChange(VIEW_MODE.WITHOUT_ORGANIZATION)}
               >
                 Без организации
               </button>

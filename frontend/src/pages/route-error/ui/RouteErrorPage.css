@@ -61,7 +61,7 @@
   text-decoration: none;
   font-size: clamp(16px, 2vw, 20px);
   font-weight: 600;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {

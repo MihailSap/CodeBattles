@@ -32,7 +32,7 @@
   background: transparent;
   color: var(--color-text-inverse);
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 .organization-page__request-button svg {
@@ -80,7 +80,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition-fast);
+
 }
 
 .organization-page__settings-logo-upload img {

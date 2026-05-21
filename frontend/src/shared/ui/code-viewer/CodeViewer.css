@@ -18,7 +18,7 @@
   background-repeat: no-repeat;
   border-radius: 7px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .code-viewer-comment-glyph--ai {
@@ -38,7 +38,7 @@
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   z-index: var(--z-raised);
-  transition: opacity 0.15s;
+  --transition-extra: opacity 0.15s;
 }
 
 [data-theme='dark'] .code-viewer-container {

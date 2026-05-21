@@ -51,7 +51,7 @@
   border: none;
   color: var(--color-danger);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .report-modal__content {
@@ -98,7 +98,7 @@
   color: var(--color-text-primary);
   font-size: 14px;
   font-family: inherit;
-  transition: border-color var(--transition-fast);
+
 }
 
 .report-modal__textarea:focus {
@@ -118,7 +118,7 @@
   background-color: var(--color-success);
   border: 2px solid var(--color-success);
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .report-modal__submit-btn svg {

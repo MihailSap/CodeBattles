@@ -52,7 +52,7 @@ const isPastDateTime = (value) => {
 };
 
 const TaskPage = () => {
-  const { userId } = useAuth();
+  const { userId, user } = useAuth();
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,7 +80,13 @@ const TaskPage = () => {
   const [deleteTask, { isLoading: isDeleteSubmitting }] = useDeleteTaskMutation();
   const isLoading = isTaskLoading || isProjectLoading;
 
+  const isAdmin = user?.role === 'ADMIN';
   const isOwner = (project?.viewerRole || task?.viewerRole) === PROJECT_MEMBER_ROLE.OWNER;
+  const isTaskAssignee = task?.assigneeIds?.includes(Number(userId));
+  const isTaskReviewer = task?.reviewerIds?.includes(Number(userId));
+  const isAdminReadOnlyView = isAdmin && !isOwner && !isTaskAssignee && !isTaskReviewer;
+  const canManageTask = isOwner && !isAdminReadOnlyView;
+  const canViewSettings = isOwner || isAdminReadOnlyView;
   const shouldShowSolutionTab = task?.isMock !== false;
 
   useEffect(() => {
@@ -144,12 +150,12 @@ const TaskPage = () => {
   const availableTabs = useMemo(() => {
     const baseTabs = [{ key: 'solution', label: tabs.solution }];
 
-    if (isOwner) {
+    if (canViewSettings) {
       baseTabs.push({ key: 'settings', label: tabs.settings });
     }
 
     return baseTabs;
-  }, [isOwner]);
+  }, [canViewSettings]);
 
   useEffect(() => {
     if (availableTabs.length > 0 && !availableTabs.some((tab) => tab.key === activeTab)) {
@@ -192,7 +198,7 @@ const TaskPage = () => {
   const isManualReviewers = settingsDraft?.reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
 
   const canSave = useMemo(() => {
-    if (!task || !settingsDraft || !hasSettingsChanges) {
+    if (!task || !settingsDraft || !hasSettingsChanges || !canManageTask) {
       return false;
     }
 
@@ -205,7 +211,7 @@ const TaskPage = () => {
     }
 
     return !nameError && !deadlineError && settingsDraft.assigneeIds.length > 0 && (!isManualReviewers || settingsDraft.reviewerIds.length > 0);
-  }, [canEditRequirementsOnly, deadlineError, hasSettingsChanges, isManualReviewers, nameError, settingsDraft, task]);
+  }, [canEditRequirementsOnly, canManageTask, deadlineError, hasSettingsChanges, isManualReviewers, nameError, settingsDraft, task]);
 
   const availableAssignees = useMemo(() => {
     if (!task || !settingsDraft) {
@@ -448,26 +454,31 @@ const TaskPage = () => {
               aiReviewEnabled={project?.aiReviewEnabled ?? task.aiReviewEnabled}
               onSnackbar={showSnackbar}
               projectId={projectId}
+              readOnly={isAdminReadOnlyView}
             />
           </Suspense>
         )}
 
-        {activeTab === 'settings' && isOwner && settingsDraft && (
+        {activeTab === 'settings' && canViewSettings && settingsDraft && (
           <>
             <div className="project-page__controls">
               <div className="project-page__controls-left">
-                <span className="project-page__participants-count">Настройки</span>
+                <span className="project-page__participants-count">
+                  {isAdminReadOnlyView ? 'Настройки: просмотр администратора' : 'Настройки'}
+                </span>
               </div>
 
-              <div className="project-page__controls-right">
-                <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setDeleteModalOpen(true)}>
-                  Удалить задачу
-                </button>
-              </div>
+              {canManageTask && (
+                <div className="project-page__controls-right">
+                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setDeleteModalOpen(true)}>
+                    Удалить задачу
+                  </button>
+                </div>
+              )}
             </div>
 
             <section className="section-card project-page__settings">
-              {canEditAllFields && (
+              {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <label>Название</label>
                   <input
@@ -475,20 +486,20 @@ const TaskPage = () => {
                     value={settingsDraft.name}
                     onChange={(event) => setSettingsDraft((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
                     onBlur={() => setSettingsTouched((prev) => ({ ...prev, name: true }))}
-                    disabled={isSettingsSubmitting}
+                    disabled={!canManageTask || isSettingsSubmitting}
                   />
                   {settingsTouched.name && nameError && <p className="project-page__settings-error">{nameError}</p>}
                 </div>
               )}
 
-              {canEditAllFields && (
+              {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <label>Описание</label>
                   <textarea
                     className="project-page__settings-input project-page__settings-textarea"
                     value={settingsDraft.description}
                     onChange={(event) => setSettingsDraft((prev) => ({ ...prev, description: event.target.value.slice(0, 4000) }))}
-                    disabled={isSettingsSubmitting}
+                    disabled={!canManageTask || isSettingsSubmitting}
                   />
                 </div>
               )}
@@ -499,6 +510,7 @@ const TaskPage = () => {
                   className="project-page__settings-input project-page__settings-textarea"
                   value={settingsDraft.requirements}
                   onChange={(event) => setSettingsDraft((prev) => ({ ...prev, requirements: event.target.value.slice(0, 4000) }))}
+                  disabled={!canManageTask || isSettingsSubmitting}
                 />
               </div>
 
@@ -508,10 +520,11 @@ const TaskPage = () => {
                   className="project-page__settings-input project-page__settings-textarea"
                   value={settingsDraft.evaluationCriteria}
                   onChange={(event) => setSettingsDraft((prev) => ({ ...prev, evaluationCriteria: event.target.value.slice(0, 4000) }))}
+                  disabled={!canManageTask || isSettingsSubmitting}
                 />
               </div>
 
-              {canEditAllFields && (
+              {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <label>Дедлайн</label>
                   <Suspense fallback={null}>
@@ -522,7 +535,7 @@ const TaskPage = () => {
                       placeholder="Выберите дату и время"
                       hasError={Boolean(settingsTouched.deadline && deadlineError)}
                       onBlur={() => setSettingsTouched((prev) => ({ ...prev, deadline: true }))}
-                      disabled={isSettingsSubmitting}
+                      disabled={!canManageTask || isSettingsSubmitting}
                     />
                   </Suspense>
                   {settingsTouched.deadline && deadlineError && <p className="project-page__settings-error">{deadlineError}</p>}
@@ -538,7 +551,7 @@ const TaskPage = () => {
                         type="radio"
                         checked={settingsDraft.reviewType === type}
                         onChange={() => setSettingsDraft((prev) => ({ ...prev, reviewType: type }))}
-                        disabled={isSettingsSubmitting}
+                        disabled={!canManageTask || isSettingsSubmitting}
                       />
                       <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
                     </label>
@@ -554,26 +567,26 @@ const TaskPage = () => {
                       users={availableReviewers}
                       selectedUserIds={settingsDraft.reviewerIds}
                       onChange={(reviewerIds) => setSettingsDraft((prev) => ({ ...prev, reviewerIds }))}
-                      disabled={isSettingsSubmitting}
+                      disabled={!canManageTask || isSettingsSubmitting}
                     />
                   </Suspense>
                 </div>
               )}
 
-              {canEditAllFields && (
+              {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <Suspense fallback={null}>
                     <AssigneesSelector
                       users={availableAssignees}
                       selectedUserIds={settingsDraft.assigneeIds}
                       onChange={(assigneeIds) => setSettingsDraft((prev) => ({ ...prev, assigneeIds }))}
-                      disabled={isSettingsSubmitting}
+                      disabled={!canManageTask || isSettingsSubmitting}
                     />
                   </Suspense>
                 </div>
               )}
 
-              {hasSettingsChanges && (
+              {canManageTask && hasSettingsChanges && (
                 <div className="project-page__settings-actions">
                   <button
                     className="project-page__settings-action project-page__settings-action--save"

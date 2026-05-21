@@ -25,7 +25,7 @@
   justify-content: space-between;
   gap: 5px;
   cursor: pointer;
-  transition: var(--transition-fast);
+
 }
 
 .review-dropdown__trigger--open,
@@ -47,7 +47,7 @@
   height: 14px;
   color: var(--color-accent);
   display: inline-flex;
-  transition: transform var(--transition-fast);
+  --transition-extra: transform var(--duration-medium) ease;
 }
 
 .review-dropdown__icon--open {
@@ -99,7 +99,7 @@
   justify-content: space-between;
   text-align: left;
   cursor: pointer;
-  transition: var(--transition-fast);
+
 }
 
 .review-dropdown__option-check {

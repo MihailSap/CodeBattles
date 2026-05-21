@@ -100,7 +100,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+
 }
 
 .profile-page__action svg {
@@ -156,7 +156,7 @@
   padding: 8px;
   cursor: pointer;
   z-index: var(--z-fixed-action);
-  transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+  --transition-extra: transform var(--transition-fast);
 }
 
 .profile-page__settings-button svg {

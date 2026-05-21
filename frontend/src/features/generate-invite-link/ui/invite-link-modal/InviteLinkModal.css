@@ -44,7 +44,7 @@
   background: transparent;
   color: var(--color-danger);
   cursor: pointer;
-  transition: color var(--transition-fast);
+
 }
 
 .invite-link-modal__close svg {
@@ -112,7 +112,7 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+  --transition-extra: opacity var(--transition-fast);
   width: fit-content;
 }
 
@@ -139,7 +139,7 @@
   word-break: break-all;
   font-size: 16px;
   text-align: center;
-  transition: color var(--transition-fast);
+
 }
 
 .invite-link-modal__result button {
@@ -153,7 +153,7 @@
   font-weight: 600;
   cursor: pointer;
   align-self: center;
-  transition: color var(--transition-fast), background-color var(--transition-fast);
+
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -51,7 +51,7 @@
   cursor: pointer;
   color: var(--color-danger);
   padding: 0;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-modal__content {
@@ -84,7 +84,7 @@
   resize: vertical;
   font-size: 14px;
   font-family: inherit;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
   line-height: 1.5;
 }
 
@@ -116,7 +116,7 @@
   cursor: pointer;
   border-radius: 8px;
   padding: 6px 8px;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-modal__radio-input {
@@ -152,7 +152,7 @@
   padding: 0.5px 38px;
   border-radius: 7px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-modal__submit-btn svg {

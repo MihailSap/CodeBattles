@@ -17,7 +17,7 @@ const GitUploadModal = lazyNamed(() => import('@/features/upload-solution'), 'Gi
 const ReportModal = lazyNamed(() => import('@/features/report-review'), 'ReportModal');
 const SolutionUploadModal = lazyNamed(() => import('@/features/upload-solution'), 'SolutionUploadModal');
 
-const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
+const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly = false }) => {
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +36,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
   const [fileContentMap, setFileContentMap] = useState({});
   const [completeNotification] = useCompleteNotificationMutation();
 
-  const isAssignee = task.assigneeIds?.includes(currentUser?.id);
+  const isAssignee = !readOnly && task.assigneeIds?.includes(currentUser?.id);
 
   const showSnackbar = useCallback(
     (message, type = 'success') => {
@@ -420,8 +420,8 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar }) => {
                   <CommentsBlock
                     comments={aiFileComments}
                     currentUser={currentUser}
-                    onLike={handleLike}
-                    onDislike={handleDislike}
+                    onLike={isAssignee ? handleLike : undefined}
+                    onDislike={isAssignee ? handleDislike : undefined}
                     readOnly
                     pageContext="task"
                     title="AI-комментарии"

@@ -29,7 +29,7 @@ const ReportModal = lazyNamed(() => import('@/features/report-review'), 'ReportM
 const ReviewPage = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
-  const { userId } = useAuth();
+  const { userId, user } = useAuth();
 
   const [task, setTask] = useState(null);
   const [review, setReview] = useState(null);
@@ -52,6 +52,7 @@ const ReviewPage = () => {
   const [fileContentMap, setFileContentMap] = useState({});
 
   const numericUserId = Number(userId);
+  const isAdmin = user?.role === 'ADMIN';
 
   const findFileByPath = useCallback((nodes, path) => {
     for (const node of nodes) {
@@ -92,7 +93,7 @@ const ReviewPage = () => {
 
       const isUserReviewer = taskData.reviewerIds?.includes(numericUserId);
 
-      if (!isUserReviewer) {
+      if (!isUserReviewer && !isAdmin) {
         navigate(ROUTES.reviews, {
           replace: true,
           state: {
@@ -119,7 +120,7 @@ const ReviewPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [reviewId, navigate, findFileByPath, numericUserId, showSnackbar]);
+  }, [reviewId, navigate, findFileByPath, isAdmin, numericUserId, showSnackbar]);
 
   useEffect(() => {
     loadData();
@@ -158,6 +159,7 @@ const ReviewPage = () => {
     if (!task?.reviewerIds || userId === null || userId === undefined) return false;
     return task.reviewerIds.includes(numericUserId);
   }, [task?.reviewerIds, userId, numericUserId]);
+  const isAdminReadOnlyView = isAdmin && !isReviewer;
 
   const isCompleted = review?.status === 'COMPLETED';
   const myFinalReview = useMemo(() => (review?.finalReviews || []).find(
@@ -337,6 +339,10 @@ const ReviewPage = () => {
   const assigneesToReveal = useMemo(() => {
     if (!task?.assignees) return null;
 
+    if (isAdminReadOnlyView) {
+      return task.assignees;
+    }
+
     const isCompletedStatus = review?.status === 'COMPLETED';
     const finalReviews = review?.finalReviews || [];
     const allApproved = finalReviews.length > 0 && finalReviews.every(fr => fr.verdict === 'APPROVED');
@@ -347,7 +353,7 @@ const ReviewPage = () => {
     }
 
     return null;
-  }, [task?.assignees, review?.status, review?.finalReviews, review?.revealAuthorAfterReview]);
+  }, [isAdminReadOnlyView, task?.assignees, review?.status, review?.finalReviews, review?.revealAuthorAfterReview]);
 
   const commentsCount = visibleComments.length;
 

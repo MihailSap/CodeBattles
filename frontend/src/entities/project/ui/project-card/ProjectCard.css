@@ -11,7 +11,7 @@
   justify-content: center;
   gap: 15px;
   cursor: pointer;
-  transition: transform var(--transition-fast);
+  --transition-extra: transform var(--transition-fast);
 }
 
 .project-card__title-row {

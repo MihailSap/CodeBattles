@@ -54,7 +54,7 @@
   border-radius: 10px;
   color: var(--color-text-inverse);
   background: var(--color-accent);
-  transition: left var(--transition-fast);
+  --transition-extra: left var(--transition-fast);
   z-index: 0;
 }
 
@@ -74,7 +74,7 @@
   cursor: pointer;
   position: relative;
   z-index: 1;
-  transition: color var(--transition-fast);
+
 }
 
 .projects-page__switch-option--active {
@@ -92,7 +92,7 @@
   border-radius: 15px;
   border: 2px solid var(--color-accent-muted);
   background: transparent;
-  transition: border-color var(--transition-fast);
+
 }
 
 .projects-page__search-wrap:focus-within {
@@ -167,7 +167,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+
 }
 
 .projects-page__actions {
@@ -185,7 +185,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+
 }
 
 .projects-page__side-action--create {
@@ -230,7 +230,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+
 }
 
 .projects-page__arrow svg {
@@ -261,7 +261,7 @@
   display: flex;
   align-items: stretch;
   gap: 20px;
-  transition: transform var(--duration-medium) ease;
+  --transition-extra: transform var(--duration-medium) ease;
 }
 
 .projects-page__organizations-slide {

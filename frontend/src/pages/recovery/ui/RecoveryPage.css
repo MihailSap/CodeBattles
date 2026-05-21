@@ -13,7 +13,7 @@
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 3px;
-  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+
 }
 
 .recovery-card__title {
@@ -46,7 +46,7 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -28,7 +28,7 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: pointer;
-  transition: color var(--transition-fast), text-decoration-color var(--transition-fast), opacity var(--transition-fast);
+  --transition-extra: opacity var(--transition-fast);
 }
 
 .project-skills-selector__clear:disabled {
@@ -60,7 +60,7 @@
   font-weight: 400;
   line-height: 1.2;
   cursor: pointer;
-  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+  --transition-extra: opacity var(--transition-fast);
 }
 
 .project-skills-selector__tag:disabled {
@@ -82,7 +82,7 @@
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-  transition: color var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+  --transition-extra: opacity var(--transition-fast);
 }
 
 .project-create-modal .project-skills-selector__add {

@@ -83,7 +83,7 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-width: 100%;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-container--closed {
@@ -168,7 +168,7 @@
   font-size: 12px;
   padding: 3px 4px;
   border-radius: 6px;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-reopen-btn {
@@ -223,7 +223,7 @@
   font-size: 14px;
   cursor: pointer;
   padding: 4px 0;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .comment-footer-right {
@@ -242,7 +242,7 @@
   color: var(--color-text-primary);
   padding: 2px 4px;
   border-radius: 6px;
-  transition: color 0.15s;
+
 }
 
 .comment-icon-btn:disabled {
@@ -316,7 +316,7 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 .btn-submit:disabled {
@@ -332,7 +332,7 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
 }
 
 @media (max-width: 1024px) {
