@@ -174,57 +174,56 @@
   }
 }
 
-@media (max-width: 500px){
-
-  .task-page__offset-section{
+@media (max-width: 500px) {
+  .task-page__offset-section {
     margin-top: 10px;
   }
 
-  .task-page__assignees-wrap{
+  .task-page__assignees-wrap {
     gap: 10px;
   }
 
-  .task-page__assignees-list{
+  .task-page__assignees-list {
     gap: 10px;
   }
 
-  .task-page__assignee-item{
+  .task-page__assignee-item {
     gap: 10px;
   }
 
   .task-page__assignee-avatar,
-.task-page__assignee-avatar img,
-.task-page__assignee-avatar svg{
+  .task-page__assignee-avatar img,
+  .task-page__assignee-avatar svg {
     width: 43px;
     height: 43px;
   }
 
-  .task-page__assignee-meta{
+  .task-page__assignee-meta {
     gap: 5px;
   }
 
   .task-page__assignee-name,
-.task-page__assignee-login{
+  .task-page__assignee-login {
     font-size: 14px;
   }
 
-  .task-page__solution{
+  .task-page__solution {
     margin-top: 5px;
   }
 
-  .task-page__review-title{
+  .task-page__review-title {
     font-size: 14px;
   }
 
-  .task-page__review-list{
+  .task-page__review-list {
     gap: 5px;
   }
 
-  .task-page__review-item{
+  .task-page__review-item {
     font-size: 12px;
   }
 
-  .task-page .project-page__settings .date-time-picker__input{
+  .task-page .project-page__settings .date-time-picker__input {
     font-size: 12px;
   }
 }

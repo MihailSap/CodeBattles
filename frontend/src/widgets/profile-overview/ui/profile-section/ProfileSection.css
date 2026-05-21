@@ -64,7 +64,6 @@ img.profile-page__avatar {
   justify-content: center;
   padding: 5px;
   background: transparent;
-
 }
 
 .profile-page__avatar-action img {
@@ -115,7 +114,6 @@ img.profile-page__avatar {
   font-weight: 500;
   background: var(--color-surface);
   outline: none;
-
 }
 
 .profile-page__name-input:focus {

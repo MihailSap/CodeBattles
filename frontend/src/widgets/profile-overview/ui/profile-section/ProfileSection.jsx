@@ -17,7 +17,7 @@ const ProfileSection = ({
   onProfileSave,
   profileData,
   profileDraft,
-  formatRegistrationDate
+  formatRegistrationDate,
 }) => {
   return (
     <section className="profile-page__section profile-page__section--profile">
@@ -65,13 +65,23 @@ const ProfileSection = ({
               <input ref={fileInputRef} type="file" accept="image/*" onChange={onAvatarUpload} hidden />
             </div>
           )}
-          {profileDraft.avatarPath ?
-            <img className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')} src={profileDraft.avatarPath} alt="Аватар пользователя" />
-            :
-            <div className={`profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')}>
+          {profileDraft.avatarPath ? (
+            <img
+              className={
+                `profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')
+              }
+              src={profileDraft.avatarPath}
+              alt="Аватар пользователя"
+            />
+          ) : (
+            <div
+              className={
+                `profile-page__avatar` + (canEditProfile && isProfileEditMode ? ' profile-page__avatar--editable' : '')
+              }
+            >
               <AvatarIcon />
             </div>
-          }
+          )}
         </div>
 
         <div className="profile-page__user-info">

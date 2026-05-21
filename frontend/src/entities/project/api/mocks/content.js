@@ -1,33 +1,139 @@
 export const MOCK_LARGE_FILE_TREE = [
   {
-    path: 'src', name: 'src', isDirectory: true, children: [
-      { path: 'src/api', name: 'api', isDirectory: true, children: [
-        { path: 'src/api/auth.js', name: 'auth.js', isDirectory: false, content: 'export const login = async (username, password) => {\n  return { token: "123", username, password };\n};\n\nexport const logout = () => {\n  localStorage.removeItem("token");\n};\n' },
-        { path: 'src/api/config.js', name: 'config.js', isDirectory: false, content: 'export const API_URL = "https://api.example.com";\nexport const TIMEOUT = 5000;\n' },
-        { path: 'src/api/services.js', name: 'services.js', isDirectory: false, content: 'import { API_URL } from "./config";\n\nexport const fetchData = async () => {\n  const res = await fetch(`${API_URL}/data`);\n  return res.json();\n};\n' },
-      ]},
-      { path: 'src/components', name: 'components', isDirectory: true, children: [
-        { path: 'src/components/ArchitectureDiagram', name: 'ArchitectureDiagram', isDirectory: true, children: [
-          { path: 'src/components/ArchitectureDiagram/index.jsx', name: 'index.jsx', isDirectory: false, content: 'export { default } from "./ArchitectureDiagram";\n' },
-          { path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.jsx', name: 'ArchitectureDiagram.jsx', isDirectory: false },
-          { path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.css', name: 'ArchitectureDiagram.css', isDirectory: false, content: '.arch-diagram__wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; }' },
-          { path: 'src/components/ArchitectureDiagram/hooks.js', name: 'hooks.js', isDirectory: false, content: 'export const useZoom = () => {};' }
-        ]},
-        { path: 'src/components/Layout', name: 'Layout', isDirectory: true, children: [
-          { path: 'src/components/Layout/Layout.jsx', name: 'Layout.jsx', isDirectory: false, content: 'export const Layout = ({ children }) => <div>{children}</div>;' },
-          { path: 'src/components/Layout/Sidebar.jsx', name: 'Sidebar.jsx', isDirectory: false, content: 'export const Sidebar = () => <aside>Menu</aside>;' }
-        ]}
-      ]},
-      { path: 'src/utils', name: 'utils', isDirectory: true, children: [
-        { path: 'src/utils/helpers.js', name: 'helpers.js', isDirectory: false, content: 'export const noop = () => {};' },
-        { path: 'src/utils/parser.js', name: 'parser.js', isDirectory: false, content: 'export const parseArchitectureConfig = (data) => { return { nodes: [], edges: [] }; };' }
-      ]},
-      { path: 'src/App.jsx', name: 'App.jsx', isDirectory: false, content: 'import Layout from "./components/Layout/Layout";\nexport default function App() { return <Layout>App</Layout>; }' },
-      { path: 'src/main.jsx', name: 'main.jsx', isDirectory: false, content: 'import React from "react";\nimport ReactDOM from "react-dom";\nimport App from "./App";\n\nReactDOM.render(<App />, document.getElementById("root"));\n' }
-    ]
+    path: 'src',
+    name: 'src',
+    isDirectory: true,
+    children: [
+      {
+        path: 'src/api',
+        name: 'api',
+        isDirectory: true,
+        children: [
+          {
+            path: 'src/api/auth.js',
+            name: 'auth.js',
+            isDirectory: false,
+            content:
+              'export const login = async (username, password) => {\n  return { token: "123", username, password };\n};\n\nexport const logout = () => {\n  localStorage.removeItem("token");\n};\n',
+          },
+          {
+            path: 'src/api/config.js',
+            name: 'config.js',
+            isDirectory: false,
+            content: 'export const API_URL = "https://api.example.com";\nexport const TIMEOUT = 5000;\n',
+          },
+          {
+            path: 'src/api/services.js',
+            name: 'services.js',
+            isDirectory: false,
+            content:
+              'import { API_URL } from "./config";\n\nexport const fetchData = async () => {\n  const res = await fetch(`${API_URL}/data`);\n  return res.json();\n};\n',
+          },
+        ],
+      },
+      {
+        path: 'src/components',
+        name: 'components',
+        isDirectory: true,
+        children: [
+          {
+            path: 'src/components/ArchitectureDiagram',
+            name: 'ArchitectureDiagram',
+            isDirectory: true,
+            children: [
+              {
+                path: 'src/components/ArchitectureDiagram/index.jsx',
+                name: 'index.jsx',
+                isDirectory: false,
+                content: 'export { default } from "./ArchitectureDiagram";\n',
+              },
+              {
+                path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.jsx',
+                name: 'ArchitectureDiagram.jsx',
+                isDirectory: false,
+              },
+              {
+                path: 'src/components/ArchitectureDiagram/ArchitectureDiagram.css',
+                name: 'ArchitectureDiagram.css',
+                isDirectory: false,
+                content: '.arch-diagram__wrapper { display: flex; flex-direction: column; width: 100%; height: 100%; }',
+              },
+              {
+                path: 'src/components/ArchitectureDiagram/hooks.js',
+                name: 'hooks.js',
+                isDirectory: false,
+                content: 'export const useZoom = () => {};',
+              },
+            ],
+          },
+          {
+            path: 'src/components/Layout',
+            name: 'Layout',
+            isDirectory: true,
+            children: [
+              {
+                path: 'src/components/Layout/Layout.jsx',
+                name: 'Layout.jsx',
+                isDirectory: false,
+                content: 'export const Layout = ({ children }) => <div>{children}</div>;',
+              },
+              {
+                path: 'src/components/Layout/Sidebar.jsx',
+                name: 'Sidebar.jsx',
+                isDirectory: false,
+                content: 'export const Sidebar = () => <aside>Menu</aside>;',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        path: 'src/utils',
+        name: 'utils',
+        isDirectory: true,
+        children: [
+          {
+            path: 'src/utils/helpers.js',
+            name: 'helpers.js',
+            isDirectory: false,
+            content: 'export const noop = () => {};',
+          },
+          {
+            path: 'src/utils/parser.js',
+            name: 'parser.js',
+            isDirectory: false,
+            content: 'export const parseArchitectureConfig = (data) => { return { nodes: [], edges: [] }; };',
+          },
+        ],
+      },
+      {
+        path: 'src/App.jsx',
+        name: 'App.jsx',
+        isDirectory: false,
+        content:
+          'import Layout from "./components/Layout/Layout";\nexport default function App() { return <Layout>App</Layout>; }',
+      },
+      {
+        path: 'src/main.jsx',
+        name: 'main.jsx',
+        isDirectory: false,
+        content:
+          'import React from "react";\nimport ReactDOM from "react-dom";\nimport App from "./App";\n\nReactDOM.render(<App />, document.getElementById("root"));\n',
+      },
+    ],
   },
-  { path: 'package.json', name: 'package.json', isDirectory: false, content: '{\n  "name": "mock-project",\n  "version": "1.0.0"\n}' },
-  { path: 'README.md', name: 'README.md', isDirectory: false, content: '# Mock Project\nThis is a mock project for testing.\n' }
+  {
+    path: 'package.json',
+    name: 'package.json',
+    isDirectory: false,
+    content: '{\n  "name": "mock-project",\n  "version": "1.0.0"\n}',
+  },
+  {
+    path: 'README.md',
+    name: 'README.md',
+    isDirectory: false,
+    content: '# Mock Project\nThis is a mock project for testing.\n',
+  },
 ];
 
 export const MOCK_LARGE_CODE = `import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -173,11 +279,11 @@ export const MOCK_LARGE_COMMENTS = [
                 createdAt: '2026-05-09T10:18:00Z',
                 likedBy: [14],
                 dislikedBy: [],
-                replies: []
-              }
-            ]
-          }
-        ]
+                replies: [],
+              },
+            ],
+          },
+        ],
       },
       {
         id: 1003,
@@ -190,9 +296,9 @@ export const MOCK_LARGE_COMMENTS = [
         createdAt: '2026-05-09T10:20:00Z',
         likedBy: [],
         dislikedBy: [],
-        replies: []
-      }
-    ]
+        replies: [],
+      },
+    ],
   },
   {
     id: 1004,
@@ -209,7 +315,7 @@ export const MOCK_LARGE_COMMENTS = [
     likedBy: [],
     dislikedBy: [],
     isClosed: true,
-    replies: []
+    replies: [],
   },
   {
     id: 1005,
@@ -226,7 +332,7 @@ export const MOCK_LARGE_COMMENTS = [
     likedBy: [12, 11, 57],
     dislikedBy: [],
     isClosed: false,
-    replies: []
+    replies: [],
   },
   {
     id: 1007,
@@ -243,7 +349,7 @@ export const MOCK_LARGE_COMMENTS = [
     likedBy: [],
     dislikedBy: [],
     isClosed: false,
-    replies: []
+    replies: [],
   },
   {
     id: 1006,
@@ -258,8 +364,8 @@ export const MOCK_LARGE_COMMENTS = [
     likedBy: [],
     dislikedBy: [11],
     isClosed: false,
-    replies: []
-  }
+    replies: [],
+  },
 ];
 
 export const MOCK_REWORK_HISTORY_COMMENTS = [
@@ -288,8 +394,8 @@ export const MOCK_REWORK_HISTORY_COMMENTS = [
         createdAt: '2026-05-05T14:00:00Z',
         likedBy: [],
         dislikedBy: [],
-        replies: []
-      }
-    ]
-  }
+        replies: [],
+      },
+    ],
+  },
 ];

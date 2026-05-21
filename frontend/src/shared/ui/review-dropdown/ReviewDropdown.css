@@ -25,7 +25,6 @@
   justify-content: space-between;
   gap: 5px;
   cursor: pointer;
-
 }
 
 .review-dropdown__trigger--open,
@@ -99,7 +98,6 @@
   justify-content: space-between;
   text-align: left;
   cursor: pointer;
-
 }
 
 .review-dropdown__option-check {
@@ -118,9 +116,9 @@
     background: var(--color-accent-hover-bg);
   }
 
-.review-dropdown__menu::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent);
-}
+  .review-dropdown__menu::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+  }
 }
 
 @media (max-width: 500px) {
@@ -155,7 +153,6 @@
 }
 
 @media (max-width: 500px) {
-
   .review-dropdown__label {
     font-size: 14px;
   }

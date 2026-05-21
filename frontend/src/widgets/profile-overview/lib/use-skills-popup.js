@@ -28,7 +28,10 @@ export const useSkillsPopup = () => {
     }
 
     const triggerRect = anchor.getBoundingClientRect();
-    const boundsElement = anchor.closest('.profile-page__section-body') || anchor.closest('.profile-page__content') || anchor.closest('form');
+    const boundsElement =
+      anchor.closest('.profile-page__section-body') ||
+      anchor.closest('.profile-page__content') ||
+      anchor.closest('form');
     const boundsRect = boundsElement?.getBoundingClientRect();
     const minLeft = boundsRect ? Math.max(VIEWPORT_PADDING, boundsRect.left + VIEWPORT_PADDING) : VIEWPORT_PADDING;
     const maxRight = boundsRect
@@ -70,26 +73,29 @@ export const useSkillsPopup = () => {
     setMobilePopupPosition({
       top: top + window.scrollY,
       left: left + window.scrollX,
-      width: popupWidth
+      width: popupWidth,
     });
   }, []);
 
-  const openSkillsPopup = useCallback((groupKey, event) => {
-    popupAnchorRef.current = event.currentTarget;
+  const openSkillsPopup = useCallback(
+    (groupKey, event) => {
+      popupAnchorRef.current = event.currentTarget;
 
-    setOpenedSkillsPopup((previousState) => {
-      if (previousState === groupKey) {
-        popupAnchorRef.current = null;
-        setMobilePopupPosition(null);
-        return null;
-      }
+      setOpenedSkillsPopup((previousState) => {
+        if (previousState === groupKey) {
+          popupAnchorRef.current = null;
+          setMobilePopupPosition(null);
+          return null;
+        }
 
-      window.requestAnimationFrame(() => {
-        recalculatePopupPosition();
+        window.requestAnimationFrame(() => {
+          recalculatePopupPosition();
+        });
+        return groupKey;
       });
-      return groupKey;
-    });
-  }, [recalculatePopupPosition]);
+    },
+    [recalculatePopupPosition]
+  );
 
   useEffect(() => {
     if (!openedSkillsPopup) {
@@ -144,6 +150,6 @@ export const useSkillsPopup = () => {
     popupMaxHeight,
     mobilePopupPosition,
     closeSkillsPopup,
-    openSkillsPopup
+    openSkillsPopup,
   };
 };

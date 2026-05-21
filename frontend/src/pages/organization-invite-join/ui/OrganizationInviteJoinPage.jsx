@@ -31,8 +31,8 @@ const OrganizationInviteJoinPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'Вы присоединились к организации',
-            snackbarType: 'success'
-          }
+            snackbarType: 'success',
+          },
         });
       } catch (error) {
         if (!isMounted) {
@@ -47,8 +47,8 @@ const OrganizationInviteJoinPage = () => {
               replace: true,
               state: {
                 snackbarMessage: 'Вы уже являетесь участником этой организации',
-                snackbarType: 'success'
-              }
+                snackbarType: 'success',
+              },
             });
             return;
           }
@@ -58,8 +58,8 @@ const OrganizationInviteJoinPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'Пригласительная ссылка недействительна или устарела',
-            snackbarType: 'error'
-          }
+            snackbarType: 'error',
+          },
         });
       }
     };
@@ -80,7 +80,9 @@ const OrganizationInviteJoinPage = () => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.login} replace state={{ from: ROUTES.organizationJoinByToken.replace(':token', token) }} />;
+    return (
+      <Navigate to={ROUTES.login} replace state={{ from: ROUTES.organizationJoinByToken.replace(':token', token) }} />
+    );
   }
 
   return (

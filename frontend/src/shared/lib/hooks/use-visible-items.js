@@ -30,7 +30,7 @@ export const useVisibleItems = (items, chunkSize) => {
       {
         root: null,
         rootMargin: '0px 0px 120px 0px',
-        threshold: 0
+        threshold: 0,
       }
     );
 
@@ -46,6 +46,6 @@ export const useVisibleItems = (items, chunkSize) => {
   return {
     visibleItems,
     hasMore: visibleCount < items.length,
-    sentinelRef
+    sentinelRef,
   };
 };

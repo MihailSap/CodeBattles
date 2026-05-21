@@ -1,13 +1,7 @@
 import { formatNotificationTime, getNotificationRoute } from '@/entities/notification';
 import { DeleteIcon } from '@/shared/ui/icons';
 
-const NotificationsList = ({
-  notifications,
-  isLoading,
-  isError,
-  onNotificationClick,
-  onDeleteNotification
-}) => {
+const NotificationsList = ({ notifications, isLoading, isError, onNotificationClick, onDeleteNotification }) => {
   if (isLoading) {
     return <p className="header__notifications-empty">Загружаем уведомления...</p>;
   }

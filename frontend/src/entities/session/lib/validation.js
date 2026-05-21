@@ -1,41 +1,64 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { z } from 'zod';
 
-export const validateEmail = (value) => {
-  if (!value.trim()) {
-    return "E-mail не может быть пустым";
-  }
+export const emailSchema = z
+  .string()
+  .trim()
+  .min(1, 'E-mail не может быть пустым')
+  .max(255, 'E-mail должен быть не длиннее 255 символов')
+  .email('Некорректный E-mail');
 
-  if (!EMAIL_PATTERN.test(value.trim())) {
-    return "Некорректный E-mail";
-  }
+export const loginSchema = z
+  .string()
+  .trim()
+  .min(1, 'Логин не может быть пустым')
+  .min(3, 'Логин - от 3 до 50 символов')
+  .max(50, 'Логин - от 3 до 50 символов');
 
-  return "";
-};
+export const passwordSchema = z
+  .string()
+  .min(8, 'Минимальная длина пароля - 8 символов')
+  .max(50, 'Пароль должен быть не длиннее 50 символов');
 
-export const validatePassword = (value) => {
-  if (value.length < 8) {
-    return "Минимальная длина пароля - 8 символов";
-  }
+export const loginFormSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Введите пароль'),
+});
 
-  return "";
-};
+export const registerFormSchema = z
+  .object({
+    login: loginSchema,
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Повторите пароль'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Пароли не совпадают',
+    path: ['confirmPassword'],
+  });
 
-export const validateConfirmPassword = (value, currentPassword) => {
-  if (value && value !== currentPassword) {
-    return "Пароли не совпадают";
-  }
+export const recoveryFormSchema = z.object({
+  email: emailSchema,
+});
 
-  return "";
-};
+const passwordPairSchema = z
+  .object({
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Повторите пароль'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Пароли не совпадают',
+    path: ['confirmPassword'],
+  });
 
-export const validateLogin = (value) => {
-  if (!value.trim()) {
-    return "Логин не может быть пустым";
-  }
+export const resetPasswordFormSchema = passwordPairSchema;
 
-  if (value.trim().length < 3 || value.trim().length > 50) {
-    return "Логин - от 3 до 50 символов";
-  }
-
-  return "";
-};
+export const profilePasswordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Введите текущий пароль').max(50, 'Пароль должен быть не длиннее 50 символов'),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Повторите пароль'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Пароли не совпадают',
+    path: ['confirmPassword'],
+  });

@@ -11,7 +11,7 @@ import './OrganizationsSidebar.css';
 const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
   const { data: items = [], isLoading } = useGetMyOrganizationsQuery(viewerId, {
     skip: !isOpen || !viewerId,
-    refetchOnMountOrArgChange: 60
+    refetchOnMountOrArgChange: 60,
   });
   const headerHeight = document.querySelector('.header')?.getBoundingClientRect().height || 0;
 
@@ -62,13 +62,20 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }) => {
             <li className="organizations-sidebar__empty">Вы еще не создали ни одну организацию</li>
           ) : (
             sorted.map((organization, index) => (
-              <li key={organization.id} className={`organizations-sidebar__item ${index === sorted.length - 1 ? 'organizations-sidebar__item--last' : ''}`}>
+              <li
+                key={organization.id}
+                className={`organizations-sidebar__item ${index === sorted.length - 1 ? 'organizations-sidebar__item--last' : ''}`}
+              >
                 <Link
                   className="organizations-sidebar__item-link"
                   to={ROUTES.organizationById.replace(':organizationId', organization.id)}
                   onClick={onClose}
                 >
-                  <img className="organizations-sidebar__logo" src={organization.logo} alt={`Логотип ${organization.name}`} />
+                  <img
+                    className="organizations-sidebar__logo"
+                    src={organization.logo}
+                    alt={`Логотип ${organization.name}`}
+                  />
                   <div className="organizations-sidebar__meta">
                     <p className="organizations-sidebar__name">{organization.name}</p>
                     <p

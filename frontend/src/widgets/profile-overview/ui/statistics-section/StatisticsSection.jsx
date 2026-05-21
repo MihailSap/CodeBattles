@@ -30,7 +30,9 @@ const StatisticsSection = ({ acceptedDecisionsPercent, getPercentClass, statCard
 
         <div className="profile-page__accepted-block">
           <p className="profile-page__stat-title">Принятые решения</p>
-          <p className={`profile-page__accepted-percent ${getPercentClass(acceptedDecisionsPercent)}`}>{acceptedDecisionsPercent}%</p>
+          <p className={`profile-page__accepted-percent ${getPercentClass(acceptedDecisionsPercent)}`}>
+            {acceptedDecisionsPercent}%
+          </p>
         </div>
       </div>
     </section>

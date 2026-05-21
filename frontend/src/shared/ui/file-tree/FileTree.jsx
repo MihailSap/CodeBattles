@@ -13,24 +13,24 @@ const sortTreeNodes = (nodes) =>
 const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedFilesSet }) => {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const sortedChildren = useMemo(
-    () => (node.children ? sortTreeNodes(node.children) : []),
-    [node.children]
-  );
+  const sortedChildren = useMemo(() => (node.children ? sortTreeNodes(node.children) : []), [node.children]);
 
   const handleToggle = useCallback((e) => {
     e.stopPropagation();
     setIsExpanded((prev) => !prev);
   }, []);
 
-  const handleSelect = useCallback((e) => {
-    e.stopPropagation();
-    if (!node.isDirectory) {
-      onSelectFile(node);
-    } else {
-      handleToggle(e);
-    }
-  }, [handleToggle, node, onSelectFile]);
+  const handleSelect = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (!node.isDirectory) {
+        onSelectFile(node);
+      } else {
+        handleToggle(e);
+      }
+    },
+    [handleToggle, node, onSelectFile]
+  );
 
   const isSelected = selectedPath === node.path;
   const hasComment = commentedFilesSet.has(node.path);
@@ -58,22 +58,20 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
           )}
         </div>
         <div className="file-tree-node__name">{node.name}</div>
-        {!node.isDirectory && hasComment && (
-          <div className="file-tree-node__comment-dot" />
-        )}
+        {!node.isDirectory && hasComment && <div className="file-tree-node__comment-dot" />}
       </div>
 
       {node.isDirectory && isExpanded && sortedChildren.length > 0 && (
         <div className="file-tree-node__children">
           {sortedChildren.map((child) => (
-              <FileTreeNode
-                key={child.path}
-                node={child}
-                level={level + 1}
-                selectedPath={selectedPath}
-                onSelectFile={onSelectFile}
-                commentedFilesSet={commentedFilesSet}
-              />
+            <FileTreeNode
+              key={child.path}
+              node={child}
+              level={level + 1}
+              selectedPath={selectedPath}
+              onSelectFile={onSelectFile}
+              commentedFilesSet={commentedFilesSet}
+            />
           ))}
         </div>
       )}

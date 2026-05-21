@@ -12,7 +12,7 @@ const EMPTY_USER = {
   registeredAt: '',
   avatarPath: '',
   role: null,
-  enabled: false
+  enabled: false,
 };
 
 const normalizeUser = (user) => {
@@ -22,7 +22,7 @@ const normalizeUser = (user) => {
 
   return {
     ...EMPTY_USER,
-    ...user
+    ...user,
   };
 };
 
@@ -50,7 +50,7 @@ export const initializeAuth = createAsyncThunk('auth/initialize', async (_, { di
     return {
       user: normalizeUser(user),
       userId: user?.id ?? null,
-      isAuthenticated: true
+      isAuthenticated: true,
     };
   } catch (errorMessage) {
     tokenStorage.clearTokens();
@@ -70,7 +70,7 @@ export const loginUser = createAsyncThunk('auth/loginUser', async (payload, { di
     return {
       user: normalizeUser(user),
       userId: user?.id ?? null,
-      tokens: response.data
+      tokens: response.data,
     };
   } catch (error) {
     tokenStorage.clearTokens();
@@ -92,45 +92,56 @@ export const registerUser = createAsyncThunk('auth/registerUser', async (payload
   }
 });
 
-export const verifyEmailUser = createAsyncThunk('auth/verifyEmailUser', async (token, { dispatch, rejectWithValue }) => {
-  try {
-    const response = await authApi.verifyEmail(token);
+export const verifyEmailUser = createAsyncThunk(
+  'auth/verifyEmailUser',
+  async (token, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await authApi.verifyEmail(token);
 
-    tokenStorage.setTokens(response.data);
+      tokenStorage.setTokens(response.data);
 
-    const user = await dispatch(fetchCurrentUser()).unwrap();
+      const user = await dispatch(fetchCurrentUser()).unwrap();
 
-    return {
-      user: normalizeUser(user),
-      userId: user?.id ?? null,
-      tokens: response.data
-    };
-  } catch (error) {
-    tokenStorage.clearTokens();
+      return {
+        user: normalizeUser(user),
+        userId: user?.id ?? null,
+        tokens: response.data,
+      };
+    } catch (error) {
+      tokenStorage.clearTokens();
 
-    return rejectWithValue(getApiErrorMessage(error, 'Не удалось подтвердить почту', 'verifyEmail'));
+      return rejectWithValue(getApiErrorMessage(error, 'Не удалось подтвердить почту', 'verifyEmail'));
+    }
   }
-});
+);
 
-export const requestPasswordReset = createAsyncThunk('auth/requestPasswordReset', async (email, { rejectWithValue }) => {
-  try {
-    const response = await authApi.forgotPassword(email);
+export const requestPasswordReset = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await authApi.forgotPassword(email);
 
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(getApiErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля', 'forgotPassword'));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        getApiErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля', 'forgotPassword')
+      );
+    }
   }
-});
+);
 
-export const resetPasswordByToken = createAsyncThunk('auth/resetPasswordByToken', async (payload, { rejectWithValue }) => {
-  try {
-    const response = await authApi.resetPassword(payload);
+export const resetPasswordByToken = createAsyncThunk(
+  'auth/resetPasswordByToken',
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await authApi.resetPassword(payload);
 
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(getApiErrorMessage(error, 'Не удалось изменить пароль', 'resetPassword'));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, 'Не удалось изменить пароль', 'resetPassword'));
+    }
   }
-});
+);
 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
   const refreshToken = tokenStorage.getRefreshToken();
@@ -147,37 +158,43 @@ export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
   return null;
 });
 
-export const updateUserLogin = createAsyncThunk('auth/updateUserLogin', async (newLogin, { getState, rejectWithValue }) => {
-  const { userId } = getState().auth;
+export const updateUserLogin = createAsyncThunk(
+  'auth/updateUserLogin',
+  async (newLogin, { getState, rejectWithValue }) => {
+    const { userId } = getState().auth;
 
-  if (!userId && userId !== 0) {
-    return rejectWithValue('Не удалось определить ID пользователя');
+    if (!userId && userId !== 0) {
+      return rejectWithValue('Не удалось определить ID пользователя');
+    }
+
+    try {
+      const response = await userApi.updateLogin(userId, newLogin);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить логин', 'updateLogin'));
+    }
   }
+);
 
-  try {
-    const response = await userApi.updateLogin(userId, newLogin);
+export const updateUserPassword = createAsyncThunk(
+  'auth/updateUserPassword',
+  async (newPassword, { getState, rejectWithValue }) => {
+    const { userId } = getState().auth;
 
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить логин', 'updateLogin'));
+    if (!userId && userId !== 0) {
+      return rejectWithValue('Не удалось определить ID пользователя');
+    }
+
+    try {
+      const response = await userApi.updatePassword(userId, newPassword);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить пароль', 'updatePassword'));
+    }
   }
-});
-
-export const updateUserPassword = createAsyncThunk('auth/updateUserPassword', async (newPassword, { getState, rejectWithValue }) => {
-  const { userId } = getState().auth;
-
-  if (!userId && userId !== 0) {
-    return rejectWithValue('Не удалось определить ID пользователя');
-  }
-
-  try {
-    const response = await userApi.updatePassword(userId, newPassword);
-
-    return response.data;
-  } catch (error) {
-    return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить пароль', 'updatePassword'));
-  }
-});
+);
 
 const initialState = {
   user: normalizeUser(),
@@ -186,7 +203,7 @@ const initialState = {
   isInitialized: false,
   isLoading: false,
   error: null,
-  successMessage: null
+  successMessage: null,
 };
 
 const authSlice = createSlice({
@@ -200,9 +217,9 @@ const authSlice = createSlice({
     patchAuthUser(state, action) {
       state.user = normalizeUser({
         ...state.user,
-        ...action.payload
+        ...action.payload,
       });
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -352,7 +369,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || 'Не удалось обновить пароль';
       });
-  }
+  },
 });
 
 export const { clearAuthMessages, patchAuthUser } = authSlice.actions;

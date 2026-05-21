@@ -3,7 +3,7 @@ import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
 
 const authClient = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
 });
 
 export const authApi = {
@@ -16,15 +16,15 @@ export const authApi = {
   verifyEmail(token) {
     return authClient.post('/api/v1/auth/verify-email', null, {
       params: {
-        token
-      }
+        token,
+      },
     });
   },
   forgotPassword(email) {
     return authClient.post('/api/v1/auth/forgot-password', null, {
       params: {
-        email
-      }
+        email,
+      },
     });
   },
   resetPassword(payload) {
@@ -39,8 +39,8 @@ export const authApi = {
       { refreshToken },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
     );
   },
@@ -50,9 +50,9 @@ export const authApi = {
       { refreshToken },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
     );
-  }
+  },
 };

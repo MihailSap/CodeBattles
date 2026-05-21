@@ -76,7 +76,6 @@
   background-color: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-
 }
 
 .snackbar__close svg {

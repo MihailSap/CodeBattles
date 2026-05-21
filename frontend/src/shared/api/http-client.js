@@ -3,11 +3,11 @@ import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
 
 export const httpClient = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
 });
 
 const refreshClient = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
 });
 
 let refreshRequestPromise = null;
@@ -32,14 +32,14 @@ const requestNewAccessToken = async () => {
       { refreshToken },
       {
         headers: {
-          Authorization: `Bearer ${nextAccessToken}`
-        }
+          Authorization: `Bearer ${nextAccessToken}`,
+        },
       }
     );
 
     tokenStorage.setTokens({
       accessToken: refreshResponse.data?.accessToken || nextAccessToken,
-      refreshToken: refreshResponse.data?.refreshToken || refreshToken
+      refreshToken: refreshResponse.data?.refreshToken || refreshToken,
     });
   } catch {
     tokenStorage.setTokens({ accessToken: nextAccessToken, refreshToken });

@@ -44,7 +44,6 @@
   background: transparent;
   color: var(--color-danger);
   cursor: pointer;
-
 }
 
 .join-search-modal__close svg {
@@ -72,7 +71,6 @@
   font-size: 18px;
   font-weight: 400;
   color: var(--color-text-primary);
-
 }
 
 .join-search-modal__search::placeholder {

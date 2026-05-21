@@ -3,7 +3,7 @@ export {
   ADMIN_COMPLAINT_PENALTY_POINTS,
   ADMIN_EVENT_TYPE,
   ADMIN_EVENT_TYPE_LABELS,
-  ADMIN_EVENT_TYPE_OPTIONS
+  ADMIN_EVENT_TYPE_OPTIONS,
 } from './model/constants';
 
 export {
@@ -12,5 +12,5 @@ export {
   useGetAdminSystemSettingsQuery,
   useResolveAdminComplaintMutation,
   useUpdateAdminAiSystemPromptMutation,
-  useUpdateAdminReviewDeadlineDaysMutation
+  useUpdateAdminReviewDeadlineDaysMutation,
 } from './api/admin-api-slice';

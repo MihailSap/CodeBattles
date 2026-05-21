@@ -18,7 +18,9 @@
   background-repeat: no-repeat;
   border-radius: 7px;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .code-viewer-comment-glyph--ai {
@@ -51,7 +53,6 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-
   .code-viewer-comment-glyph:hover {
     background-color: color-mix(in srgb, var(--color-accent) 24%, transparent);
     border-color: color-mix(in srgb, var(--color-accent) 52%, transparent);

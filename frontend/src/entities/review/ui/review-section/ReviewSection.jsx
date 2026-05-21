@@ -7,10 +7,7 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
   const [maxHeight, setMaxHeight] = useState(defaultOpen ? 'none' : '0px');
   const contentRef = useRef(null);
 
-  const sectionClassName = useMemo(
-    () => `review-section ${nested ? 'review-section--nested' : ''}`,
-    [nested]
-  );
+  const sectionClassName = useMemo(() => `review-section ${nested ? 'review-section--nested' : ''}`, [nested]);
 
   const handleToggle = () => {
     const contentNode = contentRef.current;
@@ -60,7 +57,9 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
           }
         }}
       >
-        <div className="review-section__content" ref={contentRef}>{children}</div>
+        <div className="review-section__content" ref={contentRef}>
+          {children}
+        </div>
       </div>
     </section>
   );

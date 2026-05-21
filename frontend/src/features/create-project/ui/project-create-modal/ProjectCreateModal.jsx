@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 import { CheckIcon } from '@/shared/ui/icons';
 import { ProjectSkillsSelector } from '@/entities/stack';
 import ModalShell from '@/shared/ui/modal-shell';
-import { PROJECT_PRIVACY, PROJECT_PRIVACY_LABELS } from '@/entities/project';
+import { PROJECT_PRIVACY, PROJECT_PRIVACY_LABELS, projectCreateFormSchema } from '@/entities/project';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { validateProjectName, validateRepositoryUrl } from '@/entities/project';
 import './ProjectCreateModal.css';
 
 const initialState = {
@@ -12,31 +12,26 @@ const initialState = {
   description: '',
   repositoryUrl: '',
   stack: [],
-  privacy: PROJECT_PRIVACY.PUBLIC
-};
-
-const initialTouched = {
-  name: false,
-  repositoryUrl: false
+  privacy: PROJECT_PRIVACY.PUBLIC,
 };
 
 const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
-  const [form, setForm] = useState(initialState);
-  const [touched, setTouched] = useState(initialTouched);
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm({
+    resolver: zodResolver(projectCreateFormSchema),
+    defaultValues: initialState,
+    mode: 'onChange',
+  });
 
   useBodyScrollLock(isOpen);
 
-  const nameError = validateProjectName(form.name);
-  const repositoryError = validateRepositoryUrl(form.repositoryUrl);
-
-  const isFormValid = useMemo(() => !nameError && !repositoryError, [nameError, repositoryError]);
-
-  const submit = async (event) => {
-    event.preventDefault();
-
-    setTouched({ name: true, repositoryUrl: true });
-
-    if (!isFormValid || isSubmitting) {
+  const submit = async (form) => {
+    if (isSubmitting) {
       return;
     }
 
@@ -45,8 +40,16 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
       description: form.description.trim(),
       repositoryUrl: form.repositoryUrl.trim(),
       stack: form.stack,
-      privacy: form.privacy
+      privacy: form.privacy,
     });
+  };
+
+  const getError = (fieldName) => {
+    if (!(touchedFields[fieldName] || isSubmitted)) {
+      return '';
+    }
+
+    return errors[fieldName]?.message || '';
   };
 
   if (!isOpen) {
@@ -54,10 +57,12 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
   }
 
   const handleClose = () => {
-    setForm(initialState);
-    setTouched(initialTouched);
+    reset(initialState);
     onClose();
   };
+
+  const nameError = getError('name');
+  const repositoryError = getError('repositoryUrl');
 
   return (
     <ModalShell
@@ -72,76 +77,77 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
       closeClassName="project-create-modal__close"
       closeAriaLabel="Закрыть форму"
     >
-        <form className="project-create-modal__content" onSubmit={submit}>
-          <div className="project-create-modal__fields">
-            <div className="project-create-modal__field">
-              <input
-                className={`project-create-modal__input ${touched.name && nameError ? 'project-create-modal__input--error' : ''}`}
-                type="text"
-                placeholder="Название*"
-                value={form.name}
-                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
-                onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
-                maxLength={100}
-              />
-              {touched.name && nameError && <p className="project-create-modal__error">{nameError}</p>}
-            </div>
-
-            <div className="project-create-modal__field">
-              <textarea
-                className="project-create-modal__input project-create-modal__textarea"
-                placeholder="Описание"
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value.slice(0, 3000) }))}
-                maxLength={3000}
-              />
-            </div>
-
-            <div className="project-create-modal__field">
-              <input
-                className={`project-create-modal__input ${touched.repositoryUrl && repositoryError ? 'project-create-modal__input--error' : ''}`}
-                type="text"
-                placeholder="Ссылка на репозиторий"
-                value={form.repositoryUrl}
-                onChange={(event) => setForm((prev) => ({ ...prev, repositoryUrl: event.target.value.slice(0, 500) }))}
-                onBlur={() => setTouched((prev) => ({ ...prev, repositoryUrl: true }))}
-                maxLength={500}
-              />
-              {touched.repositoryUrl && repositoryError && <p className="project-create-modal__error">{repositoryError}</p>}
-            </div>
+      <form className="project-create-modal__content" onSubmit={handleSubmit(submit)}>
+        <div className="project-create-modal__fields">
+          <div className="project-create-modal__field">
+            <input
+              className={`project-create-modal__input ${nameError ? 'project-create-modal__input--error' : ''}`}
+              type="text"
+              placeholder="Название*"
+              maxLength={100}
+              {...register('name')}
+            />
+            {nameError && <p className="project-create-modal__error">{nameError}</p>}
           </div>
 
-          <div className="project-create-modal__section">
-            <ProjectSkillsSelector
-              value={form.stack}
-              onChange={(stack) => setForm((prev) => ({ ...prev, stack }))}
-              title="Технологический стек:"
-              forceOpenUp
-              boundarySelector=".project-create-modal"
+          <div className="project-create-modal__field">
+            <textarea
+              className="project-create-modal__input project-create-modal__textarea"
+              placeholder="Описание"
+              maxLength={3000}
+              {...register('description')}
             />
           </div>
 
-          <div className="project-create-modal__section">
-            <h3 className="project-create-modal__section-title">Приватность:</h3>
-            <div className="project-create-modal__radio-row">
-              {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
-                <label className="project-create-modal__radio-item" key={privacyValue}>
-                  <input
-                    className="project-create-modal__radio"
-                    type="radio"
-                    checked={form.privacy === privacyValue}
-                    onChange={() => setForm((prev) => ({ ...prev, privacy: privacyValue }))}
-                  />
-                  <span>{PROJECT_PRIVACY_LABELS[privacyValue]}</span>
-                </label>
-              ))}
-            </div>
+          <div className="project-create-modal__field">
+            <input
+              className={`project-create-modal__input ${repositoryError ? 'project-create-modal__input--error' : ''}`}
+              type="text"
+              placeholder="Ссылка на репозиторий"
+              maxLength={500}
+              {...register('repositoryUrl')}
+            />
+            {repositoryError && <p className="project-create-modal__error">{repositoryError}</p>}
           </div>
+        </div>
 
-          <button className="project-create-modal__submit" type="submit" disabled={!isFormValid || isSubmitting}>
-            <CheckIcon />
-          </button>
-        </form>
+        <div className="project-create-modal__section">
+          <Controller
+            control={control}
+            name="stack"
+            render={({ field }) => (
+              <ProjectSkillsSelector
+                value={field.value}
+                onChange={field.onChange}
+                title="Технологический стек:"
+                forceOpenUp
+                boundarySelector=".project-create-modal"
+              />
+            )}
+          />
+        </div>
+
+        <div className="project-create-modal__section">
+          <h3 className="project-create-modal__section-title">Приватность:</h3>
+          <div className="project-create-modal__radio-row">
+            {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
+              <label className="project-create-modal__radio-item" key={privacyValue}>
+                <input
+                  className="project-create-modal__radio"
+                  type="radio"
+                  value={privacyValue}
+                  {...register('privacy')}
+                />
+                <span>{PROJECT_PRIVACY_LABELS[privacyValue]}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <button className="project-create-modal__submit" type="submit" disabled={!isValid || isSubmitting}>
+          <CheckIcon />
+        </button>
+      </form>
     </ModalShell>
   );
 };

@@ -1,4 +1,6 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import participantsCountIcon from '@/shared/assets/participants-count-icon.svg';
 import projectsCountIcon from '@/shared/assets/projects-count-icon.svg';
@@ -11,7 +13,7 @@ import {
   useGetOrganizationByIdQuery,
   useLeaveOrganizationMutation,
   useRejectOrganizationJoinRequestMutation,
-  useUpdateOrganizationMutation
+  useUpdateOrganizationMutation,
 } from '@/entities/project';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
@@ -21,10 +23,14 @@ import { ProjectCreateModal } from '@/features/create-project';
 import Snackbar from '@/shared/ui/snackbar';
 import Spinner from '@/shared/ui/spinner';
 import { ACCESS_ERROR_CODE, PROJECT_MEMBER_ROLE, PROJECT_MEMBER_ROLE_LABELS } from '@/entities/project';
-import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, useCompleteNotificationMutation } from '@/entities/notification';
+import {
+  NOTIFICATION_COMPLETION_ACTION,
+  NOTIFICATION_TARGET_KIND,
+  useCompleteNotificationMutation,
+} from '@/entities/notification';
 import { ROUTES } from '@/shared/config/routes';
 import { sortParticipants, truncateText } from '@/entities/project';
-import { validateOrganizationName, validateOrganizationUrl } from '@/entities/organization';
+import { organizationSettingsFormSchema } from '@/entities/organization';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
 import './OrganizationPage.css';
@@ -32,8 +38,16 @@ import './OrganizationPage.css';
 const tabs = {
   projects: 'Проекты',
   participants: 'Участники',
-  settings: 'Настройки'
+  settings: 'Настройки',
 };
+
+const getOrganizationSettingsDefaults = (organization) => ({
+  name: organization?.name || '',
+  description: organization?.description || '',
+  link: organization?.link || '',
+  logoUrl: organization?.logoUrl || '',
+  logoFile: null,
+});
 
 const OrganizationPage = () => {
   const { organizationId } = useParams();
@@ -56,8 +70,24 @@ const OrganizationPage = () => {
   const [isCreateProjectOpen, setCreateProjectOpen] = useState(false);
 
   const [requestActionUserId, setRequestActionUserId] = useState(null);
-  const [settingsDraft, setSettingsDraft] = useState(null);
-  const [settingsTouched, setSettingsTouched] = useState({ name: false, link: false });
+  const {
+    register: registerSettings,
+    handleSubmit: handleSettingsSubmit,
+    reset: resetSettings,
+    setValue: setSettingsValue,
+    formState: {
+      errors: settingsErrors,
+      isSubmitted: isSettingsSubmitted,
+      isValid: isSettingsValid,
+      touchedFields: settingsTouchedFields,
+    },
+    control: settingsControl,
+  } = useForm({
+    resolver: zodResolver(organizationSettingsFormSchema),
+    defaultValues: getOrganizationSettingsDefaults(),
+    mode: 'onChange',
+  });
+  const settingsDraft = useWatch({ control: settingsControl });
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const debouncedProjectSearch = useDebouncedValue(projectSearch, 300);
   const numericOrganizationId = Number(organizationId);
@@ -65,9 +95,9 @@ const OrganizationPage = () => {
     data: organization,
     error: organizationError,
     isLoading,
-    refetch: refetchOrganization
+    refetch: refetchOrganization,
   } = useGetOrganizationByIdQuery(numericOrganizationId, {
-    refetchOnMountOrArgChange: 30
+    refetchOnMountOrArgChange: 30,
   });
   const [createProject, { isLoading: isCreateProjectSubmitting }] = useCreateProjectMutation();
   const [leaveOrganization, { isLoading: isLeaveSubmitting }] = useLeaveOrganizationMutation();
@@ -86,8 +116,8 @@ const OrganizationPage = () => {
       navigate(ROUTES.projects, {
         replace: true,
         state: {
-          snackbarMessage: 'Необходимо присоединиться к организации для просмотра'
-        }
+          snackbarMessage: 'Необходимо присоединиться к организации для просмотра',
+        },
       });
       return;
     }
@@ -101,16 +131,9 @@ const OrganizationPage = () => {
     }
 
     queueMicrotask(() => {
-      setSettingsDraft({
-        name: organization.name,
-        description: organization.description,
-        link: organization.link,
-        logoUrl: organization.logoUrl,
-        logoFile: null
-      });
-      setSettingsTouched({ name: false, link: false });
+      resetSettings(getOrganizationSettingsDefaults(organization));
     });
-  }, [organization]);
+  }, [organization, resetSettings]);
 
   const projectsList = useMemo(() => {
     const normalizedSearch = debouncedProjectSearch.trim().toLowerCase();
@@ -148,7 +171,7 @@ const OrganizationPage = () => {
   const availableTabs = useMemo(() => {
     const baseTabs = [
       { key: 'projects', label: tabs.projects },
-      { key: 'participants', label: tabs.participants }
+      { key: 'participants', label: tabs.participants },
     ];
 
     if (isOwner) {
@@ -158,7 +181,10 @@ const OrganizationPage = () => {
     return baseTabs;
   }, [isOwner]);
 
-  const participantsSource = useMemo(() => sortParticipants(organization?.participants || []), [organization?.participants]);
+  const participantsSource = useMemo(
+    () => sortParticipants(organization?.participants || []),
+    [organization?.participants]
+  );
 
   const requestsSource = useMemo(
     () =>
@@ -168,9 +194,16 @@ const OrganizationPage = () => {
     [organization?.joinRequests]
   );
 
-  const settingsNameError = useMemo(() => validateOrganizationName(settingsDraft?.name || ''), [settingsDraft?.name]);
-  const settingsLinkError = useMemo(() => validateOrganizationUrl(settingsDraft?.link || ''), [settingsDraft?.link]);
-  const settingsFormInvalid = Boolean(settingsNameError || settingsLinkError);
+  const getSettingsError = (fieldName) => {
+    if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
+      return '';
+    }
+
+    return settingsErrors[fieldName]?.message || '';
+  };
+
+  const settingsNameError = getSettingsError('name');
+  const settingsLinkError = getSettingsError('link');
 
   const hasSettingsChanges = useMemo(() => {
     if (!organization || !settingsDraft) {
@@ -235,8 +268,8 @@ const OrganizationPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Вы вышли из организации',
-          snackbarType: 'success'
-        }
+          snackbarType: 'success',
+        },
       });
     } catch {
       showSnackbar('Не удалось выйти из организации', 'error');
@@ -256,8 +289,8 @@ const OrganizationPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Организация удалена',
-          snackbarType: 'success'
-        }
+          snackbarType: 'success',
+        },
       });
     } catch {
       showSnackbar('Не удалось удалить организацию', 'error');
@@ -280,8 +313,8 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.userId
-        }
+          userId: request.userId,
+        },
       });
       await refetchOrganization().unwrap();
       showSnackbar(`Вы отклонили заявку пользователя @${request.login}`, 'error');
@@ -306,8 +339,8 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.userId
-        }
+          userId: request.userId,
+        },
       });
       await refetchOrganization().unwrap();
       showSnackbar(`Вы приняли заявку пользователя @${request.login}`, 'success');
@@ -324,15 +357,8 @@ const OrganizationPage = () => {
 
     const nextUrl = URL.createObjectURL(file);
 
-    setSettingsDraft((prev) => {
-      if (!prev) return prev;
-
-      return {
-        ...prev,
-        logoUrl: nextUrl,
-        logoFile: file,
-      };
-    });
+    setSettingsValue('logoUrl', nextUrl, { shouldDirty: true });
+    setSettingsValue('logoFile', file, { shouldDirty: true, shouldValidate: true });
   };
 
   const handleCancelSettings = () => {
@@ -340,23 +366,13 @@ const OrganizationPage = () => {
       return;
     }
 
-    setSettingsTouched({ name: false, link: false });
-
-    setSettingsDraft({
-      name: organization.name,
-      description: organization.description,
-      link: organization.link,
-      logoUrl: organization.logoUrl,
-      logoFile: null
-    });
+    resetSettings(getOrganizationSettingsDefaults(organization));
   };
 
-  const handleSaveSettings = async () => {
+  const saveSettings = async (settingsDraft) => {
     if (!organization || !settingsDraft) return;
 
-    setSettingsTouched({ name: true, link: true });
-
-    if (settingsFormInvalid || !hasSettingsChanges) return;
+    if (!hasSettingsChanges) return;
 
     try {
       const payload = {};
@@ -376,11 +392,9 @@ const OrganizationPage = () => {
       }
 
       await updateOrganization({ organizationId: organization.id, payload }).unwrap();
-      await refetchOrganization().unwrap();
+      const fullOrganization = await refetchOrganization().unwrap();
 
-      setSettingsDraft(prev => ({ ...prev, logoFile: null }));
-
-      setSettingsTouched({ name: false, link: false });
+      resetSettings(getOrganizationSettingsDefaults(fullOrganization));
       showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
       if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
@@ -390,6 +404,8 @@ const OrganizationPage = () => {
       }
     }
   };
+
+  const handleSaveSettings = handleSettingsSubmit(saveSettings);
 
   if (isLoading) {
     return (
@@ -429,7 +445,11 @@ const OrganizationPage = () => {
               <span className="project-page__description-label">Описание организации: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
-                <button className="project-page__description-toggle" type="button" onClick={() => setShowFullDescription((prev) => !prev)}>
+                <button
+                  className="project-page__description-toggle"
+                  type="button"
+                  onClick={() => setShowFullDescription((prev) => !prev)}
+                >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
               )}
@@ -475,7 +495,11 @@ const OrganizationPage = () => {
                 </label>
 
                 {isOwner && (
-                  <button className="project-page__action-button project-page__action-button--success" type="button" onClick={() => setCreateProjectOpen(true)}>
+                  <button
+                    className="project-page__action-button project-page__action-button--success"
+                    type="button"
+                    onClick={() => setCreateProjectOpen(true)}
+                  >
                     Создать проект
                   </button>
                 )}
@@ -497,17 +521,27 @@ const OrganizationPage = () => {
                   onClick={() => navigate(ROUTES.projectById.replace(':projectId', project.id))}
                   role="presentation"
                 >
-                  <span className="project-page__task-name" title={project.name}>{truncateText(project.name, 55)}</span>
+                  <span className="project-page__task-name" title={project.name}>
+                    {truncateText(project.name, 55)}
+                  </span>
                   <span className="organization-page__project-tasks">{project.activeTasksCount}</span>
                   <span className="project-page__assignees">
                     {project.participants.slice(0, 6).map((participant) => (
                       <span key={participant.id} className="project-page__assignee-avatar" title={participant.fullName}>
-                        {participant.avatar ? <img src={participant.avatar} alt={participant.fullName} /> : <AvatarIcon />}
+                        {participant.avatar ? (
+                          <img src={participant.avatar} alt={participant.fullName} />
+                        ) : (
+                          <AvatarIcon />
+                        )}
                       </span>
                     ))}
-                    {project.participants.length > 6 && <span className="project-page__assignee-more">+{project.participants.length - 6}</span>}
+                    {project.participants.length > 6 && (
+                      <span className="project-page__assignee-more">+{project.participants.length - 6}</span>
+                    )}
                   </span>
-                  <span className="project-page__participant-role">{PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}</span>
+                  <span className="project-page__participant-role">
+                    {PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}
+                  </span>
                 </div>
               ))}
 
@@ -522,7 +556,9 @@ const OrganizationPage = () => {
               <div className="project-page__controls-left">
                 {isOwner ? (
                   <div className="project-page__mode-switch organization-page__participants-switch">
-                    <span className={`project-page__mode-thumb ${participantsMode === 'requests' ? 'project-page__mode-thumb--mine' : ''}`} />
+                    <span
+                      className={`project-page__mode-thumb ${participantsMode === 'requests' ? 'project-page__mode-thumb--mine' : ''}`}
+                    />
                     <button
                       type="button"
                       className={`project-page__mode-button ${participantsMode === 'members' ? 'project-page__mode-button--active' : ''}`}
@@ -539,17 +575,27 @@ const OrganizationPage = () => {
                     </button>
                   </div>
                 ) : (
-                  <span className="project-page__participants-count">Участники ({organization.participants.length})</span>
+                  <span className="project-page__participants-count">
+                    Участники ({organization.participants.length})
+                  </span>
                 )}
               </div>
 
               <div className="project-page__controls-right">
                 {isOwner ? (
-                  <button className="project-page__action-button project-page__action-button--primary" type="button" onClick={() => setInviteModalOpen(true)}>
+                  <button
+                    className="project-page__action-button project-page__action-button--primary"
+                    type="button"
+                    onClick={() => setInviteModalOpen(true)}
+                  >
                     Пригласить
                   </button>
                 ) : (
-                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setLeaveModalOpen(true)}>
+                  <button
+                    className="project-page__action-button project-page__action-button--danger"
+                    type="button"
+                    onClick={() => setLeaveModalOpen(true)}
+                  >
                     Выйти из организации
                   </button>
                 )}
@@ -559,56 +605,70 @@ const OrganizationPage = () => {
             <section className="section-card project-page__participants-list">
               {isOwner && participantsMode === 'requests'
                 ? requestsSource.map((request) => (
-                  <div key={request.id} className="project-page__participant-row">
-                    <div className="project-page__participant-main">
-                      <span className="project-page__participant-avatar">
-                        {request.avatar ? <img src={request.avatar} alt={request.fullName} /> : <AvatarIcon />}
-                      </span>
-                      <span className="project-page__participant-meta">
-                        <span className="project-page__participant-name">{request.fullName}</span>
-                        <span className="project-page__participant-login">@{request.login}</span>
-                      </span>
-                    </div>
+                    <div key={request.id} className="project-page__participant-row">
+                      <div className="project-page__participant-main">
+                        <span className="project-page__participant-avatar">
+                          {request.avatar ? <img src={request.avatar} alt={request.fullName} /> : <AvatarIcon />}
+                        </span>
+                        <span className="project-page__participant-meta">
+                          <span className="project-page__participant-name">{request.fullName}</span>
+                          <span className="project-page__participant-login">@{request.login}</span>
+                        </span>
+                      </div>
 
-                    <div className="organization-page__request-actions">
-                      <button
-                        className="organization-page__request-button organization-page__request-button--reject"
-                        type="button"
-                        onClick={() => handleRejectRequest(request)}
-                        disabled={requestActionUserId === request.userId}
-                        aria-label={`Отклонить заявку @${request.login}`}
-                      >
-                        <CrossIcon />
-                      </button>
-                      <button
-                        className="organization-page__request-button organization-page__request-button--accept"
-                        type="button"
-                        onClick={() => handleApproveRequest(request)}
-                        disabled={requestActionUserId === request.userId}
-                        aria-label={`Принять заявку @${request.login}`}
-                      >
-                        <CheckIcon />
-                      </button>
+                      <div className="organization-page__request-actions">
+                        <button
+                          className="organization-page__request-button organization-page__request-button--reject"
+                          type="button"
+                          onClick={() => handleRejectRequest(request)}
+                          disabled={requestActionUserId === request.userId}
+                          aria-label={`Отклонить заявку @${request.login}`}
+                        >
+                          <CrossIcon />
+                        </button>
+                        <button
+                          className="organization-page__request-button organization-page__request-button--accept"
+                          type="button"
+                          onClick={() => handleApproveRequest(request)}
+                          disabled={requestActionUserId === request.userId}
+                          aria-label={`Принять заявку @${request.login}`}
+                        >
+                          <CheckIcon />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
                 : participantsSource.map((participant) => (
-                  <Link key={participant.id} className="project-page__participant-row" to={`${ROUTES.profile}/${participant.id}`}>
-                    <div className="project-page__participant-main">
-                      <span className="project-page__participant-avatar">
-                        {participant.avatar ? <img src={participant.avatar} alt={participant.fullName} /> : <AvatarIcon />}
+                    <Link
+                      key={participant.id}
+                      className="project-page__participant-row"
+                      to={`${ROUTES.profile}/${participant.id}`}
+                    >
+                      <div className="project-page__participant-main">
+                        <span className="project-page__participant-avatar">
+                          {participant.avatar ? (
+                            <img src={participant.avatar} alt={participant.fullName} />
+                          ) : (
+                            <AvatarIcon />
+                          )}
+                        </span>
+                        <span className="project-page__participant-meta">
+                          <span className="project-page__participant-name">{participant.fullName}</span>
+                          <span className="project-page__participant-login">@{participant.login}</span>
+                        </span>
+                      </div>
+                      <span className="project-page__participant-role">
+                        {PROJECT_MEMBER_ROLE_LABELS[participant.role]}
                       </span>
-                      <span className="project-page__participant-meta">
-                        <span className="project-page__participant-name">{participant.fullName}</span>
-                        <span className="project-page__participant-login">@{participant.login}</span>
-                      </span>
-                    </div>
-                    <span className="project-page__participant-role">{PROJECT_MEMBER_ROLE_LABELS[participant.role]}</span>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
 
-              {isOwner && participantsMode === 'requests' && requestsSource.length === 0 && <p className="project-page__list-empty">Заявок пока нет</p>}
-              {(!isOwner || participantsMode === 'members') && participantsSource.length === 0 && <p className="project-page__list-empty">Участники не найдены</p>}
+              {isOwner && participantsMode === 'requests' && requestsSource.length === 0 && (
+                <p className="project-page__list-empty">Заявок пока нет</p>
+              )}
+              {(!isOwner || participantsMode === 'members') && participantsSource.length === 0 && (
+                <p className="project-page__list-empty">Участники не найдены</p>
+              )}
             </section>
           </>
         )}
@@ -621,49 +681,59 @@ const OrganizationPage = () => {
               </div>
 
               <div className="project-page__controls-right">
-                <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setDeleteModalOpen(true)}>
+                <button
+                  className="project-page__action-button project-page__action-button--danger"
+                  type="button"
+                  onClick={() => setDeleteModalOpen(true)}
+                >
                   Удалить организацию
                 </button>
               </div>
             </div>
 
-            <section className="section-card project-page__settings">
+            <form className="section-card project-page__settings" onSubmit={handleSaveSettings}>
               <div className="project-page__settings-field">
                 <label>Название</label>
                 <input
-                  className={`project-page__settings-input ${settingsTouched.name && settingsNameError ? 'project-page__settings-input--error' : ''}`}
-                  value={settingsDraft.name}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
-                  onBlur={() => setSettingsTouched((prev) => ({ ...prev, name: true }))}
+                  className={`project-page__settings-input ${settingsNameError ? 'project-page__settings-input--error' : ''}`}
+                  maxLength={100}
+                  {...registerSettings('name')}
                 />
-                {settingsTouched.name && settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
+                {settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
               </div>
 
               <div className="project-page__settings-field">
                 <label>Описание</label>
                 <textarea
                   className="project-page__settings-input project-page__settings-textarea"
-                  value={settingsDraft.description}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, description: event.target.value.slice(0, 3000) }))}
+                  maxLength={3000}
+                  {...registerSettings('description')}
                 />
               </div>
 
               <div className="project-page__settings-field">
                 <label>Ссылка</label>
                 <input
-                  className={`project-page__settings-input ${settingsTouched.link && settingsLinkError ? 'project-page__settings-input--error' : ''}`}
-                  value={settingsDraft.link}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, link: event.target.value.slice(0, 500) }))}
-                  onBlur={() => setSettingsTouched((prev) => ({ ...prev, link: true }))}
+                  className={`project-page__settings-input ${settingsLinkError ? 'project-page__settings-input--error' : ''}`}
+                  maxLength={500}
+                  {...registerSettings('link')}
                 />
-                {settingsTouched.link && settingsLinkError && <p className="project-page__settings-error">{settingsLinkError}</p>}
+                {settingsLinkError && <p className="project-page__settings-error">{settingsLinkError}</p>}
               </div>
 
               <div className="project-page__settings-field">
                 <label>Логотип</label>
                 <div className="organization-page__settings-logo-wrap">
-                  <img className="organization-page__settings-logo" src={settingsDraft.logoUrl} alt="Логотип организации" />
-                  <button className="organization-page__settings-logo-upload" type="button" onClick={() => logoInputRef.current?.click()}>
+                  <img
+                    className="organization-page__settings-logo"
+                    src={settingsDraft.logoUrl}
+                    alt="Логотип организации"
+                  />
+                  <button
+                    className="organization-page__settings-logo-upload"
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                  >
                     <img src={uploadIcon} alt="" />
                   </button>
                   <input ref={logoInputRef} type="file" accept="image/*" hidden onChange={handleLogoUpload} />
@@ -674,18 +744,22 @@ const OrganizationPage = () => {
                 <div className="project-page__settings-actions">
                   <button
                     className="project-page__settings-action project-page__settings-action--save"
-                    type="button"
-                    onClick={handleSaveSettings}
-                    disabled={isSettingsSubmitting || settingsFormInvalid}
+                    type="submit"
+                    disabled={isSettingsSubmitting || !isSettingsValid}
                   >
                     <CheckIcon />
                   </button>
-                  <button className="project-page__settings-action project-page__settings-action--cancel" type="button" onClick={handleCancelSettings} disabled={isSettingsSubmitting}>
+                  <button
+                    className="project-page__settings-action project-page__settings-action--cancel"
+                    type="button"
+                    onClick={handleCancelSettings}
+                    disabled={isSettingsSubmitting}
+                  >
                     <CrossIcon />
                   </button>
                 </div>
               )}
-            </section>
+            </form>
           </>
         )}
       </main>

@@ -1,7 +1,7 @@
 export const getLanguageByFileName = (fileName) => {
   if (!fileName) return 'javascript';
   const extension = fileName.split('.').pop().toLowerCase();
-  
+
   const map = {
     js: 'javascript',
     jsx: 'javascript',
@@ -34,7 +34,7 @@ export const getLanguageByFileName = (fileName) => {
     vue: 'html',
     svelte: 'html',
     xml: 'xml',
-    txt: 'plaintext'
+    txt: 'plaintext',
   };
 
   return map[extension] || 'plaintext';

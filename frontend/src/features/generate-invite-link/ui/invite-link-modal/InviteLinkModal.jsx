@@ -44,7 +44,7 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
 
     const payload = {
       expiresAt,
-      reusable
+      reusable,
     };
 
     const result = await onGenerate(payload);
@@ -93,47 +93,68 @@ const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitt
       closeAriaLabel="Закрыть форму"
       closeDisabled={isSubmitting}
     >
-        <div className="invite-link-modal__content">
-          {!generatedLink && (
-            <>
-              <div className="invite-link-modal__section">
-                <h3 className="invite-link-modal__section-title">Срок действия:</h3>
-                <DateTimePicker
-                  value={expiresAt}
-                  onChange={setExpiresAt}
-                  minDateTime={minValue}
-                  placeholder="Выберите дату и время"
-                  hasError={Boolean(localError)}
-                />
-                {localError && <p className="invite-link-modal__error">{localError}</p>}
-              </div>
-
-              <div className="invite-link-modal__section">
-                <h3 className="invite-link-modal__section-title">Тип ссылки:</h3>
-                <div className="invite-link-modal__radios">
-                  <label className="invite-link-modal__radio-item">
-                    <input className="invite-link-modal__radio" type="radio" checked={!reusable} onChange={() => setReusable(false)} disabled={isSubmitting} />
-                    <span>Одноразовая</span>
-                  </label>
-                  <label className="invite-link-modal__radio-item">
-                    <input className="invite-link-modal__radio" type="radio" checked={reusable} onChange={() => setReusable(true)} disabled={isSubmitting} />
-                    <span>Многоразовая</span>
-                  </label>
-                </div>
-              </div>
-
-              <button className="invite-link-modal__submit" type="button" onClick={generate} disabled={!expiresAt || isSubmitting}>
-                <CheckIcon />
-              </button>
-            </>
-          )}
-          {generatedLink && (
-            <div className="invite-link-modal__result">
-              <a href={generatedLink} target="_blank" rel="noreferrer">{generatedLink}</a>
-              <button type="button" onClick={copy}>Скопировать</button>
+      <div className="invite-link-modal__content">
+        {!generatedLink && (
+          <>
+            <div className="invite-link-modal__section">
+              <h3 className="invite-link-modal__section-title">Срок действия:</h3>
+              <DateTimePicker
+                value={expiresAt}
+                onChange={setExpiresAt}
+                minDateTime={minValue}
+                placeholder="Выберите дату и время"
+                hasError={Boolean(localError)}
+              />
+              {localError && <p className="invite-link-modal__error">{localError}</p>}
             </div>
-          )}
-        </div>
+
+            <div className="invite-link-modal__section">
+              <h3 className="invite-link-modal__section-title">Тип ссылки:</h3>
+              <div className="invite-link-modal__radios">
+                <label className="invite-link-modal__radio-item">
+                  <input
+                    className="invite-link-modal__radio"
+                    type="radio"
+                    checked={!reusable}
+                    onChange={() => setReusable(false)}
+                    disabled={isSubmitting}
+                  />
+                  <span>Одноразовая</span>
+                </label>
+                <label className="invite-link-modal__radio-item">
+                  <input
+                    className="invite-link-modal__radio"
+                    type="radio"
+                    checked={reusable}
+                    onChange={() => setReusable(true)}
+                    disabled={isSubmitting}
+                  />
+                  <span>Многоразовая</span>
+                </label>
+              </div>
+            </div>
+
+            <button
+              className="invite-link-modal__submit"
+              type="button"
+              onClick={generate}
+              disabled={!expiresAt || isSubmitting}
+            >
+              <CheckIcon />
+            </button>
+          </>
+        )}
+        {generatedLink && (
+          <div className="invite-link-modal__result">
+            <a href={generatedLink} target="_blank" rel="noreferrer">
+              {generatedLink}
+            </a>
+            <button type="button" onClick={copy}>
+              Скопировать
+            </button>
+          </div>
+        )}
+      </div>
     </ModalShell>
   );
 };

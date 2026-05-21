@@ -17,7 +17,7 @@
   z-index: -1;
 }
 
-[data-theme="dark"] .not-found-page__bg {
+[data-theme='dark'] .not-found-page__bg {
   background-image:
     linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15)),
     url('../../../shared/assets/auth-background-dark.png');
@@ -67,7 +67,6 @@
   padding: 8px 28px;
   background-color: var(--color-accent);
   color: var(--color-surface-panel);
-
 }
 
 @media (hover: hover) and (pointer: fine) {

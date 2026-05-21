@@ -1,19 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useMemo } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  useCreateTaskMutation,
-  useGetOrganizationByIdQuery,
-  useGetProjectByIdQuery
-} from '@/entities/project';
+import { useCreateTaskMutation, useGetOrganizationByIdQuery, useGetProjectByIdQuery } from '@/entities/project';
 import { AssigneesSelector } from '@/features/manage-task';
 import DateTimePicker from '@/shared/ui/date-time-picker';
 import { CheckIcon } from '@/shared/ui/icons';
 import Snackbar from '@/shared/ui/snackbar';
 import Spinner from '@/shared/ui/spinner';
-import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS } from '@/entities/project';
+import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS, taskCreateFormSchema } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { validateTaskName } from '@/entities/project';
 import './TaskCreatePage.css';
 
 const initialState = {
@@ -24,44 +21,43 @@ const initialState = {
   deadline: '',
   reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
   assigneeIds: [],
-  reviewerIds: []
-};
-
-const isPastDateTime = (value) => {
-  if (!value) {
-    return false;
-  }
-
-  const parsed = new Date(value).getTime();
-
-  if (Number.isNaN(parsed)) {
-    return true;
-  }
-
-  return parsed < Date.now();
+  reviewerIds: [],
 };
 
 const TaskCreatePage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState(initialState);
-  const [touched, setTouched] = useState({ name: false, deadline: false, submitted: false });
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm({
+    resolver: zodResolver(taskCreateFormSchema),
+    defaultValues: initialState,
+    mode: 'onChange',
+  });
+  const [reviewType = TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds = [], reviewerIds = []] = useWatch({
+    control,
+    name: ['reviewType', 'assigneeIds', 'reviewerIds'],
+  });
   const {
     data: project,
     error: projectError,
-    isLoading: isProjectLoading
+    isLoading: isProjectLoading,
   } = useGetProjectByIdQuery(projectId, {
-    refetchOnMountOrArgChange: 30
+    refetchOnMountOrArgChange: 30,
   });
   const shouldLoadOrganization = Boolean(project?.organizationId && project.privacy === PROJECT_PRIVACY.PUBLIC);
-  const {
-    data: organization,
-    isLoading: isOrganizationLoading
-  } = useGetOrganizationByIdQuery(project?.organizationId, {
-    skip: !shouldLoadOrganization,
-    refetchOnMountOrArgChange: 60
-  });
+  const { data: organization, isLoading: isOrganizationLoading } = useGetOrganizationByIdQuery(
+    project?.organizationId,
+    {
+      skip: !shouldLoadOrganization,
+      refetchOnMountOrArgChange: 60,
+    }
+  );
   const [createTask, { isLoading: isSubmitting }] = useCreateTaskMutation();
   const organizationParticipants = useMemo(() => organization?.participants || [], [organization?.participants]);
   const isLoading = isProjectLoading || (shouldLoadOrganization && isOrganizationLoading);
@@ -79,22 +75,7 @@ const TaskCreatePage = () => {
   }, [navigate, project, projectId]);
 
   const nowMin = useMemo(() => new Date(), []);
-  const nameError = useMemo(() => validateTaskName(form.name), [form.name]);
-  const deadlineError = useMemo(() => {
-    if (!form.deadline) {
-      return 'Выберите дедлайн';
-    }
-
-    if (isPastDateTime(form.deadline)) {
-      return 'Дедлайн не может быть в прошлом';
-    }
-
-    return '';
-  }, [form.deadline]);
-
-  const showDeadlineError = touched.deadline || touched.submitted;
-  const isValid = !nameError && !deadlineError;
-  const isManualReviewers = form.reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+  const isManualReviewers = reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
 
   const reviewersSource = useMemo(() => {
     if (!project) {
@@ -113,64 +94,37 @@ const TaskCreatePage = () => {
   }, [organizationParticipants, project]);
 
   const availableAssignees = useMemo(
-    () => project?.participants.filter((participant) => !form.reviewerIds.includes(participant.id)) || [],
-    [form.reviewerIds, project]
+    () => project?.participants.filter((participant) => !reviewerIds.includes(participant.id)) || [],
+    [reviewerIds, project]
   );
 
   const availableReviewers = useMemo(
-    () => reviewersSource.filter((participant) => !form.assigneeIds.includes(participant.id)),
-    [form.assigneeIds, reviewersSource]
+    () => reviewersSource.filter((participant) => !assigneeIds.includes(participant.id)),
+    [assigneeIds, reviewersSource]
   );
 
   const reviewTypes = useMemo(() => {
     const types = Object.values(TASK_REVIEW_TYPE);
-    return project?.aiReviewEnabled ? types : types.filter(type => type !== TASK_REVIEW_TYPE.AI_ONLY);
+    return project?.aiReviewEnabled ? types : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
   }, [project?.aiReviewEnabled]);
 
   useEffect(() => {
     if (!isManualReviewers) {
-      if (form.reviewerIds.length > 0) {
-        queueMicrotask(() => setForm((prev) => ({ ...prev, reviewerIds: [] })));
+      if (reviewerIds.length > 0) {
+        queueMicrotask(() => setValue('reviewerIds', [], { shouldDirty: true, shouldValidate: true }));
       }
       return;
     }
 
     const availableReviewerIds = new Set(availableReviewers.map((participant) => participant.id));
-    const nextReviewerIds = form.reviewerIds.filter((id) => availableReviewerIds.has(id));
+    const nextReviewerIds = reviewerIds.filter((id) => availableReviewerIds.has(id));
 
-    if (nextReviewerIds.length !== form.reviewerIds.length) {
-      queueMicrotask(() => setForm((prev) => ({ ...prev, reviewerIds: nextReviewerIds })));
+    if (nextReviewerIds.length !== reviewerIds.length) {
+      queueMicrotask(() => setValue('reviewerIds', nextReviewerIds, { shouldDirty: true, shouldValidate: true }));
     }
-  }, [availableReviewers, form.reviewerIds, isManualReviewers]);
+  }, [availableReviewers, isManualReviewers, reviewerIds, setValue]);
 
-  const submit = async (event) => {
-    event.preventDefault();
-
-    setTouched({ name: true, deadline: true, submitted: true });
-
-    if (!form.deadline) {
-      return;
-    }
-
-    if (isPastDateTime(form.deadline)) {
-      showSnackbar('Дедлайн не может быть в прошлом', 'error');
-      return;
-    }
-
-    if (!isValid) {
-      return;
-    }
-
-    if (form.assigneeIds.length === 0) {
-      showSnackbar('Выберите хотя бы одного исполнителя', 'error');
-      return;
-    }
-
-    if (isManualReviewers && form.reviewerIds.length === 0) {
-      showSnackbar('Выберите хотя бы одного ревьюера', 'error');
-      return;
-    }
-
+  const submit = async (form) => {
     try {
       const result = await createTask({
         projectId: project.id,
@@ -179,8 +133,8 @@ const TaskCreatePage = () => {
           name: form.name.trim(),
           description: form.description.trim(),
           requirements: form.requirements.trim(),
-          evaluationCriteria: form.evaluationCriteria.trim()
-        }
+          evaluationCriteria: form.evaluationCriteria.trim(),
+        },
       }).unwrap();
 
       if (result?.accepted && result?.taskId) {
@@ -190,6 +144,25 @@ const TaskCreatePage = () => {
       showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
     }
   };
+
+  const onInvalid = (formErrors) => {
+    const firstError = formErrors.deadline || formErrors.assigneeIds || formErrors.reviewerIds || formErrors.name;
+
+    if (firstError?.message) {
+      showSnackbar(firstError.message, 'error');
+    }
+  };
+
+  const getError = (fieldName) => {
+    if (!(touchedFields[fieldName] || isSubmitted)) {
+      return '';
+    }
+
+    return errors[fieldName]?.message || '';
+  };
+
+  const nameError = getError('name');
+  const deadlineError = getError('deadline');
 
   if (isLoading) {
     return (
@@ -210,25 +183,27 @@ const TaskCreatePage = () => {
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
 
       <main className="task-create-page__content">
-        <button className="task-create-page__back" type="button" onClick={() => navigate(`${ROUTES.projects}/${projectId}`)}>
+        <button
+          className="task-create-page__back"
+          type="button"
+          onClick={() => navigate(`${ROUTES.projects}/${projectId}`)}
+        >
           ← Назад
         </button>
         <h1 className="task-create-page__title">Создание задачи</h1>
 
-        <form className="task-create-page__form" onSubmit={submit}>
+        <form className="task-create-page__form" onSubmit={handleSubmit(submit, onInvalid)}>
           <div className="task-create-page__fields">
             <div className="task-create-page__field">
               <h3 className="task-create-page__field-title">Название</h3>
               <input
-                className={`task-create-page__input ${touched.name && nameError ? 'task-create-page__input--error' : ''}`}
+                className={`task-create-page__input ${nameError ? 'task-create-page__input--error' : ''}`}
                 type="text"
                 placeholder="Название"
-                value={form.name}
-                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
-                onBlur={() => setTouched((prev) => ({ ...prev, name: true }))}
                 maxLength={100}
+                {...register('name')}
               />
-              {touched.name && nameError && <p className="task-create-page__error">{nameError}</p>}
+              {nameError && <p className="task-create-page__error">{nameError}</p>}
             </div>
 
             <div className="task-create-page__field">
@@ -236,9 +211,8 @@ const TaskCreatePage = () => {
               <textarea
                 className="task-create-page__input task-create-page__textarea"
                 placeholder="Описание задачи"
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value.slice(0, 4000) }))}
                 maxLength={4000}
+                {...register('description')}
               />
             </div>
 
@@ -247,9 +221,8 @@ const TaskCreatePage = () => {
               <textarea
                 className="task-create-page__input task-create-page__textarea"
                 placeholder="Требования"
-                value={form.requirements}
-                onChange={(event) => setForm((prev) => ({ ...prev, requirements: event.target.value.slice(0, 4000) }))}
                 maxLength={4000}
+                {...register('requirements')}
               />
             </div>
 
@@ -258,24 +231,29 @@ const TaskCreatePage = () => {
               <textarea
                 className="task-create-page__input task-create-page__textarea"
                 placeholder="Критерии оценки"
-                value={form.evaluationCriteria}
-                onChange={(event) => setForm((prev) => ({ ...prev, evaluationCriteria: event.target.value.slice(0, 4000) }))}
                 maxLength={4000}
+                {...register('evaluationCriteria')}
               />
             </div>
           </div>
 
           <div className="task-create-page__block">
             <h3 className="task-create-page__block-title">Дедлайн</h3>
-            <DateTimePicker
-              value={form.deadline}
-              onChange={(deadline) => setForm((prev) => ({ ...prev, deadline }))}
-              minDateTime={nowMin}
-              placeholder="Выберите дату и время"
-              hasError={showDeadlineError && Boolean(deadlineError)}
-              onBlur={() => setTouched((prev) => ({ ...prev, deadline: true }))}
+            <Controller
+              control={control}
+              name="deadline"
+              render={({ field }) => (
+                <DateTimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  minDateTime={nowMin}
+                  placeholder="Выберите дату и время"
+                  hasError={Boolean(deadlineError)}
+                  onBlur={field.onBlur}
+                />
+              )}
             />
-            {showDeadlineError && deadlineError && <p className="task-create-page__error">{deadlineError}</p>}
+            {deadlineError && <p className="task-create-page__error">{deadlineError}</p>}
           </div>
 
           <div className="task-create-page__block">
@@ -283,12 +261,7 @@ const TaskCreatePage = () => {
             <div className="task-create-page__radio-list">
               {reviewTypes.map((type) => (
                 <label key={type} className="task-create-page__radio-item">
-                  <input
-                    className="task-create-page__radio"
-                    type="radio"
-                    checked={form.reviewType === type}
-                    onChange={() => setForm((prev) => ({ ...prev, reviewType: type }))}
-                  />
+                  <input className="task-create-page__radio" type="radio" value={type} {...register('reviewType')} />
                   <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
                 </label>
               ))}
@@ -297,22 +270,34 @@ const TaskCreatePage = () => {
 
           {isManualReviewers && (
             <div className="task-create-page__block">
-              <AssigneesSelector
-                title="Ревьюеры"
-                users={availableReviewers}
-                selectedUserIds={form.reviewerIds}
-                onChange={(reviewerIds) => setForm((prev) => ({ ...prev, reviewerIds }))}
-                disabled={isSubmitting}
+              <Controller
+                control={control}
+                name="reviewerIds"
+                render={({ field }) => (
+                  <AssigneesSelector
+                    title="Ревьюеры"
+                    users={availableReviewers}
+                    selectedUserIds={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </div>
           )}
 
           <div className="task-create-page__block">
-            <AssigneesSelector
-              users={availableAssignees}
-              selectedUserIds={form.assigneeIds}
-              onChange={(assigneeIds) => setForm((prev) => ({ ...prev, assigneeIds }))}
-              disabled={isSubmitting}
+            <Controller
+              control={control}
+              name="assigneeIds"
+              render={({ field }) => (
+                <AssigneesSelector
+                  users={availableAssignees}
+                  selectedUserIds={field.value}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                />
+              )}
             />
           </div>
 

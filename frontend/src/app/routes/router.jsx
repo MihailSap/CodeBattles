@@ -35,7 +35,13 @@ const RootFallback = () => (
 );
 
 const withSuspense = (element) => (
-  <Suspense fallback={<div className="page-loader"><Spinner /></div>}>
+  <Suspense
+    fallback={
+      <div className="page-loader">
+        <Spinner />
+      </div>
+    }
+  >
     {element}
   </Suspense>
 );
@@ -81,9 +87,7 @@ const router = createBrowserRouter([
       },
       {
         element: <ProtectedRoute onlyAdmin />,
-        children: [
-          { path: ROUTES.admin, element: withSuspense(<AdminPage />) },
-        ],
+        children: [{ path: ROUTES.admin, element: withSuspense(<AdminPage />) }],
       },
       {
         element: <ProtectedRoute onlyUnauthorized />,

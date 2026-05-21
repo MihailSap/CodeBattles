@@ -73,7 +73,7 @@
   flex-direction: column;
 }
 
-[data-theme="dark"] .profile-settings-modal__section--security {
+[data-theme='dark'] .profile-settings-modal__section--security {
   box-shadow: var(--shadow-success-soft);
 }
 
@@ -121,7 +121,6 @@
   font-size: 14px;
   color: var(--color-text-primary);
   background: var(--color-surface);
-
 }
 
 .profile-settings-modal__input::placeholder {
@@ -160,7 +159,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .profile-settings-modal__action-button--reset {

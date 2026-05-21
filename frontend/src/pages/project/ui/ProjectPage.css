@@ -57,7 +57,7 @@
   --transition-extra: filter var(--transition-fast);
 }
 
-[data-theme="dark"] .project-page__private-icon {
+[data-theme='dark'] .project-page__private-icon {
   filter: invert(1);
 }
 
@@ -103,7 +103,6 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
-
 }
 
 .project-page__repository {
@@ -115,7 +114,6 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   word-break: break-all;
-
 }
 
 .project-page__stack-list {
@@ -154,17 +152,18 @@
   font-size: 16px;
 }
 
-.project-page__metric-item img, .project-page__metric-item svg {
+.project-page__metric-item img,
+.project-page__metric-item svg {
   width: 19px;
   height: 19px;
   --transition-extra: filter var(--transition-fast);
 }
 
-[data-theme="dark"] .project-page__metric-item img {
+[data-theme='dark'] .project-page__metric-item img {
   filter: invert(1);
 }
 
-[data-theme="dark"] .project-page__metric-item svg {
+[data-theme='dark'] .project-page__metric-item svg {
   color: var(--color-text-inverse);
 }
 
@@ -201,7 +200,6 @@
   cursor: pointer;
   position: relative;
   z-index: 1;
-
 }
 
 .project-page__tab--active {
@@ -280,7 +278,6 @@
   align-items: center;
   gap: 5px;
   background: var(--color-page-bg);
-
 }
 
 .project-page__search-field:focus-within {
@@ -318,7 +315,6 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-
 }
 
 .project-page__action-button--success {
@@ -348,7 +344,6 @@
   gap: 10px;
   padding: 15px 10px;
   border-bottom: 1px solid var(--color-border-muted);
-
 }
 
 .project-page__table-row:last-child {
@@ -439,7 +434,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-
 }
 
 .project-page__participant-row:last-child {
@@ -498,7 +492,7 @@
   gap: 5px;
 }
 
-.project-page__settings-field>label,
+.project-page__settings-field > label,
 .project-page__settings-title {
   font-size: 16px;
   font-weight: 500;
@@ -514,7 +508,6 @@
   font-weight: 400;
   color: var(--color-text-primary);
   background: var(--color-surface);
-
 }
 
 .project-page__settings-input:focus {
@@ -639,7 +632,6 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-
   .project-page__repository:hover,
   .project-page__description-toggle:hover {
     color: var(--color-accent-muted);
@@ -820,7 +812,7 @@
 
   .project-page__participant-name,
   .project-page__participant-login,
-  .project-page__settings-field>label,
+  .project-page__settings-field > label,
   .project-page__settings-title,
   .project-page__ai-check,
   .project-page__settings-error {

@@ -7,7 +7,9 @@
   box-shadow: var(--shadow-review-card);
   text-align: left;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .review-card__top {
@@ -171,7 +173,8 @@
     gap: 5px;
   }
 
-  .review-card__label, .review-card__value {
+  .review-card__label,
+  .review-card__value {
     font-size: 12px;
   }
 }

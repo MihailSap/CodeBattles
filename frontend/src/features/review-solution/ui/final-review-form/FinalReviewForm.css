@@ -44,7 +44,6 @@
   color: var(--color-text-primary);
   font-size: 14px;
   font-family: inherit;
-
 }
 
 .final-review-form__textarea:focus {
@@ -115,7 +114,9 @@
   color: var(--color-text-inverse);
   background-color: var(--color-success);
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
   align-self: center;
   margin-top: 10px;
 }
@@ -143,7 +144,9 @@
   background: none;
   border: none;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .star-selector__btn:disabled {
@@ -167,7 +170,6 @@
 }
 
 @media (max-width: 500px) {
-
   .final-review-form {
     gap: 10px;
   }

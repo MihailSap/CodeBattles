@@ -13,7 +13,6 @@
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 3px;
-
 }
 
 .recovery-card__title {
@@ -46,7 +45,6 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-
 }
 
 @media (hover: hover) and (pointer: fine) {

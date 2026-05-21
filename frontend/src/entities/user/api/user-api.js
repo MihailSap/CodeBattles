@@ -8,7 +8,7 @@ const mapUser = (user) => {
 
   return {
     ...user,
-    avatarPath: getImageUrl(fileName)
+    avatarPath: getImageUrl(fileName),
   };
 };
 
@@ -23,7 +23,7 @@ export const userApi = {
     const response = await httpClient.get('/api/v1/users', { params });
     return {
       ...response.data,
-      content: (response.data.content || []).map(mapUser)
+      content: (response.data.content || []).map(mapUser),
     };
   },
 
@@ -59,5 +59,5 @@ export const userApi = {
 
   enableUser(userId) {
     return httpClient.patch(`/api/v1/users/${userId}/enable`);
-  }
+  },
 };

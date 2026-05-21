@@ -51,7 +51,9 @@
   border: none;
   color: var(--color-danger);
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .report-modal__content {
@@ -98,7 +100,6 @@
   color: var(--color-text-primary);
   font-size: 14px;
   font-family: inherit;
-
 }
 
 .report-modal__textarea:focus {
@@ -118,7 +119,9 @@
   background-color: var(--color-success);
   border: 2px solid var(--color-success);
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .report-modal__submit-btn svg {
@@ -142,19 +145,17 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .report-modal__close:hover {
+    opacity: 0.8;
+  }
 
-.report-modal__close:hover {
-  opacity: 0.8;
-}
-
-.report-modal__submit-btn:hover:not(:disabled) {
-  background-color: var(--color-surface);
-  color: var(--color-success);
-}
+  .report-modal__submit-btn:hover:not(:disabled) {
+    background-color: var(--color-surface);
+    color: var(--color-success);
+  }
 }
 
 @media (max-width: 500px) {
-
   .report-modal__backdrop {
     padding: 10px;
   }

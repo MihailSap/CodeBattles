@@ -1,4 +1,6 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoLight from '@/shared/assets/logo-light.svg';
@@ -8,7 +10,7 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, resetPasswordByToken } from '@/entities/session';
-import { validateConfirmPassword, validatePassword } from '@/entities/session';
+import { resetPasswordFormSchema } from '@/entities/session';
 import '../../auth/ui/AuthPage.css';
 import './ResetPasswordPage.css';
 
@@ -19,17 +21,20 @@ const ResetPasswordPage = () => {
   const { isLoading, error } = useAuth();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  const [touched, setTouched] = useState({
-    password: false,
-    confirmPassword: false
-  });
-  const [submitted, setSubmitted] = useState(false);
   const [resultMessage, setResultMessage] = useState('');
   const [resultType, setResultType] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm({
+    resolver: zodResolver(resetPasswordFormSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
+    mode: 'onChange',
+  });
 
   const token = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -63,62 +68,26 @@ const ResetPasswordPage = () => {
     };
   }, [navigate, resultMessage]);
 
-  const validateField = (name, value) => {
-    if (name === 'password') {
-      setPasswordError(validatePassword(value));
-      setConfirmPasswordError(validateConfirmPassword(confirmPassword, value));
+  const registerPasswordField = (name) =>
+    register(name, {
+      onChange: () => {
+        dispatch(clearAuthMessages());
+      },
+    });
+
+  const getPasswordError = (name) => {
+    if (!(touchedFields[name] || isSubmitted)) {
+      return '';
     }
-    if (name === 'confirmPassword') {
-      setConfirmPasswordError(validateConfirmPassword(value, password));
-    }
-    return '';
+
+    return errors[name]?.message || '';
   };
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-
-    if (name === 'password') {
-      setPassword(value);
-    } else if (name === 'confirmPassword') {
-      setConfirmPassword(value);
-    }
-
-    validateField(name, value);
-    dispatch(clearAuthMessages());
-  };
-
-  const handleBlur = (event) => {
-    const { name, value } = event.target;
-
-    setTouched((prev) => ({
-      ...prev,
-      [name]: true
-    }));
-
-    validateField(name, value);
-  };
-
-  const showPasswordError = touched.password || submitted ? passwordError : '';
-  const showConfirmPasswordError = touched.confirmPassword || submitted ? confirmPasswordError : '';
-  const isFormValid = Boolean(
-    password &&
-    confirmPassword &&
-    !validatePassword(password) &&
-    !validateConfirmPassword(confirmPassword, password)
-  );
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitted(true);
-
-    if (!isFormValid) {
-      return;
-    }
-
+  const onSubmit = async ({ password }) => {
     const result = await dispatch(
       resetPasswordByToken({
         token,
-        password
+        password,
       })
     );
 
@@ -131,6 +100,9 @@ const ResetPasswordPage = () => {
     setResultMessage(result.payload || error || 'Не удалось изменить пароль');
     setResultType('error');
   };
+
+  const showPasswordError = getPasswordError('password');
+  const showConfirmPasswordError = getPasswordError('confirmPassword');
 
   return (
     <div className="auth-page reset-password-page">
@@ -153,11 +125,13 @@ const ResetPasswordPage = () => {
           <div className="auth-form-wrap">
             <div className="auth-form-card reset-password-card">
               {resultMessage ? (
-                <p className={`reset-password-card__result ${resultType === 'success' ? 'reset-password-card__result--success' : 'reset-password-card__result--error'}`}>
+                <p
+                  className={`reset-password-card__result ${resultType === 'success' ? 'reset-password-card__result--success' : 'reset-password-card__result--error'}`}
+                >
                   {resultMessage}
                 </p>
               ) : (
-                <form className="auth-form" onSubmit={handleSubmit}>
+                <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                   <div className="reset-password-card__top">
                     <h1 className="reset-password-card__title">Восстановление пароля</h1>
                   </div>
@@ -169,11 +143,9 @@ const ResetPasswordPage = () => {
                         name="password"
                         type="password"
                         placeholder="Придумайте пароль"
-                        value={password}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
                         maxLength={50}
                         autoComplete="new-password"
+                        {...registerPasswordField('password')}
                       />
                       {showPasswordError && <p className="auth-input-error">{showPasswordError}</p>}
                     </div>
@@ -184,17 +156,15 @@ const ResetPasswordPage = () => {
                         name="confirmPassword"
                         type="password"
                         placeholder="Повторите пароль"
-                        value={confirmPassword}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
                         maxLength={50}
                         autoComplete="new-password"
+                        {...registerPasswordField('confirmPassword')}
                       />
                       {showConfirmPasswordError && <p className="auth-input-error">{showConfirmPasswordError}</p>}
                     </div>
                   </div>
 
-                  <button className="auth-submit" type="submit" disabled={isLoading || !isFormValid}>
+                  <button className="auth-submit" type="submit" disabled={isLoading || !isValid}>
                     {isLoading ? 'Отправка...' : 'Отправить'}
                   </button>
                 </form>

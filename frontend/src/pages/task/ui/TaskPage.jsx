@@ -1,10 +1,12 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   useDeleteTaskMutation,
   useGetProjectByIdQuery,
   useGetTaskByIdQuery,
-  useUpdateTaskMutation
+  useUpdateTaskMutation,
 } from '@/entities/project';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
@@ -18,14 +20,14 @@ import {
   TASK_REVIEW_TYPE,
   TASK_REVIEW_TYPE_LABELS,
   TASK_STATUS,
-  TASK_STATUS_LABELS
+  TASK_STATUS_LABELS,
+  taskSettingsFormSchema,
 } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { lazyNamed } from '@/shared/lib';
 import { formatDeadline, getDeadlineToneClass } from '@/entities/project';
-import { validateTaskName } from '@/entities/project';
 import './TaskPage.css';
 
 const AssigneesSelector = lazyNamed(() => import('@/features/manage-task'), 'AssigneesSelector');
@@ -34,7 +36,7 @@ const DateTimePicker = lazyNamed(() => import('@/shared/ui/date-time-picker'), '
 
 const tabs = {
   solution: 'Решение',
-  settings: 'Настройки'
+  settings: 'Настройки',
 };
 
 const isPastDateTime = (value) => {
@@ -63,19 +65,43 @@ const TaskPage = () => {
   const [showFullCriteria, setShowFullCriteria] = useState(false);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
-  const [settingsDraft, setSettingsDraft] = useState(null);
-  const [settingsTouched, setSettingsTouched] = useState({ name: false, deadline: false, submitted: false });
+  const {
+    control: settingsControl,
+    register: registerSettings,
+    handleSubmit: handleSettingsSubmit,
+    reset: resetSettings,
+    setValue: setSettingsValue,
+    formState: {
+      errors: settingsErrors,
+      isSubmitted: isSettingsSubmitted,
+      isValid: isSettingsValid,
+      touchedFields: settingsTouchedFields,
+    },
+  } = useForm({
+    resolver: zodResolver(taskSettingsFormSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      requirements: '',
+      evaluationCriteria: '',
+      deadline: '',
+      reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
+      reviewerIds: [],
+      assigneeIds: [],
+    },
+    mode: 'onChange',
+  });
+  const settingsDraft = useWatch({ control: settingsControl });
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const {
     data: task,
     error: taskError,
     isLoading: isTaskLoading,
-    refetch: refetchTask
+    refetch: refetchTask,
   } = useGetTaskByIdQuery({ projectId, taskId }, { refetchOnMountOrArgChange: 30 });
-  const {
-    data: project = null,
-    isLoading: isProjectLoading
-  } = useGetProjectByIdQuery(projectId, { refetchOnMountOrArgChange: 30 });
+  const { data: project = null, isLoading: isProjectLoading } = useGetProjectByIdQuery(projectId, {
+    refetchOnMountOrArgChange: 30,
+  });
   const [updateTask, { isLoading: isSettingsSubmitting }] = useUpdateTaskMutation();
   const [deleteTask, { isLoading: isDeleteSubmitting }] = useDeleteTaskMutation();
   const isLoading = isTaskLoading || isProjectLoading;
@@ -94,17 +120,19 @@ const TaskPage = () => {
       return;
     }
 
-    queueMicrotask(() => setSettingsDraft({
-      name: task.name,
-      description: task.description,
-      requirements: task.requirements,
-      evaluationCriteria: task.evaluationCriteria,
-      deadline: task.deadline,
-      reviewType: task.reviewType,
-      reviewerIds: task.reviewerIds,
-      assigneeIds: task.assigneeIds
-    }));
-  }, [task]);
+    queueMicrotask(() =>
+      resetSettings({
+        name: task.name,
+        description: task.description,
+        requirements: task.requirements,
+        evaluationCriteria: task.evaluationCriteria,
+        deadline: task.deadline,
+        reviewType: task.reviewType,
+        reviewerIds: task.reviewerIds,
+        assigneeIds: task.assigneeIds,
+      })
+    );
+  }, [resetSettings, task]);
 
   useEffect(() => {
     if (!taskError) {
@@ -116,23 +144,24 @@ const TaskPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Вы не являетесь исполнителем данной задачи',
-          snackbarType: 'error'
-        }
+          snackbarType: 'error',
+        },
       });
       return;
     }
 
     if (taskError?.status === 403 && taskError?.code === ACCESS_ERROR_CODE.FORBIDDEN_TASK_PROJECT_MEMBER) {
-      const target = taskError.projectPrivacy === PROJECT_PRIVACY.PUBLIC
-        ? ROUTES.projectById.replace(':projectId', taskError.projectId || projectId)
-        : ROUTES.projects;
+      const target =
+        taskError.projectPrivacy === PROJECT_PRIVACY.PUBLIC
+          ? ROUTES.projectById.replace(':projectId', taskError.projectId || projectId)
+          : ROUTES.projects;
 
       navigate(target, {
         replace: true,
         state: {
           snackbarMessage: 'Вы не являетесь участником проекта',
-          snackbarType: 'error'
-        }
+          snackbarType: 'error',
+        },
       });
       return;
     }
@@ -163,7 +192,15 @@ const TaskPage = () => {
     }
   }, [activeTab, availableTabs]);
 
-  const nameError = useMemo(() => validateTaskName(settingsDraft?.name || ''), [settingsDraft?.name]);
+  const getSettingsError = (fieldName) => {
+    if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
+      return '';
+    }
+
+    return settingsErrors[fieldName]?.message || '';
+  };
+
+  const nameError = getSettingsError('name');
   const deadlineError = useMemo(() => {
     if (!settingsDraft?.deadline) {
       return 'Выберите дедлайн';
@@ -174,7 +211,7 @@ const TaskPage = () => {
     }
 
     return '';
-  }, [settingsDraft?.deadline]);
+  }, [settingsDraft]);
 
   const hasSettingsChanges = useMemo(() => {
     if (!task || !settingsDraft) {
@@ -210,8 +247,24 @@ const TaskPage = () => {
       return true;
     }
 
-    return !nameError && !deadlineError && settingsDraft.assigneeIds.length > 0 && (!isManualReviewers || settingsDraft.reviewerIds.length > 0);
-  }, [canEditRequirementsOnly, canManageTask, deadlineError, hasSettingsChanges, isManualReviewers, nameError, settingsDraft, task]);
+    return (
+      isSettingsValid &&
+      !nameError &&
+      !deadlineError &&
+      settingsDraft.assigneeIds.length > 0 &&
+      (!isManualReviewers || settingsDraft.reviewerIds.length > 0)
+    );
+  }, [
+    canEditRequirementsOnly,
+    canManageTask,
+    deadlineError,
+    hasSettingsChanges,
+    isManualReviewers,
+    isSettingsValid,
+    nameError,
+    settingsDraft,
+    task,
+  ]);
 
   const availableAssignees = useMemo(() => {
     if (!task || !settingsDraft) {
@@ -242,7 +295,7 @@ const TaskPage = () => {
     }
 
     if (!isManualReviewers && settingsDraft.reviewerIds.length > 0) {
-      queueMicrotask(() => setSettingsDraft((prev) => ({ ...prev, reviewerIds: [] })));
+      queueMicrotask(() => setSettingsValue('reviewerIds', [], { shouldDirty: true, shouldValidate: true }));
       return;
     }
 
@@ -254,17 +307,18 @@ const TaskPage = () => {
     const nextReviewerIds = settingsDraft.reviewerIds.filter((id) => availableReviewerIds.has(id));
 
     if (nextReviewerIds.length !== settingsDraft.reviewerIds.length) {
-      queueMicrotask(() => setSettingsDraft((prev) => ({ ...prev, reviewerIds: nextReviewerIds })));
+      queueMicrotask(() =>
+        setSettingsValue('reviewerIds', nextReviewerIds, { shouldDirty: true, shouldValidate: true })
+      );
     }
-  }, [availableReviewers, isManualReviewers, settingsDraft]);
+  }, [availableReviewers, isManualReviewers, setSettingsValue, settingsDraft]);
 
   const handleCancel = () => {
     if (!task) {
       return;
     }
 
-    setSettingsTouched({ name: false, deadline: false, submitted: false });
-    setSettingsDraft({
+    resetSettings({
       name: task.name,
       description: task.description,
       requirements: task.requirements,
@@ -272,16 +326,14 @@ const TaskPage = () => {
       deadline: task.deadline,
       reviewType: task.reviewType,
       reviewerIds: task.reviewerIds,
-      assigneeIds: task.assigneeIds
+      assigneeIds: task.assigneeIds,
     });
   };
 
-  const handleSave = async () => {
+  const saveSettings = async (settingsDraft) => {
     if (!task || !settingsDraft || !canSave) {
       return;
     }
-
-    setSettingsTouched({ name: true, deadline: true, submitted: true });
 
     if (isManualReviewers && settingsDraft.reviewerIds.length === 0) {
       showSnackbar('Выберите хотя бы одного ревьюера', 'error');
@@ -297,8 +349,8 @@ const TaskPage = () => {
             requirements: settingsDraft.requirements,
             evaluationCriteria: settingsDraft.evaluationCriteria,
             reviewType: settingsDraft.reviewType,
-            reviewerIds: settingsDraft.reviewerIds
-          }
+            reviewerIds: settingsDraft.reviewerIds,
+          },
         }).unwrap();
       } else {
         await updateTask({
@@ -312,18 +364,29 @@ const TaskPage = () => {
             deadline: settingsDraft.deadline,
             reviewType: settingsDraft.reviewType,
             reviewerIds: settingsDraft.reviewerIds,
-            assigneeIds: settingsDraft.assigneeIds
-          }
+            assigneeIds: settingsDraft.assigneeIds,
+          },
         }).unwrap();
       }
 
-      await refetchTask();
-      setSettingsTouched({ name: false, deadline: false, submitted: false });
+      const updatedTask = await refetchTask().unwrap();
+      resetSettings({
+        name: updatedTask.name,
+        description: updatedTask.description,
+        requirements: updatedTask.requirements,
+        evaluationCriteria: updatedTask.evaluationCriteria,
+        deadline: updatedTask.deadline,
+        reviewType: updatedTask.reviewType,
+        reviewerIds: updatedTask.reviewerIds,
+        assigneeIds: updatedTask.assigneeIds,
+      });
       showSnackbar('Изменения сохранены', 'success');
     } catch {
       showSnackbar('Не удалось сохранить изменения', 'error');
     }
   };
+
+  const handleSave = handleSettingsSubmit(saveSettings);
 
   const handleDelete = async () => {
     if (!task) {
@@ -336,8 +399,8 @@ const TaskPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Задача удалена',
-          snackbarType: 'success'
-        }
+          snackbarType: 'success',
+        },
       });
     } catch {
       showSnackbar('Не удалось удалить задачу', 'error');
@@ -367,7 +430,8 @@ const TaskPage = () => {
   const isLongCriteria = criteria.length > 1000;
 
   const shownDescription = isLongDescription && !showFullDescription ? `${description.slice(0, 1000)}...` : description;
-  const shownRequirements = isLongRequirements && !showFullRequirements ? `${requirements.slice(0, 1000)}...` : requirements;
+  const shownRequirements =
+    isLongRequirements && !showFullRequirements ? `${requirements.slice(0, 1000)}...` : requirements;
   const shownCriteria = isLongCriteria && !showFullCriteria ? `${criteria.slice(0, 1000)}...` : criteria;
 
   return (
@@ -390,7 +454,11 @@ const TaskPage = () => {
               <span className="project-page__description-label">Описание задачи: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
-                <button className="project-page__description-toggle" type="button" onClick={() => setShowFullDescription((prev) => !prev)}>
+                <button
+                  className="project-page__description-toggle"
+                  type="button"
+                  onClick={() => setShowFullDescription((prev) => !prev)}
+                >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
               )}
@@ -402,7 +470,11 @@ const TaskPage = () => {
               <span className="project-page__description-label">Требования: </span>
               <span>{shownRequirements}</span>
               {isLongRequirements && (
-                <button className="project-page__description-toggle" type="button" onClick={() => setShowFullRequirements((prev) => !prev)}>
+                <button
+                  className="project-page__description-toggle"
+                  type="button"
+                  onClick={() => setShowFullRequirements((prev) => !prev)}
+                >
                   {showFullRequirements ? 'Свернуть' : 'Развернуть'}
                 </button>
               )}
@@ -414,7 +486,11 @@ const TaskPage = () => {
               <span className="project-page__description-label">Критерии оценки: </span>
               <span>{shownCriteria}</span>
               {isLongCriteria && (
-                <button className="project-page__description-toggle" type="button" onClick={() => setShowFullCriteria((prev) => !prev)}>
+                <button
+                  className="project-page__description-toggle"
+                  type="button"
+                  onClick={() => setShowFullCriteria((prev) => !prev)}
+                >
                   {showFullCriteria ? 'Свернуть' : 'Развернуть'}
                 </button>
               )}
@@ -423,7 +499,9 @@ const TaskPage = () => {
 
           <p className="project-page__description task-page__offset-section">
             <span className="project-page__description-label">Дедлайн: </span>
-            <span className={`project-page__deadline ${getDeadlineToneClass(task.deadline, task.status)}`}>{formatDeadline(task.deadline)}</span>
+            <span className={`project-page__deadline ${getDeadlineToneClass(task.deadline, task.status)}`}>
+              {formatDeadline(task.deadline)}
+            </span>
           </p>
 
           <div className="task-page__assignees-wrap task-page__offset-section">
@@ -447,7 +525,13 @@ const TaskPage = () => {
         {availableTabs.length > 0 && <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />}
 
         {activeTab === 'solution' && shouldShowSolutionTab && (
-          <Suspense fallback={<div className="project-page__loader"><Spinner /></div>}>
+          <Suspense
+            fallback={
+              <div className="project-page__loader">
+                <Spinner />
+              </div>
+            }
+          >
             <SolutionTab
               task={task}
               currentUser={{ id: Number(userId), fullName: 'Мой Пользователь' }}
@@ -470,25 +554,28 @@ const TaskPage = () => {
 
               {canManageTask && (
                 <div className="project-page__controls-right">
-                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setDeleteModalOpen(true)}>
+                  <button
+                    className="project-page__action-button project-page__action-button--danger"
+                    type="button"
+                    onClick={() => setDeleteModalOpen(true)}
+                  >
                     Удалить задачу
                   </button>
                 </div>
               )}
             </div>
 
-            <section className="section-card project-page__settings">
+            <form className="section-card project-page__settings" onSubmit={handleSave}>
               {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <label>Название</label>
                   <input
-                    className={`project-page__settings-input ${settingsTouched.name && nameError ? 'project-page__settings-input--error' : ''}`}
-                    value={settingsDraft.name}
-                    onChange={(event) => setSettingsDraft((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
-                    onBlur={() => setSettingsTouched((prev) => ({ ...prev, name: true }))}
+                    className={`project-page__settings-input ${nameError ? 'project-page__settings-input--error' : ''}`}
+                    maxLength={100}
                     disabled={!canManageTask || isSettingsSubmitting}
+                    {...registerSettings('name')}
                   />
-                  {settingsTouched.name && nameError && <p className="project-page__settings-error">{nameError}</p>}
+                  {nameError && <p className="project-page__settings-error">{nameError}</p>}
                 </div>
               )}
 
@@ -497,9 +584,9 @@ const TaskPage = () => {
                   <label>Описание</label>
                   <textarea
                     className="project-page__settings-input project-page__settings-textarea"
-                    value={settingsDraft.description}
-                    onChange={(event) => setSettingsDraft((prev) => ({ ...prev, description: event.target.value.slice(0, 4000) }))}
+                    maxLength={4000}
                     disabled={!canManageTask || isSettingsSubmitting}
+                    {...registerSettings('description')}
                   />
                 </div>
               )}
@@ -508,9 +595,9 @@ const TaskPage = () => {
                 <label>Требования</label>
                 <textarea
                   className="project-page__settings-input project-page__settings-textarea"
-                  value={settingsDraft.requirements}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, requirements: event.target.value.slice(0, 4000) }))}
+                  maxLength={4000}
                   disabled={!canManageTask || isSettingsSubmitting}
+                  {...registerSettings('requirements')}
                 />
               </div>
 
@@ -518,9 +605,9 @@ const TaskPage = () => {
                 <label>Критерии оценки</label>
                 <textarea
                   className="project-page__settings-input project-page__settings-textarea"
-                  value={settingsDraft.evaluationCriteria}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, evaluationCriteria: event.target.value.slice(0, 4000) }))}
+                  maxLength={4000}
                   disabled={!canManageTask || isSettingsSubmitting}
+                  {...registerSettings('evaluationCriteria')}
                 />
               </div>
 
@@ -528,17 +615,25 @@ const TaskPage = () => {
                 <div className="project-page__settings-field">
                   <label>Дедлайн</label>
                   <Suspense fallback={null}>
-                    <DateTimePicker
-                      value={settingsDraft.deadline}
-                      onChange={(deadline) => setSettingsDraft((prev) => ({ ...prev, deadline }))}
-                      minDateTime={new Date()}
-                      placeholder="Выберите дату и время"
-                      hasError={Boolean(settingsTouched.deadline && deadlineError)}
-                      onBlur={() => setSettingsTouched((prev) => ({ ...prev, deadline: true }))}
-                      disabled={!canManageTask || isSettingsSubmitting}
+                    <Controller
+                      control={settingsControl}
+                      name="deadline"
+                      render={({ field }) => (
+                        <DateTimePicker
+                          value={field.value}
+                          onChange={field.onChange}
+                          minDateTime={new Date()}
+                          placeholder="Выберите дату и время"
+                          hasError={Boolean(settingsTouchedFields.deadline && deadlineError)}
+                          onBlur={field.onBlur}
+                          disabled={!canManageTask || isSettingsSubmitting}
+                        />
+                      )}
                     />
                   </Suspense>
-                  {settingsTouched.deadline && deadlineError && <p className="project-page__settings-error">{deadlineError}</p>}
+                  {(settingsTouchedFields.deadline || isSettingsSubmitted) && deadlineError && (
+                    <p className="project-page__settings-error">{deadlineError}</p>
+                  )}
                 </div>
               )}
 
@@ -549,9 +644,9 @@ const TaskPage = () => {
                     <label key={type} className="task-page__review-item">
                       <input
                         type="radio"
-                        checked={settingsDraft.reviewType === type}
-                        onChange={() => setSettingsDraft((prev) => ({ ...prev, reviewType: type }))}
+                        value={type}
                         disabled={!canManageTask || isSettingsSubmitting}
+                        {...registerSettings('reviewType')}
                       />
                       <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
                     </label>
@@ -562,12 +657,18 @@ const TaskPage = () => {
               {isManualReviewers && (
                 <div className="project-page__settings-field">
                   <Suspense fallback={null}>
-                    <AssigneesSelector
-                      title="Ревьюеры"
-                      users={availableReviewers}
-                      selectedUserIds={settingsDraft.reviewerIds}
-                      onChange={(reviewerIds) => setSettingsDraft((prev) => ({ ...prev, reviewerIds }))}
-                      disabled={!canManageTask || isSettingsSubmitting}
+                    <Controller
+                      control={settingsControl}
+                      name="reviewerIds"
+                      render={({ field }) => (
+                        <AssigneesSelector
+                          title="Ревьюеры"
+                          users={availableReviewers}
+                          selectedUserIds={field.value}
+                          onChange={field.onChange}
+                          disabled={!canManageTask || isSettingsSubmitting}
+                        />
+                      )}
                     />
                   </Suspense>
                 </div>
@@ -576,11 +677,17 @@ const TaskPage = () => {
               {(canEditAllFields || isAdminReadOnlyView) && (
                 <div className="project-page__settings-field">
                   <Suspense fallback={null}>
-                    <AssigneesSelector
-                      users={availableAssignees}
-                      selectedUserIds={settingsDraft.assigneeIds}
-                      onChange={(assigneeIds) => setSettingsDraft((prev) => ({ ...prev, assigneeIds }))}
-                      disabled={!canManageTask || isSettingsSubmitting}
+                    <Controller
+                      control={settingsControl}
+                      name="assigneeIds"
+                      render={({ field }) => (
+                        <AssigneesSelector
+                          users={availableAssignees}
+                          selectedUserIds={field.value}
+                          onChange={field.onChange}
+                          disabled={!canManageTask || isSettingsSubmitting}
+                        />
+                      )}
                     />
                   </Suspense>
                 </div>
@@ -590,8 +697,7 @@ const TaskPage = () => {
                 <div className="project-page__settings-actions">
                   <button
                     className="project-page__settings-action project-page__settings-action--save"
-                    type="button"
-                    onClick={handleSave}
+                    type="submit"
                     disabled={!canSave || isSettingsSubmitting}
                     aria-label="Сохранить изменения"
                   >
@@ -608,7 +714,7 @@ const TaskPage = () => {
                   </button>
                 </div>
               )}
-            </section>
+            </form>
           </>
         )}
       </main>

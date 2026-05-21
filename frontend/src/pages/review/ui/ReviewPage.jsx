@@ -11,11 +11,12 @@ import { ReviewResultsSidebar } from '@/widgets/review-workspace';
 import ScrollToTopButton from '@/shared/ui/scroll-to-top-button';
 import { projectsApi } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
+import { REVIEW_STATUS_LABEL, getDeadlineInfo } from '@/entities/review';
 import {
-  REVIEW_STATUS_LABEL,
-  getDeadlineInfo
-} from '@/entities/review';
-import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, useCompleteNotificationMutation } from '@/entities/notification';
+  NOTIFICATION_COMPLETION_ACTION,
+  NOTIFICATION_TARGET_KIND,
+  useCompleteNotificationMutation,
+} from '@/entities/notification';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getLanguageByFileName, lazyNamed } from '@/shared/lib';
@@ -87,7 +88,7 @@ const ReviewPage = () => {
 
       const [taskData] = await Promise.all([
         projectsApi.getTaskById(reviewData.projectId, reviewData.taskId),
-        projectsApi.getProjectById(reviewData.projectId)
+        projectsApi.getProjectById(reviewData.projectId),
       ]);
       setTask(taskData);
 
@@ -98,14 +99,14 @@ const ReviewPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'У вас нет доступа к этому ревью',
-            snackbarType: 'error'
-          }
+            snackbarType: 'error',
+          },
         });
         return;
       }
 
       if (reviewData.files?.length > 0) {
-        setSelectedFile(prev => {
+        setSelectedFile((prev) => {
           if (prev) {
             const stillExists = findFileByPath(reviewData.files, prev.path);
             if (stillExists) return stillExists;
@@ -126,28 +127,34 @@ const ReviewPage = () => {
     loadData();
   }, [loadData]);
 
-  const fetchFileContent = useCallback(async (filePath) => {
-    if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
-    setFileContentLoading(true);
-    try {
-      const data = await projectsApi.getReviewFileContent(reviewId, filePath);
-      setFileContentMap(prev => ({ ...prev, [filePath]: data }));
-    } catch (err) {
-      console.error('Failed to fetch file content:', err);
-      setFileContentMap(prev => ({ ...prev, [filePath]: { error: true } }));
-      showSnackbar('Ошибка загрузки содержимого файла', 'error');
-    } finally {
-      setFileContentLoading(false);
-    }
-  }, [reviewId, fileContentMap, showSnackbar]);
+  const fetchFileContent = useCallback(
+    async (filePath) => {
+      if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
+      setFileContentLoading(true);
+      try {
+        const data = await projectsApi.getReviewFileContent(reviewId, filePath);
+        setFileContentMap((prev) => ({ ...prev, [filePath]: data }));
+      } catch (err) {
+        console.error('Failed to fetch file content:', err);
+        setFileContentMap((prev) => ({ ...prev, [filePath]: { error: true } }));
+        showSnackbar('Ошибка загрузки содержимого файла', 'error');
+      } finally {
+        setFileContentLoading(false);
+      }
+    },
+    [reviewId, fileContentMap, showSnackbar]
+  );
 
-  const handleSelectFile = useCallback((file) => {
-    setSelectedFile(file);
-    setSelectedLineRange(null);
-    if (!file.isDirectory) {
-      fetchFileContent(file.path);
-    }
-  }, [fetchFileContent]);
+  const handleSelectFile = useCallback(
+    (file) => {
+      setSelectedFile(file);
+      setSelectedLineRange(null);
+      if (!file.isDirectory) {
+        fetchFileContent(file.path);
+      }
+    },
+    [fetchFileContent]
+  );
 
   useEffect(() => {
     if (selectedFile && !selectedFile.isDirectory && !fileContentMap[selectedFile.path]) {
@@ -162,9 +169,10 @@ const ReviewPage = () => {
   const isAdminReadOnlyView = isAdmin && !isReviewer;
 
   const isCompleted = review?.status === 'COMPLETED';
-  const myFinalReview = useMemo(() => (review?.finalReviews || []).find(
-    (fr) => fr.reviewerId === numericUserId
-  ), [review?.finalReviews, numericUserId]);
+  const myFinalReview = useMemo(
+    () => (review?.finalReviews || []).find((fr) => fr.reviewerId === numericUserId),
+    [review?.finalReviews, numericUserId]
+  );
 
   const alreadySubmittedReview = !!myFinalReview;
   const isReadOnlyMode = alreadySubmittedReview || isCompleted;
@@ -173,14 +181,17 @@ const ReviewPage = () => {
 
   const taskId = review?.taskId;
 
-  const handleLineContextMenu = useCallback((data) => {
-    if (!canAddNewComments) return;
-    setContextLineData({
-      startLine: data.startLineNumber,
-      endLine: data.endLineNumber
-    });
-    setIsCommentModalOpen(true);
-  }, [canAddNewComments]);
+  const handleLineContextMenu = useCallback(
+    (data) => {
+      if (!canAddNewComments) return;
+      setContextLineData({
+        startLine: data.startLineNumber,
+        endLine: data.endLineNumber,
+      });
+      setIsCommentModalOpen(true);
+    },
+    [canAddNewComments]
+  );
 
   const handleLineClick = useCallback((range) => {
     setSelectedLineRange(range);
@@ -201,7 +212,7 @@ const ReviewPage = () => {
         authorId: numericUserId,
         authorName: 'Вы',
         authorRole: 'Reviewer',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
       await loadData();
       setIsCommentModalOpen(false);
@@ -220,7 +231,7 @@ const ReviewPage = () => {
         authorName: 'Вы',
         authorRole: 'Reviewer',
         text,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
       await loadData();
       showSnackbar('Ответ отправлен', 'success');
@@ -238,14 +249,17 @@ const ReviewPage = () => {
     }
   };
 
-  const handleDislike = useCallback(async (commentId) => {
-    try {
-      await projectsApi.toggleCommentLike(taskId, commentId, numericUserId, true);
-      await loadData();
-    } catch (err) {
-      console.error('Dislike error:', err);
-    }
-  }, [taskId, numericUserId, loadData]);
+  const handleDislike = useCallback(
+    async (commentId) => {
+      try {
+        await projectsApi.toggleCommentLike(taskId, commentId, numericUserId, true);
+        await loadData();
+      } catch (err) {
+        console.error('Dislike error:', err);
+      }
+    },
+    [taskId, numericUserId, loadData]
+  );
 
   const handleDeleteComment = async (commentId) => {
     try {
@@ -283,15 +297,15 @@ const ReviewPage = () => {
       await projectsApi.submitFinalReview(taskId, {
         ...payload,
         reviewerId: numericUserId,
-        reviewerName: 'Вы'
+        reviewerName: 'Вы',
       });
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_REVIEW_RESULT,
         target: {
           kind: NOTIFICATION_TARGET_KIND.REVIEW,
           reviewId: Number(reviewId),
-          taskId
-        }
+          taskId,
+        },
       });
       await loadData();
       showSnackbar('Результаты ревью успешно сохранены', 'success');
@@ -322,16 +336,14 @@ const ReviewPage = () => {
 
   const allComments = useMemo(() => review?.comments || [], [review?.comments]);
   const visibleComments = useMemo(
-    () => task?.aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI'),
+    () => (task?.aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
     [allComments, task?.aiReviewEnabled]
   );
   const fileComments = visibleComments.filter((c) => c.file === selectedFile?.path);
   const commentedFiles = [...new Set(visibleComments.map((c) => c.file))];
 
   const displayedComments = selectedLineRange
-    ? fileComments.filter(c =>
-      c.startLine === selectedLineRange.startLine && c.endLine === selectedLineRange.endLine
-    )
+    ? fileComments.filter((c) => c.startLine === selectedLineRange.startLine && c.endLine === selectedLineRange.endLine)
     : [];
 
   const showAssigneesName = isCompleted && review?.revealAuthorAfterReview;
@@ -345,7 +357,7 @@ const ReviewPage = () => {
 
     const isCompletedStatus = review?.status === 'COMPLETED';
     const finalReviews = review?.finalReviews || [];
-    const allApproved = finalReviews.length > 0 && finalReviews.every(fr => fr.verdict === 'APPROVED');
+    const allApproved = finalReviews.length > 0 && finalReviews.every((fr) => fr.verdict === 'APPROVED');
     const shouldReveal = review?.revealAuthorAfterReview;
 
     if (isCompletedStatus && allApproved && shouldReveal) {
@@ -357,13 +369,16 @@ const ReviewPage = () => {
 
   const commentsCount = visibleComments.length;
 
-  const humanComments = useMemo(() => visibleComments.filter(c => c.authorRole !== 'AI'), [visibleComments]);
-  const isAllResolved = useMemo(() => humanComments.length > 0 && humanComments.every(c => c.isClosed), [humanComments]);
+  const humanComments = useMemo(() => visibleComments.filter((c) => c.authorRole !== 'AI'), [visibleComments]);
+  const isAllResolved = useMemo(
+    () => humanComments.length > 0 && humanComments.every((c) => c.isClosed),
+    [humanComments]
+  );
   const allThreadsResolved = isAllResolved;
 
   const myHistoryComments = useMemo(() => {
     if (!review?.history) return [];
-    return review.history.flatMap(h => h.comments || []).filter(c => c.authorId === numericUserId);
+    return review.history.flatMap((h) => h.comments || []).filter((c) => c.authorId === numericUserId);
   }, [review?.history, numericUserId]);
 
   const deadlineInfo = useMemo(() => {
@@ -385,7 +400,9 @@ const ReviewPage = () => {
   if (loading) {
     return (
       <div className="review-page">
-        <div className="review-page__loader"><Spinner /></div>
+        <div className="review-page__loader">
+          <Spinner />
+        </div>
       </div>
     );
   }
@@ -418,9 +435,15 @@ const ReviewPage = () => {
           <p className="project-page__description">
             <span className="project-page__description-label">Загружено: </span>
             <span>
-              {review?.uploadedAt ? new Date(review.uploadedAt).toLocaleString('ru-RU', {
-                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-              }) : '—'}
+              {review?.uploadedAt
+                ? new Date(review.uploadedAt).toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—'}
             </span>
           </p>
 
@@ -488,12 +511,16 @@ const ReviewPage = () => {
 
           <div className="review-page__col-center">
             {fileContentLoading ? (
-              <div className="review-page__loader" style={{ height: '400px' }}><Spinner /></div>
+              <div className="review-page__loader" style={{ height: '400px' }}>
+                <Spinner />
+              </div>
             ) : currentFileContent?.error ? (
               <div className="review-page__loader" style={{ height: '400px' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p>Ошибка загрузки файла</p>
-                  <button className="btn-manual" onClick={() => fetchFileContent(selectedFile.path)}>Повторить</button>
+                  <button className="btn-manual" onClick={() => fetchFileContent(selectedFile.path)}>
+                    Повторить
+                  </button>
                 </div>
               </div>
             ) : (
@@ -525,15 +552,12 @@ const ReviewPage = () => {
               <>
                 <div className="review-page__card review-page__submitted-card">
                   <h3 className="review-page__card-title">Ревью отправлено</h3>
-                  <p className="review-page__submitted-text">Вы уже отправили свой вердикт. Ожидайте завершения ревью другими участниками.</p>
+                  <p className="review-page__submitted-text">
+                    Вы уже отправили свой вердикт. Ожидайте завершения ревью другими участниками.
+                  </p>
                 </div>
                 <Suspense fallback={null}>
-                  <FinalReviewForm
-                    isReadOnly
-                    isSubmitting={false}
-                    taskId={review.id}
-                    initialData={myFinalReview}
-                  />
+                  <FinalReviewForm isReadOnly isSubmitting={false} taskId={review.id} initialData={myFinalReview} />
                 </Suspense>
               </>
             )}

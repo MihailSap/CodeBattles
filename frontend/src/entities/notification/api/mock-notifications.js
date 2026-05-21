@@ -1,8 +1,4 @@
-import {
-  NOTIFICATION_COMPLETION_ACTION,
-  NOTIFICATION_TARGET_KIND,
-  NOTIFICATION_TYPE
-} from '../model/constants';
+import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, NOTIFICATION_TYPE } from '../model/constants';
 import { formatNotificationDeadline, getNotificationExpiresAt } from '../lib/notification-utils';
 
 const makeDate = (minutesFromNow) => {
@@ -18,7 +14,7 @@ const createNotification = (notification) => {
     ...notification,
     isRead: Boolean(notification.isRead),
     createdAt,
-    expiresAt: getNotificationExpiresAt({ ...notification, createdAt })
+    expiresAt: getNotificationExpiresAt({ ...notification, createdAt }),
   };
 };
 
@@ -32,15 +28,15 @@ export const MOCK_NOTIFICATIONS = [
     createdAt: makeDate(-8),
     target: {
       kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
-      organizationId: 300
+      organizationId: 300,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_ORGANIZATION,
       target: {
         kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
-        organizationId: 300
-      }
-    }
+        organizationId: 300,
+      },
+    },
   }),
   createNotification({
     id: 'mock-org-rejected-400',
@@ -49,7 +45,7 @@ export const MOCK_NOTIFICATIONS = [
     text: 'Ваш запрос на вступление в организацию DeepMind Corp был отклонен.',
     createdAt: makeDate(-34),
     target: null,
-    completion: null
+    completion: null,
   }),
   createNotification({
     id: 'mock-org-request-300-42',
@@ -59,16 +55,16 @@ export const MOCK_NOTIFICATIONS = [
     createdAt: makeDate(-48),
     target: {
       kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
-      organizationId: 300
+      organizationId: 300,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.RESOLVE_ORGANIZATION_JOIN_REQUEST,
       target: {
         kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
         organizationId: 300,
-        userId: 42
-      }
-    }
+        userId: 42,
+      },
+    },
   }),
   createNotification({
     id: 'mock-task-assigned-9901',
@@ -81,16 +77,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
-      taskId: 9901
+      taskId: 9901,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9901
-      }
-    }
+        taskId: 9901,
+      },
+    },
   }),
   createNotification({
     id: 'mock-review-available-201',
@@ -102,16 +98,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.REVIEW,
       reviewId: 201,
-      taskId: 9801
+      taskId: 9801,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_REVIEW_RESULT,
       target: {
         kind: NOTIFICATION_TARGET_KIND.REVIEW,
         reviewId: 201,
-        taskId: 9801
-      }
-    }
+        taskId: 9801,
+      },
+    },
   }),
   createNotification({
     id: 'mock-review-approved-9904',
@@ -122,16 +118,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
-      taskId: 9904
+      taskId: 9904,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.ACCEPT_REVIEW_RESULT,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9904
-      }
-    }
+        taskId: 9904,
+      },
+    },
   }),
   createNotification({
     id: 'mock-review-rework-9903',
@@ -142,16 +138,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
-      taskId: 9903
+      taskId: 9903,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9903
-      }
-    }
+        taskId: 9903,
+      },
+    },
   }),
   createNotification({
     id: 'mock-review-expired-without-decision-9802',
@@ -162,16 +158,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
-      taskId: 9802
+      taskId: 9802,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9802
-      }
-    }
+        taskId: 9802,
+      },
+    },
   }),
   createNotification({
     id: 'mock-ai-review-completed-9904',
@@ -182,16 +178,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
-      taskId: 9904
+      taskId: 9904,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9904
-      }
-    }
+        taskId: 9904,
+      },
+    },
   }),
   createNotification({
     id: 'mock-thread-task-9903',
@@ -205,16 +201,16 @@ export const MOCK_NOTIFICATIONS = [
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
       taskId: 9903,
-      taskName: 'Разработать Architecture Diagram Canvas'
+      taskName: 'Разработать Architecture Diagram Canvas',
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9903
-      }
-    }
+        taskId: 9903,
+      },
+    },
   }),
   createNotification({
     id: 'mock-task-completed-reviewer-9803',
@@ -223,12 +219,12 @@ export const MOCK_NOTIFICATIONS = [
     text: 'Задача Интеграция Sentry была завершена. Баллы за ревью доступны на странице Лидерборда.',
     createdAt: makeDate(-210),
     target: {
-      kind: NOTIFICATION_TARGET_KIND.LEADERBOARD
+      kind: NOTIFICATION_TARGET_KIND.LEADERBOARD,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_LEADERBOARD,
-      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD }
-    }
+      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD },
+    },
   }),
   createNotification({
     id: 'mock-task-completed-owner-9806',
@@ -239,16 +235,16 @@ export const MOCK_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 6666,
-      taskId: 9806
+      taskId: 9806,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 6666,
-        taskId: 9806
-      }
-    }
+        taskId: 9806,
+      },
+    },
   }),
   createNotification({
     id: 'mock-achievement-1',
@@ -257,13 +253,13 @@ export const MOCK_NOTIFICATIONS = [
     text: 'Получено достижение Первая кровь!',
     createdAt: makeDate(-300),
     target: {
-      kind: NOTIFICATION_TARGET_KIND.PROFILE
+      kind: NOTIFICATION_TARGET_KIND.PROFILE,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_PROFILE,
-      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE }
-    }
-  })
+      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE },
+    },
+  }),
 ];
 
 export const MOCK_REALTIME_NOTIFICATIONS = [
@@ -277,16 +273,16 @@ export const MOCK_REALTIME_NOTIFICATIONS = [
     target: {
       kind: NOTIFICATION_TARGET_KIND.REVIEW,
       reviewId: 204,
-      taskId: 9804
+      taskId: 9804,
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_REVIEW_RESULT,
       target: {
         kind: NOTIFICATION_TARGET_KIND.REVIEW,
         reviewId: 204,
-        taskId: 9804
-      }
-    }
+        taskId: 9804,
+      },
+    },
   }),
   createNotification({
     id: 'mock-rt-thread-9903-1',
@@ -299,15 +295,15 @@ export const MOCK_REALTIME_NOTIFICATIONS = [
       kind: NOTIFICATION_TARGET_KIND.TASK,
       projectId: 9999,
       taskId: 9903,
-      taskName: 'Разработать Architecture Diagram Canvas'
+      taskName: 'Разработать Architecture Diagram Canvas',
     },
     completion: {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_TASK,
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: 9999,
-        taskId: 9903
-      }
-    }
-  })
+        taskId: 9903,
+      },
+    },
+  }),
 ];

@@ -20,7 +20,7 @@
   pointer-events: none;
 }
 
-[data-theme="dark"] .auth-page__bg {
+[data-theme='dark'] .auth-page__bg {
   background-image:
     linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15)),
     url('../../../shared/assets/auth-background-dark.png');
@@ -112,7 +112,6 @@
   font-weight: 600;
   line-height: 1.4;
   text-align: center;
-
 }
 
 .auth-mode-switch {
@@ -157,7 +156,6 @@
   z-index: 1;
   text-align: center;
   height: 30px;
-
 }
 
 .auth-mode-switch__option--active {
@@ -197,7 +195,6 @@
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-accent);
-
 }
 
 .auth-input::placeholder {
@@ -276,7 +273,6 @@
 .auth-recovery-link {
   color: var(--color-accent);
   font-weight: 600;
-
 }
 
 .auth-submit {
@@ -289,7 +285,6 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-
 }
 
 .auth-submit:disabled {
@@ -326,7 +321,7 @@
     background-color: rgba(0, 0, 0, 0.1);
   }
 
-  [data-theme="dark"] .auth-social__button--github:hover {
+  [data-theme='dark'] .auth-social__button--github:hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
 

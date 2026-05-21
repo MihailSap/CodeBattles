@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/shared/lib/theme';
@@ -12,7 +14,7 @@ import { API_BASE_URL } from '@/shared/config/api';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, fetchCurrentUser, loginUser, registerUser } from '@/entities/session';
-import { validateLogin, validateEmail, validatePassword, validateConfirmPassword } from '@/entities/session';
+import { loginFormSchema, registerFormSchema } from '@/entities/session';
 import { tokenStorage } from '@/shared/lib';
 import './AuthPage.css';
 
@@ -20,14 +22,7 @@ const initialForm = {
   login: '',
   email: '',
   password: '',
-  confirmPassword: ''
-};
-
-const initialErrors = {
-  login: '',
-  email: '',
-  password: '',
-  confirmPassword: ''
+  confirmPassword: '',
 };
 
 const AuthPage = () => {
@@ -38,20 +33,28 @@ const AuthPage = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const [form, setForm] = useState(initialForm);
-  const [touched, setTouched] = useState({});
-  const [submitted, setSubmitted] = useState(false);
-  const [validationErrors, setValidationErrors] = useState(initialErrors);
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
+  const activeSchema = useMemo(() => (isLoginMode ? loginFormSchema : registerFormSchema), [isLoginMode]);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm({
+    resolver: zodResolver(activeSchema),
+    defaultValues: initialForm,
+    mode: 'onChange',
+  });
   const postLoginRedirect = location.state?.from || ROUTES.dashboard;
   const resetFormState = () => {
-    setForm(initialForm);
-    setValidationErrors(initialErrors);
-    setTouched({});
-    setSubmitted(false);
+    reset(initialForm);
     setRegistrationCompleted(false);
   };
+
+  useEffect(() => {
+    reset(initialForm);
+  }, [isLoginMode, reset]);
 
   useEffect(() => {
     dispatch(clearAuthMessages());
@@ -136,74 +139,32 @@ const AuthPage = () => {
     return value;
   };
 
-  const validateField = (name, value) => {
-    switch (name) {
-      case 'email':
-        setValidationErrors((prev) => ({ ...prev, email: validateEmail(value) }));
-        break;
-      case 'login':
-        setValidationErrors((prev) => ({ ...prev, login: validateLogin(value) }));
-        break;
-      case 'password':
-        setValidationErrors((prev) => ({ ...prev, password: validatePassword(value) }));
-        if (form.confirmPassword) {
-          setValidationErrors((prev) => ({
-            ...prev,
-            confirmPassword: validateConfirmPassword(form.confirmPassword, value)
-          }));
-        }
-        break;
-      case 'confirmPassword':
-        setValidationErrors((prev) => ({ ...prev, confirmPassword: validateConfirmPassword(value, form.password) }));
-        break;
-      default:
-        break;
-    }
-  }
+  const registerField = (name) => {
+    const field = register(name);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    const nextValue = sanitizeValue(name, value);
-    setForm((prev) => ({ ...prev, [name]: nextValue }));
-    dispatch(clearAuthMessages());
-
-    if (isLoginMode) {
-      return;
-    }
-
-    validateField(name, nextValue);
+    return {
+      ...field,
+      onChange: (event) => {
+        event.target.value = sanitizeValue(name, event.target.value);
+        field.onChange(event);
+        dispatch(clearAuthMessages());
+      },
+    };
   };
 
-  const isFormValid = Boolean(
-    form.email.trim() &&
-    (form.login.trim() || isLoginMode) &&
-    form.password.trim() &&
-    (form.confirmPassword.trim() || isLoginMode) &&
-    !validationErrors.email &&
-    !validationErrors.login &&
-    !validationErrors.password &&
-    !validationErrors.confirmPassword
-  );
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    setSubmitted(true);
-
-    if (!isFormValid) {
-      return;
-    }
+  const onSubmit = async (form) => {
+    dispatch(clearAuthMessages());
 
     const payload = isLoginMode
       ? {
-        email: form.email.trim(),
-        password: form.password
-      }
+          email: form.email.trim(),
+          password: form.password,
+        }
       : {
-        login: form.login.trim(),
-        email: form.email.trim(),
-        password: form.password
-      };
+          login: form.login.trim(),
+          email: form.email.trim(),
+          password: form.password,
+        };
 
     const action = isLoginMode ? loginUser(payload) : registerUser(payload);
     const result = await dispatch(action);
@@ -217,30 +178,15 @@ const AuthPage = () => {
     }
   };
 
-  const handleBlur = (event) => {
-    const { name, value } = event.target;
-
-    setTouched((prev) => ({
-      ...prev,
-      [name]: true
-    }));
-
-    if (isLoginMode) {
-      return;
-    }
-
-    validateField(name, value);
-  };
-
   const getFieldError = (name) => {
-    if (!(touched[name] || submitted)) {
+    if (!(touchedFields[name] || isSubmitted)) {
       return '';
     }
 
-    return validationErrors[name] || '';
+    return errors[name]?.message || '';
   };
 
-  const isSubmitDisabled = isLoading || !isFormValid;
+  const isSubmitDisabled = isLoading || !isValid;
 
   return (
     <div className="auth-page">
@@ -270,7 +216,9 @@ const AuthPage = () => {
               ) : (
                 <>
                   <div className="auth-mode-switch">
-                    <span className={`auth-mode-switch__thumb ${isLoginMode ? 'auth-mode-switch__thumb--login' : ''}`} />
+                    <span
+                      className={`auth-mode-switch__thumb ${isLoginMode ? 'auth-mode-switch__thumb--login' : ''}`}
+                    />
                     <button
                       className={`auth-mode-switch__option ${!isLoginMode ? 'auth-mode-switch__option--active' : ''}`}
                       type="button"
@@ -287,7 +235,7 @@ const AuthPage = () => {
                     </button>
                   </div>
 
-                  <form className="auth-form" onSubmit={handleSubmit}>
+                  <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                     <div className="auth-form-inputs">
                       {!isLoginMode && (
                         <div className="auth-input-group">
@@ -296,11 +244,9 @@ const AuthPage = () => {
                             name="login"
                             type="text"
                             placeholder="Придумайте логин"
-                            value={form.login}
-                            onChange={handleChange}
                             maxLength={50}
-                            onBlur={handleBlur}
                             autoComplete="username"
+                            {...registerField('login')}
                           />
                           {getFieldError('login') && <p className="auth-input-error">{getFieldError('login')}</p>}
                         </div>
@@ -313,11 +259,9 @@ const AuthPage = () => {
                           type="text"
                           inputMode="email"
                           placeholder="Введите Ваш email"
-                          value={form.email}
-                          onChange={handleChange}
                           maxLength={255}
-                          onBlur={handleBlur}
                           autoComplete="email"
+                          {...registerField('email')}
                         />
                         {getFieldError('email') && <p className="auth-input-error">{getFieldError('email')}</p>}
                       </div>
@@ -328,11 +272,9 @@ const AuthPage = () => {
                           name="password"
                           type="password"
                           placeholder={isLoginMode ? 'Введите пароль' : 'Придумайте пароль'}
-                          value={form.password}
-                          onChange={handleChange}
                           maxLength={50}
-                          onBlur={handleBlur}
                           autoComplete={isLoginMode ? 'current-password' : 'new-password'}
+                          {...registerField('password')}
                         />
                         {getFieldError('password') && <p className="auth-input-error">{getFieldError('password')}</p>}
                       </div>
@@ -344,11 +286,9 @@ const AuthPage = () => {
                             name="confirmPassword"
                             type="password"
                             placeholder="Повторите пароль"
-                            value={form.confirmPassword}
-                            onChange={handleChange}
                             maxLength={50}
-                            onBlur={handleBlur}
                             autoComplete="new-password"
+                            {...registerField('confirmPassword')}
                           />
                           {getFieldError('confirmPassword') && (
                             <p className="auth-input-error">{getFieldError('confirmPassword')}</p>
@@ -375,7 +315,9 @@ const AuthPage = () => {
                     {isLoginMode && (
                       <p className="auth-recovery-text">
                         Забыли пароль?{' '}
-                        <Link className="auth-recovery-link" to={ROUTES.recovery}>Восстановить</Link>
+                        <Link className="auth-recovery-link" to={ROUTES.recovery}>
+                          Восстановить
+                        </Link>
                       </p>
                     )}
 
@@ -388,11 +330,7 @@ const AuthPage = () => {
               )}
             </div>
 
-            {error && (
-              <div className="auth-server-error">
-                {error}
-              </div>
-            )}
+            {error && <div className="auth-server-error">{error}</div>}
           </div>
         </section>
       </div>

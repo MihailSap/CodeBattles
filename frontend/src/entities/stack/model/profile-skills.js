@@ -2,7 +2,24 @@ export const SKILL_GROUPS = [
   {
     key: 'languages',
     title: 'Языки программирования:',
-    options: ['C#', 'Java', 'Python', 'JavaScript', 'TypeScript', 'Go', 'Rust', 'C++', 'C', 'PHP', 'Ruby', 'Swift', 'Kotlin', 'Scala', 'Dart', 'SQL']
+    options: [
+      'C#',
+      'Java',
+      'Python',
+      'JavaScript',
+      'TypeScript',
+      'Go',
+      'Rust',
+      'C++',
+      'C',
+      'PHP',
+      'Ruby',
+      'Swift',
+      'Kotlin',
+      'Scala',
+      'Dart',
+      'SQL',
+    ],
   },
   {
     key: 'frameworks',
@@ -22,12 +39,24 @@ export const SKILL_GROUPS = [
       'Ruby on Rails',
       'Laravel',
       'Flutter',
-      'SwiftUI'
-    ]
+      'SwiftUI',
+    ],
   },
   {
     key: 'tools',
     title: 'Инструменты и технологии:',
-    options: ['Docker', 'Kubernetes', 'Git', 'GitHub Actions', 'GitLab CI', 'Jenkins', 'Terraform', 'Ansible', 'Prometheus', 'Grafana', 'Elastic Stack (ELK)']
+    options: [
+      'Docker',
+      'Kubernetes',
+      'Git',
+      'GitHub Actions',
+      'GitLab CI',
+      'Jenkins',
+      'Terraform',
+      'Ansible',
+      'Prometheus',
+      'Grafana',
+      'Elastic Stack (ELK)',
+    ],
   },
 ];

@@ -1,5 +1,8 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StarIcon, CheckIcon } from '@/shared/ui/icons';
+import { finalReviewFormSchema } from '../../model/final-review-schema';
 import './FinalReviewForm.css';
 
 const STORAGE_KEY_PREFIX = 'codebattles_final_review_';
@@ -12,13 +15,16 @@ const StarSelector = ({ value, onChange, disabled = false }) => {
       {Array.from({ length: 5 }).map((_, i) => {
         const ratingValue = i + 1;
         const isFilled = ratingValue <= (hoverValue || value);
-        const starColor = hoverValue && ratingValue <= hoverValue
-          ? 'var(--color-rating-star-hover)'
-          : isFilled ? 'var(--color-rating-star)' : undefined;
+        const starColor =
+          hoverValue && ratingValue <= hoverValue
+            ? 'var(--color-rating-star-hover)'
+            : isFilled
+              ? 'var(--color-rating-star)'
+              : undefined;
 
         return (
           <button
-            key={i}
+            key={ratingValue}
             type="button"
             className="star-selector__btn"
             onClick={() => !disabled && onChange(ratingValue)}
@@ -38,7 +44,7 @@ const StarDisplay = ({ value }) => {
   return (
     <div className="star-selector star-selector--readonly">
       {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} className="star-selector__btn star-selector__btn--readonly">
+        <span key={i + 1} className="star-selector__btn star-selector__btn--readonly">
           <StarIcon filled={i < rounded} />
         </span>
       ))}
@@ -68,23 +74,34 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
         scalability: initialData.scalability || 0,
         comment: initialData.comment || '',
         verdict: initialData.verdict || '',
-        revealName: Boolean(initialData.revealName)
+        revealName: Boolean(initialData.revealName),
       };
     }
 
     const saved = loadSavedForm();
-    return saved || {
-      architecture: 0,
-      readability: 0,
-      testability: 0,
-      scalability: 0,
-      comment: '',
-      verdict: '',
-      revealName: false
-    };
+    return (
+      saved || {
+        architecture: 0,
+        readability: 0,
+        testability: 0,
+        scalability: 0,
+        comment: '',
+        verdict: '',
+        revealName: false,
+      }
+    );
   }, [initialData, loadSavedForm]);
 
-  const [form, setForm] = useState(getInitialForm);
+  const { control, register, handleSubmit, reset } = useForm({
+    resolver: zodResolver(finalReviewFormSchema),
+    defaultValues: getInitialForm(),
+    mode: 'onChange',
+  });
+  const form = useWatch({ control }) || getInitialForm();
+
+  useEffect(() => {
+    reset(getInitialForm());
+  }, [getInitialForm, reset]);
 
   useEffect(() => {
     if (!isReadOnly && taskId) {
@@ -103,17 +120,10 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     return Math.round(filled.reduce((a, b) => a + b, 0) / filled.length);
   }, [form.architecture, form.readability, form.testability, form.scalability]);
 
-  const isFormValid =
-    form.architecture > 0 &&
-    form.readability > 0 &&
-    form.testability > 0 &&
-    form.scalability > 0 &&
-    form.comment.trim().length >= 20 &&
-    form.verdict !== '';
+  const isFormValid = finalReviewFormSchema.safeParse(form).success;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!isFormValid || isSubmitting) return;
+  const submit = async () => {
+    if (isSubmitting) return;
     await onSubmit({ ...form, overallScore });
     try {
       localStorage.removeItem(storageKey);
@@ -122,52 +132,55 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     }
   };
 
-  const updateField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
   return (
     <div className="final-review-form-wrapper review-results-sidebar__block">
       <h3 className="review-results-sidebar__title">Итоговое ревью</h3>
-      <form className="final-review-form" onSubmit={handleSubmit}>
+      <form className="final-review-form" onSubmit={handleSubmit(submit)}>
         <div className="final-review-form__fields">
           <div className="final-review-form__field">
             <span className="final-review-form__label">Оценка архитектуры:</span>
-            <StarSelector
-              value={form.architecture}
-              onChange={(val) => updateField('architecture', val)}
-              disabled={isReadOnly}
+            <Controller
+              control={control}
+              name="architecture"
+              render={({ field }) => (
+                <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
+              )}
             />
           </div>
           <div className="final-review-form__field">
             <span className="final-review-form__label">Оценка читаемости:</span>
-            <StarSelector
-              value={form.readability}
-              onChange={(val) => updateField('readability', val)}
-              disabled={isReadOnly}
+            <Controller
+              control={control}
+              name="readability"
+              render={({ field }) => (
+                <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
+              )}
             />
           </div>
           <div className="final-review-form__field">
             <span className="final-review-form__label">Оценка тестируемости:</span>
-            <StarSelector
-              value={form.testability}
-              onChange={(val) => updateField('testability', val)}
-              disabled={isReadOnly}
+            <Controller
+              control={control}
+              name="testability"
+              render={({ field }) => (
+                <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
+              )}
             />
           </div>
           <div className="final-review-form__field">
             <span className="final-review-form__label">Оценка масштабируемости:</span>
-            <StarSelector
-              value={form.scalability}
-              onChange={(val) => updateField('scalability', val)}
-              disabled={isReadOnly}
+            <Controller
+              control={control}
+              name="scalability"
+              render={({ field }) => (
+                <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
+              )}
             />
           </div>
 
           <div className="final-review-form__field">
             <span className="final-review-form__label">Общая оценка качества:</span>
             <StarDisplay value={overallScore} />
-
           </div>
 
           <div className="final-review-form__field-vertical">
@@ -175,14 +188,11 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <textarea
               className="final-review-form__textarea"
               placeholder="Оставьте ваш комментарий к решению..."
-              value={form.comment}
-              onChange={(e) => updateField('comment', e.target.value)}
               disabled={isReadOnly}
+              {...register('comment')}
             />
             {form.comment.length > 0 && form.comment.trim().length < 20 && (
-              <span className="final-review-form__char-count">
-                {form.comment.trim().length}/20
-              </span>
+              <span className="final-review-form__char-count">{form.comment.trim().length}/20</span>
             )}
           </div>
 
@@ -195,11 +205,12 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
                   className="final-review-form__radio-input"
                   name="verdict"
                   value="APPROVED"
-                  checked={form.verdict === 'APPROVED'}
-                  onChange={() => updateField('verdict', 'APPROVED')}
                   disabled={isReadOnly}
+                  {...register('verdict')}
                 />
-                <span className="final-review-form__verdict-text final-review-form__verdict-text--approved">Одобрить</span>
+                <span className="final-review-form__verdict-text final-review-form__verdict-text--approved">
+                  Одобрить
+                </span>
               </label>
               <label className="final-review-form__radio-label">
                 <input
@@ -207,11 +218,12 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
                   className="final-review-form__radio-input"
                   name="verdict"
                   value="REWORK"
-                  checked={form.verdict === 'REWORK'}
-                  onChange={() => updateField('verdict', 'REWORK')}
                   disabled={isReadOnly}
+                  {...register('verdict')}
                 />
-                <span className="final-review-form__verdict-text final-review-form__verdict-text--rework">На доработку</span>
+                <span className="final-review-form__verdict-text final-review-form__verdict-text--rework">
+                  На доработку
+                </span>
               </label>
             </div>
           </div>
@@ -220,19 +232,15 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <input
               type="checkbox"
               className="final-review-form__checkbox"
-              checked={form.revealName}
-              onChange={(e) => updateField('revealName', e.target.checked)}
               disabled={isReadOnly}
+              {...register('revealName')}
             />
             Раскрыть моё имя исполнителям после завершения ревью
           </label>
         </div>
 
         {!isReadOnly && (
-
-          <button type="submit"
-            className="final-review-form__submit-btn"
-            disabled={!isFormValid || isSubmitting}>
+          <button type="submit" className="final-review-form__submit-btn" disabled={!isFormValid || isSubmitting}>
             <CheckIcon />
           </button>
         )}

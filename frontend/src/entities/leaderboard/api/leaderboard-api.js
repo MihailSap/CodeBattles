@@ -1,13 +1,5 @@
-import {
-  LEADERBOARD_PERIOD,
-  LEADERBOARD_SCOPE,
-  LEADERBOARD_SORT_METRIC
-} from '../model';
-import {
-  MOCK_LEADERBOARD_ORGANIZATIONS,
-  MOCK_LEADERBOARD_PROJECTS,
-  MOCK_LEADERBOARD_USERS
-} from '@/entities/project/api/mocks';
+import { LEADERBOARD_PERIOD, LEADERBOARD_SCOPE, LEADERBOARD_SORT_METRIC } from '../model';
+import { MOCK_LEADERBOARD_ORGANIZATIONS, MOCK_LEADERBOARD_PROJECTS, MOCK_LEADERBOARD_USERS } from '@/entities/project';
 
 const DEFAULT_CURRENT_USER_ID = 57;
 const resetRatingUserIds = new Set();
@@ -42,7 +34,7 @@ const mapLeaderboardEntry = (user, rank, period) => ({
   name: user.name,
   login: user.login,
   avatar: user.avatar,
-  metrics: getPeriodStats(user, period)
+  metrics: getPeriodStats(user, period),
 });
 
 const filterUsersByScope = ({ scope, entityId }) => {
@@ -92,7 +84,7 @@ const makeLeaderboard = ({ scope, entityId, period, category, query, viewerId, p
     page,
     size,
     totalElements: filteredEntries.length,
-    totalPages: Math.ceil(filteredEntries.length / size)
+    totalPages: Math.ceil(filteredEntries.length / size),
   };
 };
 
@@ -100,7 +92,8 @@ const getAvailableEntities = ({ type, viewerId, query, limit, isAdmin }) => {
   const currentUserId = getViewerId(viewerId);
   const currentUser = MOCK_LEADERBOARD_USERS.find((user) => user.id === currentUserId);
   const entityIds = type === LEADERBOARD_SCOPE.ORGANIZATIONS ? currentUser?.organizationIds : currentUser?.projectIds;
-  const entities = type === LEADERBOARD_SCOPE.ORGANIZATIONS ? MOCK_LEADERBOARD_ORGANIZATIONS : MOCK_LEADERBOARD_PROJECTS;
+  const entities =
+    type === LEADERBOARD_SCOPE.ORGANIZATIONS ? MOCK_LEADERBOARD_ORGANIZATIONS : MOCK_LEADERBOARD_PROJECTS;
   const normalizedQuery = normalizeQuery(query);
 
   if (!isAdmin && !entityIds?.length) {
@@ -123,7 +116,7 @@ export const leaderboardApi = {
     query = '',
     viewerId,
     page = 0,
-    size = 100
+    size = 100,
   }) {
     return wait(makeLeaderboard({ scope, entityId, period, category, query, viewerId, page, size }));
   },
@@ -139,5 +132,5 @@ export const leaderboardApi = {
   async resetUserRating(userId) {
     resetRatingUserIds.add(Number(userId));
     return wait({ userId: Number(userId), ratingReset: true }, 250);
-  }
+  },
 };

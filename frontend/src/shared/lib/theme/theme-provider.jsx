@@ -14,16 +14,15 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const value = useMemo(() => ({
-    theme,
-    toggleTheme: () => dispatch(toggleTheme())
-  }), [dispatch, theme]);
-
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({
+      theme,
+      toggleTheme: () => dispatch(toggleTheme()),
+    }),
+    [dispatch, theme]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => useContext(ThemeContext);

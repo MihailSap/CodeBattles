@@ -2,8 +2,7 @@
   min-height: 100vh;
   background:
     linear-gradient(90deg, var(--color-control-border) 1px, transparent 1px),
-    linear-gradient(0deg, var(--color-control-border) 1px, transparent 1px),
-    var(--color-page-bg);
+    linear-gradient(0deg, var(--color-control-border) 1px, transparent 1px), var(--color-page-bg);
   background-size: 72px 72px;
 }
 
@@ -60,7 +59,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .landing-header__link--primary {
@@ -155,7 +153,6 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-
 }
 
 .landing-button svg {
@@ -182,7 +179,7 @@
 }
 
 .landing-hero-art::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 8% 4% 9% 0;
   border: 1px solid var(--color-accent-muted);
@@ -341,9 +338,7 @@
   border: 1px solid var(--color-accent-muted);
   border-radius: 8px;
   color: var(--color-accent);
-  background:
-    linear-gradient(135deg, var(--color-accent-hover-bg), transparent 58%),
-    var(--color-surface);
+  background: linear-gradient(135deg, var(--color-accent-hover-bg), transparent 58%), var(--color-surface);
   box-shadow: var(--shadow-accent-button);
   display: grid;
   place-items: center;
@@ -357,9 +352,7 @@
 .landing-section__mark--success {
   color: var(--color-success);
   border-color: var(--color-success-border);
-  background:
-    linear-gradient(135deg, var(--color-success-surface), transparent 58%),
-    var(--color-surface);
+  background: linear-gradient(135deg, var(--color-success-surface), transparent 58%), var(--color-surface);
 }
 
 .landing-section__body {

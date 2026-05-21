@@ -25,8 +25,8 @@
   display: grid;
   grid-template-columns: 1.25fr 2fr;
   grid-template-areas:
-    "profile statistics"
-    "skills achievements";
+    'profile statistics'
+    'skills achievements';
   gap: 40px;
 }
 
@@ -100,7 +100,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .profile-page__action svg {
@@ -193,10 +192,10 @@
   .profile-page__grid {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "profile"
-      "skills"
-      "statistics"
-      "achievements";
+      'profile'
+      'skills'
+      'statistics'
+      'achievements';
   }
 }
 

@@ -55,142 +55,151 @@ const getRowClass = ({ rank, isCurrentUser }) => {
   return classes.join(' ');
 };
 
-const LeaderboardTable = forwardRef(({
-  entries,
-  currentUserEntry,
-  category,
-  currentUserId,
-  canResetRatings,
-  onResetRating
-}, ref) => {
-  const columns = LEADERBOARD_METRIC_COLUMNS[category];
-  const tableRows = useMemo(
-    () => (currentUserEntry ? [...entries, currentUserEntry] : entries),
-    [currentUserEntry, entries]
-  );
-  const gridTemplateColumns = useMemo(
-    () => `max-content minmax(max-content, 1fr) repeat(${columns.length}, max-content)${canResetRatings ? ' max-content' : ''}`,
-    [canResetRatings, columns.length]
-  );
+const LeaderboardTable = forwardRef(
+  ({ entries, currentUserEntry, category, currentUserId, canResetRatings, onResetRating }, ref) => {
+    const columns = LEADERBOARD_METRIC_COLUMNS[category];
+    const tableRows = useMemo(
+      () => (currentUserEntry ? [...entries, currentUserEntry] : entries),
+      [currentUserEntry, entries]
+    );
+    const gridTemplateColumns = useMemo(
+      () =>
+        `max-content minmax(max-content, 1fr) repeat(${columns.length}, max-content)${canResetRatings ? ' max-content' : ''}`,
+      [canResetRatings, columns.length]
+    );
 
-  if (!tableRows.length) {
+    if (!tableRows.length) {
+      return <div className="leaderboard-table leaderboard-table--empty">Пользователи не найдены</div>;
+    }
+
     return (
-      <div className="leaderboard-table leaderboard-table--empty">
-        Пользователи не найдены
+      <div className="leaderboard-table">
+        <div className="leaderboard-table__scroll">
+          <div className="leaderboard-table__inner" style={{ gridTemplateColumns }}>
+            <div className="leaderboard-table__row leaderboard-table__row--head">
+              <div className="leaderboard-table__cell">Место</div>
+              <div className="leaderboard-table__cell leaderboard-table__cell--user">Пользователь</div>
+              {columns.map((column) => (
+                <div className="leaderboard-table__cell" key={column.key}>
+                  {column.label}
+                </div>
+              ))}
+              {canResetRatings && <div className="leaderboard-table__cell">Действие</div>}
+            </div>
+
+            {entries.map((entry) => {
+              const displayName = entry.name || entry.login;
+              const isCurrentUser = Number(entry.id) === Number(currentUserId);
+
+              return (
+                <Link
+                  className={getRowClass({ rank: entry.rank, isCurrentUser })}
+                  key={entry.id}
+                  to={ROUTES.profileByUserId.replace(':userId', entry.id)}
+                >
+                  <div
+                    className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(entry.rank)}`}
+                    ref={isCurrentUser ? ref : null}
+                  >
+                    {entry.rank}
+                  </div>
+                  <div className="leaderboard-table__cell leaderboard-table__cell--user">
+                    <span className="leaderboard-table__avatar">
+                      {entry.avatar ? <img src={entry.avatar} alt={`Аватар ${displayName}`} /> : <AvatarIcon />}
+                    </span>
+                    <span className="leaderboard-table__name" title={displayName}>
+                      {displayName}
+                    </span>
+                  </div>
+                  {columns.map((column) => (
+                    <div className="leaderboard-table__cell" key={column.key}>
+                      {formatMetric(entry.metrics[column.key], column.type)}
+                    </div>
+                  ))}
+                  {canResetRatings && (
+                    <div className="leaderboard-table__cell">
+                      <button
+                        className="leaderboard-table__reset-button"
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onResetRating(entry);
+                        }}
+                      >
+                        Обнулить
+                      </button>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
+
+            {currentUserEntry && (
+              <>
+                <div
+                  className="leaderboard-table__separator"
+                  style={{ gridColumn: `1 / ${columns.length + (canResetRatings ? 4 : 3)}` }}
+                >
+                  •••
+                </div>
+                <Link
+                  className={getRowClass({ rank: currentUserEntry.rank, isCurrentUser: true })}
+                  to={ROUTES.profileByUserId.replace(':userId', currentUserEntry.id)}
+                >
+                  <div
+                    className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(currentUserEntry.rank)}`}
+                    ref={ref}
+                  >
+                    {currentUserEntry.rank}
+                  </div>
+                  <div className="leaderboard-table__cell leaderboard-table__cell--user">
+                    <span className="leaderboard-table__avatar">
+                      {currentUserEntry.avatar ? (
+                        <img
+                          src={currentUserEntry.avatar}
+                          alt={`Аватар ${currentUserEntry.name || `@${currentUserEntry.login}`}`}
+                        />
+                      ) : (
+                        <AvatarIcon />
+                      )}
+                    </span>
+                    <span
+                      className="leaderboard-table__name"
+                      title={currentUserEntry.name || `@${currentUserEntry.login}`}
+                    >
+                      {currentUserEntry.name || `@${currentUserEntry.login}`}
+                    </span>
+                  </div>
+                  {columns.map((column) => (
+                    <div className="leaderboard-table__cell" key={column.key}>
+                      {formatMetric(currentUserEntry.metrics[column.key], column.type)}
+                    </div>
+                  ))}
+                  {canResetRatings && (
+                    <div className="leaderboard-table__cell">
+                      <button
+                        className="leaderboard-table__reset-button"
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onResetRating(currentUserEntry);
+                        }}
+                      >
+                        Обнулить
+                      </button>
+                    </div>
+                  )}
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
-
-  return (
-    <div className="leaderboard-table">
-      <div className="leaderboard-table__scroll">
-        <div className="leaderboard-table__inner" style={{ gridTemplateColumns }}>
-          <div className="leaderboard-table__row leaderboard-table__row--head">
-            <div className="leaderboard-table__cell">Место</div>
-            <div className="leaderboard-table__cell leaderboard-table__cell--user">Пользователь</div>
-            {columns.map((column) => (
-              <div className="leaderboard-table__cell" key={column.key}>{column.label}</div>
-            ))}
-            {canResetRatings && <div className="leaderboard-table__cell">Действие</div>}
-          </div>
-
-          {entries.map((entry) => {
-            const displayName = entry.name || entry.login;
-            const isCurrentUser = Number(entry.id) === Number(currentUserId);
-
-            return (
-              <Link
-                className={getRowClass({ rank: entry.rank, isCurrentUser })}
-                key={entry.id}
-                to={ROUTES.profileByUserId.replace(':userId', entry.id)}
-              >
-                <div
-                  className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(entry.rank)}`}
-                  ref={isCurrentUser ? ref : null}
-                >
-                  {entry.rank}
-                </div>
-                <div className="leaderboard-table__cell leaderboard-table__cell--user">
-                  <span className="leaderboard-table__avatar">
-                    {entry.avatar ? <img src={entry.avatar} alt={`Аватар ${displayName}`} /> : <AvatarIcon />}
-                  </span>
-                  <span className="leaderboard-table__name" title={displayName}>{displayName}</span>
-                </div>
-                {columns.map((column) => (
-                  <div className="leaderboard-table__cell" key={column.key}>
-                    {formatMetric(entry.metrics[column.key], column.type)}
-                  </div>
-                ))}
-                {canResetRatings && (
-                  <div className="leaderboard-table__cell">
-                    <button
-                      className="leaderboard-table__reset-button"
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onResetRating(entry);
-                      }}
-                    >
-                      Обнулить
-                    </button>
-                  </div>
-                )}
-              </Link>
-            );
-          })}
-
-          {currentUserEntry && (
-            <>
-              <div className="leaderboard-table__separator" style={{ gridColumn: `1 / ${columns.length + (canResetRatings ? 4 : 3)}` }}>
-                •••
-              </div>
-              <Link
-                className={getRowClass({ rank: currentUserEntry.rank, isCurrentUser: true })}
-                to={ROUTES.profileByUserId.replace(':userId', currentUserEntry.id)}
-              >
-                <div
-                  className={`leaderboard-table__cell leaderboard-table__rank ${getRankClass(currentUserEntry.rank)}`}
-                  ref={ref}
-                >
-                  {currentUserEntry.rank}
-                </div>
-                <div className="leaderboard-table__cell leaderboard-table__cell--user">
-                  <span className="leaderboard-table__avatar">
-                    {currentUserEntry.avatar ? <img src={currentUserEntry.avatar} alt={`Аватар ${currentUserEntry.name || `@${currentUserEntry.login}`}`} /> : <AvatarIcon />}
-                  </span>
-                  <span className="leaderboard-table__name" title={currentUserEntry.name || `@${currentUserEntry.login}`}>
-                    {currentUserEntry.name || `@${currentUserEntry.login}`}
-                  </span>
-                </div>
-                {columns.map((column) => (
-                  <div className="leaderboard-table__cell" key={column.key}>
-                    {formatMetric(currentUserEntry.metrics[column.key], column.type)}
-                  </div>
-                ))}
-                {canResetRatings && (
-                  <div className="leaderboard-table__cell">
-                    <button
-                      className="leaderboard-table__reset-button"
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onResetRating(currentUserEntry);
-                      }}
-                    >
-                      Обнулить
-                    </button>
-                  </div>
-                )}
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-});
+);
 
 LeaderboardTable.displayName = 'LeaderboardTable';
 

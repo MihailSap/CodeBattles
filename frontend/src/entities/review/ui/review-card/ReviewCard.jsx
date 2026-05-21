@@ -7,7 +7,7 @@ const formatDate = (value) =>
   new Date(value).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   });
 
 const getStatusClassName = (status) => {
@@ -41,11 +41,16 @@ const getDeadlineMeta = (review) => {
   }
 
   const daysLeft = Math.max(1, Math.ceil((deadlineTime - nowTime) / (24 * 60 * 60 * 1000)));
-  const suffix = daysLeft % 10 === 1 && daysLeft % 100 !== 11 ? 'день' : daysLeft % 10 >= 2 && daysLeft % 10 <= 4 && (daysLeft % 100 < 12 || daysLeft % 100 > 14) ? 'дня' : 'дней';
+  const suffix =
+    daysLeft % 10 === 1 && daysLeft % 100 !== 11
+      ? 'день'
+      : daysLeft % 10 >= 2 && daysLeft % 10 <= 4 && (daysLeft % 100 < 12 || daysLeft % 100 > 14)
+        ? 'дня'
+        : 'дней';
 
   return {
     text: `${daysLeft} ${suffix}`,
-    className: 'review-card__deadline-value--warning'
+    className: 'review-card__deadline-value--warning',
   };
 };
 
@@ -81,7 +86,9 @@ const ReviewCard = ({ review, onClick, onOpen }) => {
               </span>
             </span>
           )}
-          <span className={`review-card__status ${getStatusClassName(review.status)}`}>{REVIEW_STATUS_LABEL[review.status]}</span>
+          <span className={`review-card__status ${getStatusClassName(review.status)}`}>
+            {REVIEW_STATUS_LABEL[review.status]}
+          </span>
         </div>
       </div>
 
@@ -93,7 +100,9 @@ const ReviewCard = ({ review, onClick, onOpen }) => {
         <p className="review-card__meta-line">
           <span className="review-card__label">Срок проверки:</span>
           <span className="review-card__value">
-            <span className={deadlineMeta.className}>{formatDate(review.responseDeadline)} ({deadlineMeta.text})</span>
+            <span className={deadlineMeta.className}>
+              {formatDate(review.responseDeadline)} ({deadlineMeta.text})
+            </span>
           </span>
         </p>
       </div>

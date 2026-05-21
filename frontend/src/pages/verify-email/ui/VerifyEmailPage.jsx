@@ -66,7 +66,6 @@ const VerifyEmailPage = () => {
 
       <img className="verify-email-page__logo" src={isDark ? logoDark : logoLight} alt="CodeBattles" />
 
-
       <main className="verify-email-page__content">
         <h1 className="verify-email-page__title">Подтверждение E-Mail</h1>
         <p

@@ -5,6 +5,7 @@
   box-shadow: var(--shadow-accent);
   background: transparent;
   padding: 13px;
+  font: inherit;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,7 +40,7 @@
   flex-shrink: 0;
 }
 
-[data-theme="dark"] .project-card__privacy {
+[data-theme='dark'] .project-card__privacy {
   filter: invert(1);
 }
 

@@ -15,7 +15,7 @@ import {
   useGetLeaderboardQuery,
   useResetUserRatingMutation,
   useSearchLeaderboardOrganizationsQuery,
-  useSearchLeaderboardProjectsQuery
+  useSearchLeaderboardProjectsQuery,
 } from '@/entities/leaderboard';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
@@ -28,7 +28,7 @@ const getEntityConfig = (scope) => {
       initialText: 'Выберите организацию для просмотра лидерборда',
       titleFallback: 'организации',
       emptyText: 'Вы не состоите в организациях',
-      searchEmptyText: 'Организации не найдены'
+      searchEmptyText: 'Организации не найдены',
     };
   }
 
@@ -37,7 +37,7 @@ const getEntityConfig = (scope) => {
     initialText: 'Выберите проект для просмотра лидерборда',
     titleFallback: 'проекта',
     emptyText: 'Вы не состоите в проектах',
-    searchEmptyText: 'Проекты не найдены'
+    searchEmptyText: 'Проекты не найдены',
   };
 };
 
@@ -58,42 +58,47 @@ const LeaderboardPage = () => {
   const isEntityScope = activeScope !== LEADERBOARD_SCOPE.GLOBAL;
   const entityConfig = useMemo(() => getEntityConfig(activeScope), [activeScope]);
   const canResetRatings = user?.role === 'ADMIN';
-  const leaderboardParams = useMemo(() => ({
-    scope: activeScope,
-    entityId: selectedEntity?.id,
-    period,
-    category,
-    query: debouncedUserSearch,
-    viewerId: currentUserId,
-    page: 0,
-    size: 100
-  }), [activeScope, category, currentUserId, debouncedUserSearch, period, selectedEntity?.id]);
-  const entitySearchParams = useMemo(() => ({
-    viewerId: currentUserId,
-    query: debouncedEntitySearch,
-    limit: 5,
-    isAdmin: canResetRatings
-  }), [canResetRatings, currentUserId, debouncedEntitySearch]);
+  const leaderboardParams = useMemo(
+    () => ({
+      scope: activeScope,
+      entityId: selectedEntity?.id,
+      period,
+      category,
+      query: debouncedUserSearch,
+      viewerId: currentUserId,
+      page: 0,
+      size: 100,
+    }),
+    [activeScope, category, currentUserId, debouncedUserSearch, period, selectedEntity?.id]
+  );
+  const entitySearchParams = useMemo(
+    () => ({
+      viewerId: currentUserId,
+      query: debouncedEntitySearch,
+      limit: 5,
+      isAdmin: canResetRatings,
+    }),
+    [canResetRatings, currentUserId, debouncedEntitySearch]
+  );
   const {
     data: leaderboard = { content: [], currentUserEntry: null },
     isLoading: isLeaderboardInitialLoading,
-    isFetching: isLeaderboardFetching
+    isFetching: isLeaderboardFetching,
   } = useGetLeaderboardQuery(leaderboardParams, {
     skip: isEntityScope && !selectedEntity,
-    refetchOnMountOrArgChange: 30
+    refetchOnMountOrArgChange: 30,
   });
   const organizationsSearchQuery = useSearchLeaderboardOrganizationsQuery(entitySearchParams, {
     skip: activeScope !== LEADERBOARD_SCOPE.ORGANIZATIONS,
-    refetchOnMountOrArgChange: 60
+    refetchOnMountOrArgChange: 60,
   });
   const projectsSearchQuery = useSearchLeaderboardProjectsQuery(entitySearchParams, {
     skip: activeScope !== LEADERBOARD_SCOPE.PROJECTS,
-    refetchOnMountOrArgChange: 60
+    refetchOnMountOrArgChange: 60,
   });
   const [resetUserRating, { isLoading: isResetRatingSubmitting }] = useResetUserRatingMutation();
-  const activeEntityQuery = activeScope === LEADERBOARD_SCOPE.ORGANIZATIONS
-    ? organizationsSearchQuery
-    : projectsSearchQuery;
+  const activeEntityQuery =
+    activeScope === LEADERBOARD_SCOPE.ORGANIZATIONS ? organizationsSearchQuery : projectsSearchQuery;
   const entityOptions = activeEntityQuery.data || [];
   const isEntitiesLoading = activeEntityQuery.isLoading || activeEntityQuery.isFetching;
   const isLeaderboardLoading = isLeaderboardInitialLoading || isLeaderboardFetching;

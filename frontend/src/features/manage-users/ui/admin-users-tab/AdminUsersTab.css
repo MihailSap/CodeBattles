@@ -39,7 +39,6 @@
   font-family: inherit;
   font-size: 16px;
   padding: 10px 12px;
-
 }
 
 .admin-users__search-input:focus {
@@ -120,7 +119,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
 }
 
 .admin-users__action-button--delete {
@@ -195,7 +193,6 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-
 }
 
 .admin-users__pagination-button:disabled {

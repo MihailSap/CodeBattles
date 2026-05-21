@@ -1,19 +1,27 @@
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { CheckIcon } from '@/shared/ui/icons';
-import {
-  COMMENT_CATEGORY,
-  COMMENT_CATEGORY_LABEL,
-  COMMENT_SEVERITY,
-  COMMENT_SEVERITY_LABEL,
-} from '@/entities/review';
+import { COMMENT_CATEGORY, COMMENT_CATEGORY_LABEL, COMMENT_SEVERITY, COMMENT_SEVERITY_LABEL } from '@/entities/review';
+import { commentFormSchema } from '../../model/comment-schema';
 import './CommentModal.css';
 
 const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => {
-  const [text, setText] = useState('');
-  const [category, setCategory] = useState('');
-  const [severity, setSeverity] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isValid },
+  } = useForm({
+    resolver: zodResolver(commentFormSchema),
+    defaultValues: {
+      text: '',
+      category: '',
+      severity: '',
+    },
+    mode: 'onChange',
+  });
 
   useBodyScrollLock(isOpen);
 
@@ -26,18 +34,14 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
     ? `Комментарий к строке ${startLine}`
     : `Комментарий к строкам ${startLine}-${endLine}`;
 
-  const handleSubmit = () => {
-    if (text.length < 15 || isSubmitting) return;
-    onSubmit({ text, category: category || null, severity: severity || null });
-    setText('');
-    setCategory('');
-    setSeverity('');
+  const submit = ({ text, category, severity }) => {
+    if (isSubmitting) return;
+    onSubmit({ text: text.trim(), category: category || null, severity: severity || null });
+    reset();
   };
 
   const handleClose = () => {
-    setText('');
-    setCategory('');
-    setSeverity('');
+    reset();
     onClose();
   };
 
@@ -53,14 +57,13 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
       titleClassName="comment-modal__title"
       closeClassName="comment-modal__close"
     >
-      <div className="comment-modal__content">
+      <form className="comment-modal__content" onSubmit={handleSubmit(submit)}>
         <div className="comment-modal__field">
           <label>Текст комментария*</label>
           <textarea
             className="comment-modal__textarea"
             placeholder="Введите текст комментария..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
+            {...register('text')}
           />
         </div>
 
@@ -74,8 +77,7 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
                   className="comment-modal__radio-input"
                   name="category"
                   value=""
-                  checked={category === ''}
-                  onChange={() => setCategory('')}
+                  {...register('category')}
                 />
                 <span className="comment-modal__radio-text">Без категории</span>
               </label>
@@ -86,8 +88,7 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
                     className="comment-modal__radio-input"
                     name="category"
                     value={value}
-                    checked={category === value}
-                    onChange={(e) => setCategory(e.target.value)}
+                    {...register('category')}
                   />
                   <span className="comment-modal__radio-text">{COMMENT_CATEGORY_LABEL[value]}</span>
                 </label>
@@ -104,8 +105,7 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
                   className="comment-modal__radio-input"
                   name="severity"
                   value=""
-                  checked={severity === ''}
-                  onChange={() => setSeverity('')}
+                  {...register('severity')}
                 />
                 <span className="comment-modal__radio-text">Без критичности</span>
               </label>
@@ -116,8 +116,7 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
                     className="comment-modal__radio-input"
                     name="severity"
                     value={value}
-                    checked={severity === value}
-                    onChange={(e) => setSeverity(e.target.value)}
+                    {...register('severity')}
                   />
                   <span className="comment-modal__radio-text">{COMMENT_SEVERITY_LABEL[value]}</span>
                 </label>
@@ -127,16 +126,11 @@ const CommentModal = ({ isOpen, onClose, onSubmit, isSubmitting, lineData }) => 
         </div>
 
         <div className="comment-modal__footer">
-          <button
-            type="button"
-            className="comment-modal__submit-btn"
-            disabled={text.trim().length < 15 || isSubmitting}
-            onClick={handleSubmit}
-          >
+          <button type="submit" className="comment-modal__submit-btn" disabled={!isValid || isSubmitting}>
             <CheckIcon />
           </button>
         </div>
-      </div>
+      </form>
     </ModalShell>
   );
 };

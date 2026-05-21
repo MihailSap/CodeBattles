@@ -22,7 +22,7 @@ const ProjectSkillsSelector = ({
   boundarySelector = '',
   withClear = true,
   disabled = false,
-  emptyLabel = 'Не указано'
+  emptyLabel = 'Не указано',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [popupStyle, setPopupStyle] = useState({});
@@ -31,7 +31,10 @@ const ProjectSkillsSelector = ({
   const triggerRef = useRef(null);
 
   const selected = useMemo(
-    () => [...new Set((value || []).filter((item) => uniqueSkills.includes(item)))].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' })),
+    () =>
+      [...new Set((value || []).filter((item) => uniqueSkills.includes(item)))].sort((a, b) =>
+        a.localeCompare(b, 'ru', { sensitivity: 'base' })
+      ),
     [value]
   );
 
@@ -78,11 +81,15 @@ const ProjectSkillsSelector = ({
       triggerElement.closest('form');
     const boundaryRect = boundaryElement?.getBoundingClientRect();
 
-    const minLeft = boundaryRect ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.left + POPUP_VIEWPORT_PADDING) : POPUP_VIEWPORT_PADDING;
+    const minLeft = boundaryRect
+      ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.left + POPUP_VIEWPORT_PADDING)
+      : POPUP_VIEWPORT_PADDING;
     const maxRight = boundaryRect
       ? Math.min(window.innerWidth - POPUP_VIEWPORT_PADDING, boundaryRect.right - POPUP_VIEWPORT_PADDING)
       : window.innerWidth - POPUP_VIEWPORT_PADDING;
-    const minTop = boundaryRect ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.top + POPUP_VIEWPORT_PADDING) : POPUP_VIEWPORT_PADDING;
+    const minTop = boundaryRect
+      ? Math.max(POPUP_VIEWPORT_PADDING, boundaryRect.top + POPUP_VIEWPORT_PADDING)
+      : POPUP_VIEWPORT_PADDING;
     const maxBottom = boundaryRect
       ? Math.min(window.innerHeight - POPUP_VIEWPORT_PADDING, boundaryRect.bottom - POPUP_VIEWPORT_PADDING)
       : window.innerHeight - POPUP_VIEWPORT_PADDING;
@@ -122,7 +129,7 @@ const ProjectSkillsSelector = ({
         top: `${top + window.scrollY}px`,
         left: `${left + window.scrollX}px`,
         width: `${popupWidth}px`,
-        maxHeight: `${fallbackHeight}px`
+        maxHeight: `${fallbackHeight}px`,
       });
       return;
     }
@@ -133,7 +140,7 @@ const ProjectSkillsSelector = ({
       top: `${top + window.scrollY}px`,
       left: `${left + window.scrollX}px`,
       width: `${popupWidth}px`,
-      maxHeight: `${popupMaxHeight}px`
+      maxHeight: `${popupMaxHeight}px`,
     });
   }, [boundarySelector, forceOpenUp]);
 
@@ -193,7 +200,12 @@ const ProjectSkillsSelector = ({
       <div className="project-skills-selector__head">
         <h3 className={titleClassName}>{title}</h3>
         {withClear && (
-          <button className="project-skills-selector__clear" type="button" onClick={clearAll} disabled={disabled || selected.length === 0}>
+          <button
+            className="project-skills-selector__clear"
+            type="button"
+            onClick={clearAll}
+            disabled={disabled || selected.length === 0}
+          >
             Очистить все
           </button>
         )}
@@ -203,7 +215,13 @@ const ProjectSkillsSelector = ({
         {selected.length === 0 && <span className="project-skills-selector__empty">{emptyLabel}</span>}
 
         {selected.map((skillName) => (
-          <button className="project-skills-selector__tag" type="button" key={skillName} onClick={() => toggleSkill(skillName)} disabled={disabled}>
+          <button
+            className="project-skills-selector__tag"
+            type="button"
+            key={skillName}
+            onClick={() => toggleSkill(skillName)}
+            disabled={disabled}
+          >
             {skillName}
           </button>
         ))}
@@ -239,7 +257,12 @@ const ProjectSkillsSelector = ({
 
                   return (
                     <label className="project-skills-selector__option" key={skillName}>
-                      <input type="checkbox" checked={isChecked} onChange={() => toggleSkill(skillName)} disabled={disabled} />
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSkill(skillName)}
+                        disabled={disabled}
+                      />
                       <span>{skillName}</span>
                     </label>
                   );

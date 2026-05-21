@@ -1,4 +1,4 @@
-import { MOCK_ASSIGNED_REVIEWS } from '@/entities/project/api/mocks';
+import { MOCK_ASSIGNED_REVIEWS } from '@/entities/project';
 import { REVIEW_SORT, REVIEWS_NETWORK_DELAY_MS, REVIEWS_PAGE_SIZE_DEFAULT } from '../model';
 
 const withDelay = (value, ms = REVIEWS_NETWORK_DELAY_MS) =>
@@ -23,7 +23,7 @@ const paginate = (items, page = 1, pageSize = REVIEWS_PAGE_SIZE_DEFAULT) => {
     totalItems,
     totalPages,
     hasNext: normalizedPage < totalPages,
-    hasPrevious: normalizedPage > 1
+    hasPrevious: normalizedPage > 1,
   };
 };
 
@@ -39,18 +39,18 @@ export const reviewsApi = {
   async getAssignedReviews(viewerId, params = {}) {
     const { page = 1, pageSize = REVIEWS_PAGE_SIZE_DEFAULT, status = '', sort = REVIEW_SORT.NEAREST_FIRST } = params;
 
-    const filtered = MOCK_ASSIGNED_REVIEWS
-      .filter((review) => review.reviewerId === Number(viewerId))
-      .filter((review) => {
+    const filtered = MOCK_ASSIGNED_REVIEWS.filter((review) => review.reviewerId === Number(viewerId)).filter(
+      (review) => {
         if (!status) {
           return true;
         }
 
         return review.status === status;
-      });
+      }
+    );
 
     const sorted = sortByDeadline(filtered, sort);
 
     return withDelay(clone(paginate(sorted, page, pageSize)));
-  }
+  },
 };

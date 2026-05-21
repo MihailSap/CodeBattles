@@ -7,7 +7,7 @@ import {
   useEnableUserMutation,
   useGetUsersQuery,
   useMakeAdminMutation,
-  useMakeNotAdminMutation
+  useMakeNotAdminMutation,
 } from '@/entities/user';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getApiErrorMessage } from '@/shared/lib';
@@ -27,11 +27,11 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
     {
       page,
       size: PAGE_SIZE,
-      filter: debouncedSearch || undefined
+      filter: debouncedSearch || undefined,
     },
     {
       skip: !isActive,
-      refetchOnMountOrArgChange: 30
+      refetchOnMountOrArgChange: 30,
     }
   );
   const [deleteUser, deleteUserState] = useDeleteUserMutation();
@@ -42,7 +42,8 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const users = Array.isArray(usersQuery.data?.content) ? usersQuery.data.content : [];
   const totalPages = Number.isFinite(usersQuery.data?.totalPages) ? usersQuery.data.totalPages : 0;
   const isLoading = usersQuery.isLoading || usersQuery.isFetching;
-  const isSubmittingAction = deleteUserState.isLoading || makeAdminState.isLoading || makeNotAdminState.isLoading || enableUserState.isLoading;
+  const isSubmittingAction =
+    deleteUserState.isLoading || makeAdminState.isLoading || makeNotAdminState.isLoading || enableUserState.isLoading;
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -69,7 +70,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
   const openDeleteConfirm = (targetUser) => {
     setConfirmState({
       type: 'delete',
-      targetUser
+      targetUser,
     });
   };
 
@@ -77,14 +78,14 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
     setConfirmState({
       type: 'role',
       targetUser,
-      shouldBeAdmin
+      shouldBeAdmin,
     });
   };
 
   const openEnableConfirm = (targetUser) => {
     setConfirmState({
       type: 'enable',
-      targetUser
+      targetUser,
     });
   };
 
@@ -124,9 +125,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }) 
         }
 
         showSnackbar(
-          confirmState.shouldBeAdmin
-            ? 'Пользователь назначен администратором'
-            : 'Роль администратора снята',
+          confirmState.shouldBeAdmin ? 'Пользователь назначен администратором' : 'Роль администратора снята',
           'success'
         );
       }

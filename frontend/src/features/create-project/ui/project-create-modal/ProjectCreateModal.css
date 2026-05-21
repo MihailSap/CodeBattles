@@ -46,7 +46,6 @@
   background: transparent;
   color: var(--color-danger);
   cursor: pointer;
-
 }
 
 .project-create-modal__close svg {
@@ -82,7 +81,6 @@
   background-color: var(--color-surface);
   color: var(--color-text-primary);
   box-shadow: var(--shadow-accent);
-
 }
 
 .project-create-modal__input::placeholder {

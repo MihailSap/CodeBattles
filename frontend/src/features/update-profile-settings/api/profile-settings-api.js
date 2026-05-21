@@ -4,7 +4,7 @@ export const profileSettingsApi = {
   async updatePassword(currentPassword, newPassword) {
     const response = await httpClient.patch('/api/v1/profile/me/password', {
       currentPassword,
-      newPassword
+      newPassword,
     });
     return response.data;
   },
@@ -32,5 +32,5 @@ export const profileSettingsApi = {
   async unlinkAccount(provider) {
     console.warn(`Unlink account for ${provider} is not implemented on backend`);
     return this.getLinkedAccounts();
-  }
+  },
 };

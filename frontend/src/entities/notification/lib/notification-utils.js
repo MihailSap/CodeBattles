@@ -3,7 +3,7 @@ import {
   NOTIFICATION_COMPLETION_ACTION,
   NOTIFICATION_TARGET_KIND,
   NOTIFICATION_TTL_DAYS,
-  NOTIFICATION_TYPE
+  NOTIFICATION_TYPE,
 } from '../model/constants';
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
@@ -59,7 +59,7 @@ export const formatNotificationTime = (value) => {
   return date.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   });
 };
 
@@ -73,7 +73,7 @@ export const formatNotificationDeadline = (value) => {
   return date.toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   });
 };
 
@@ -118,8 +118,8 @@ export const getNotificationCompletionPayloadsForPath = (pathname) => {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_ORGANIZATION,
       target: {
         kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
-        organizationId: Number(organizationMatch[1])
-      }
+        organizationId: Number(organizationMatch[1]),
+      },
     });
   }
 
@@ -129,8 +129,8 @@ export const getNotificationCompletionPayloadsForPath = (pathname) => {
       target: {
         kind: NOTIFICATION_TARGET_KIND.TASK,
         projectId: Number(taskMatch[1]),
-        taskId: Number(taskMatch[2])
-      }
+        taskId: Number(taskMatch[2]),
+      },
     });
   }
 
@@ -139,22 +139,22 @@ export const getNotificationCompletionPayloadsForPath = (pathname) => {
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_REVIEW,
       target: {
         kind: NOTIFICATION_TARGET_KIND.REVIEW,
-        reviewId: Number(reviewMatch[1])
-      }
+        reviewId: Number(reviewMatch[1]),
+      },
     });
   }
 
   if (pathname === ROUTES.leaderboard) {
     payloads.push({
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_LEADERBOARD,
-      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD }
+      target: { kind: NOTIFICATION_TARGET_KIND.LEADERBOARD },
     });
   }
 
   if (pathname === ROUTES.profile) {
     payloads.push({
       action: NOTIFICATION_COMPLETION_ACTION.OPEN_PROFILE,
-      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE }
+      target: { kind: NOTIFICATION_TARGET_KIND.PROFILE },
     });
   }
 

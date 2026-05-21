@@ -31,8 +31,8 @@ const ProjectInviteJoinPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'Вы присоединились к проекту',
-            snackbarType: 'success'
-          }
+            snackbarType: 'success',
+          },
         });
       } catch (error) {
         if (!isMounted) {
@@ -47,8 +47,8 @@ const ProjectInviteJoinPage = () => {
               replace: true,
               state: {
                 snackbarMessage: 'Вы уже являетесь участником этого проекта',
-                snackbarType: 'success'
-              }
+                snackbarType: 'success',
+              },
             });
             return;
           }
@@ -59,8 +59,8 @@ const ProjectInviteJoinPage = () => {
             replace: true,
             state: {
               snackbarMessage: 'Необходимо присоединиться к организации',
-              snackbarType: 'error'
-            }
+              snackbarType: 'error',
+            },
           });
           return;
         }
@@ -69,8 +69,8 @@ const ProjectInviteJoinPage = () => {
           replace: true,
           state: {
             snackbarMessage: 'Пригласительная ссылка недействительна или устарела',
-            snackbarType: 'error'
-          }
+            snackbarType: 'error',
+          },
         });
       }
     };

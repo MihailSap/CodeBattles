@@ -14,7 +14,9 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .review-section__header--collapsed {

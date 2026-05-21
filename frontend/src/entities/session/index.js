@@ -1,10 +1,11 @@
 export { authApi } from './api/auth-api';
 export { useAuth } from './lib/use-auth';
 export {
-  validateConfirmPassword,
-  validateEmail,
-  validateLogin,
-  validatePassword
+  loginFormSchema,
+  profilePasswordFormSchema,
+  recoveryFormSchema,
+  registerFormSchema,
+  resetPasswordFormSchema,
 } from './lib/validation';
 export {
   clearAuthMessages,
@@ -18,6 +19,6 @@ export {
   resetPasswordByToken,
   updateUserLogin,
   updateUserPassword,
-  verifyEmailUser
+  verifyEmailUser,
 } from './model/auth-slice';
 export { default as authReducer } from './model/auth-slice';

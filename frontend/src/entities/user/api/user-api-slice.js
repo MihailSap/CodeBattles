@@ -8,29 +8,35 @@ export const userApiSlice = baseApi.injectEndpoints({
       providesTags: (result) => {
         const users = result?.content || [];
 
-        return [
-          { type: 'Users', id: 'LIST' },
-          ...users.map((user) => ({ type: 'Users', id: user.id }))
-        ];
-      }
+        return [{ type: 'Users', id: 'LIST' }, ...users.map((user) => ({ type: 'Users', id: user.id }))];
+      },
     }),
     deleteUser: build.mutation({
       queryFn: (userId) => toQueryResult(() => userApi.delete(userId)),
-      invalidatesTags: [{ type: 'Users', id: 'LIST' }]
+      invalidatesTags: [{ type: 'Users', id: 'LIST' }],
     }),
     makeAdmin: build.mutation({
       queryFn: (userId) => toQueryResult(() => userApi.makeAdmin(userId)),
-      invalidatesTags: (_result, _error, userId) => [{ type: 'Users', id: userId }, { type: 'Users', id: 'LIST' }]
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'Users', id: userId },
+        { type: 'Users', id: 'LIST' },
+      ],
     }),
     makeNotAdmin: build.mutation({
       queryFn: (userId) => toQueryResult(() => userApi.makeNotAdmin(userId)),
-      invalidatesTags: (_result, _error, userId) => [{ type: 'Users', id: userId }, { type: 'Users', id: 'LIST' }]
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'Users', id: userId },
+        { type: 'Users', id: 'LIST' },
+      ],
     }),
     enableUser: build.mutation({
       queryFn: (userId) => toQueryResult(() => userApi.enableUser(userId)),
-      invalidatesTags: (_result, _error, userId) => [{ type: 'Users', id: userId }, { type: 'Users', id: 'LIST' }]
-    })
-  })
+      invalidatesTags: (_result, _error, userId) => [
+        { type: 'Users', id: userId },
+        { type: 'Users', id: 'LIST' },
+      ],
+    }),
+  }),
 });
 
 export const {
@@ -38,5 +44,5 @@ export const {
   useEnableUserMutation,
   useGetUsersQuery,
   useMakeAdminMutation,
-  useMakeNotAdminMutation
+  useMakeNotAdminMutation,
 } = userApiSlice;

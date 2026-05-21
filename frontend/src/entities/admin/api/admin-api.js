@@ -23,7 +23,7 @@ const paginate = (items, page = 0, size = 10) => {
     page: normalizedPage,
     size: normalizedSize,
     totalElements,
-    totalPages
+    totalPages,
   };
 };
 
@@ -32,7 +32,7 @@ const usersPenaltyState = new Map([
   [31, 0],
   [42, 2],
   [54, 0],
-  [77, 1]
+  [77, 1],
 ]);
 
 let eventSequence = 30;
@@ -47,7 +47,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Проверка прав доступа не покрывает случай истекшего refresh token.',
     createdAt: makeIso(1, 2),
     likedBy: [8, 12, 18, 29, 31, 42],
-    dislikedBy: [54]
+    dislikedBy: [54],
   },
   {
     id: 6402,
@@ -56,7 +56,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Стоит вынести повторяющуюся нормализацию дат в отдельный helper.',
     createdAt: makeIso(2, 4),
     likedBy: [15, 21, 34, 45],
-    dislikedBy: []
+    dislikedBy: [],
   },
   {
     id: 6403,
@@ -65,7 +65,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Ветка обработки ошибки не возвращает пользовательское сообщение.',
     createdAt: makeIso(4, 1),
     likedBy: [8, 19, 23, 31, 55, 62, 73],
-    dislikedBy: [12, 64]
+    dislikedBy: [12, 64],
   },
   {
     id: 6404,
@@ -74,7 +74,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Компонент делает лишний запрос при каждом изменении фильтра.',
     createdAt: makeIso(7, 5),
     likedBy: [18, 21, 29],
-    dislikedBy: [42]
+    dislikedBy: [42],
   },
   {
     id: 6405,
@@ -83,7 +83,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Для этой формы не хватает проверки минимальной длины ответа.',
     createdAt: makeIso(9, 3),
     likedBy: [12, 15, 34, 45, 54],
-    dislikedBy: []
+    dislikedBy: [],
   },
   {
     id: 6406,
@@ -92,7 +92,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Название переменной не отражает, что значение уже отфильтровано.',
     createdAt: makeIso(12, 6),
     likedBy: [8, 19],
-    dislikedBy: [23, 31, 77]
+    dislikedBy: [23, 31, 77],
   },
   {
     id: 6407,
@@ -101,7 +101,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Похоже, здесь нужен optimistic update, иначе интерфейс заметно дергается.',
     createdAt: makeIso(16, 2),
     likedBy: [12, 18, 21, 29, 34, 42, 55, 62],
-    dislikedBy: [64]
+    dislikedBy: [64],
   },
   {
     id: 6408,
@@ -110,7 +110,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Проверка роли должна выполняться до вычисления доступных действий.',
     createdAt: makeIso(21, 1),
     likedBy: [8, 15, 23, 45, 73],
-    dislikedBy: [31, 54]
+    dislikedBy: [31, 54],
   },
   {
     id: 6409,
@@ -119,7 +119,7 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Комментарий к коду дублирует название функции и не добавляет смысла.',
     createdAt: makeIso(25, 4),
     likedBy: [19, 29, 34],
-    dislikedBy: [12]
+    dislikedBy: [12],
   },
   {
     id: 6410,
@@ -128,27 +128,28 @@ const MOCK_AI_FEEDBACK_COMMENTS = [
     text: 'Можно заменить вложенные условия ранними выходами и упростить чтение.',
     createdAt: makeIso(29, 0),
     likedBy: [8, 12, 18, 21, 23, 31, 42, 45, 55],
-    dislikedBy: []
-  }
+    dislikedBy: [],
+  },
 ];
 
-const getAiFeedbackStats = () => MOCK_AI_FEEDBACK_COMMENTS.reduce(
-  (accumulator, comment) => ({
-    ...accumulator,
-    totalLikes: accumulator.totalLikes + comment.likedBy.length,
-    totalDislikes: accumulator.totalDislikes + comment.dislikedBy.length
-  }),
-  {
-    totalLikes: 0,
-    totalDislikes: 0
-  }
-);
+const getAiFeedbackStats = () =>
+  MOCK_AI_FEEDBACK_COMMENTS.reduce(
+    (accumulator, comment) => ({
+      ...accumulator,
+      totalLikes: accumulator.totalLikes + comment.likedBy.length,
+      totalDislikes: accumulator.totalDislikes + comment.dislikedBy.length,
+    }),
+    {
+      totalLikes: 0,
+      totalDislikes: 0,
+    }
+  );
 
 let settings = {
   reviewDeadlineDays: 14,
   aiSystemPrompt:
     'Ты строгий, но конструктивный AI-ревьюер. Оценивай корректность, читаемость, безопасность, производительность и соответствие условиям задачи. Давай короткие, проверяемые рекомендации.',
-  aiFeedbackStats: getAiFeedbackStats()
+  aiFeedbackStats: getAiFeedbackStats(),
 };
 
 let complaints = [
@@ -160,7 +161,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #452: REST API для турниров', url: '/reviews/452' },
     reason: 'Оскорбительный тон',
     reportedBy: { id: 8, login: 'nina_dev', fullName: 'Нина Волкова' },
-    createdAt: makeIso(0, 1)
+    createdAt: makeIso(0, 1),
   },
   {
     id: 2,
@@ -170,7 +171,7 @@ let complaints = [
     target: { kind: 'task', title: 'Задача #118: Очередь задач', url: '/projects/3/tasks/118' },
     reason: 'Обвинение без доказательств',
     reportedBy: { id: 12, login: 'elena_code', fullName: 'Елена Романова' },
-    createdAt: makeIso(0, 3)
+    createdAt: makeIso(0, 3),
   },
   {
     id: 3,
@@ -180,7 +181,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #443: Auth flow', url: '/reviews/443' },
     reason: 'Токсичный комментарий',
     reportedBy: { id: 18, login: 'qa_maria', fullName: 'Мария Котова' },
-    createdAt: makeIso(1, 0)
+    createdAt: makeIso(1, 0),
   },
   {
     id: 4,
@@ -190,7 +191,7 @@ let complaints = [
     target: { kind: 'task', title: 'Задача #126: RTK Query cache', url: '/projects/5/tasks/126' },
     reason: 'Спам жалоба, комментарий кажется нормальным',
     reportedBy: { id: 21, login: 'dasha_fullstack', fullName: 'Дарья Петрова' },
-    createdAt: makeIso(1, 4)
+    createdAt: makeIso(1, 4),
   },
   {
     id: 5,
@@ -200,7 +201,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #439: UI notifications', url: '/reviews/439' },
     reason: 'Неуважительный тон',
     reportedBy: { id: 34, login: 'ui_vika', fullName: 'Виктория Сергеева' },
-    createdAt: makeIso(2, 2)
+    createdAt: makeIso(2, 2),
   },
   {
     id: 6,
@@ -210,7 +211,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #438: Leaderboard filters', url: '/reviews/438' },
     reason: 'Давление на автора',
     reportedBy: { id: 43, login: 'rustam_js', fullName: 'Рустам Галиев' },
-    createdAt: makeIso(2, 5)
+    createdAt: makeIso(2, 5),
   },
   {
     id: 7,
@@ -220,7 +221,7 @@ let complaints = [
     target: { kind: 'task', title: 'Задача #104: Парсер логов', url: '/projects/2/tasks/104' },
     reason: 'Жалоба на спорный комментарий',
     reportedBy: { id: 55, login: 'roman_api', fullName: 'Роман Васильев' },
-    createdAt: makeIso(3, 1)
+    createdAt: makeIso(3, 1),
   },
   {
     id: 8,
@@ -230,7 +231,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #431: Profile settings', url: '/reviews/431' },
     reason: 'Резкая формулировка',
     reportedBy: { id: 29, login: 'a11y_lena', fullName: 'Лена Аксенова' },
-    createdAt: makeIso(4, 6)
+    createdAt: makeIso(4, 6),
   },
   {
     id: 9,
@@ -240,7 +241,7 @@ let complaints = [
     target: { kind: 'task', title: 'Задача #97: Webhook events', url: '/projects/7/tasks/97' },
     reason: 'Ошибочная жалоба',
     reportedBy: { id: 15, login: 'pm_alex', fullName: 'Алексей Павлов' },
-    createdAt: makeIso(5, 0)
+    createdAt: makeIso(5, 0),
   },
   {
     id: 10,
@@ -250,7 +251,7 @@ let complaints = [
     target: { kind: 'review', title: 'Review #428: Invite links', url: '/reviews/428' },
     reason: 'Уничижительная формулировка',
     reportedBy: { id: 73, login: 'newbie_sasha', fullName: 'Саша Белова' },
-    createdAt: makeIso(5, 3)
+    createdAt: makeIso(5, 3),
   },
   {
     id: 11,
@@ -260,7 +261,7 @@ let complaints = [
     target: { kind: 'task', title: 'Задача #92: Calendar sync', url: '/projects/8/tasks/92' },
     reason: 'Спор по содержанию',
     reportedBy: { id: 45, login: 'ivan_tz', fullName: 'Иван Морозов' },
-    createdAt: makeIso(6, 2)
+    createdAt: makeIso(6, 2),
   },
   {
     id: 12,
@@ -270,8 +271,8 @@ let complaints = [
     target: { kind: 'review', title: 'Review #420: Task details', url: '/reviews/420' },
     reason: 'Сомнительное обвинение',
     reportedBy: { id: 62, login: 'katya_backend', fullName: 'Катя Смирнова' },
-    createdAt: makeIso(7, 1)
-  }
+    createdAt: makeIso(7, 1),
+  },
 ];
 
 let events = [
@@ -285,7 +286,7 @@ let events = [
     reason: complaint.reason,
     decision: null,
     consequence: 'Ожидает решения модератора',
-    details: `Жалоба на комментарий #${complaint.commentId}: ${complaint.commentText.slice(0, 90)}`
+    details: `Жалоба на комментарий #${complaint.commentId}: ${complaint.commentText.slice(0, 90)}`,
   })),
   {
     id: eventSequence++,
@@ -294,7 +295,7 @@ let events = [
     actor: DEFAULT_ADMIN_ACTOR,
     targetUser: { id: 31, login: 'frontend_ilya', fullName: 'Илья Соколов' },
     scope: { type: 'PROJECT', name: 'CodeBattles Frontend Arena', url: '/projects/5' },
-    details: 'Рейтинг пользователя обнулен в рамках проектного лидерборда'
+    details: 'Рейтинг пользователя обнулен в рамках проектного лидерборда',
   },
   {
     id: eventSequence++,
@@ -303,7 +304,7 @@ let events = [
     actor: DEFAULT_ADMIN_ACTOR,
     previousValue: '10 дней',
     newValue: '14 дней',
-    details: 'Срок проверки ревью обновлен'
+    details: 'Срок проверки ревью обновлен',
   },
   {
     id: eventSequence++,
@@ -312,8 +313,8 @@ let events = [
     actor: DEFAULT_ADMIN_ACTOR,
     previousValue: 'Ты AI-ревьюер...',
     newValue: 'Ты строгий, но конструктивный AI-ревьюер...',
-    details: 'Изменен системный промпт AI-модели'
-  }
+    details: 'Изменен системный промпт AI-модели',
+  },
 ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
 const pushEvent = (event) => {
@@ -321,9 +322,9 @@ const pushEvent = (event) => {
     {
       id: eventSequence++,
       createdAt: new Date().toISOString(),
-      ...event
+      ...event,
     },
-    ...events
+    ...events,
   ];
 };
 
@@ -353,9 +354,10 @@ export const adminApi = {
       const previousApprovedCount = usersPenaltyState.get(complaint.commentAuthor.id) || 0;
       const nextApprovedCount = previousApprovedCount + 1;
       usersPenaltyState.set(complaint.commentAuthor.id, nextApprovedCount);
-      consequence = previousApprovedCount === 0
-        ? 'Комментарий удален. Первое подтверждение жалобы: предупреждение без штрафа'
-        : `Комментарий удален. Начислен штраф -${ADMIN_COMPLAINT_PENALTY_POINTS} баллов`;
+      consequence =
+        previousApprovedCount === 0
+          ? 'Комментарий удален. Первое подтверждение жалобы: предупреждение без штрафа'
+          : `Комментарий удален. Начислен штраф -${ADMIN_COMPLAINT_PENALTY_POINTS} баллов`;
     }
 
     pushEvent({
@@ -366,13 +368,13 @@ export const adminApi = {
       reason: complaint.reason,
       decision: isApproved ? 'Подтверждена' : 'Отклонена',
       consequence,
-      details: `Решение по жалобе #${complaint.id} на комментарий #${complaint.commentId}`
+      details: `Решение по жалобе #${complaint.id} на комментарий #${complaint.commentId}`,
     });
 
     return {
       complaintId: complaint.id,
       decision: payload.decision,
-      consequence
+      consequence,
     };
   },
 
@@ -386,7 +388,7 @@ export const adminApi = {
 
     settings = {
       ...settings,
-      reviewDeadlineDays: nextValue
+      reviewDeadlineDays: nextValue,
     };
 
     pushEvent({
@@ -394,7 +396,7 @@ export const adminApi = {
       actor: payload.actor || DEFAULT_ADMIN_ACTOR,
       previousValue: `${previousValue} дней`,
       newValue: `${nextValue} дней`,
-      details: 'Изменен срок проверки ревью'
+      details: 'Изменен срок проверки ревью',
     });
 
     return clone(settings);
@@ -406,7 +408,7 @@ export const adminApi = {
 
     settings = {
       ...settings,
-      aiSystemPrompt: nextPrompt
+      aiSystemPrompt: nextPrompt,
     };
 
     pushEvent({
@@ -414,7 +416,7 @@ export const adminApi = {
       actor: payload.actor || DEFAULT_ADMIN_ACTOR,
       previousValue: previousPrompt.slice(0, 120),
       newValue: nextPrompt.slice(0, 120),
-      details: 'Изменен системный промпт AI-модели'
+      details: 'Изменен системный промпт AI-модели',
     });
 
     return clone(settings);
@@ -434,5 +436,5 @@ export const adminApi = {
     });
 
     return paginate(filtered, params.page, params.size);
-  }
+  },
 };

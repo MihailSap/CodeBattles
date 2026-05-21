@@ -11,7 +11,6 @@
   justify-content: space-between;
   position: relative;
   cursor: pointer;
-
 }
 
 .theme-toggle__icon {
@@ -22,7 +21,6 @@
   align-items: center;
   justify-content: center;
   z-index: 2;
-
 }
 
 .theme-toggle__icon svg {
@@ -50,7 +48,8 @@
   transform: translateX(100%);
 }
 
-.theme-toggle--light .theme-toggle__icon--sun, .theme-toggle--dark .theme-toggle__icon--moon {
+.theme-toggle--light .theme-toggle__icon--sun,
+.theme-toggle--dark .theme-toggle__icon--moon {
   color: var(--color-text-inverse);
 }
 

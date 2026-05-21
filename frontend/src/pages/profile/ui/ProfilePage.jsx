@@ -5,7 +5,7 @@ import {
   useDeleteAvatarMutation,
   useGetProfilePageDataQuery,
   useUpdateProfileSectionMutation,
-  useUpdateSkillsSectionMutation
+  useUpdateSkillsSectionMutation,
 } from '@/entities/profile';
 import { SettingsIcon } from '@/shared/ui/icons';
 import { AchievementsSection } from '@/entities/achievement';
@@ -29,7 +29,7 @@ const EMPTY_PROFILE = {
   email: '',
   login: '',
   registeredAt: '',
-  avatarPath: ''
+  avatarPath: '',
 };
 
 const EMPTY_SKILLS = SKILL_GROUPS.reduce((accumulator, group) => {
@@ -42,18 +42,17 @@ const DEFAULT_STATISTICS = {
   aiQualityScore: 0,
   usefulnessIndex: 0,
   reviewDepth: 0,
-  acceptedDecisionsPercent: 0
+  acceptedDecisionsPercent: 0,
 };
 
 const STAT_CARDS = [
   { key: 'qualityScore', title: 'Оценка качества' },
   { key: 'aiQualityScore', title: 'Оценка качества от ИИ' },
   { key: 'usefulnessIndex', title: 'Индекс полезности' },
-  { key: 'reviewDepth', title: 'Глубина ревью' }
+  { key: 'reviewDepth', title: 'Глубина ревью' },
 ];
 
-const sortByAlphabet = (values = []) =>
-  [...values].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
+const sortByAlphabet = (values = []) => [...values].sort((a, b) => a.localeCompare(b, 'ru', { sensitivity: 'base' }));
 
 const normalizeSkills = (skillsFromServer) => {
   const normalized = { ...EMPTY_SKILLS };
@@ -80,7 +79,7 @@ const formatRegistrationDate = (value) => {
   return new Intl.DateTimeFormat('ru-RU', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
+    year: 'numeric',
   }).format(date);
 };
 
@@ -107,7 +106,7 @@ const ProfilePage = () => {
     email: '',
     login: '',
     registeredAt: '',
-    avatarPath: ''
+    avatarPath: '',
   });
   const [isProfileEditMode, setIsProfileEditMode] = useState(false);
   const [isSkillsEditMode, setIsSkillsEditMode] = useState(false);
@@ -129,9 +128,8 @@ const ProfilePage = () => {
     popupMaxHeight,
     mobilePopupPosition,
     closeSkillsPopup,
-    openSkillsPopup
-  } =
-    useSkillsPopup();
+    openSkillsPopup,
+  } = useSkillsPopup();
   const normalizedRouteUserId = routeUserId ? String(routeUserId) : '';
   const isOwnProfile = !normalizedRouteUserId || normalizedRouteUserId === String(userId ?? '');
   const canEditProfile = isOwnProfile;
@@ -139,10 +137,10 @@ const ProfilePage = () => {
   const {
     data: profilePayload,
     isLoading: isPageLoading,
-    isError: isProfileLoadError
+    isError: isProfileLoadError,
   } = useGetProfilePageDataQuery(profileQueryArg, {
     skip: !isOwnProfile && !normalizedRouteUserId,
-    refetchOnMountOrArgChange: 60
+    refetchOnMountOrArgChange: 60,
   });
   const [deleteAvatar] = useDeleteAvatarMutation();
   const [updateProfileSection, { isLoading: isProfileSaving }] = useUpdateProfileSectionMutation();
@@ -154,7 +152,7 @@ const ProfilePage = () => {
       email: user?.email ?? '',
       login: user?.login ?? '',
       registeredAt: user?.registeredAt ?? '',
-      avatarPath: user?.avatarPath ?? ''
+      avatarPath: user?.avatarPath ?? '',
     };
   }, [user?.avatarPath, user?.email, user?.login, user?.name, user?.registeredAt]);
 
@@ -197,7 +195,7 @@ const ProfilePage = () => {
       email: profilePayload?.user?.email ?? (isOwnProfile ? fallbackProfile.email : ''),
       login: profilePayload?.user?.login ?? (isOwnProfile ? fallbackProfile.login : ''),
       registeredAt: profilePayload?.user?.registeredAt ?? (isOwnProfile ? fallbackProfile.registeredAt : ''),
-      avatarPath: profilePayload?.user?.avatarPath ?? (isOwnProfile ? fallbackProfile.avatarPath : '')
+      avatarPath: profilePayload?.user?.avatarPath ?? (isOwnProfile ? fallbackProfile.avatarPath : ''),
     };
     const normalizedSkills = normalizeSkills(profilePayload?.skills);
 
@@ -208,10 +206,12 @@ const ProfilePage = () => {
       setSkillsDraft(normalizedSkills);
       setStatistics({
         ...DEFAULT_STATISTICS,
-        ...(profilePayload?.statistics || {})
+        ...(profilePayload?.statistics || {}),
       });
       setAchievements(Array.isArray(profilePayload?.achievements) ? profilePayload.achievements : []);
-      setReceivedAchievementIds(Array.isArray(profilePayload?.receivedAchievementIds) ? profilePayload.receivedAchievementIds : []);
+      setReceivedAchievementIds(
+        Array.isArray(profilePayload?.receivedAchievementIds) ? profilePayload.receivedAchievementIds : []
+      );
     });
   }, [isOwnProfile, profilePayload]);
 
@@ -220,7 +220,7 @@ const ProfilePage = () => {
   const skillsByGroup = useMemo(() => {
     return SKILL_GROUPS.map((group) => ({
       ...group,
-      selected: sortByAlphabet(skillsData[group.key] || [])
+      selected: sortByAlphabet(skillsData[group.key] || []),
     }));
   }, [skillsData]);
 
@@ -234,7 +234,7 @@ const ProfilePage = () => {
       return {
         ...group,
         selected,
-        orderedOptions: [...unselected, ...selectedSorted]
+        orderedOptions: [...unselected, ...selectedSorted],
       };
     });
   }, [skillsDraft]);
@@ -256,7 +256,9 @@ const ProfilePage = () => {
 
   const visibleAchievements = useMemo(() => {
     if (canEditProfile) {
-      return orderedAchievements.filter((achievement) => achievement.visible || receivedAchievementIdSet.has(achievement.id));
+      return orderedAchievements.filter(
+        (achievement) => achievement.visible || receivedAchievementIdSet.has(achievement.id)
+      );
     }
 
     return orderedAchievements.filter((achievement) => receivedAchievementIdSet.has(achievement.id));
@@ -299,7 +301,7 @@ const ProfilePage = () => {
   const handleNameChange = (event) => {
     setProfileDraft((previousState) => ({
       ...previousState,
-      name: event.target.value.slice(0, 255)
+      name: event.target.value.slice(0, 255),
     }));
   };
 
@@ -313,7 +315,7 @@ const ProfilePage = () => {
     setShouldDeleteAvatar(true);
     setProfileDraft((previousState) => ({
       ...previousState,
-      avatarPath: ''
+      avatarPath: '',
     }));
   };
 
@@ -336,7 +338,7 @@ const ProfilePage = () => {
     setShouldDeleteAvatar(false);
     setProfileDraft((previousState) => ({
       ...previousState,
-      avatarPath: localPreviewUrl
+      avatarPath: localPreviewUrl,
     }));
 
     createdAvatarUrlsRef.current.add(localPreviewUrl);
@@ -354,12 +356,12 @@ const ProfilePage = () => {
 
       const savedProfile = await updateProfileSection({
         name: profileDraft.name.trim(),
-        avatar: pendingAvatarFile
+        avatar: pendingAvatarFile,
       }).unwrap();
 
       const nextProfile = {
         ...profileData,
-        ...savedProfile
+        ...savedProfile,
       };
 
       setProfileData(nextProfile);
@@ -372,7 +374,7 @@ const ProfilePage = () => {
         patchAuthUser({
           name: nextProfile.name,
           registeredAt: nextProfile.registeredAt,
-          avatarPath: nextProfile.avatarPath
+          avatarPath: nextProfile.avatarPath,
         })
       );
       showSnackbar('Профиль успешно обновлён', 'success');
@@ -412,7 +414,7 @@ const ProfilePage = () => {
 
       return {
         ...previousState,
-        [groupKey]: sortByAlphabet(nextSkills)
+        [groupKey]: sortByAlphabet(nextSkills),
       };
     });
   };
@@ -424,7 +426,7 @@ const ProfilePage = () => {
 
     setSkillsDraft((previousState) => ({
       ...previousState,
-      [groupKey]: []
+      [groupKey]: [],
     }));
   };
 
@@ -460,53 +462,53 @@ const ProfilePage = () => {
           </div>
         ) : (
           <div className="profile-page__grid">
-              <ProfileSection
-                canEditProfile={canEditProfile}
-                fileInputRef={fileInputRef}
-                isActionBlocked={isActionBlocked}
-                isProfileEditMode={isProfileEditMode}
-                onAvatarDelete={handleAvatarDelete}
-                onAvatarUpload={handleAvatarUpload}
-                onNameChange={handleNameChange}
-                onProfileEditCancel={handleProfileEditCancel}
-                onProfileEditStart={handleProfileEditStart}
-                onProfileSave={handleProfileSave}
-                profileData={profileData}
-                profileDraft={profileDraft}
-                formatRegistrationDate={formatRegistrationDate}
-              />
+            <ProfileSection
+              canEditProfile={canEditProfile}
+              fileInputRef={fileInputRef}
+              isActionBlocked={isActionBlocked}
+              isProfileEditMode={isProfileEditMode}
+              onAvatarDelete={handleAvatarDelete}
+              onAvatarUpload={handleAvatarUpload}
+              onNameChange={handleNameChange}
+              onProfileEditCancel={handleProfileEditCancel}
+              onProfileEditStart={handleProfileEditStart}
+              onProfileSave={handleProfileSave}
+              profileData={profileData}
+              profileDraft={profileDraft}
+              formatRegistrationDate={formatRegistrationDate}
+            />
 
-              <SkillsSection
-                canEditProfile={canEditProfile}
-                isActionBlocked={isActionBlocked}
-                isSkillsEditMode={isSkillsEditMode}
-                mobilePopupPosition={mobilePopupPosition}
-                onClearGroup={clearSkillGroup}
-                onOpenSkillsPopup={openSkillsPopup}
-                onSkillsEditCancel={handleSkillsEditCancel}
-                onSkillsEditStart={handleSkillsEditStart}
-                onSkillsSave={handleSkillsSave}
-                onToggleSkill={toggleSkill}
-                openedSkillsPopup={openedSkillsPopup}
-                popupDirection={popupDirection}
-                popupHorizontalAlign={popupHorizontalAlign}
-                popupMaxHeight={popupMaxHeight}
-                skillsByGroup={skillsByGroup}
-                skillsDraftByGroup={skillsDraftByGroup}
-              />
-              <StatisticsSection
-                acceptedDecisionsPercent={acceptedDecisionsPercent}
-                getPercentClass={getPercentClass}
-                statCards={STAT_CARDS}
-                statistics={statistics}
-              />
+            <SkillsSection
+              canEditProfile={canEditProfile}
+              isActionBlocked={isActionBlocked}
+              isSkillsEditMode={isSkillsEditMode}
+              mobilePopupPosition={mobilePopupPosition}
+              onClearGroup={clearSkillGroup}
+              onOpenSkillsPopup={openSkillsPopup}
+              onSkillsEditCancel={handleSkillsEditCancel}
+              onSkillsEditStart={handleSkillsEditStart}
+              onSkillsSave={handleSkillsSave}
+              onToggleSkill={toggleSkill}
+              openedSkillsPopup={openedSkillsPopup}
+              popupDirection={popupDirection}
+              popupHorizontalAlign={popupHorizontalAlign}
+              popupMaxHeight={popupMaxHeight}
+              skillsByGroup={skillsByGroup}
+              skillsDraftByGroup={skillsDraftByGroup}
+            />
+            <StatisticsSection
+              acceptedDecisionsPercent={acceptedDecisionsPercent}
+              getPercentClass={getPercentClass}
+              statCards={STAT_CARDS}
+              statistics={statistics}
+            />
 
-              <AchievementsSection
-                achievements={visibleAchievements}
-                canEditProfile={canEditProfile}
-                receivedAchievementIdSet={receivedAchievementIdSet}
-              />
-            </div>
+            <AchievementsSection
+              achievements={visibleAchievements}
+              canEditProfile={canEditProfile}
+              receivedAchievementIdSet={receivedAchievementIdSet}
+            />
+          </div>
         )}
       </main>
 
@@ -523,10 +525,7 @@ const ProfilePage = () => {
 
       {canEditProfile && isSettingsModalOpen && (
         <Suspense fallback={null}>
-          <ProfileSettingsModal
-            isOpen={isSettingsModalOpen}
-            onClose={() => setIsSettingsModalOpen(false)}
-          />
+          <ProfileSettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
         </Suspense>
       )}
     </div>

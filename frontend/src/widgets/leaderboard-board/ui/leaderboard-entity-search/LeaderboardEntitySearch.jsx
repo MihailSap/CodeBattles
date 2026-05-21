@@ -9,7 +9,7 @@ const LeaderboardEntitySearch = ({
   selectedEntity,
   emptyText,
   onValueChange,
-  onSelect
+  onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const rootRef = useRef(null);
@@ -49,20 +49,22 @@ const LeaderboardEntitySearch = ({
 
       {isOpen && (
         <div className="leaderboard-entity-search__dropdown">
-          {options.length > 0 ? options.map((option) => (
-            <button
-              className="leaderboard-entity-search__option"
-              key={option.id}
-              type="button"
-              onClick={() => {
-                onSelect(option);
-                setIsOpen(false);
-              }}
-            >
-              <span>{option.name}</span>
-              {selectedEntity?.id === option.id && <CheckIcon />}
-            </button>
-          )) : (
+          {options.length > 0 ? (
+            options.map((option) => (
+              <button
+                className="leaderboard-entity-search__option"
+                key={option.id}
+                type="button"
+                onClick={() => {
+                  onSelect(option);
+                  setIsOpen(false);
+                }}
+              >
+                <span>{option.name}</span>
+                {selectedEntity?.id === option.id && <CheckIcon />}
+              </button>
+            ))
+          ) : (
             <div className="leaderboard-entity-search__empty">{emptyText}</div>
           )}
         </div>

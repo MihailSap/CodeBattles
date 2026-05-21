@@ -37,7 +37,7 @@
 body {
   background-color: var(--color-page-bg);
   color: var(--color-text-primary);
-  font-family: "Montserrat", sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-optical-sizing: auto;
   font-size: 14px;
   font-weight: 500;

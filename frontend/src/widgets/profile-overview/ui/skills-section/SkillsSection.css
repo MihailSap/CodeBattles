@@ -37,7 +37,6 @@
   text-underline-offset: 3px;
   cursor: pointer;
   flex-shrink: 0;
-
 }
 
 .profile-page__skills-list {
@@ -64,7 +63,6 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 120%;
-
 }
 
 .profile-page__skill-tag--editable {
@@ -85,7 +83,6 @@
   line-height: 1;
   font-weight: 500;
   cursor: pointer;
-
 }
 
 .profile-page__skills-popup {

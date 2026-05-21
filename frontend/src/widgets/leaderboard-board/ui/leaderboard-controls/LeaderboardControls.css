@@ -38,7 +38,6 @@
   align-items: center;
   gap: 5px;
   background: var(--color-surface);
-
 }
 
 .leaderboard-controls__search:focus-within {
@@ -79,7 +78,6 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-
 }
 
 .leaderboard-controls__my-rating:active {

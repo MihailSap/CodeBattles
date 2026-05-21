@@ -74,7 +74,6 @@
   cursor: pointer;
   position: relative;
   z-index: 1;
-
 }
 
 .projects-page__switch-option--active {
@@ -92,7 +91,6 @@
   border-radius: 15px;
   border: 2px solid var(--color-accent-muted);
   background: transparent;
-
 }
 
 .projects-page__search-wrap:focus-within {
@@ -167,7 +165,6 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-
 }
 
 .projects-page__actions {
@@ -185,7 +182,6 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-
 }
 
 .projects-page__side-action--create {
@@ -230,7 +226,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
 }
 
 .projects-page__arrow svg {
@@ -288,7 +283,6 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-
   .projects-page__side-action:hover,
   .projects-page__load-more:hover {
     background: transparent;
@@ -313,7 +307,6 @@
 }
 
 @media (max-width: 1600px) {
-
   .projects-page__toolbar-wrap,
   .projects-page__section-wrap {
     padding: 0 30px;
@@ -341,7 +334,6 @@
 }
 
 @media (max-width: 900px) {
-
   .projects-page__toolbar-wrap,
   .projects-page__section-wrap {
     padding: 0;

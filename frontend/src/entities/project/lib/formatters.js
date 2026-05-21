@@ -2,18 +2,18 @@ import { PROJECT_MEMBER_ROLE, TASK_STATUS, TASK_STATUS_ORDER } from '../model';
 
 const monthFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: 'numeric',
-  month: 'long'
+  month: 'long',
 });
 
 const fullDateFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: '2-digit',
   month: '2-digit',
-  year: 'numeric'
+  year: 'numeric',
 });
 
 const timeFormatter = new Intl.DateTimeFormat('ru-RU', {
   hour: '2-digit',
-  minute: '2-digit'
+  minute: '2-digit',
 });
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -21,7 +21,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
   month: '2-digit',
   year: 'numeric',
   hour: '2-digit',
-  minute: '2-digit'
+  minute: '2-digit',
 });
 
 const compareText = (left, right) =>
@@ -130,7 +130,7 @@ export const sortTasks = (tasks = []) => {
 
 const roleOrder = {
   [PROJECT_MEMBER_ROLE.OWNER]: 0,
-  [PROJECT_MEMBER_ROLE.MEMBER]: 1
+  [PROJECT_MEMBER_ROLE.MEMBER]: 1,
 };
 
 export const sortParticipants = (participants = []) => {

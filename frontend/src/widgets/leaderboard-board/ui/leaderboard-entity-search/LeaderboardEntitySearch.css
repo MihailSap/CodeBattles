@@ -9,7 +9,6 @@
   border: 2px solid var(--color-accent-muted);
   border-radius: 10px;
   background: var(--color-surface);
-
 }
 
 .leaderboard-entity-search:focus-within {
@@ -67,7 +66,6 @@
   text-align: center;
   border-bottom: 1px solid var(--color-leaderboard-border);
   cursor: pointer;
-
 }
 
 .leaderboard-entity-search__option span {

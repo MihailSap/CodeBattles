@@ -51,7 +51,9 @@
   border: none;
   color: var(--color-danger);
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
   border-radius: 8px;
 }
 
@@ -128,7 +130,9 @@
   background-color: var(--color-success);
   border: 2px solid var(--color-success);
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -211,7 +215,6 @@
 }
 
 @media (max-width: 500px) {
-
   .git-upload-modal__backdrop {
     padding: 5px;
   }
@@ -236,7 +239,7 @@
     padding: 5px 12px;
     font-size: 12px;
   }
-  
+
   .git-upload-modal__close {
     width: 25px;
     height: 25px;

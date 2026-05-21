@@ -16,7 +16,7 @@ const SkillsSection = ({
   openedSkillsPopup,
   popupMaxHeight,
   skillsByGroup,
-  skillsDraftByGroup
+  skillsDraftByGroup,
 }) => {
   return (
     <section className="profile-page__section profile-page__section--skills">
@@ -67,7 +67,9 @@ const SkillsSection = ({
                       className={`profile-page__skill-tag ${canEditProfile && isSkillsEditMode ? 'profile-page__skill-tag--editable' : ''}`}
                       type="button"
                       key={skillName}
-                      onClick={() => (canEditProfile && isSkillsEditMode ? onToggleSkill(group.key, skillName) : undefined)}
+                      onClick={() =>
+                        canEditProfile && isSkillsEditMode ? onToggleSkill(group.key, skillName) : undefined
+                      }
                       disabled={!canEditProfile || !isSkillsEditMode || isActionBlocked}
                     >
                       {skillName}
@@ -104,7 +106,7 @@ const SkillsSection = ({
                             top: `${mobilePopupPosition.top}px`,
                             left: `${mobilePopupPosition.left}px`,
                             width: `${mobilePopupPosition.width}px`,
-                            maxHeight: `${popupMaxHeight}px`
+                            maxHeight: `${popupMaxHeight}px`,
                           }}
                         >
                           {group.orderedOptions.map((skillName) => {

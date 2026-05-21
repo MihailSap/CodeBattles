@@ -7,7 +7,7 @@ import {
   useJoinPublicProjectMutation,
   useLazySearchOrganizationsQuery,
   useLazySearchProjectsForJoinQuery,
-  useRequestOrganizationAccessMutation
+  useRequestOrganizationAccessMutation,
 } from '@/entities/project';
 import OrganizationProjectsCard from '@/widgets/organization-projects-card';
 import OrganizationsSidebar from '@/widgets/organizations-sidebar';
@@ -28,12 +28,12 @@ const ProjectCreateModal = lazyNamed(() => import('@/features/create-project'), 
 
 const VIEW_MODE = {
   WITHOUT_ORGANIZATION: 'WITHOUT_ORGANIZATION',
-  WITH_ORGANIZATION: 'WITH_ORGANIZATION'
+  WITH_ORGANIZATION: 'WITH_ORGANIZATION',
 };
 
 const VIEW_MODE_SEARCH_PARAM = {
   [VIEW_MODE.WITH_ORGANIZATION]: 'with-organization',
-  [VIEW_MODE.WITHOUT_ORGANIZATION]: 'without-organization'
+  [VIEW_MODE.WITHOUT_ORGANIZATION]: 'without-organization',
 };
 
 const CAROUSEL_PADDING = 10;
@@ -44,9 +44,10 @@ const ProjectsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { userId } = useAuth();
 
-  const viewMode = searchParams.get('view') === VIEW_MODE_SEARCH_PARAM[VIEW_MODE.WITHOUT_ORGANIZATION]
-    ? VIEW_MODE.WITHOUT_ORGANIZATION
-    : VIEW_MODE.WITH_ORGANIZATION;
+  const viewMode =
+    searchParams.get('view') === VIEW_MODE_SEARCH_PARAM[VIEW_MODE.WITHOUT_ORGANIZATION]
+      ? VIEW_MODE.WITHOUT_ORGANIZATION
+      : VIEW_MODE.WITH_ORGANIZATION;
   const [search, setSearch] = useState('');
   const debaouncedSearch = useDebouncedValue(search, 300);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
@@ -68,11 +69,8 @@ const ProjectsPage = () => {
     data: dashboard = { withoutOrganizationProjects: [], organizationsWithProjects: [] },
     isLoading,
     isError,
-    refetch: refetchDashboard
-  } = useGetProjectsDashboardQuery(
-    { search: debaouncedSearch },
-    { refetchOnMountOrArgChange: 30 }
-  );
+    refetch: refetchDashboard,
+  } = useGetProjectsDashboardQuery({ search: debaouncedSearch }, { refetchOnMountOrArgChange: 30 });
   const [createProject, { isLoading: isProjectCreateSubmitting }] = useCreateProjectMutation();
   const [createOrganization, { isLoading: isOrganizationCreateSubmitting }] = useCreateOrganizationMutation();
   const [joinPublicProject] = useJoinPublicProjectMutation();
@@ -80,13 +78,19 @@ const ProjectsPage = () => {
   const [searchProjectsForJoin] = useLazySearchProjectsForJoinQuery();
   const [searchOrganizations] = useLazySearchOrganizationsQuery();
 
-  const handleViewModeChange = useCallback((nextViewMode) => {
-    setSearchParams((currentParams) => {
-      const nextParams = new URLSearchParams(currentParams);
-      nextParams.set('view', VIEW_MODE_SEARCH_PARAM[nextViewMode]);
-      return nextParams;
-    }, { replace: true });
-  }, [setSearchParams]);
+  const handleViewModeChange = useCallback(
+    (nextViewMode) => {
+      setSearchParams(
+        (currentParams) => {
+          const nextParams = new URLSearchParams(currentParams);
+          nextParams.set('view', VIEW_MODE_SEARCH_PARAM[nextViewMode]);
+          return nextParams;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
 
   useEffect(() => {
     if (isError) {
@@ -101,9 +105,15 @@ const ProjectsPage = () => {
     }
   }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
-  const noOrganizationProjects = useMemo(() => dashboard.withoutOrganizationProjects, [dashboard.withoutOrganizationProjects]);
+  const noOrganizationProjects = useMemo(
+    () => dashboard.withoutOrganizationProjects,
+    [dashboard.withoutOrganizationProjects]
+  );
 
-  const organizationsWithProjects = useMemo(() => dashboard.organizationsWithProjects, [dashboard.organizationsWithProjects]);
+  const organizationsWithProjects = useMemo(
+    () => dashboard.organizationsWithProjects,
+    [dashboard.organizationsWithProjects]
+  );
 
   const maxCarouselStart = Math.max(0, organizationsWithProjects.length - cardsPerView);
   const boundedCarouselStart = Math.min(carouselStart, maxCarouselStart);
@@ -162,56 +172,65 @@ const ProjectsPage = () => {
   const canSlideRight = boundedCarouselStart + cardsPerView < organizationsWithProjects.length;
   const shouldShowArrows = organizationsWithProjects.length > cardsPerView;
 
-  const openProject = useCallback((projectId) => {
-    navigate(`${ROUTES.projects}/${projectId}`);
-  }, [navigate]);
+  const openProject = useCallback(
+    (projectId) => {
+      navigate(`${ROUTES.projects}/${projectId}`);
+    },
+    [navigate]
+  );
 
-  const handleCreateProject = useCallback(async (payload) => {
-    try {
-      const result = await createProject({
-        ...payload,
-        organizationId: createProjectOrganizationId
-      }).unwrap();
-      const projectId = result?.projectId;
+  const handleCreateProject = useCallback(
+    async (payload) => {
+      try {
+        const result = await createProject({
+          ...payload,
+          organizationId: createProjectOrganizationId,
+        }).unwrap();
+        const projectId = result?.projectId;
 
-      if (projectId) {
-        setProjectCreateOpen(false);
-        setCreateProjectOrganizationId(null);
-        navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
+        if (projectId) {
+          setProjectCreateOpen(false);
+          setCreateProjectOrganizationId(null);
+          navigate(ROUTES.projectById.replace(':projectId', projectId), { replace: true });
+        }
+      } catch (error) {
+        if (error?.code === 'PROJECT_NAME_CONFLICT') {
+          showSnackbar('Проект с таким названием уже существует', 'error');
+          return;
+        }
+
+        showSnackbar('Не удалось создать проект. Попробуйте позже', 'error');
       }
-    } catch (error) {
-      if (error?.code === 'PROJECT_NAME_CONFLICT') {
-        showSnackbar('Проект с таким названием уже существует', 'error');
+    },
+    [createProject, createProjectOrganizationId, navigate, showSnackbar]
+  );
+
+  const handleCreateOrganization = useCallback(
+    async (payload) => {
+      if (!payload.logoPreview) {
+        showSnackbar('Прикрепите лого организации', 'error');
         return;
       }
 
-      showSnackbar('Не удалось создать проект. Попробуйте позже', 'error');
-    }
-  }, [createProject, createProjectOrganizationId, navigate, showSnackbar]);
+      try {
+        const result = await createOrganization(payload).unwrap();
+        const organizationId = result?.organizationId;
 
-  const handleCreateOrganization = useCallback(async (payload) => {
-    if (!payload.logoPreview) {
-      showSnackbar('Прикрепите лого организации', 'error');
-      return;
-    }
+        if (organizationId) {
+          setOrganizationCreateOpen(false);
+          navigate(ROUTES.organizationById.replace(':organizationId', organizationId), { replace: true });
+        }
+      } catch (error) {
+        if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
+          showSnackbar('Организация с таким названием существует', 'error');
+          return;
+        }
 
-    try {
-      const result = await createOrganization(payload).unwrap();
-      const organizationId = result?.organizationId;
-
-      if (organizationId) {
-        setOrganizationCreateOpen(false);
-        navigate(ROUTES.organizationById.replace(':organizationId', organizationId), { replace: true });
+        showSnackbar('Не удалось создать организацию. Попробуйте позже', 'error');
       }
-    } catch (error) {
-      if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
-        showSnackbar('Организация с таким названием существует', 'error');
-        return;
-      }
-
-      showSnackbar('Не удалось создать организацию. Попробуйте позже', 'error');
-    }
-  }, [createOrganization, navigate, showSnackbar]);
+    },
+    [createOrganization, navigate, showSnackbar]
+  );
 
   const fetchProjectsForJoin = useCallback(
     async ({ query }) => {
@@ -227,24 +246,30 @@ const ProjectsPage = () => {
     [searchOrganizations, userId]
   );
 
-  const handleJoinProject = useCallback(async (projectId) => {
-    try {
-      await joinPublicProject(projectId).unwrap();
-      await refetchDashboard();
-      showSnackbar('Вы вступили в проект', 'success');
-    } catch {
-      showSnackbar('Не удалось вступить в проект', 'error');
-    }
-  }, [joinPublicProject, refetchDashboard, showSnackbar]);
+  const handleJoinProject = useCallback(
+    async (projectId) => {
+      try {
+        await joinPublicProject(projectId).unwrap();
+        await refetchDashboard();
+        showSnackbar('Вы вступили в проект', 'success');
+      } catch {
+        showSnackbar('Не удалось вступить в проект', 'error');
+      }
+    },
+    [joinPublicProject, refetchDashboard, showSnackbar]
+  );
 
-  const handleRequestOrganizationAccess = useCallback(async (organizationId) => {
-    try {
-      await requestOrganizationAccess(organizationId).unwrap();
-      showSnackbar('Запрос на вступление отправлен владельцу организации', 'success');
-    } catch {
-      showSnackbar('Не удалось отправить запрос на вступление', 'error');
-    }
-  }, [requestOrganizationAccess, showSnackbar]);
+  const handleRequestOrganizationAccess = useCallback(
+    async (organizationId) => {
+      try {
+        await requestOrganizationAccess(organizationId).unwrap();
+        showSnackbar('Запрос на вступление отправлен владельцу организации', 'success');
+      } catch {
+        showSnackbar('Не удалось отправить запрос на вступление', 'error');
+      }
+    },
+    [requestOrganizationAccess, showSnackbar]
+  );
 
   const handleCreateProjectForOrganization = useCallback((organizationId) => {
     setCreateProjectOrganizationId(organizationId);
@@ -258,16 +283,24 @@ const ProjectsPage = () => {
       <main className="projects-page__content">
         <section className="projects-page__toolbar-wrap">
           <div className="projects-page__toolbar">
-            <div className={`projects-page__toolbar-left ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? '' : 'projects-page__toolbar-left--hidden'}`}>
+            <div
+              className={`projects-page__toolbar-left ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? '' : 'projects-page__toolbar-left--hidden'}`}
+            >
               {viewMode === VIEW_MODE.WITH_ORGANIZATION && (
-                <button className="projects-page__side-action projects-page__side-action--org" type="button" onClick={() => setSidebarOpen(true)}>
+                <button
+                  className="projects-page__side-action projects-page__side-action--org"
+                  type="button"
+                  onClick={() => setSidebarOpen(true)}
+                >
                   Мои организации
                 </button>
               )}
             </div>
 
             <div className="projects-page__switch" role="tablist" aria-label="Режим просмотра проектов">
-              <span className={`projects-page__switch-thumb ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-thumb--with-org' : ''}`} />
+              <span
+                className={`projects-page__switch-thumb ${viewMode === VIEW_MODE.WITHOUT_ORGANIZATION ? 'projects-page__switch-thumb--with-org' : ''}`}
+              />
               <button
                 className={`projects-page__switch-option ${viewMode === VIEW_MODE.WITH_ORGANIZATION ? 'projects-page__switch-option--active' : ''}`}
                 type="button"
@@ -286,7 +319,13 @@ const ProjectsPage = () => {
 
             <div className="projects-page__search-wrap">
               <SearchIcon />
-              <input className="projects-page__search" type="search" placeholder="Поиск" value={search} onChange={(event) => setSearch(event.target.value.slice(0, 120))} />
+              <input
+                className="projects-page__search"
+                type="search"
+                placeholder="Поиск"
+                value={search}
+                onChange={(event) => setSearch(event.target.value.slice(0, 120))}
+              />
             </div>
           </div>
         </section>
@@ -324,7 +363,11 @@ const ProjectsPage = () => {
               >
                 Создать проект
               </button>
-              <button className="projects-page__side-action projects-page__side-action--join" type="button" onClick={() => setProjectsSearchOpen(true)}>
+              <button
+                className="projects-page__side-action projects-page__side-action--join"
+                type="button"
+                onClick={() => setProjectsSearchOpen(true)}
+              >
                 Присоединиться
               </button>
             </div>
@@ -348,7 +391,9 @@ const ProjectsPage = () => {
 
               <div className="projects-page__organizations-viewport" ref={carouselViewportRef}>
                 {organizationsWithProjects.length === 0 ? (
-                  <p className="projects-page__empty projects-page__empty--org">Создайте свою организацию или присоединитесь к существующей</p>
+                  <p className="projects-page__empty projects-page__empty--org">
+                    Создайте свою организацию или присоединитесь к существующей
+                  </p>
                 ) : (
                   <div
                     className={`projects-page__organizations-track ${cardsPerView === 1 ? 'projects-page__organizations-track--single' : 'projects-page__organizations-track--double'} ${organizationsWithProjects.length === 1 ? 'projects-page__organizations-track--single-item' : ''}`}
@@ -383,10 +428,18 @@ const ProjectsPage = () => {
             </section>
 
             <div className="projects-page__actions">
-              <button className="projects-page__side-action projects-page__side-action--create" type="button" onClick={() => setOrganizationCreateOpen(true)}>
+              <button
+                className="projects-page__side-action projects-page__side-action--create"
+                type="button"
+                onClick={() => setOrganizationCreateOpen(true)}
+              >
                 Создать организацию
               </button>
-              <button className="projects-page__side-action projects-page__side-action--join" type="button" onClick={() => setOrganizationsSearchOpen(true)}>
+              <button
+                className="projects-page__side-action projects-page__side-action--join"
+                type="button"
+                onClick={() => setOrganizationsSearchOpen(true)}
+              >
                 Присоединиться
               </button>
             </div>

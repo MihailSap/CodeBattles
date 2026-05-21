@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { profileSettingsApi } from '@/features/update-profile-settings';
-import { validateConfirmPassword, validatePassword } from '@/entities/session';
+import { profilePasswordFormSchema } from '@/entities/session';
 import { useAuth } from '@/entities/session';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
@@ -12,31 +14,37 @@ import './ProfileSettingsModal.css';
 const initialPasswordForm = {
   currentPassword: '',
   password: '',
-  confirmPassword: ''
-};
-
-const initialPasswordErrors = {
-  password: '',
-  confirmPassword: ''
+  confirmPassword: '',
 };
 
 const initialNotifications = {
   reviewAssignments: true,
   newComments: true,
-  achievements: true
+  achievements: true,
 };
 
 const initialLinkedAccounts = {
   githubLogin: '',
-  gitlabLogin: ''
+  gitlabLogin: '',
 };
 
 const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const { userId } = useAuth();
-  const [passwordForm, setPasswordForm] = useState(initialPasswordForm);
-  const [passwordErrors, setPasswordErrors] = useState(initialPasswordErrors);
-  const [passwordTouched, setPasswordTouched] = useState({});
-  const [passwordSubmitted, setPasswordSubmitted] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset: resetPasswordForm,
+    formState: {
+      errors: passwordErrors,
+      isSubmitted: isPasswordSubmitted,
+      isValid: isPasswordFormValid,
+      touchedFields: passwordTouchedFields,
+    },
+  } = useForm({
+    resolver: zodResolver(profilePasswordFormSchema),
+    defaultValues: initialPasswordForm,
+    mode: 'onChange',
+  });
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationsSaving, setIsNotificationsSaving] = useState(false);
@@ -80,7 +88,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       try {
         const [notificationSettings, linkedAccountsState] = await Promise.all([
           profileSettingsApi.getNotificationSettings(),
-          profileSettingsApi.getLinkedAccounts()
+          profileSettingsApi.getLinkedAccounts(),
         ]);
 
         if (isCancelled) {
@@ -89,12 +97,12 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
 
         setNotifications({
           ...initialNotifications,
-          ...notificationSettings
+          ...notificationSettings,
         });
 
         setLinkedAccounts({
           ...initialLinkedAccounts,
-          ...linkedAccountsState
+          ...linkedAccountsState,
         });
       } catch {
         if (!isCancelled) {
@@ -114,89 +122,21 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
     };
   }, [isOpen, userId]);
 
-  const validateField = (name, value, nextPasswordValue = passwordForm.password) => {
-    if (name === 'password') {
-      setPasswordErrors((previousState) => ({
-        ...previousState,
-        password: validatePassword(value),
-        confirmPassword: passwordForm.confirmPassword
-          ? validateConfirmPassword(passwordForm.confirmPassword, value)
-          : previousState.confirmPassword
-      }));
-    }
-
-    if (name === 'confirmPassword') {
-      setPasswordErrors((previousState) => ({
-        ...previousState,
-        confirmPassword: validateConfirmPassword(value, nextPasswordValue)
-      }));
-    }
-  };
-
-  const handlePasswordChange = (event) => {
-    const { name, value } = event.target;
-    const nextValue = value.slice(0, 50);
-
-    setPasswordForm((previousState) => ({
-      ...previousState,
-      [name]: nextValue
-    }));
-
-    if (name === 'password') {
-      validateField(name, nextValue);
-      return;
-    }
-
-    validateField(name, nextValue);
-  };
-
-  const handlePasswordBlur = (event) => {
-    const { name, value } = event.target;
-
-    setPasswordTouched((previousState) => ({
-      ...previousState,
-      [name]: true
-    }));
-
-    validateField(name, value, passwordForm.password);
-  };
-
   const getPasswordFieldError = (name) => {
-    if (!(passwordTouched[name] || passwordSubmitted)) {
+    if (!(passwordTouchedFields[name] || isPasswordSubmitted)) {
       return '';
     }
 
-    return passwordErrors[name] || '';
+    return passwordErrors[name]?.message || '';
   };
 
-  const isPasswordFormValid = useMemo(() => {
-    return Boolean(
-      passwordForm.password &&
-      passwordForm.confirmPassword &&
-      passwordForm.currentPassword &&
-      !passwordErrors.password &&
-      !passwordErrors.confirmPassword &&
-      passwordForm.password === passwordForm.confirmPassword
-    );
-  }, [passwordErrors.confirmPassword, passwordErrors.password, passwordForm.confirmPassword, passwordForm.password, passwordForm.currentPassword]);
-
-  const handlePasswordSubmit = async (event) => {
-    event.preventDefault();
-    setPasswordSubmitted(true);
-
-    if (!isPasswordFormValid) {
-      return;
-    }
-
+  const submitPassword = async (passwordForm) => {
     setIsPasswordSubmitting(true);
 
     try {
       await profileSettingsApi.updatePassword(passwordForm.currentPassword, passwordForm.password);
       showSnackbar('Пароль успешно обновлён', 'success');
-      setPasswordForm(initialPasswordForm);
-      setPasswordErrors(initialPasswordErrors);
-      setPasswordTouched({});
-      setPasswordSubmitted(false);
+      resetPasswordForm(initialPasswordForm);
     } catch (error) {
       showSnackbar(error?.message || 'Не удалось обновить пароль', 'error');
     } finally {
@@ -207,7 +147,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
   const handleNotificationChange = async (key) => {
     const nextSettings = {
       ...notifications,
-      [key]: !notifications[key]
+      [key]: !notifications[key],
     };
 
     setNotifications(nextSettings);
@@ -231,7 +171,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       const nextState = await profileSettingsApi.unlinkAccount(provider);
       setLinkedAccounts({
         ...initialLinkedAccounts,
-        ...nextState
+        ...nextState,
       });
       showSnackbar('Аккаунт отвязан', 'success');
     } catch {
@@ -248,7 +188,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       const nextState = await profileSettingsApi.linkAccount(provider);
       setLinkedAccounts({
         ...initialLinkedAccounts,
-        ...nextState
+        ...nextState,
       });
       showSnackbar('Интеграция готова к подключению backend', 'success');
     } catch {
@@ -280,42 +220,40 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
       closeClassName="profile-settings-modal__close"
       closeAriaLabel="Закрыть настройки профиля"
     >
-        {loadError ? (
+      {loadError ? (
         <div className="profile-settings-modal__load-error" role="alert">
           {loadError}
         </div>
-        ) : (
+      ) : (
         <div className="profile-settings-modal__grid">
           <section className="profile-settings-modal__section profile-settings-modal__section--security">
             <h3 className="profile-settings-modal__section-title">Безопасность</h3>
 
-            <form className="profile-settings-modal__security-form" onSubmit={handlePasswordSubmit}>
+            <form className="profile-settings-modal__security-form" onSubmit={handleSubmit(submitPassword)}>
               <div className="profile-settings-modal__inputs">
                 <div className="profile-settings-modal__input-group">
                   <input
-                    className='profile-settings-modal__input'
+                    className="profile-settings-modal__input"
                     type="password"
-                    name="currentPassword"
                     placeholder="Введите текущий пароль"
-                    value={passwordForm.currentPassword}
                     maxLength={50}
-                    onChange={handlePasswordChange}
                     autoComplete="new-password"
                     disabled={isFormDisabled}
+                    {...register('currentPassword')}
                   />
+                  {getPasswordFieldError('currentPassword') && (
+                    <p className="profile-settings-modal__input-error">{getPasswordFieldError('currentPassword')}</p>
+                  )}
                 </div>
                 <div className="profile-settings-modal__input-group">
                   <input
                     className={`profile-settings-modal__input ${getPasswordFieldError('password') ? 'profile-settings-modal__input--error' : ''}`}
                     type="password"
-                    name="password"
                     placeholder="Введите новый пароль"
-                    value={passwordForm.password}
                     maxLength={50}
-                    onChange={handlePasswordChange}
-                    onBlur={handlePasswordBlur}
                     autoComplete="new-password"
                     disabled={isFormDisabled}
+                    {...register('password')}
                   />
                   {getPasswordFieldError('password') && (
                     <p className="profile-settings-modal__input-error">{getPasswordFieldError('password')}</p>
@@ -326,14 +264,11 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
                   <input
                     className={`profile-settings-modal__input ${getPasswordFieldError('confirmPassword') ? 'profile-settings-modal__input--error' : ''}`}
                     type="password"
-                    name="confirmPassword"
                     placeholder="Повторите новый пароль"
-                    value={passwordForm.confirmPassword}
                     maxLength={50}
-                    onChange={handlePasswordChange}
-                    onBlur={handlePasswordBlur}
                     autoComplete="new-password"
                     disabled={isFormDisabled}
+                    {...register('confirmPassword')}
                   />
                   {getPasswordFieldError('confirmPassword') && (
                     <p className="profile-settings-modal__input-error">{getPasswordFieldError('confirmPassword')}</p>
@@ -447,8 +382,8 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }) => {
             </div>
           </section>
         </div>
-        )}
-      
+      )}
+
       <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
     </ModalShell>
   );

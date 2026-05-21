@@ -21,9 +21,10 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
   const safeSelectedUserIds = useMemo(() => (Array.isArray(selectedUserIds) ? selectedUserIds : []), [selectedUserIds]);
 
   const selectedUsers = useMemo(
-    () => safeUsers
-      .filter((user) => safeSelectedUserIds.includes(user.id))
-      .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' })),
+    () =>
+      safeUsers
+        .filter((user) => safeSelectedUserIds.includes(user.id))
+        .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' })),
     [safeSelectedUserIds, safeUsers]
   );
 
@@ -37,7 +38,9 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
           return true;
         }
 
-        return user.fullName.toLowerCase().includes(normalizedSearch) || user.login.toLowerCase().includes(normalizedSearch);
+        return (
+          user.fullName.toLowerCase().includes(normalizedSearch) || user.login.toLowerCase().includes(normalizedSearch)
+        );
       })
       .sort((left, right) => left.fullName.localeCompare(right.fullName, 'ru', { sensitivity: 'base' }));
   }, [safeSelectedUserIds, safeUsers, search]);
@@ -75,14 +78,14 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
             bottom: `${rootRect.bottom - triggerRect.top + 8}px`,
             left: `${left}px`,
             width: `${width}px`,
-            maxHeight: `${maxHeight}px`
+            maxHeight: `${maxHeight}px`,
           }
         : {
             top: `${triggerRect.bottom - rootRect.top + 8}px`,
             bottom: 'auto',
             left: `${left}px`,
             width: `${width}px`,
-            maxHeight: `${maxHeight}px`
+            maxHeight: `${maxHeight}px`,
           }
     );
   }, []);
@@ -169,14 +172,25 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
     <div className="assignees-selector" ref={rootRef}>
       <div className="assignees-selector__head">
         <h3 className="assignees-selector__title">{title}</h3>
-        <button className="assignees-selector__clear" type="button" onClick={clearAll} disabled={disabled || safeSelectedUserIds.length === 0}>
+        <button
+          className="assignees-selector__clear"
+          type="button"
+          onClick={clearAll}
+          disabled={disabled || safeSelectedUserIds.length === 0}
+        >
           Очистить все
         </button>
       </div>
 
       <div className="assignees-selector__selected-list">
         {selectedUsers.map((user) => (
-          <button key={user.id} className="assignees-selector__selected-item" type="button" onClick={() => toggleUser(user.id)} disabled={disabled}>
+          <button
+            key={user.id}
+            className="assignees-selector__selected-item"
+            type="button"
+            onClick={() => toggleUser(user.id)}
+            disabled={disabled}
+          >
             {user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}
             <span>{user.fullName}</span>
           </button>
@@ -212,8 +226,15 @@ const AssigneesSelector = ({ users, selectedUserIds, onChange, disabled = false,
 
           <div className="assignees-selector__users">
             {visibleItems.map((user) => (
-              <button className="assignees-selector__user" key={user.id} type="button" onClick={() => toggleUser(user.id)}>
-                <span className="assignees-selector__avatar">{user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}</span>
+              <button
+                className="assignees-selector__user"
+                key={user.id}
+                type="button"
+                onClick={() => toggleUser(user.id)}
+              >
+                <span className="assignees-selector__avatar">
+                  {user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}
+                </span>
                 <span className="assignees-selector__meta">
                   <span className="assignees-selector__name">{user.fullName}</span>
                   <span className="assignees-selector__login">@{user.login}</span>

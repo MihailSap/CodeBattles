@@ -1,7 +1,4 @@
-import {
-  LEADERBOARD_CATEGORY_OPTIONS,
-  LEADERBOARD_PERIOD_OPTIONS
-} from '@/entities/leaderboard';
+import { LEADERBOARD_CATEGORY_OPTIONS, LEADERBOARD_PERIOD_OPTIONS } from '@/entities/leaderboard';
 import { SearchIcon } from '@/shared/ui/icons';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import './LeaderboardControls.css';
@@ -13,26 +10,21 @@ const LeaderboardControls = ({
   onPeriodChange,
   onCategoryChange,
   onSearchChange,
-  onMyRatingClick
+  onMyRatingClick,
 }) => {
   const periodDropdownOptions = LEADERBOARD_PERIOD_OPTIONS.map((option) => ({
     value: option.key,
-    label: option.label
+    label: option.label,
   }));
   const categoryDropdownOptions = LEADERBOARD_CATEGORY_OPTIONS.map((option) => ({
     value: option.key,
-    label: option.label
+    label: option.label,
   }));
 
   return (
     <div className="leaderboard-controls">
       <div className="leaderboard-controls__dropdowns">
-        <ReviewDropdown
-          label="Период:"
-          value={period}
-          options={periodDropdownOptions}
-          onChange={onPeriodChange}
-        />
+        <ReviewDropdown label="Период:" value={period} options={periodDropdownOptions} onChange={onPeriodChange} />
 
         <ReviewDropdown
           label="Категория:"

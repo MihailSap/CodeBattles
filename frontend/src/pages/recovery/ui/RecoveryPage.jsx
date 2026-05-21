@@ -1,4 +1,6 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import logoLight from '@/shared/assets/logo-light.svg';
@@ -8,7 +10,7 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, requestPasswordReset } from '@/entities/session';
-import { validateEmail } from '@/entities/session';
+import { recoveryFormSchema } from '@/entities/session';
 import '../../auth/ui/AuthPage.css';
 import './RecoveryPage.css';
 
@@ -19,11 +21,16 @@ const RecoveryPage = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [touched, setTouched] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm({
+    resolver: zodResolver(recoveryFormSchema),
+    defaultValues: { email: '' },
+    mode: 'onChange',
+  });
 
   useEffect(() => {
     dispatch(clearAuthMessages());
@@ -47,27 +54,14 @@ const RecoveryPage = () => {
     };
   }, [isCompleted, navigate]);
 
-  const handleChange = (event) => {
-    const value = event.target.value.replace(/\s/g, '');
+  const emailField = register('email', {
+    onChange: (event) => {
+      event.target.value = event.target.value.replace(/\s/g, '');
+      dispatch(clearAuthMessages());
+    },
+  });
 
-    setEmail(value);
-    setEmailError(validateEmail(value));
-    dispatch(clearAuthMessages());
-  };
-
-  const handleBlur = () => {
-    setTouched(true);
-    setEmailError(validateEmail(email));
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setSubmitted(true);
-
-    if (validateEmail(email) !== '') {
-      return;
-    }
-
+  const onSubmit = async ({ email }) => {
     const result = await dispatch(requestPasswordReset(email.trim()));
 
     if (requestPasswordReset.fulfilled.match(result)) {
@@ -75,8 +69,8 @@ const RecoveryPage = () => {
     }
   };
 
-  const shownEmailError = touched || submitted ? emailError : '';
-  const isSubmitDisabled = isLoading || Boolean(validateEmail(email));
+  const shownEmailError = touchedFields.email || isSubmitted ? errors.email?.message || '' : '';
+  const isSubmitDisabled = isLoading || !isValid;
 
   return (
     <div className="auth-page recovery-page">
@@ -101,9 +95,11 @@ const RecoveryPage = () => {
               {isCompleted ? (
                 <p className="recovery-card__success">Ссылка для сброса пароля отправлена на указанный E-Mail.</p>
               ) : (
-                <form className="auth-form" onSubmit={handleSubmit}>
+                <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
                   <div className="recovery-card__top">
-                    <Link className="recovery-card__back" to={ROUTES.login}>← Назад</Link>
+                    <Link className="recovery-card__back" to={ROUTES.login}>
+                      ← Назад
+                    </Link>
                     <h1 className="recovery-card__title">Восстановление пароля</h1>
                     <p className="recovery-card__description">
                       Введите E-Mail, указанный при регистрации, на него будет отправлена ссылка для сброса пароля
@@ -118,11 +114,9 @@ const RecoveryPage = () => {
                         type="text"
                         inputMode="email"
                         placeholder="Введите Ваш email"
-                        value={email}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
                         autoComplete="email"
                         maxLength={255}
+                        {...emailField}
                       />
                       {shownEmailError && <p className="auth-input-error">{shownEmailError}</p>}
                     </div>
@@ -135,11 +129,7 @@ const RecoveryPage = () => {
               )}
             </div>
 
-            {error && !isCompleted && (
-              <div className="auth-server-error">
-                {error}
-              </div>
-            )}
+            {error && !isCompleted && <div className="auth-server-error">{error}</div>}
           </div>
         </section>
       </div>

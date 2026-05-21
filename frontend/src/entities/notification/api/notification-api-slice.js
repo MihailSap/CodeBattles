@@ -27,10 +27,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
       queryFn: () => toQueryResult(() => notificationsApi.getNotifications()),
       providesTags: (result) =>
         result
-          ? [
-              ...result.map((notification) => ({ type: 'Notification', id: notification.id })),
-              notificationListTag
-            ]
+          ? [...result.map((notification) => ({ type: 'Notification', id: notification.id })), notificationListTag]
           : [notificationListTag],
       async onCacheEntryAdded(_arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
         let unsubscribe = () => {};
@@ -70,7 +67,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
 
           unsubscribe();
         }
-      }
+      },
     }),
     markAllNotificationsRead: build.mutation({
       queryFn: () => toQueryResult(() => notificationsApi.markAllRead()),
@@ -89,7 +86,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
           patchResult.undo();
         }
       },
-      invalidatesTags: [notificationListTag]
+      invalidatesTags: [notificationListTag],
     }),
     deleteNotification: build.mutation({
       queryFn: (notificationId) => toQueryResult(() => notificationsApi.deleteNotification(notificationId)),
@@ -112,8 +109,8 @@ export const notificationApiSlice = baseApi.injectEndpoints({
       },
       invalidatesTags: (_result, _error, notificationId) => [
         { type: 'Notification', id: notificationId },
-        notificationListTag
-      ]
+        notificationListTag,
+      ],
     }),
     completeNotification: build.mutation({
       queryFn: (payload) => toQueryResult(() => notificationsApi.completeNotification(payload)),
@@ -127,8 +124,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
 
               const left = notification.completion.target || {};
               const right = payload.target || {};
-              const hasDifferentUser =
-                left.userId && right.userId && Number(left.userId) !== Number(right.userId);
+              const hasDifferentUser = left.userId && right.userId && Number(left.userId) !== Number(right.userId);
 
               return (
                 !hasDifferentUser &&
@@ -149,14 +145,14 @@ export const notificationApiSlice = baseApi.injectEndpoints({
           patchResult.undo();
         }
       },
-      invalidatesTags: [notificationListTag]
-    })
-  })
+      invalidatesTags: [notificationListTag],
+    }),
+  }),
 });
 
 export const {
   useCompleteNotificationMutation,
   useDeleteNotificationMutation,
   useGetNotificationsQuery,
-  useMarkAllNotificationsReadMutation
+  useMarkAllNotificationsReadMutation,
 } = notificationApiSlice;

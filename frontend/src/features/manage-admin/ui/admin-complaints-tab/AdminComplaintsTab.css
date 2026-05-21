@@ -82,7 +82,6 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-
 }
 
 .admin-panel__pagination-button--active {
@@ -211,7 +210,6 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-
 }
 
 .admin-complaints__action svg {
@@ -269,7 +267,7 @@
     padding: 12px;
     gap: 10px;
   }
-  
+
   .admin-complaints__item {
     gap: 12px;
   }
@@ -283,7 +281,8 @@
     grid-template-columns: 1fr;
   }
 
-  .admin-complaints__meta dd, .admin-panel__subtitle {
+  .admin-complaints__meta dd,
+  .admin-panel__subtitle {
     font-size: 13px;
   }
 

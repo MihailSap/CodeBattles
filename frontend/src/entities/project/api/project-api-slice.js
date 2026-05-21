@@ -10,107 +10,112 @@ export const projectApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getProjectsDashboard: build.query({
       queryFn: (params = {}) => toQueryResult(() => projectsApi.getProjectsDashboard(params)),
-      providesTags: [dashboardTag, projectListTag, organizationListTag]
+      providesTags: [dashboardTag, projectListTag, organizationListTag],
     }),
     getProjectById: build.query({
       queryFn: (projectId) => toQueryResult(() => projectsApi.getProjectById(projectId)),
       providesTags: (_result, _error, projectId) => [
         { type: 'Project', id: projectId },
-        { type: 'Task', id: `PROJECT-${projectId}` }
-      ]
+        { type: 'Task', id: `PROJECT-${projectId}` },
+      ],
     }),
     getTaskById: build.query({
       queryFn: ({ projectId, taskId }) => toQueryResult(() => projectsApi.getTaskById(projectId, taskId)),
       providesTags: (_result, _error, { projectId, taskId }) => [
         { type: 'Task', id: taskId },
-        { type: 'Project', id: projectId }
-      ]
+        { type: 'Project', id: projectId },
+      ],
     }),
     getOrganizationById: build.query({
       queryFn: (organizationId) => toQueryResult(() => projectsApi.getOrganizationById(organizationId)),
-      providesTags: (_result, _error, organizationId) => [{ type: 'Organization', id: organizationId }]
+      providesTags: (_result, _error, organizationId) => [{ type: 'Organization', id: organizationId }],
     }),
     getOrganizationProjects: build.query({
       queryFn: ({ organizationId, params = {} }) =>
         toQueryResult(() => projectsApi.getOrganizationProjects(organizationId, params)),
       providesTags: (_result, _error, { organizationId }) => [
         { type: 'Organization', id: organizationId },
-        { type: 'Project', id: `ORGANIZATION-${organizationId}` }
-      ]
+        { type: 'Project', id: `ORGANIZATION-${organizationId}` },
+      ],
     }),
     getMyOrganizations: build.query({
       queryFn: (viewerId) => toQueryResult(() => projectsApi.getMyOrganizations(viewerId)),
-      providesTags: [organizationListTag]
+      providesTags: [organizationListTag],
     }),
     searchProjectsForJoin: build.query({
       queryFn: ({ viewerId, params = {} }) => toQueryResult(() => projectsApi.searchProjectsForJoin(viewerId, params)),
-      providesTags: [projectListTag]
+      providesTags: [projectListTag],
     }),
     searchOrganizations: build.query({
       queryFn: ({ viewerId, params = {} }) => toQueryResult(() => projectsApi.searchOrganizations(viewerId, params)),
-      providesTags: [organizationListTag]
+      providesTags: [organizationListTag],
     }),
     getReviewById: build.query({
       queryFn: (reviewId) => toQueryResult(() => projectsApi.getReviewById(reviewId)),
-      providesTags: (_result, _error, reviewId) => [{ type: 'Review', id: reviewId }]
+      providesTags: (_result, _error, reviewId) => [{ type: 'Review', id: reviewId }],
     }),
     getReviewByTaskId: build.query({
       queryFn: (taskId) => toQueryResult(() => projectsApi.getReviewByTaskId(taskId)),
       providesTags: (_result, _error, taskId) => [
         { type: 'Review', id: `TASK-${taskId}` },
-        { type: 'Task', id: taskId }
-      ]
+        { type: 'Task', id: taskId },
+      ],
     }),
     getReviewFileContent: build.query({
       queryFn: ({ reviewIdOrTaskId, filePath }) =>
         toQueryResult(() => projectsApi.getReviewFileContent(reviewIdOrTaskId, filePath)),
       providesTags: (_result, _error, { reviewIdOrTaskId, filePath }) => [
-        { type: 'Review', id: `FILE-${reviewIdOrTaskId}-${filePath}` }
-      ]
+        { type: 'Review', id: `FILE-${reviewIdOrTaskId}-${filePath}` },
+      ],
     }),
     createProject: build.mutation({
       queryFn: (payload) => toQueryResult(() => projectsApi.createProject(payload)),
-      invalidatesTags: [dashboardTag, projectListTag]
+      invalidatesTags: [dashboardTag, projectListTag],
     }),
     updateProject: build.mutation({
       queryFn: ({ projectId, payload }) => toQueryResult(() => projectsApi.updateProject(projectId, payload)),
       invalidatesTags: (_result, _error, { projectId }) => [
         { type: 'Project', id: projectId },
         dashboardTag,
-        projectListTag
-      ]
+        projectListTag,
+      ],
     }),
     deleteProject: build.mutation({
       queryFn: (projectId) => toQueryResult(() => projectsApi.deleteProject(projectId)),
       invalidatesTags: (_result, _error, projectId) => [
         { type: 'Project', id: projectId },
         dashboardTag,
-        projectListTag
-      ]
+        projectListTag,
+      ],
     }),
     leaveProject: build.mutation({
       queryFn: (projectId) => toQueryResult(() => projectsApi.leaveProject(projectId)),
       invalidatesTags: (_result, _error, projectId) => [
         { type: 'Project', id: projectId },
         dashboardTag,
-        projectListTag
-      ]
+        projectListTag,
+      ],
     }),
     createTask: build.mutation({
       queryFn: ({ projectId, payload }) => toQueryResult(() => projectsApi.createTask(projectId, payload)),
       invalidatesTags: (_result, _error, { projectId }) => [
         { type: 'Project', id: projectId },
         { type: 'Task', id: `PROJECT-${projectId}` },
-        dashboardTag
-      ]
+        dashboardTag,
+      ],
     }),
     updateTask: build.mutation({
       queryFn: ({ taskId, payload }) => toQueryResult(() => projectsApi.updateTask(taskId, payload)),
       invalidatesTags: (_result, _error, { taskId, projectId }) => [
         { type: 'Task', id: taskId },
-        ...(projectId ? [{ type: 'Project', id: projectId }, { type: 'Task', id: `PROJECT-${projectId}` }] : []),
-        reviewListTag
-      ]
+        ...(projectId
+          ? [
+              { type: 'Project', id: projectId },
+              { type: 'Task', id: `PROJECT-${projectId}` },
+            ]
+          : []),
+        reviewListTag,
+      ],
     }),
     deleteTask: build.mutation({
       queryFn: (arg) => {
@@ -123,72 +128,78 @@ export const projectApiSlice = baseApi.injectEndpoints({
 
         return [
           { type: 'Task', id: taskId },
-          ...(projectId ? [{ type: 'Project', id: projectId }, { type: 'Task', id: `PROJECT-${projectId}` }] : []),
+          ...(projectId
+            ? [
+                { type: 'Project', id: projectId },
+                { type: 'Task', id: `PROJECT-${projectId}` },
+              ]
+            : []),
           projectListTag,
-          dashboardTag
+          dashboardTag,
         ];
-      }
+      },
     }),
     createOrganization: build.mutation({
       queryFn: (payload) => toQueryResult(() => projectsApi.createOrganization(payload)),
-      invalidatesTags: [dashboardTag, organizationListTag]
+      invalidatesTags: [dashboardTag, organizationListTag],
     }),
     updateOrganization: build.mutation({
-      queryFn: ({ organizationId, payload }) => toQueryResult(() => projectsApi.updateOrganization(organizationId, payload)),
+      queryFn: ({ organizationId, payload }) =>
+        toQueryResult(() => projectsApi.updateOrganization(organizationId, payload)),
       invalidatesTags: (_result, _error, { organizationId }) => [
         { type: 'Organization', id: organizationId },
         dashboardTag,
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     deleteOrganization: build.mutation({
       queryFn: (organizationId) => toQueryResult(() => projectsApi.deleteOrganization(organizationId)),
       invalidatesTags: (_result, _error, organizationId) => [
         { type: 'Organization', id: organizationId },
         dashboardTag,
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     leaveOrganization: build.mutation({
       queryFn: (organizationId) => toQueryResult(() => projectsApi.leaveOrganization(organizationId)),
       invalidatesTags: (_result, _error, organizationId) => [
         { type: 'Organization', id: organizationId },
         dashboardTag,
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     approveOrganizationJoinRequest: build.mutation({
       queryFn: ({ organizationId, userId }) =>
         toQueryResult(() => projectsApi.approveOrganizationJoinRequest(organizationId, userId)),
       invalidatesTags: (_result, _error, { organizationId }) => [
         { type: 'Organization', id: organizationId },
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     rejectOrganizationJoinRequest: build.mutation({
       queryFn: ({ organizationId, userId }) =>
         toQueryResult(() => projectsApi.rejectOrganizationJoinRequest(organizationId, userId)),
       invalidatesTags: (_result, _error, { organizationId }) => [
         { type: 'Organization', id: organizationId },
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     joinPublicProject: build.mutation({
       queryFn: (projectId) => toQueryResult(() => projectsApi.joinPublicProject(projectId)),
-      invalidatesTags: [dashboardTag, projectListTag]
+      invalidatesTags: [dashboardTag, projectListTag],
     }),
     requestOrganizationAccess: build.mutation({
       queryFn: (organizationId) => toQueryResult(() => projectsApi.requestOrganizationAccess(organizationId)),
       invalidatesTags: (_result, _error, organizationId) => [
         { type: 'Organization', id: organizationId },
-        organizationListTag
-      ]
+        organizationListTag,
+      ],
     }),
     invalidateReview: build.mutation({
       queryFn: async () => ({ data: null }),
-      invalidatesTags: [reviewListTag]
-    })
-  })
+      invalidatesTags: [reviewListTag],
+    }),
+  }),
 });
 
 export const {
@@ -217,5 +228,5 @@ export const {
   useRequestOrganizationAccessMutation,
   useUpdateOrganizationMutation,
   useUpdateProjectMutation,
-  useUpdateTaskMutation
+  useUpdateTaskMutation,
 } = projectApiSlice;

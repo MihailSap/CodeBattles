@@ -41,7 +41,7 @@
   color: var(--color-danger);
 }
 
-[data-theme="dark"] .verify-email-page__status--success {
+[data-theme='dark'] .verify-email-page__status--success {
   color: #52d273;
 }
 

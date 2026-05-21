@@ -14,12 +14,12 @@ const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'Все' },
   { value: REVIEW_STATUS.NEW, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.NEW] },
   { value: REVIEW_STATUS.IN_PROGRESS, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.IN_PROGRESS] },
-  { value: REVIEW_STATUS.COMPLETED, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.COMPLETED] }
+  { value: REVIEW_STATUS.COMPLETED, label: REVIEW_STATUS_LABEL[REVIEW_STATUS.COMPLETED] },
 ];
 
 const SORT_OPTIONS = [
   { value: REVIEW_SORT.NEAREST_FIRST, label: REVIEW_SORT_LABEL[REVIEW_SORT.NEAREST_FIRST] },
-  { value: REVIEW_SORT.FARTHEST_FIRST, label: REVIEW_SORT_LABEL[REVIEW_SORT.FARTHEST_FIRST] }
+  { value: REVIEW_SORT.FARTHEST_FIRST, label: REVIEW_SORT_LABEL[REVIEW_SORT.FARTHEST_FIRST] },
 ];
 
 const groupReviews = (reviews) => {
@@ -33,7 +33,7 @@ const groupReviews = (reviews) => {
         id: organizationId,
         title: review.organization?.name || 'Без организации',
         projectsMap: new Map(),
-        reviewsCount: 0
+        reviewsCount: 0,
       });
     }
 
@@ -44,7 +44,7 @@ const groupReviews = (reviews) => {
       organizationGroup.projectsMap.set(projectId, {
         id: projectId,
         title: review.project.name,
-        reviews: []
+        reviews: [],
       });
     }
 
@@ -55,7 +55,9 @@ const groupReviews = (reviews) => {
   return [...groupsMap.values()]
     .map((group) => ({
       ...group,
-      projects: [...group.projectsMap.values()].sort((left, right) => left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' }))
+      projects: [...group.projectsMap.values()].sort((left, right) =>
+        left.title.localeCompare(right.title, 'ru', { sensitivity: 'base' })
+      ),
     }))
     .sort((left, right) => {
       if (left.id === 'without-organization') {
@@ -75,25 +77,25 @@ const ReviewsPage = () => {
   const { userId } = useAuth();
   const [statusFilter, setStatusFilter] = useState('');
   const [sortDirection, setSortDirection] = useState(REVIEW_SORT.NEAREST_FIRST);
-  const {
-    data: pageData = { items: [], totalItems: 0 },
-    isLoading
-  } = useGetAssignedReviewsQuery(
+  const { data: pageData = { items: [], totalItems: 0 }, isLoading } = useGetAssignedReviewsQuery(
     {
       viewerId: Number(userId),
       params: {
         status: statusFilter,
-        sort: sortDirection
-      }
+        sort: sortDirection,
+      },
     },
     {
       skip: !userId,
-      refetchOnMountOrArgChange: 30
+      refetchOnMountOrArgChange: 30,
     }
   );
-  const openReview = useCallback((reviewId) => {
-    navigate(ROUTES.reviewById.replace(':reviewId', reviewId));
-  }, [navigate]);
+  const openReview = useCallback(
+    (reviewId) => {
+      navigate(ROUTES.reviewById.replace(':reviewId', reviewId));
+    },
+    [navigate]
+  );
 
   const groupedReviews = useMemo(() => groupReviews(pageData.items), [pageData.items]);
 
@@ -139,11 +141,7 @@ const ReviewsPage = () => {
                     <ReviewSection key={project.id} title={project.title} reviewsCount={project.reviews.length} nested>
                       <div className="reviews-page__reviews-list">
                         {project.reviews.map((review) => (
-                          <ReviewCard
-                            key={review.id}
-                            review={review}
-                            onOpen={openReview}
-                          />
+                          <ReviewCard key={review.id} review={review} onOpen={openReview} />
                         ))}
                       </div>
                     </ReviewSection>

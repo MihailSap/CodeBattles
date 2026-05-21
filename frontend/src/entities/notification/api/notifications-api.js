@@ -21,9 +21,8 @@ const notifyMockListeners = (event) => {
   mockListeners.forEach((listener) => listener(clone(event)));
 };
 
-const getTargetId = (target = {}) => (
-  target.reviewId || target.taskId || target.organizationId || target.userId || target.kind
-);
+const getTargetId = (target = {}) =>
+  target.reviewId || target.taskId || target.organizationId || target.userId || target.kind;
 
 const isSameTarget = (left = {}, right = {}) => {
   if (!left || !right || left.kind !== right.kind) {
@@ -48,7 +47,7 @@ const isCompletionMatch = (notification, payload) => {
 const upsertMockNotification = (incomingNotification) => {
   const notification = {
     ...incomingNotification,
-    isRead: Boolean(incomingNotification.isRead)
+    isRead: Boolean(incomingNotification.isRead),
   };
 
   if (notification.type === NOTIFICATION_TYPE.THREAD_REPLY) {
@@ -67,9 +66,10 @@ const upsertMockNotification = (incomingNotification) => {
         expiresAt: notification.expiresAt,
         isRead: false,
         threadReplyCount,
-        text: threadReplyCount > 1
-          ? `Было получено несколько ответов на ваши комментарии в задаче ${taskName}.`
-          : notification.text
+        text:
+          threadReplyCount > 1
+            ? `Было получено несколько ответов на ваши комментарии в задаче ${taskName}.`
+            : notification.text,
       };
 
       mockStore.set(groupedNotification.id, mergedNotification);
@@ -89,17 +89,20 @@ const startMockRealtime = () => {
   mockRealtimeStarted = true;
 
   MOCK_REALTIME_NOTIFICATIONS.slice(0, MOCK_REALTIME_NOTIFICATIONS_LIMIT).forEach((notification, index) => {
-    window.setTimeout(() => {
-      const storedNotification = upsertMockNotification({
-        ...clone(notification),
-        createdAt: new Date().toISOString()
-      });
+    window.setTimeout(
+      () => {
+        const storedNotification = upsertMockNotification({
+          ...clone(notification),
+          createdAt: new Date().toISOString(),
+        });
 
-      notifyMockListeners({
-        type: 'notification.upserted',
-        notification: storedNotification
-      });
-    }, 1000 + index * 6000);
+        notifyMockListeners({
+          type: 'notification.upserted',
+          notification: storedNotification,
+        });
+      },
+      1000 + index * 6000
+    );
   });
 };
 
@@ -200,5 +203,5 @@ export const notificationsApi = {
     }
 
     return subscribeBackendNotifications(listener);
-  }
+  },
 };

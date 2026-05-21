@@ -1,29 +1,28 @@
+import { z } from 'zod';
+
 const URL_PATTERN = /^(https?:\/\/)[^\s/$.?#].[^\s]*$/i;
 
-export const validateOrganizationName = (value) => {
-  const normalized = value.trim();
+const optionalUrlSchema = z
+  .string()
+  .trim()
+  .max(500, 'Ссылка должна быть не длиннее 500 символов')
+  .refine((value) => !value || URL_PATTERN.test(value), 'Введите корректную ссылку');
 
-  if (!normalized) {
-    return 'Название организации не может быть пустым';
-  }
+export const organizationCreateFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Название организации не может быть пустым')
+    .max(100, 'Название организации должно быть короче 100 символов'),
+  link: optionalUrlSchema,
+  description: z.string().max(3000, 'Описание должно быть не длиннее 3000 символов').default(''),
+  logoFile: z.instanceof(File, { message: 'Загрузите логотип' }),
+});
 
-  if (normalized.length > 100) {
-    return 'Название организации должно быть короче 100 символов';
-  }
-
-  return '';
-};
-
-export const validateOrganizationUrl = (value) => {
-  const normalized = value.trim();
-
-  if (!normalized) {
-    return '';
-  }
-
-  if (!URL_PATTERN.test(normalized)) {
-    return 'Введите корректную ссылку';
-  }
-
-  return '';
-};
+export const organizationSettingsFormSchema = z.object({
+  name: organizationCreateFormSchema.shape.name,
+  link: optionalUrlSchema,
+  description: organizationCreateFormSchema.shape.description,
+  logoFile: z.instanceof(File).nullable().default(null),
+  logoUrl: z.string().default(''),
+});

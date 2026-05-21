@@ -24,19 +24,14 @@ const LANGUAGES = [
   { value: 'markdown', label: 'Markdown' },
   { value: 'shell', label: 'Shell' },
   { value: 'xml', label: 'XML' },
-  { value: 'plaintext', label: 'Plain Text' }
+  { value: 'plaintext', label: 'Plain Text' },
 ];
 
 const CodeEditor = ({ value, onChange, language, onLanguageChange }) => {
   return (
     <div className="code-editor-container">
       <div className="code-editor-header">
-        <ReviewDropdown
-          label="Язык:"
-          options={LANGUAGES}
-          value={language}
-          onChange={onLanguageChange}
-        />
+        <ReviewDropdown label="Язык:" options={LANGUAGES} value={language} onChange={onLanguageChange} />
       </div>
       <div className="code-editor-wrapper">
         <Editor
@@ -52,7 +47,7 @@ const CodeEditor = ({ value, onChange, language, onLanguageChange }) => {
             wordWrap: 'off',
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            lineNumbersMinChars: 3
+            lineNumbersMinChars: 3,
           }}
         />
       </div>

@@ -7,34 +7,40 @@ const StarRating = ({ value, max = 5 }) => {
   const roundedValue = Math.round(value);
   return (
     <div className="star-rating">
-      {Array.from({ length: max }).map((_, i) => (
-        <span key={i} className="star-rating__star">
-          <StarIcon filled={i < roundedValue} />
-        </span>
-      ))}
+      {Array.from({ length: max }).map((_, index) => {
+        const ratingValue = index + 1;
+
+        return (
+          <span key={ratingValue} className="star-rating__star">
+            <StarIcon filled={ratingValue <= roundedValue} />
+          </span>
+        );
+      })}
     </div>
   );
 };
 
 const ReviewResultsSidebar = ({ review, aiReviewEnabled }) => {
   const [selectedReviewerId, setSelectedReviewerId] = useState(
-    review.finalReviews && review.finalReviews.length > 0
-      ? review.finalReviews[0].reviewerId
-      : null
+    review.finalReviews && review.finalReviews.length > 0 ? review.finalReviews[0].reviewerId : null
   );
 
   if (!review) return null;
 
-  const averageScore = review.finalReviews && review.finalReviews.length > 0
-    ? review.finalReviews.reduce((acc, fr) => acc + (fr.architecture + fr.readability + fr.testability + fr.scalability) / 4, 0) / review.finalReviews.length
-    : 0;
+  const averageScore =
+    review.finalReviews && review.finalReviews.length > 0
+      ? review.finalReviews.reduce(
+          (acc, fr) => acc + (fr.architecture + fr.readability + fr.testability + fr.scalability) / 4,
+          0
+        ) / review.finalReviews.length
+      : 0;
 
   const reviewerOptions = (review.finalReviews || []).map((fr, idx) => ({
     value: fr.reviewerId,
-    label: fr.revealName ? fr.reviewerName : `Ревьюер ${idx + 1}`
+    label: fr.revealName ? fr.reviewerName : `Ревьюер ${idx + 1}`,
   }));
 
-  const selectedReviewData = (review.finalReviews || []).find(fr => fr.reviewerId === selectedReviewerId);
+  const selectedReviewData = (review.finalReviews || []).find((fr) => fr.reviewerId === selectedReviewerId);
 
   const hasFinalReviews = review.finalReviews && review.finalReviews.length > 0;
 
@@ -84,7 +90,9 @@ const ReviewResultsSidebar = ({ review, aiReviewEnabled }) => {
             </div>
             <div className="review-results-sidebar__field">
               <div className="review-results-sidebar__label">Вердикт:</div>
-              <div className={`review-results-sidebar__verdict ${selectedReviewData.verdict === 'APPROVED' ? 'approved' : 'rework'}`}>
+              <div
+                className={`review-results-sidebar__verdict ${selectedReviewData.verdict === 'APPROVED' ? 'approved' : 'rework'}`}
+              >
                 {selectedReviewData.verdict === 'APPROVED' ? 'Одобрено' : 'На доработку'}
               </div>
             </div>
@@ -110,12 +118,16 @@ const ReviewResultsSidebar = ({ review, aiReviewEnabled }) => {
                   <div className="review-results-sidebar__label">Нарушения SOLID:</div>
                   <div className="review-results-sidebar__sub-field">
                     <span className="review-results-sidebar__label-small">Количество:</span>
-                    <span className="review-results-sidebar__text-bold">{review.aiEvaluation.solidViolations?.count || 0}</span>
+                    <span className="review-results-sidebar__text-bold">
+                      {review.aiEvaluation.solidViolations?.count || 0}
+                    </span>
                   </div>
                   {review.aiEvaluation.solidViolations && (
                     <div className="review-results-sidebar__sub-field">
                       <span className="review-results-sidebar__label-small">Критичность:</span>
-                      <div className={`review-results-sidebar__severity severity-${review.aiEvaluation.solidViolations.severity === 'Проблем нет' ? 'none' : review.aiEvaluation.solidViolations.severity === 'Не критично' ? 'low' : review.aiEvaluation.solidViolations.severity === 'Средняя' ? 'medium' : 'high'}`}>
+                      <div
+                        className={`review-results-sidebar__severity severity-${review.aiEvaluation.solidViolations.severity === 'Проблем нет' ? 'none' : review.aiEvaluation.solidViolations.severity === 'Не критично' ? 'low' : review.aiEvaluation.solidViolations.severity === 'Средняя' ? 'medium' : 'high'}`}
+                      >
                         {review.aiEvaluation.solidViolations.severity}
                       </div>
                     </div>

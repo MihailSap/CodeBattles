@@ -17,7 +17,7 @@ import {
   useDeleteNotificationMutation,
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
-  useNotificationRouteCompletion
+  useNotificationRouteCompletion,
 } from '@/entities/notification';
 import { BellIcon, AvatarIcon, AdminIcon, ExitIcon } from '@/shared/ui/icons';
 import NotificationsList from './NotificationsList';
@@ -27,13 +27,13 @@ const NAV_LINKS = [
   { to: ROUTES.dashboard, label: 'Главная' },
   { to: ROUTES.projects, label: 'Проекты' },
   { to: ROUTES.reviews, label: 'Ревью' },
-  { to: ROUTES.leaderboard, label: 'Лидерборд' }
+  { to: ROUTES.leaderboard, label: 'Лидерборд' },
 ];
 
 const toToastNotification = (notification) => ({
   title: notification.title,
   text: notification.text,
-  time: formatNotificationTime(notification.createdAt)
+  time: formatNotificationTime(notification.createdAt),
 });
 
 const Header = () => {
@@ -54,7 +54,7 @@ const Header = () => {
   const {
     data: notifications = [],
     isLoading: isNotificationsLoading,
-    isError: isNotificationsError
+    isError: isNotificationsError,
   } = useGetNotificationsQuery(undefined, { skip: !user });
   const [markAllNotificationsRead] = useMarkAllNotificationsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
@@ -169,8 +169,7 @@ const Header = () => {
 
     const newNotifications = notifications.filter(
       (notification) =>
-        !notification.isRead &&
-        knownNotificationsRef.current.get(notification.id) !== notification.createdAt
+        !notification.isRead && knownNotificationsRef.current.get(notification.id) !== notification.createdAt
     );
 
     knownNotificationsRef.current = nextKnownNotifications;
@@ -291,9 +290,7 @@ const Header = () => {
                     <h2 className="header__notifications-title">Уведомления</h2>
                   </div>
                   {unreadNotificationsCount > 0 && (
-                    <span className="header__notifications-count">
-                      {unreadNotificationsCount}
-                    </span>
+                    <span className="header__notifications-count">{unreadNotificationsCount}</span>
                   )}
                 </div>
 
@@ -315,27 +312,47 @@ const Header = () => {
                 aria-expanded={isMenuOpen}
                 onClick={handleToggleMenu}
               >
-                {user?.avatarPath ?
+                {user?.avatarPath ? (
                   <img className="header__avatar-image" src={user?.avatarPath} alt={`Аватар ${displayLogin}`} />
-                  : <AvatarIcon />
-                }
+                ) : (
+                  <AvatarIcon />
+                )}
               </button>
 
-              <div className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`} role="menu" aria-hidden={!isMenuOpen}>
+              <div
+                className={`header__menu ${isMenuOpen ? 'header__menu--open' : ''}`}
+                role="menu"
+                aria-hidden={!isMenuOpen}
+              >
                 <div className="header__menu-theme">
                   <ThemeToggle />
                 </div>
-                <Link className="header__menu-link" to={ROUTES.profile} onClick={() => setIsMenuOpen(false)} title='Личный кабинет'>
+                <Link
+                  className="header__menu-link"
+                  to={ROUTES.profile}
+                  onClick={() => setIsMenuOpen(false)}
+                  title="Личный кабинет"
+                >
                   <AvatarIcon />
                 </Link>
 
                 {isAdmin && (
-                  <Link className="header__menu-link" to={ROUTES.admin} onClick={() => setIsMenuOpen(false)} title='Админ панель'>
+                  <Link
+                    className="header__menu-link"
+                    to={ROUTES.admin}
+                    onClick={() => setIsMenuOpen(false)}
+                    title="Админ панель"
+                  >
                     <AdminIcon />
                   </Link>
                 )}
 
-                <button className="header__menu-link header__menu-link--logout" type="button" onClick={handleLogout} disabled={isLoading}>
+                <button
+                  className="header__menu-link header__menu-link--logout"
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={isLoading}
+                >
                   <ExitIcon />
                 </button>
               </div>
@@ -344,7 +361,11 @@ const Header = () => {
         </div>
       </header>
 
-      <NotificationToast notification={toastNotification} isVisible={isToastVisible} onClose={dismissNotificationToast} />
+      <NotificationToast
+        notification={toastNotification}
+        isVisible={isToastVisible}
+        onClose={dismissNotificationToast}
+      />
 
       <ConfirmActionModal
         isOpen={Boolean(notificationToDelete)}

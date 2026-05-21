@@ -3,7 +3,7 @@ import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 export const getQueryError = (error) => ({
   status: error?.status || error?.response?.status || 'CUSTOM_ERROR',
   data: error?.response?.data || error?.message || error,
-  code: error?.code
+  code: error?.code,
 });
 
 export const toQueryResult = async (request) => {
@@ -34,7 +34,7 @@ export const baseApi = createApi({
     'Notification',
     'AdminComplaint',
     'AdminEvent',
-    'AdminSettings'
+    'AdminSettings',
   ],
-  endpoints: () => ({})
+  endpoints: () => ({}),
 });

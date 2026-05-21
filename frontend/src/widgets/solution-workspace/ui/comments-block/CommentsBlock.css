@@ -76,14 +76,20 @@
 .comment-container {
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 84%, transparent) 0%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface) 84%, transparent) 0%,
+    var(--color-surface) 100%
+  );
   border-radius: 12px;
   padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--color-border-muted) 70%, transparent);
   word-wrap: break-word;
   overflow-wrap: break-word;
   max-width: 100%;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .comment-container--closed {
@@ -93,7 +99,11 @@
 
 .comment-container--ai {
   border-left: 3px solid var(--color-accent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 9%, var(--color-surface)) 0%, var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 9%, var(--color-surface)) 0%,
+    var(--color-surface) 100%
+  );
 }
 
 .comment-header {
@@ -168,7 +178,9 @@
   font-size: 12px;
   padding: 3px 4px;
   border-radius: 6px;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .comment-reopen-btn {
@@ -223,7 +235,9 @@
   font-size: 14px;
   cursor: pointer;
   padding: 4px 0;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .comment-footer-right {
@@ -242,7 +256,6 @@
   color: var(--color-text-primary);
   padding: 2px 4px;
   border-radius: 6px;
-
 }
 
 .comment-icon-btn:disabled {
@@ -316,7 +329,9 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 .btn-submit:disabled {
@@ -332,7 +347,9 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  --transition-extra: transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast), filter var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
 }
 
 @media (max-width: 1024px) {
@@ -381,9 +398,11 @@
 
 [data-theme='dark'] .comment-container {
   border-color: color-mix(in srgb, var(--color-accent) 18%, transparent);
-  background: linear-gradient(180deg,
-      color-mix(in srgb, var(--color-surface) 90%, #000 10%) 0%,
-      var(--color-surface) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-surface) 90%, #000 10%) 0%,
+    var(--color-surface) 100%
+  );
 }
 
 [data-theme='dark'] .comment-container--closed {
@@ -396,7 +415,6 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-
   .comment-container:hover {
     border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border-muted) 60%);
   }

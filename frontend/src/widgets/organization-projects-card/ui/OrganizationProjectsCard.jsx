@@ -24,7 +24,9 @@ const OrganizationProjectsCard = ({ organization, onProjectOpen, onCreateProject
               <ProjectCard key={project.id} project={project} onOpen={onProjectOpen} />
             ))}
           </div>
-          {hiddenProjectsCount > 0 && <p className="organization-projects-card__hidden-count">+{hiddenProjectsCount}</p>}
+          {hiddenProjectsCount > 0 && (
+            <p className="organization-projects-card__hidden-count">+{hiddenProjectsCount}</p>
+          )}
         </>
       )}
 
@@ -33,7 +35,10 @@ const OrganizationProjectsCard = ({ organization, onProjectOpen, onCreateProject
           Создать проект
         </button>
       ) : (
-        <div className="organization-projects-card__create organization-projects-card__create--stub" aria-hidden="true" />
+        <div
+          className="organization-projects-card__create organization-projects-card__create--stub"
+          aria-hidden="true"
+        />
       )}
     </article>
   );

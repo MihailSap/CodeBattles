@@ -8,7 +8,7 @@ export const ROUTES = {
   projectTaskById: '/projects/:projectId/tasks/:taskId',
   reviewById: '/reviews/:reviewId',
   projectJoinByToken: '/projects/join/:token',
-  organizationById: '/organizations/:organizationId',
+  organizationById: '/projects/organizations/:organizationId',
   organizationJoinByToken: '/organizations/join/:token',
   reviews: '/reviews',
   leaderboard: '/leaderboard',
@@ -18,5 +18,5 @@ export const ROUTES = {
   register: '/register',
   recovery: '/recovery',
   verifyEmail: '/verify-email',
-  resetPassword: '/reset-password'
+  resetPassword: '/reset-password',
 };

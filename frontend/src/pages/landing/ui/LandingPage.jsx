@@ -2,15 +2,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/widgets/app-header';
 import { useAuth } from '@/entities/session';
 import { ROUTES } from '@/shared/config/routes';
-import {
-  AIIcon,
-  ArrowIcon,
-  CheckIcon,
-  CommentIcon,
-  FileIcon,
-  RefreshCycleIcon,
-  StarIcon
-} from '@/shared/ui/icons';
+import { AIIcon, ArrowIcon, CheckIcon, CommentIcon, FileIcon, RefreshCycleIcon, StarIcon } from '@/shared/ui/icons';
 import CodeReviewIllustration from './CodeReviewIllustration';
 import LandingHeader from './LandingHeader';
 import './LandingPage.css';
@@ -19,23 +11,23 @@ const FEATURES = [
   {
     title: 'Взаимное ревью',
     text: 'Анонимно до завершения цикла, с честным распределением задач между участниками.',
-    icon: RefreshCycleIcon
+    icon: RefreshCycleIcon,
   },
   {
     title: 'AI-ревью',
     text: 'Автоматический анализ кода, рекомендации по улучшению и подсветка рисков.',
-    icon: AIIcon
+    icon: AIIcon,
   },
   {
     title: 'Геймификация',
     text: 'Баллы, достижения и лидерборды помогают держать темп и видеть прогресс.',
-    icon: StarIcon
+    icon: StarIcon,
   },
   {
     title: 'Удобный интерфейс',
     text: 'Inline-комментарии, обсуждения, итоговые оценки и прозрачный статус ревью.',
-    icon: CommentIcon
-  }
+    icon: CommentIcon,
+  },
 ];
 
 const STEPS = [
@@ -44,14 +36,14 @@ const STEPS = [
   'Загрузите решение из Git или вручную.',
   'Получите ревью: 2-3 ревьюера + AI проанализируют код.',
   'Обсудите замечания, оставляйте комментарии и закрывайте треды.',
-  'Завершите ревью, получите баллы и рейтинг.'
+  'Завершите ревью, получите баллы и рейтинг.',
 ];
 
 const BENEFITS = [
   'Обучение без ментора через ревью коллег.',
   'Объективная оценка вашего кода через Quality Score.',
   'Возможность помогать другим и расти в сообществе.',
-  'Интеграция с Git и поддержка популярных языков.'
+  'Интеграция с Git и поддержка популярных языков.',
 ];
 
 const LandingPage = () => {
@@ -96,7 +88,11 @@ const LandingPage = () => {
           <CodeReviewIllustration />
         </section>
 
-        <section className="landing-section landing-section--about" id="landing-about" aria-labelledby="landing-about-title">
+        <section
+          className="landing-section landing-section--about"
+          id="landing-about"
+          aria-labelledby="landing-about-title"
+        >
           <div className="landing-section__mark">
             <AIIcon />
           </div>

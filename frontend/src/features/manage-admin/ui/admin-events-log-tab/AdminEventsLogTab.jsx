@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ADMIN_EVENT_TYPE, ADMIN_EVENT_TYPE_LABELS, ADMIN_EVENT_TYPE_OPTIONS, useGetAdminEventsQuery } from '@/entities/admin';
+import {
+  ADMIN_EVENT_TYPE,
+  ADMIN_EVENT_TYPE_LABELS,
+  ADMIN_EVENT_TYPE_OPTIONS,
+  useGetAdminEventsQuery,
+} from '@/entities/admin';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import Spinner from '@/shared/ui/spinner';
 import { ROUTES } from '@/shared/config/routes';
@@ -135,11 +140,11 @@ const AdminEventsLogTab = ({ isActive }) => {
       size: PAGE_SIZE,
       type: type || undefined,
       dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined
+      dateTo: dateTo || undefined,
     },
     {
       skip: !isActive,
-      refetchOnMountOrArgChange: 30
+      refetchOnMountOrArgChange: 30,
     }
   );
 
@@ -221,21 +226,24 @@ const AdminEventsLogTab = ({ isActive }) => {
           <div className="admin-panel__empty">События по выбранным фильтрам не найдены</div>
         )}
 
-        {!isLoading && events.map((event) => (
-          <article className={`admin-events__item admin-events__item--${event.type.toLowerCase()}`} key={event.id}>
-            <header className="admin-events__item-head">
-              <span className="admin-events__type">{ADMIN_EVENT_TYPE_LABELS[event.type] || event.type}</span>
-              <time dateTime={event.createdAt}>{formatAdminDateTime(event.createdAt)}</time>
-            </header>
+        {!isLoading &&
+          events.map((event) => (
+            <article className={`admin-events__item admin-events__item--${event.type.toLowerCase()}`} key={event.id}>
+              <header className="admin-events__item-head">
+                <span className="admin-events__type">{ADMIN_EVENT_TYPE_LABELS[event.type] || event.type}</span>
+                <time dateTime={event.createdAt}>{formatAdminDateTime(event.createdAt)}</time>
+              </header>
 
-            <dl className="admin-events__fields">
-              <EventField label={event.type === ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_CREATED ? 'Жалобу отправил' : 'Кем'}>
-                <UserLink user={event.actor} />
-              </EventField>
-              {renderTypedEventFields(event)}
-            </dl>
-          </article>
-        ))}
+              <dl className="admin-events__fields">
+                <EventField
+                  label={event.type === ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_CREATED ? 'Жалобу отправил' : 'Кем'}
+                >
+                  <UserLink user={event.actor} />
+                </EventField>
+                {renderTypedEventFields(event)}
+              </dl>
+            </article>
+          ))}
       </div>
 
       {error && <p className="admin-panel__error">{error}</p>}

@@ -1,23 +1,23 @@
 export const REVIEW_STATUS = {
   NEW: 'NEW',
   IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED'
+  COMPLETED: 'COMPLETED',
 };
 
 export const REVIEW_STATUS_LABEL = {
   [REVIEW_STATUS.NEW]: 'Новое',
   [REVIEW_STATUS.IN_PROGRESS]: 'В работе',
-  [REVIEW_STATUS.COMPLETED]: 'Завершено'
+  [REVIEW_STATUS.COMPLETED]: 'Завершено',
 };
 
 export const REVIEW_SORT = {
   NEAREST_FIRST: 'NEAREST_FIRST',
-  FARTHEST_FIRST: 'FARTHEST_FIRST'
+  FARTHEST_FIRST: 'FARTHEST_FIRST',
 };
 
 export const REVIEW_SORT_LABEL = {
   [REVIEW_SORT.NEAREST_FIRST]: 'Сначала ближайшие',
-  [REVIEW_SORT.FARTHEST_FIRST]: 'Сначала дальнейшие'
+  [REVIEW_SORT.FARTHEST_FIRST]: 'Сначала дальнейшие',
 };
 
 export const REVIEWS_NETWORK_DELAY_MS = 600;
@@ -31,7 +31,7 @@ export const COMMENT_CATEGORY = {
   CODE_STYLE: 'CODE_STYLE',
   BEST_PRACTICES: 'BEST_PRACTICES',
   REFACTORING: 'REFACTORING',
-  OTHER: 'OTHER'
+  OTHER: 'OTHER',
 };
 
 export const COMMENT_CATEGORY_LABEL = {
@@ -42,7 +42,7 @@ export const COMMENT_CATEGORY_LABEL = {
   [COMMENT_CATEGORY.CODE_STYLE]: 'Стиль кода',
   [COMMENT_CATEGORY.BEST_PRACTICES]: 'Лучшие практики',
   [COMMENT_CATEGORY.REFACTORING]: 'Предложение по рефакторингу',
-  [COMMENT_CATEGORY.OTHER]: 'Другое'
+  [COMMENT_CATEGORY.OTHER]: 'Другое',
 };
 
 export const COMMENT_CATEGORY_COLOR = {
@@ -53,19 +53,19 @@ export const COMMENT_CATEGORY_COLOR = {
   [COMMENT_CATEGORY.CODE_STYLE]: '#808080',
   [COMMENT_CATEGORY.BEST_PRACTICES]: '#1565c0',
   [COMMENT_CATEGORY.REFACTORING]: '#15c059',
-  [COMMENT_CATEGORY.OTHER]: '#ffcc00'
+  [COMMENT_CATEGORY.OTHER]: '#ffcc00',
 };
 
 export const COMMENT_SEVERITY = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
-  HIGH: 'HIGH'
+  HIGH: 'HIGH',
 };
 
 export const COMMENT_SEVERITY_LABEL = {
   [COMMENT_SEVERITY.LOW]: 'Низкий',
   [COMMENT_SEVERITY.MEDIUM]: 'Средний',
-  [COMMENT_SEVERITY.HIGH]: 'Высокий'
+  [COMMENT_SEVERITY.HIGH]: 'Высокий',
 };
 
 export const REPORT_REASON = {
@@ -73,7 +73,7 @@ export const REPORT_REASON = {
   SPAM: 'SPAM',
   PLAGIARISM: 'PLAGIARISM',
   INCORRECT_LOGIC: 'INCORRECT_LOGIC',
-  OTHER: 'OTHER'
+  OTHER: 'OTHER',
 };
 
 export const REPORT_REASON_LABEL = {
@@ -81,7 +81,7 @@ export const REPORT_REASON_LABEL = {
   [REPORT_REASON.SPAM]: 'Спам',
   [REPORT_REASON.PLAGIARISM]: 'Плагиат',
   [REPORT_REASON.INCORRECT_LOGIC]: 'Некорректная логика/ошибка',
-  [REPORT_REASON.OTHER]: 'Другое'
+  [REPORT_REASON.OTHER]: 'Другое',
 };
 
 export const REPORT_REASONS = Object.values(REPORT_REASON);
@@ -97,7 +97,7 @@ export const getDeadlineInfo = (deadline, status, reviewedAt) => {
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   });
 
   if (isCompleted) {
@@ -106,7 +106,7 @@ export const getDeadlineInfo = (deadline, status, reviewedAt) => {
     return {
       label: isOverdue ? 'Просрочено' : 'Проверено',
       date: dateStr,
-      isOverdue
+      isOverdue,
     };
   }
 
@@ -125,6 +125,6 @@ export const getDeadlineInfo = (deadline, status, reviewedAt) => {
   return {
     label: `Осталось ${diffDays} ${daysLabel}`,
     date: dateStr,
-    isOverdue: false
+    isOverdue: false,
   };
 };

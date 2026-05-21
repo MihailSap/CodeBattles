@@ -5,13 +5,7 @@ import { useDebouncedValue } from '@/shared/lib/hooks';
 import Spinner from '@/shared/ui/spinner';
 import './JoinSearchModal.css';
 
-const JoinSearchModal = ({
-  mode,
-  fetchItems,
-  onClose,
-  onJoin,
-  onRequestAccess
-}) => {
+const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }) => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query, 300);
   const [items, setItems] = useState([]);
@@ -90,71 +84,77 @@ const JoinSearchModal = ({
       closeClassName="join-search-modal__close"
       closeAriaLabel="Закрыть окно"
     >
-        <div className="join-search-modal__content">
-          <input
-            className="join-search-modal__search"
-            type="search"
-            placeholder="Поиск по названию и описанию"
-            value={query}
-            onChange={(event) => setQuery(event.target.value.slice(0, 120))}
-          />
+      <div className="join-search-modal__content">
+        <input
+          className="join-search-modal__search"
+          type="search"
+          placeholder="Поиск по названию и описанию"
+          value={query}
+          onChange={(event) => setQuery(event.target.value.slice(0, 120))}
+        />
 
-          <ul className="join-search-modal__list" onScroll={handleScroll}>
-            {isLoading ? (
-              <li className="join-search-modal__loading">
-                <Spinner />
-              </li>
-            ) : items.length === 0 ? (
-              <li className="join-search-modal__empty">Ничего не найдено</li>
-            ) : (
-              items.map((item, index) => (
-                <li key={item.id} className={`join-search-modal__item ${index === items.length - 1 ? 'join-search-modal__item--last' : ''}`}>
-                  {mode === 'projects' ? (
-                    <div className="join-search-modal__item-row">
-                      <div className="join-search-modal__main">
-                        <p className="join-search-modal__name">{item.name}</p>
-                        <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
-                        <p className="join-search-modal__value">Открытых задач: {item.openTasksCount}</p>
-                      </div>
-                      <button className="join-search-modal__action" type="button" onClick={async () => {
+        <ul className="join-search-modal__list" onScroll={handleScroll}>
+          {isLoading ? (
+            <li className="join-search-modal__loading">
+              <Spinner />
+            </li>
+          ) : items.length === 0 ? (
+            <li className="join-search-modal__empty">Ничего не найдено</li>
+          ) : (
+            items.map((item, index) => (
+              <li
+                key={item.id}
+                className={`join-search-modal__item ${index === items.length - 1 ? 'join-search-modal__item--last' : ''}`}
+              >
+                {mode === 'projects' ? (
+                  <div className="join-search-modal__item-row">
+                    <div className="join-search-modal__main">
+                      <p className="join-search-modal__name">{item.name}</p>
+                      <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
+                      <p className="join-search-modal__value">Открытых задач: {item.openTasksCount}</p>
+                    </div>
+                    <button
+                      className="join-search-modal__action"
+                      type="button"
+                      onClick={async () => {
                         await onJoin(item.id);
                         setItems((prev) => prev.filter((i) => i.id !== item.id));
                       }}
-                      >
-                        Вступить
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="join-search-modal__item-row">
-                      <div className="join-search-modal__organization">
-                        <img className="join-search-modal__logo" src={item.logo} alt={`Логотип ${item.name}`} />
-                        <div className="join-search-modal__main">
-                          <p className="join-search-modal__name">{item.name}</p>
-                          <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
-                          <p className="join-search-modal__value">Проектов: {item.projectsCount}</p>
-                        </div>
+                    >
+                      Вступить
+                    </button>
+                  </div>
+                ) : (
+                  <div className="join-search-modal__item-row">
+                    <div className="join-search-modal__organization">
+                      <img className="join-search-modal__logo" src={item.logo} alt={`Логотип ${item.name}`} />
+                      <div className="join-search-modal__main">
+                        <p className="join-search-modal__name">{item.name}</p>
+                        <p className="join-search-modal__value">Участников: {item.participantsCount}</p>
+                        <p className="join-search-modal__value">Проектов: {item.projectsCount}</p>
                       </div>
-                      {item.hasPendingRequest || pendingRequestIds.includes(item.id) ? (
-                        <span className="join-search-modal__status">Запрос отправлен</span>
-                      ) : (
-                        <button
-                          className="join-search-modal__action"
-                          type="button"
-                          onClick={async () => {
-                            await onRequestAccess(item.id);
-                            setPendingRequestIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
-                          }}
-                        >
-                          Запросить доступ
-                        </button>
-                      )}
                     </div>
-                  )}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+                    {item.hasPendingRequest || pendingRequestIds.includes(item.id) ? (
+                      <span className="join-search-modal__status">Запрос отправлен</span>
+                    ) : (
+                      <button
+                        className="join-search-modal__action"
+                        type="button"
+                        onClick={async () => {
+                          await onRequestAccess(item.id);
+                          setPendingRequestIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
+                        }}
+                      >
+                        Запросить доступ
+                      </button>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
     </ModalShell>
   );
 };

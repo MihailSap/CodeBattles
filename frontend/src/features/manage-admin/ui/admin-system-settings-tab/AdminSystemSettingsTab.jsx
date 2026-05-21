@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   useGetAdminSystemSettingsQuery,
   useUpdateAdminAiSystemPromptMutation,
-  useUpdateAdminReviewDeadlineDaysMutation
+  useUpdateAdminReviewDeadlineDaysMutation,
 } from '@/entities/admin';
 import Spinner from '@/shared/ui/spinner';
 import { CheckIcon, CrossIcon, DislikeIcon, LikeIcon } from '@/shared/ui/icons';
@@ -25,7 +25,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
 
   const settingsQuery = useGetAdminSystemSettingsQuery(undefined, {
     skip: !isActive,
-    refetchOnMountOrArgChange: 30
+    refetchOnMountOrArgChange: 30,
   });
   const [updateDeadline, updateDeadlineState] = useUpdateAdminReviewDeadlineDaysMutation();
   const [updatePrompt, updatePromptState] = useUpdateAdminAiSystemPromptMutation();
@@ -56,12 +56,16 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
         setError('');
         const response = await updateDeadline({
           reviewDeadlineDays: debouncedDeadlineDays,
-          actor
+          actor,
         }).unwrap();
         setLastSavedDeadlineDays(response.reviewDeadlineDays);
         showSnackbar(`Срок проверки ревью сохранен: ${response.reviewDeadlineDays} дней`, 'success');
       } catch (requestError) {
-        const message = getApiErrorMessage(requestError, 'Не удалось сохранить срок ревью', 'updateAdminReviewDeadlineDays');
+        const message = getApiErrorMessage(
+          requestError,
+          'Не удалось сохранить срок ревью',
+          'updateAdminReviewDeadlineDays'
+        );
         setError(message);
         setReviewDeadlineDays(lastSavedDeadlineDays);
         showSnackbar(message, 'error');
@@ -87,13 +91,17 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
       setError('');
       const response = await updatePrompt({
         aiSystemPrompt: promptDraft,
-        actor
+        actor,
       }).unwrap();
       setSavedPrompt(response.aiSystemPrompt);
       setPromptDraft(response.aiSystemPrompt);
       showSnackbar('Системный промпт сохранен', 'success');
     } catch (requestError) {
-      const message = getApiErrorMessage(requestError, 'Не удалось сохранить системный промпт', 'updateAdminAiSystemPrompt');
+      const message = getApiErrorMessage(
+        requestError,
+        'Не удалось сохранить системный промпт',
+        'updateAdminAiSystemPrompt'
+      );
       setError(message);
       showSnackbar(message, 'error');
     }
@@ -103,7 +111,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
     setPromptDraft(savedPrompt);
   };
 
-  if (settingsQuery.isLoading || settingsQuery.isFetching && !settingsQuery.data) {
+  if (settingsQuery.isLoading || (settingsQuery.isFetching && !settingsQuery.data)) {
     return (
       <section className="admin-panel admin-settings" aria-label="Настройки системы">
         <div className="admin-panel__top">
@@ -138,9 +146,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
               />
               <span>дней</span>
             </div>
-            <small>
-              {updateDeadlineState.isLoading ? 'Сохраняем...' : `Сохранено: ${lastSavedDeadlineDays} дней`}
-            </small>
+            <small>{updateDeadlineState.isLoading ? 'Сохраняем...' : `Сохранено: ${lastSavedDeadlineDays} дней`}</small>
           </label>
 
           <label className="admin-settings__field admin-settings__prompt-field">
@@ -150,7 +156,9 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
               maxLength={MAX_PROMPT_LENGTH}
               onChange={(event) => setPromptDraft(event.target.value)}
             />
-            <small>{promptDraft.length}/{MAX_PROMPT_LENGTH} символов</small>
+            <small>
+              {promptDraft.length}/{MAX_PROMPT_LENGTH} символов
+            </small>
           </label>
         </div>
 
@@ -214,8 +222,12 @@ const AdminSystemSettingsTab = ({ isActive, actor }) => {
               />
             </div>
             <div className="admin-settings__ratio-legend" aria-hidden="true">
-              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--likes">{likesPercent}% лайков</span>
-              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--dislikes">{dislikesPercent}% дизлайков</span>
+              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--likes">
+                {likesPercent}% лайков
+              </span>
+              <span className="admin-settings__ratio-legend-item admin-settings__ratio-legend-item--dislikes">
+                {dislikesPercent}% дизлайков
+              </span>
             </div>
             <small>соотношение лайков и дизлайков</small>
           </div>

@@ -62,7 +62,6 @@
 }
 
 @media (max-width: 768px) {
-
 }
 
 @media (max-width: 500px) {
@@ -84,7 +83,9 @@
     font-size: 12px;
   }
 
-  .leaderboard-page__controls, .leaderboard-page__entity-block, .leaderboard-page__table {
+  .leaderboard-page__controls,
+  .leaderboard-page__entity-block,
+  .leaderboard-page__table {
     margin-top: 10px;
   }
 

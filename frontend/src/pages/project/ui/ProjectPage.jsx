@@ -1,4 +1,6 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import privateIcon from '@/shared/assets/private-icon.svg';
 import participantsCountIcon from '@/shared/assets/participants-count-icon.svg';
@@ -9,7 +11,7 @@ import {
   useDeleteProjectMutation,
   useGetProjectByIdQuery,
   useLeaveProjectMutation,
-  useUpdateProjectMutation
+  useUpdateProjectMutation,
 } from '@/entities/project';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
@@ -22,16 +24,23 @@ import {
   PROJECT_MEMBER_ROLE_LABELS,
   PROJECT_PRIVACY,
   PROJECT_PRIVACY_LABELS,
+  projectSettingsFormSchema,
   TASK_STATUS,
-  TASK_STATUS_LABELS
+  TASK_STATUS_LABELS,
 } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { lazyNamed } from '@/shared/lib';
-import { formatDeadline, formatLastActivity, getDeadlineToneClass, sortParticipants, sortTasks, truncateText } from '@/entities/project';
-import { validateProjectName, validateRepositoryUrl } from '@/entities/project';
+import {
+  formatDeadline,
+  formatLastActivity,
+  getDeadlineToneClass,
+  sortParticipants,
+  sortTasks,
+  truncateText,
+} from '@/entities/project';
 import './ProjectPage.css';
 
 const InviteLinkModal = lazyNamed(() => import('@/features/generate-invite-link'), 'InviteLinkModal');
@@ -40,8 +49,17 @@ const ProjectSkillsSelector = lazyNamed(() => import('@/entities/stack'), 'Proje
 const tabs = {
   tasks: 'Задачи',
   participants: 'Участники',
-  settings: 'Настройки'
+  settings: 'Настройки',
 };
+
+const getProjectSettingsDefaults = (project) => ({
+  name: project?.name || '',
+  repositoryUrl: project?.repositoryUrl || '',
+  description: project?.description || '',
+  stack: project?.stack || [],
+  privacy: project?.privacy || PROJECT_PRIVACY.PUBLIC,
+  aiReviewEnabled: Boolean(project?.aiReviewEnabled),
+});
 
 const ProjectPage = () => {
   const { userId } = useAuth();
@@ -57,14 +75,29 @@ const ProjectPage = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-  const [settingsDraft, setSettingsDraft] = useState(null);
-  const [settingsTouched, setSettingsTouched] = useState({ name: false, repositoryUrl: false });
+  const {
+    control: settingsControl,
+    register: registerSettings,
+    handleSubmit: handleSettingsSubmit,
+    reset: resetSettings,
+    formState: {
+      errors: settingsErrors,
+      isSubmitted: isSettingsSubmitted,
+      isValid: isSettingsValid,
+      touchedFields: settingsTouchedFields,
+    },
+  } = useForm({
+    resolver: zodResolver(projectSettingsFormSchema),
+    defaultValues: getProjectSettingsDefaults(),
+    mode: 'onChange',
+  });
+  const settingsDraft = useWatch({ control: settingsControl });
   const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
   const {
     data: project,
     error: projectError,
     isLoading,
-    refetch: refetchProject
+    refetch: refetchProject,
   } = useGetProjectByIdQuery(projectId, { refetchOnMountOrArgChange: 30 });
   const [updateProject, { isLoading: isSettingsSubmitting }] = useUpdateProjectMutation();
   const [leaveProject, { isLoading: isLeaveSubmitting }] = useLeaveProjectMutation();
@@ -77,15 +110,8 @@ const ProjectPage = () => {
       return;
     }
 
-    setSettingsDraft({
-      name: project.name,
-      repositoryUrl: project.repositoryUrl,
-      description: project.description,
-      stack: project.stack,
-      privacy: project.privacy,
-      aiReviewEnabled: project.aiReviewEnabled
-    });
-  }, [project]);
+    resetSettings(getProjectSettingsDefaults(project));
+  }, [project, resetSettings]);
 
   useEffect(() => {
     if (!projectError) {
@@ -96,8 +122,8 @@ const ProjectPage = () => {
       navigate(ROUTES.projects, {
         replace: true,
         state: {
-          snackbarMessage: 'Необходимо присоединиться к проекту для просмотра'
-        }
+          snackbarMessage: 'Необходимо присоединиться к проекту для просмотра',
+        },
       });
       return;
     }
@@ -106,8 +132,8 @@ const ProjectPage = () => {
       navigate(ROUTES.projects, {
         replace: true,
         state: {
-          snackbarMessage: 'Необходимо присоединиться к организации для просмотра проекта'
-        }
+          snackbarMessage: 'Необходимо присоединиться к организации для просмотра проекта',
+        },
       });
       return;
     }
@@ -157,14 +183,17 @@ const ProjectPage = () => {
   const openTasksCount = useMemo(() => allTasks.filter((task) => task.status !== TASK_STATUS.DONE).length, [allTasks]);
 
   const currentUserTaskCount = useMemo(
-    () => allTasks.filter((task) => task.assignees.some((assignee) => assignee.id === Number(userId)) && task.status !== TASK_STATUS.DONE).length,
+    () =>
+      allTasks.filter(
+        (task) => task.assignees.some((assignee) => assignee.id === Number(userId)) && task.status !== TASK_STATUS.DONE
+      ).length,
     [allTasks, userId]
   );
 
   const availableTabs = useMemo(() => {
     const baseTabs = [
       { key: 'tasks', label: tabs.tasks },
-      { key: 'participants', label: tabs.participants }
+      { key: 'participants', label: tabs.participants },
     ];
 
     if (isOwner) {
@@ -175,19 +204,31 @@ const ProjectPage = () => {
   }, [isOwner]);
 
   const requestedTab = searchParams.get('tab');
-  const activeTab = availableTabs.some((tab) => tab.key === requestedTab) ? requestedTab : availableTabs[0]?.key || 'tasks';
+  const activeTab = availableTabs.some((tab) => tab.key === requestedTab)
+    ? requestedTab
+    : availableTabs[0]?.key || 'tasks';
 
   const handleTabChange = (tabKey) => {
-    setSearchParams((currentParams) => {
-      const nextParams = new URLSearchParams(currentParams);
-      nextParams.set('tab', tabKey);
-      return nextParams;
-    }, { replace: true });
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set('tab', tabKey);
+        return nextParams;
+      },
+      { replace: true }
+    );
   };
 
-  const settingsNameError = useMemo(() => validateProjectName(settingsDraft?.name || ''), [settingsDraft?.name]);
-  const settingsRepositoryError = useMemo(() => validateRepositoryUrl(settingsDraft?.repositoryUrl || ''), [settingsDraft?.repositoryUrl]);
-  const settingsFormInvalid = Boolean(settingsNameError || settingsRepositoryError);
+  const getSettingsError = (fieldName) => {
+    if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
+      return '';
+    }
+
+    return settingsErrors[fieldName]?.message || '';
+  };
+
+  const settingsNameError = getSettingsError('name');
+  const settingsRepositoryError = getSettingsError('repositoryUrl');
 
   const hasSettingsChanges = useMemo(() => {
     if (!project || !settingsDraft) {
@@ -217,10 +258,8 @@ const ProjectPage = () => {
     }
   };
 
-  const handleSaveSettings = async () => {
-    setSettingsTouched({ name: true, repositoryUrl: true });
-
-    if (settingsFormInvalid || !hasSettingsChanges) {
+  const saveSettings = async (settingsDraft) => {
+    if (!hasSettingsChanges) {
       return;
     }
 
@@ -248,13 +287,13 @@ const ProjectPage = () => {
 
       await updateProject({ projectId: project.id, payload }).unwrap();
       const fullProject = await refetchProject().unwrap();
-      setSettingsDraft({
+      resetSettings({
         name: fullProject.name,
         repositoryUrl: fullProject.repositoryUrl,
-        description: fullProject.description,
+        description: fullProject.description || '',
         stack: fullProject.stack,
         privacy: fullProject.privacy,
-        aiReviewEnabled: fullProject.aiReviewEnabled
+        aiReviewEnabled: Boolean(fullProject.aiReviewEnabled),
       });
       showSnackbar('Изменения сохранены', 'success');
     } catch (error) {
@@ -266,6 +305,11 @@ const ProjectPage = () => {
     }
   };
 
+  const handleSaveSettings = handleSettingsSubmit(saveSettings);
+  const handleCancelSettings = () => {
+    resetSettings(getProjectSettingsDefaults(project));
+  };
+
   const handleLeaveProject = async () => {
     try {
       await leaveProject(project.id).unwrap();
@@ -273,8 +317,8 @@ const ProjectPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Вы вышли из проекта',
-          snackbarType: 'success'
-        }
+          snackbarType: 'success',
+        },
       });
     } catch {
       showSnackbar('Не удалось выйти из проекта', 'error');
@@ -289,8 +333,8 @@ const ProjectPage = () => {
         replace: true,
         state: {
           snackbarMessage: 'Проект удален',
-          snackbarType: 'success'
-        }
+          snackbarType: 'success',
+        },
       });
     } catch {
       showSnackbar('Не удалось удалить проект', 'error');
@@ -325,7 +369,9 @@ const ProjectPage = () => {
           <div className="project-page__title-row">
             <div className="project-page__title-wrap">
               <h1 className="project-page__title">{project.name}</h1>
-              {project.privacy === PROJECT_PRIVACY.PRIVATE && <img src={privateIcon} alt="Приватный проект" className="project-page__private-icon" />}
+              {project.privacy === PROJECT_PRIVACY.PRIVATE && (
+                <img src={privateIcon} alt="Приватный проект" className="project-page__private-icon" />
+              )}
             </div>
             <span className="project-page__role-tag">{PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}</span>
           </div>
@@ -337,7 +383,11 @@ const ProjectPage = () => {
               <span className="project-page__description-label">Описание проекта: </span>
               <span>{shownDescription}</span>
               {isLongDescription && (
-                <button className="project-page__description-toggle" type="button" onClick={() => setShowFullDescription((prev) => !prev)}>
+                <button
+                  className="project-page__description-toggle"
+                  type="button"
+                  onClick={() => setShowFullDescription((prev) => !prev)}
+                >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
               )}
@@ -353,7 +403,9 @@ const ProjectPage = () => {
           {project.stack.length > 0 && (
             <div className="project-page__stack-list">
               {project.stack.map((skill) => (
-                <span key={skill} className="project-page__stack-tag">{skill}</span>
+                <span key={skill} className="project-page__stack-tag">
+                  {skill}
+                </span>
               ))}
             </div>
           )}
@@ -382,11 +434,21 @@ const ProjectPage = () => {
               <div className="project-page__controls-left">
                 {isOwner ? (
                   <div className="project-page__mode-switch">
-                    <span className={`project-page__mode-thumb ${tasksMode === 'mine' ? 'project-page__mode-thumb--mine' : ''}`} />
-                    <button type="button" className={`project-page__mode-button ${tasksMode === 'all' ? 'project-page__mode-button--active' : ''}`} onClick={() => setTasksMode('all')}>
+                    <span
+                      className={`project-page__mode-thumb ${tasksMode === 'mine' ? 'project-page__mode-thumb--mine' : ''}`}
+                    />
+                    <button
+                      type="button"
+                      className={`project-page__mode-button ${tasksMode === 'all' ? 'project-page__mode-button--active' : ''}`}
+                      onClick={() => setTasksMode('all')}
+                    >
                       Все задачи ({openTasksCount})
                     </button>
-                    <button type="button" className={`project-page__mode-button ${tasksMode === 'mine' ? 'project-page__mode-button--active' : ''}`} onClick={() => setTasksMode('mine')}>
+                    <button
+                      type="button"
+                      className={`project-page__mode-button ${tasksMode === 'mine' ? 'project-page__mode-button--active' : ''}`}
+                      onClick={() => setTasksMode('mine')}
+                    >
                       Мои задачи ({currentUserTaskCount})
                     </button>
                   </div>
@@ -399,7 +461,12 @@ const ProjectPage = () => {
                 {project.canSeeTasks && (
                   <label className="project-page__search-field">
                     <SearchIcon />
-                    <input type="search" placeholder="Поиск" value={taskSearch} onChange={(event) => setTaskSearch(event.target.value.slice(0, 100))} />
+                    <input
+                      type="search"
+                      placeholder="Поиск"
+                      value={taskSearch}
+                      onChange={(event) => setTaskSearch(event.target.value.slice(0, 100))}
+                    />
                   </label>
                 )}
 
@@ -432,20 +499,32 @@ const ProjectPage = () => {
                   <div
                     key={task.id}
                     className="project-page__table-row"
-                    onClick={() => navigate(ROUTES.projectTaskById.replace(':projectId', project.id).replace(':taskId', task.id))}
+                    onClick={() =>
+                      navigate(ROUTES.projectTaskById.replace(':projectId', project.id).replace(':taskId', task.id))
+                    }
                     role="presentation"
                   >
-                    <span className="project-page__task-name" title={task.name}>{truncateText(task.name, 50)}</span>
-                    <span className={`project-page__task-status project-page__task-status--${task.status.toLowerCase()}`}>{TASK_STATUS_LABELS[task.status]}</span>
+                    <span className="project-page__task-name" title={task.name}>
+                      {truncateText(task.name, 50)}
+                    </span>
+                    <span
+                      className={`project-page__task-status project-page__task-status--${task.status.toLowerCase()}`}
+                    >
+                      {TASK_STATUS_LABELS[task.status]}
+                    </span>
                     <span className="project-page__assignees">
                       {task.assignees.slice(0, 6).map((assignee) => (
                         <span key={assignee.id} className="project-page__assignee-avatar" title={assignee.fullName}>
                           {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
                         </span>
                       ))}
-                      {task.assignees.length > 6 && <span className="project-page__assignee-more">+{task.assignees.length - 6}</span>}
+                      {task.assignees.length > 6 && (
+                        <span className="project-page__assignee-more">+{task.assignees.length - 6}</span>
+                      )}
                     </span>
-                    <span className={`project-page__deadline ${getDeadlineToneClass(task.deadline, task.status)}`}>{formatDeadline(task.deadline)}</span>
+                    <span className={`project-page__deadline ${getDeadlineToneClass(task.deadline, task.status)}`}>
+                      {formatDeadline(task.deadline)}
+                    </span>
                   </div>
                 ))}
 
@@ -464,23 +543,41 @@ const ProjectPage = () => {
 
               <div className="project-page__controls-right">
                 {isOwner ? (
-                  <button className="project-page__action-button project-page__action-button--primary" type="button" onClick={() => setInviteModalOpen(true)}>
+                  <button
+                    className="project-page__action-button project-page__action-button--primary"
+                    type="button"
+                    onClick={() => setInviteModalOpen(true)}
+                  >
                     Пригласить
                   </button>
-                ) : project.canSeeTasks && (
-                  <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setLeaveModalOpen(true)}>
-                    Выйти из проекта
-                  </button>
+                ) : (
+                  project.canSeeTasks && (
+                    <button
+                      className="project-page__action-button project-page__action-button--danger"
+                      type="button"
+                      onClick={() => setLeaveModalOpen(true)}
+                    >
+                      Выйти из проекта
+                    </button>
+                  )
                 )}
               </div>
             </div>
 
             <section className="section-card project-page__participants-list">
               {participants.map((participant) => (
-                <Link key={participant.id} className="project-page__participant-row" to={`${ROUTES.profile}/${participant.id}`}>
+                <Link
+                  key={participant.id}
+                  className="project-page__participant-row"
+                  to={`${ROUTES.profile}/${participant.id}`}
+                >
                   <div className="project-page__participant-main">
                     <span className="project-page__participant-avatar">
-                      {participant.avatar ? <img src={participant.avatar} alt={participant.fullName} /> : <AvatarIcon />}
+                      {participant.avatar ? (
+                        <img src={participant.avatar} alt={participant.fullName} />
+                      ) : (
+                        <AvatarIcon />
+                      )}
                     </span>
                     <span className="project-page__participant-meta">
                       <span className="project-page__participant-name">{participant.fullName}</span>
@@ -502,52 +599,60 @@ const ProjectPage = () => {
               </div>
 
               <div className="project-page__controls-right">
-                <button className="project-page__action-button project-page__action-button--danger" type="button" onClick={() => setDeleteModalOpen(true)}>
+                <button
+                  className="project-page__action-button project-page__action-button--danger"
+                  type="button"
+                  onClick={() => setDeleteModalOpen(true)}
+                >
                   Удалить проект
                 </button>
               </div>
             </div>
 
-            <section className="section-card project-page__settings">
+            <form className="section-card project-page__settings" onSubmit={handleSaveSettings}>
               <div className="project-page__settings-field">
                 <label>Название</label>
                 <input
-                  className={`project-page__settings-input ${settingsTouched.name && settingsNameError ? 'project-page__settings-input--error' : ''}`}
-                  value={settingsDraft.name}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, name: event.target.value.slice(0, 100) }))}
-                  onBlur={() => setSettingsTouched((prev) => ({ ...prev, name: true }))}
+                  className={`project-page__settings-input ${settingsNameError ? 'project-page__settings-input--error' : ''}`}
+                  maxLength={100}
+                  {...registerSettings('name')}
                 />
-                {settingsTouched.name && settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
+                {settingsNameError && <p className="project-page__settings-error">{settingsNameError}</p>}
               </div>
 
               <div className="project-page__settings-field">
                 <label>Ссылка на репозиторий</label>
                 <input
-                  className={`project-page__settings-input ${settingsTouched.repositoryUrl && settingsRepositoryError ? 'project-page__settings-input--error' : ''}`}
-                  value={settingsDraft.repositoryUrl}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, repositoryUrl: event.target.value.slice(0, 500) }))}
-                  onBlur={() => setSettingsTouched((prev) => ({ ...prev, repositoryUrl: true }))}
+                  className={`project-page__settings-input ${settingsRepositoryError ? 'project-page__settings-input--error' : ''}`}
+                  maxLength={500}
+                  {...registerSettings('repositoryUrl')}
                 />
-                {settingsTouched.repositoryUrl && settingsRepositoryError && <p className="project-page__settings-error">{settingsRepositoryError}</p>}
+                {settingsRepositoryError && <p className="project-page__settings-error">{settingsRepositoryError}</p>}
               </div>
 
               <div className="project-page__settings-field">
                 <label>Описание</label>
                 <textarea
                   className="project-page__settings-input project-page__settings-textarea"
-                  value={settingsDraft.description}
-                  onChange={(event) => setSettingsDraft((prev) => ({ ...prev, description: event.target.value.slice(0, 3000) }))}
+                  maxLength={3000}
+                  {...registerSettings('description')}
                 />
               </div>
 
               <div className="project-page__settings-field">
                 <Suspense fallback={null}>
-                  <ProjectSkillsSelector
-                    title="Технологический стек:"
-                    titleClassName="project-page__settings-title"
-                    value={settingsDraft.stack}
-                    onChange={(stack) => setSettingsDraft((prev) => ({ ...prev, stack }))}
-                    forceOpenUp
+                  <Controller
+                    control={settingsControl}
+                    name="stack"
+                    render={({ field }) => (
+                      <ProjectSkillsSelector
+                        title="Технологический стек:"
+                        titleClassName="project-page__settings-title"
+                        value={field.value}
+                        onChange={field.onChange}
+                        forceOpenUp
+                      />
+                    )}
                   />
                 </Suspense>
               </div>
@@ -557,11 +662,7 @@ const ProjectPage = () => {
                 <div className="project-page__privacy-row">
                   {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
                     <label key={privacyValue} className="project-page__privacy-item">
-                      <input
-                        type="radio"
-                        checked={settingsDraft.privacy === privacyValue}
-                        onChange={() => setSettingsDraft((prev) => ({ ...prev, privacy: privacyValue }))}
-                      />
+                      <input type="radio" value={privacyValue} {...registerSettings('privacy')} />
                       <span>{PROJECT_PRIVACY_LABELS[privacyValue]}</span>
                     </label>
                   ))}
@@ -570,11 +671,7 @@ const ProjectPage = () => {
 
               <div className="project-page__settings-field">
                 <label className="project-page__ai-check">
-                  <input
-                    type="checkbox"
-                    checked={settingsDraft.aiReviewEnabled}
-                    onChange={(event) => setSettingsDraft((prev) => ({ ...prev, aiReviewEnabled: event.target.checked }))}
-                  />
+                  <input type="checkbox" {...registerSettings('aiReviewEnabled')} />
                   <span>Включить AI-ревью</span>
                 </label>
               </div>
@@ -583,9 +680,8 @@ const ProjectPage = () => {
                 <div className="project-page__settings-actions">
                   <button
                     className="project-page__settings-action project-page__settings-action--save"
-                    type="button"
-                    onClick={handleSaveSettings}
-                    disabled={settingsFormInvalid || isSettingsSubmitting}
+                    type="submit"
+                    disabled={!isSettingsValid || isSettingsSubmitting}
                     aria-label="Сохранить изменения"
                   >
                     <CheckIcon />
@@ -593,17 +689,7 @@ const ProjectPage = () => {
                   <button
                     className="project-page__settings-action project-page__settings-action--cancel"
                     type="button"
-                    onClick={() => {
-                      setSettingsDraft({
-                        name: project.name,
-                        repositoryUrl: project.repositoryUrl,
-                        description: project.description,
-                        stack: project.stack,
-                        privacy: project.privacy,
-                        aiReviewEnabled: project.aiReviewEnabled
-                      });
-                      setSettingsTouched({ name: false, repositoryUrl: false });
-                    }}
+                    onClick={handleCancelSettings}
                     disabled={isSettingsSubmitting}
                     aria-label="Отменить изменения"
                   >
@@ -611,7 +697,7 @@ const ProjectPage = () => {
                   </button>
                 </div>
               )}
-            </section>
+            </form>
           </>
         )}
       </main>

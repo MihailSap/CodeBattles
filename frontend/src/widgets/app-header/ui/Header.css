@@ -53,7 +53,6 @@
   text-decoration-color: transparent;
   text-underline-offset: 3px;
   padding: 0 clamp(10px, 1vw, 15px);
-
 }
 
 .header__nav-link--active {
@@ -80,7 +79,6 @@
   justify-content: center;
   cursor: pointer;
   overflow: hidden;
-
 }
 
 .header__icon-button {
@@ -128,7 +126,8 @@
   transform: translateY(-8px) scale(0.98);
   pointer-events: none;
   overflow: hidden;
-  --transition-extra: opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
+  --transition-extra:
+    opacity var(--transition-fast), transform var(--transition-fast), visibility var(--transition-fast);
 }
 
 .header__notifications-panel--open {
@@ -199,11 +198,10 @@
   min-width: 0;
   position: relative;
   overflow: hidden;
-
 }
 
 .header__notification-card::before {
-  content: "";
+  content: '';
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -383,7 +381,6 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
-
 }
 
 .header__menu-link--logout {
@@ -437,9 +434,9 @@
   .header__content {
     grid-template-columns: max-content 1fr auto;
     grid-template-areas:
-      "left right"
-      "center center"
-      "right right";
+      'left right'
+      'center center'
+      'right right';
   }
 }
 
@@ -447,8 +444,8 @@
   .header__content {
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "left right"
-      "center center";
+      'left right'
+      'center center';
     row-gap: 10px;
   }
 

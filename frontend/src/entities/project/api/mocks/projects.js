@@ -17,7 +17,7 @@ export const MOCK_PROJECTS = [
     canSeeTasks: true,
     participants: MOCK_USERS,
     openTasksCount: 4,
-    participantsCount: MOCK_USERS.length
+    participantsCount: MOCK_USERS.length,
   },
   {
     id: 8888,
@@ -34,7 +34,7 @@ export const MOCK_PROJECTS = [
     canSeeTasks: true,
     participants: MOCK_USERS,
     openTasksCount: 1,
-    participantsCount: MOCK_USERS.length
+    participantsCount: MOCK_USERS.length,
   },
   {
     id: 7777,
@@ -51,7 +51,7 @@ export const MOCK_PROJECTS = [
     canSeeTasks: true,
     participants: MOCK_USERS,
     openTasksCount: 1,
-    participantsCount: MOCK_USERS.length
+    participantsCount: MOCK_USERS.length,
   },
   {
     id: 6666,
@@ -68,6 +68,6 @@ export const MOCK_PROJECTS = [
     canSeeTasks: true,
     participants: MOCK_USERS,
     openTasksCount: 1,
-    participantsCount: MOCK_USERS.length
-  }
+    participantsCount: MOCK_USERS.length,
+  },
 ];

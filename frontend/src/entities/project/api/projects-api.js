@@ -8,7 +8,7 @@ import {
   sortProjectsByName,
   sortParticipants,
   sortJoinRequests,
-  sortTasks
+  sortTasks,
 } from '../lib/sorting';
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -26,7 +26,7 @@ const parseBackendMessage = (message) => {
 
   return {
     status: Number(match[1]),
-    code: match[2]
+    code: match[2],
   };
 };
 
@@ -66,7 +66,7 @@ const mapProjectListItem = (item) => ({
   role: item.role || PROJECT_MEMBER_ROLE.GUEST,
   participantsCount: item.participantsCount || 0,
   openTasksCount: item.openTasksCount || 0,
-  lastActivityAt: item.lastActivityAt || null
+  lastActivityAt: item.lastActivityAt || null,
 });
 
 const mapParticipant = (participant) => ({
@@ -75,7 +75,7 @@ const mapParticipant = (participant) => ({
   email: participant.email || '',
   fullName: participant.fullName || '',
   avatar: getImageUrl(participant.avatar),
-  role: participant.role || PROJECT_MEMBER_ROLE.MEMBER
+  role: participant.role || PROJECT_MEMBER_ROLE.MEMBER,
 });
 
 const isMockProjectId = (projectId) => MOCK_PROJECTS.some((project) => Number(project.id) === Number(projectId));
@@ -127,9 +127,11 @@ const mapTaskFromBackend = (task, projectViewerRole, allParticipants) => {
     createdAt: task.createdAt || '',
     updatedAt: task.updatedAt || '',
     isMock: false,
-    canManageSettings: Boolean(task.permissions?.canManageSettings ?? [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status)),
+    canManageSettings: Boolean(
+      task.permissions?.canManageSettings ?? [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status)
+    ),
     availableAssignees: clone(allParticipants),
-    availableReviewers: clone(allParticipants)
+    availableReviewers: clone(allParticipants),
   };
 };
 
@@ -165,7 +167,7 @@ const mapTaskDetailsFromBackend = (task, participants, projectViewerRole) => {
     canFinishReview: Boolean(task.permissions?.canFinishReview ?? false),
     createdAt: task.createdAt || '',
     updatedAt: task.updatedAt || '',
-    isMock: false
+    isMock: false,
   };
 };
 
@@ -178,7 +180,7 @@ const mapOrganizationListItem = (item) => ({
   participantsCount: item.participantsCount || 0,
   projectsCount: item.projectsCount || 0,
   role: item.isAdmin ? 'OWNER' : 'MEMBER',
-  hasPendingRequest: Boolean(item.hasPendingRequest)
+  hasPendingRequest: Boolean(item.hasPendingRequest),
 });
 
 const mapCreateProjectPayload = (payload) => ({
@@ -188,7 +190,7 @@ const mapCreateProjectPayload = (payload) => ({
   repositoryUrl: payload.repositoryUrl || '',
   stack: payload.stack || [],
   isPrivate: payload.privacy === PROJECT_PRIVACY.PRIVATE,
-  aiReviewEnabled: Boolean(payload.aiReviewEnabled)
+  aiReviewEnabled: Boolean(payload.aiReviewEnabled),
 });
 
 const mapCreateOrganizationPayload = (payload) => {
@@ -206,7 +208,7 @@ const mapUpdateProjectPayload = (payload) => ({
   ...(payload.repositoryUrl !== undefined ? { repositoryUrl: payload.repositoryUrl } : {}),
   ...(payload.stack !== undefined ? { stack: payload.stack } : {}),
   ...(payload.privacy !== undefined ? { isPrivate: payload.privacy === PROJECT_PRIVACY.PRIVATE } : {}),
-  ...(payload.aiReviewEnabled !== undefined ? { aiReviewEnable: Boolean(payload.aiReviewEnabled) } : {})
+  ...(payload.aiReviewEnabled !== undefined ? { aiReviewEnable: Boolean(payload.aiReviewEnabled) } : {}),
 });
 
 const toBackendLocalDateTime = (value) => {
@@ -258,7 +260,7 @@ const createFallbackParticipant = (id) => ({
   email: mockUsersById.get(Number(id))?.email || '',
   fullName: mockUsersById.get(Number(id))?.fullName || '',
   avatar: getImageUrl(mockUsersById.get(Number(id))?.avatar),
-  role: PROJECT_MEMBER_ROLE.MEMBER
+  role: PROJECT_MEMBER_ROLE.MEMBER,
 });
 
 const normalizeTaskRecord = (task) => ({
@@ -268,13 +270,14 @@ const normalizeTaskRecord = (task) => ({
   assignees: Array.isArray(task.assignees) ? task.assignees.map(mapParticipant) : [],
   reviewers: Array.isArray(task.reviewers) ? task.reviewers.map(mapParticipant) : [],
   availableAssignees: Array.isArray(task.availableAssignees) ? task.availableAssignees.map(mapParticipant) : [],
-  availableReviewers: Array.isArray(task.availableReviewers) ? task.availableReviewers.map(mapParticipant) : []
+  availableReviewers: Array.isArray(task.availableReviewers) ? task.availableReviewers.map(mapParticipant) : [],
 });
 
 const hydrateMockTask = (task, project) => {
   const participants = project?.participants || [];
-  const participantsById = new Map((participants).map((participant) => [Number(participant.id), participant]));
-  const resolveParticipant = (id) => mapParticipant(participantsById.get(Number(id)) || mockUsersById.get(Number(id)) || createFallbackParticipant(id));
+  const participantsById = new Map(participants.map((participant) => [Number(participant.id), participant]));
+  const resolveParticipant = (id) =>
+    mapParticipant(participantsById.get(Number(id)) || mockUsersById.get(Number(id)) || createFallbackParticipant(id));
 
   return {
     ...normalizeTaskRecord(task),
@@ -286,7 +289,7 @@ const hydrateMockTask = (task, project) => {
     canManageSettings: [TASK_STATUS.IN_PROGRESS, TASK_STATUS.REWORK].includes(task.status),
     isMock: true,
     availableAssignees: clone(participants),
-    availableReviewers: clone(participants)
+    availableReviewers: clone(participants),
   };
 };
 
@@ -303,12 +306,12 @@ const seedMockTasksForProject = (projectId, participants = [], projectViewerRole
     return [];
   }
 
-  const actualMockProject = MOCK_PROJECTS.find(p => p.id === Number(projectId));
+  const actualMockProject = MOCK_PROJECTS.find((p) => p.id === Number(projectId));
   const mockProject = {
     participants,
     viewerRole: projectViewerRole,
     name: actualMockProject?.name || 'Unknown Project',
-    privacy: actualMockProject?.privacy || 'PRIVATE'
+    privacy: actualMockProject?.privacy || 'PRIVATE',
   };
   const hydrated = seedTasks.map((task) => hydrateMockTask(task, mockProject));
   taskMockStore.set(key, hydrated);
@@ -330,7 +333,7 @@ export const projectsApi = {
 
   async getProjectById(projectId) {
     const projId = Number(projectId);
-    const mockProj = MOCK_PROJECTS.find(p => p.id === projId);
+    const mockProj = MOCK_PROJECTS.find((p) => p.id === projId);
     if (mockProj) {
       const viewerRole = mockProj.viewerRole || PROJECT_MEMBER_ROLE.OWNER;
       const sortedParticipants = sortParticipants(mockProj.participants || []);
@@ -340,7 +343,7 @@ export const projectsApi = {
         ...mockProj,
         viewerRole,
         participants: sortedParticipants,
-        tasks: sortTasks(tasks)
+        tasks: sortTasks(tasks),
       };
     }
 
@@ -368,7 +371,7 @@ export const projectsApi = {
       viewerRole,
       canSeeTasks: Boolean(project.canSeeTasks),
       participants: sortedParticipants,
-      tasks: sortTasks(normalizedTasks)
+      tasks: sortTasks(normalizedTasks),
     };
   },
 
@@ -376,7 +379,9 @@ export const projectsApi = {
     if (!isMockProjectId(projectId)) {
       const task = await request({ method: 'GET', url: `/api/v1/tasks/tasks/${taskId}` });
       const participants = await this.getProjectUsers(task.projectId || projectId).catch(() => []);
-      const project = await request({ method: 'GET', url: `/api/v1/projects/${task.projectId || projectId}` }).catch(() => null);
+      const project = await request({ method: 'GET', url: `/api/v1/projects/${task.projectId || projectId}` }).catch(
+        () => null
+      );
       const viewerRole = project?.viewerRole || task.permissions?.viewerRole || PROJECT_MEMBER_ROLE.GUEST;
       const sortedParticipants = sortParticipants(participants || []);
 
@@ -425,14 +430,18 @@ export const projectsApi = {
       const project = await this.getProjectById(projectId);
       const key = getMockTaskKey(projectId);
       const tasks = taskMockStore.get(key) || [];
-      const nextId = Math.max(0, ...MOCK_TASKS.map((task) => Number(task.id)), ...tasks.map((task) => Number(task.id))) + 1;
-      const nextTask = hydrateMockTask({
-        id: nextId,
-        projectId: Number(projectId),
-        status: TASK_STATUS.IN_PROGRESS,
-        ...payload,
-        deadline: payload.deadline
-      }, project);
+      const nextId =
+        Math.max(0, ...MOCK_TASKS.map((task) => Number(task.id)), ...tasks.map((task) => Number(task.id))) + 1;
+      const nextTask = hydrateMockTask(
+        {
+          id: nextId,
+          projectId: Number(projectId),
+          status: TASK_STATUS.IN_PROGRESS,
+          ...payload,
+          deadline: payload.deadline,
+        },
+        project
+      );
 
       taskMockStore.set(key, [...tasks, nextTask]);
       return { accepted: true, taskId: nextId };
@@ -444,8 +453,8 @@ export const projectsApi = {
       data: {
         ...payload,
         projectId: Number(projectId),
-        deadline: toBackendLocalDateTime(payload.deadline)
-      }
+        deadline: toBackendLocalDateTime(payload.deadline),
+      },
     });
     return { accepted: true, taskId: data?.id };
   },
@@ -460,7 +469,7 @@ export const projectsApi = {
 
       const nextTask = {
         ...tasks[index],
-        ...payload
+        ...payload,
       };
 
       const nextTasks = [...tasks];
@@ -474,8 +483,8 @@ export const projectsApi = {
       url: `/api/v1/tasks/tasks/${taskId}`,
       data: {
         ...payload,
-        ...(payload.deadline !== undefined ? { deadline: toBackendLocalDateTime(payload.deadline) } : {})
-      }
+        ...(payload.deadline !== undefined ? { deadline: toBackendLocalDateTime(payload.deadline) } : {}),
+      },
     });
 
     return data;
@@ -506,8 +515,8 @@ export const projectsApi = {
       url: `/api/v1/projects/${projectId}/invites`,
       data: {
         ...payload,
-        expiresAt: toBackendLocalDateTime(payload.expiresAt)
-      }
+        expiresAt: toBackendLocalDateTime(payload.expiresAt),
+      },
     });
     return { ...data, link: `${window.location.origin}/projects/join/${data.token}` };
   },
@@ -526,8 +535,8 @@ export const projectsApi = {
       url: `/api/v1/organizations/${organizationId}/invites`,
       data: {
         ...payload,
-        expiresAt: toBackendLocalDateTime(payload.expiresAt)
-      }
+        expiresAt: toBackendLocalDateTime(payload.expiresAt),
+      },
     });
     return { ...data, link: `${window.location.origin}/organizations/join/${data.token}` };
   },
@@ -546,12 +555,12 @@ export const projectsApi = {
     const [projectsResponse, organizationsResponse] = await Promise.all([
       request({
         method: 'GET',
-        url: '/api/v1/projects'
+        url: '/api/v1/projects',
       }).catch(() => []),
       request({
         method: 'GET',
-        url: '/api/v1/organizations/my-with-projects'
-      }).catch(() => [])
+        url: '/api/v1/organizations/my-with-projects',
+      }).catch(() => []),
     ]);
 
     const normalizedSearch = search.trim().toLowerCase();
@@ -560,18 +569,18 @@ export const projectsApi = {
       .filter((project) => !project.organizationId)
       .map(mapProjectListItem);
 
-    const mockProjectsWithoutOrg = MOCK_PROJECTS
-      .filter((project) => !project.organizationId)
-      .map(p => ({
-        ...p,
-        role: p.viewerRole || PROJECT_MEMBER_ROLE.GUEST
-      }));
+    const mockProjectsWithoutOrg = MOCK_PROJECTS.filter((project) => !project.organizationId).map((p) => ({
+      ...p,
+      role: p.viewerRole || PROJECT_MEMBER_ROLE.GUEST,
+    }));
 
-    const allWithoutOrg = sortProjects([...apiProjectsWithoutOrg, ...mockProjectsWithoutOrg])
-      .filter((p) => {
-        if (!normalizedSearch) return true;
-        return p.name.toLowerCase().includes(normalizedSearch) || (p.description || '').toLowerCase().includes(normalizedSearch);
-      });
+    const allWithoutOrg = sortProjects([...apiProjectsWithoutOrg, ...mockProjectsWithoutOrg]).filter((p) => {
+      if (!normalizedSearch) return true;
+      return (
+        p.name.toLowerCase().includes(normalizedSearch) ||
+        (p.description || '').toLowerCase().includes(normalizedSearch)
+      );
+    });
 
     const apiOrganizations = (organizationsResponse || []).map((organization) => ({
       id: organization.id,
@@ -581,11 +590,11 @@ export const projectsApi = {
       description: organization.description || '',
       role: organization.isAdmin ? 'OWNER' : 'MEMBER',
       projects: sortProjects((organization.projects || []).map(mapProjectListItem)),
-      hiddenProjectsCount: 0
+      hiddenProjectsCount: 0,
     }));
 
     const mockOrgsMap = new Map();
-    MOCK_PROJECTS.forEach(p => {
+    MOCK_PROJECTS.forEach((p) => {
       if (p.organizationId && !mockOrgsMap.has(p.organizationId)) {
         mockOrgsMap.set(p.organizationId, {
           id: p.organizationId,
@@ -595,13 +604,13 @@ export const projectsApi = {
           description: 'Моковая организация для демонстрации',
           role: 'MEMBER',
           projects: [],
-          hiddenProjectsCount: 0
+          hiddenProjectsCount: 0,
         });
       }
     });
 
     const allOrganizations = [...apiOrganizations];
-    const apiOrgIds = new Set(apiOrganizations.map(o => o.id));
+    const apiOrgIds = new Set(apiOrganizations.map((o) => o.id));
 
     mockOrgsMap.forEach((mockOrg, id) => {
       if (!apiOrgIds.has(id)) {
@@ -609,30 +618,33 @@ export const projectsApi = {
       }
     });
 
-    allOrganizations.forEach(org => {
-      const orgMocks = MOCK_PROJECTS
-        .filter(p => p.organizationId === org.id)
-        .map(p => ({
-          ...p,
-          role: p.viewerRole || PROJECT_MEMBER_ROLE.GUEST
-        }));
+    allOrganizations.forEach((org) => {
+      const orgMocks = MOCK_PROJECTS.filter((p) => p.organizationId === org.id).map((p) => ({
+        ...p,
+        role: p.viewerRole || PROJECT_MEMBER_ROLE.GUEST,
+      }));
 
-      const existingIds = new Set(org.projects.map(p => p.id));
-      const uniqueMocks = orgMocks.filter(p => !existingIds.has(p.id));
+      const existingIds = new Set(org.projects.map((p) => p.id));
+      const uniqueMocks = orgMocks.filter((p) => !existingIds.has(p.id));
 
       org.projects = sortProjects([...org.projects, ...uniqueMocks]);
     });
 
-    const organizationsWithProjects = sortOrganizations(allOrganizations.filter((org) => {
-      if (!normalizedSearch) return org.projects;
-      return (org.name.toLowerCase().includes(normalizedSearch) || (org.description || '').toLowerCase().includes(normalizedSearch));
-    }));
+    const organizationsWithProjects = sortOrganizations(
+      allOrganizations.filter((org) => {
+        if (!normalizedSearch) return org.projects;
+        return (
+          org.name.toLowerCase().includes(normalizedSearch) ||
+          (org.description || '').toLowerCase().includes(normalizedSearch)
+        );
+      })
+    );
 
     return {
       withoutOrganizationProjects: allWithoutOrg,
       organizationsWithProjects,
       noOrgTotal: allWithoutOrg.length,
-      organizationsTotal: organizationsWithProjects.length
+      organizationsTotal: organizationsWithProjects.length,
     };
   },
 
@@ -640,17 +652,21 @@ export const projectsApi = {
     const { search = '' } = params;
     const response = await request({
       method: 'GET',
-      url: '/api/v1/projects'
+      url: '/api/v1/projects',
     });
 
     const normalizedSearch = search.trim().toLowerCase();
-    const filtered = sortProjects((response || [])
-      .filter((project) => Number(project.organizationId) === Number(organizationId))
-      .map(mapProjectListItem))
-      .filter(p => {
-        if (!normalizedSearch) return true;
-        return p.name.toLowerCase().includes(normalizedSearch) || (p.description || '').toLowerCase().includes(normalizedSearch);
-      });
+    const filtered = sortProjects(
+      (response || [])
+        .filter((project) => Number(project.organizationId) === Number(organizationId))
+        .map(mapProjectListItem)
+    ).filter((p) => {
+      if (!normalizedSearch) return true;
+      return (
+        p.name.toLowerCase().includes(normalizedSearch) ||
+        (p.description || '').toLowerCase().includes(normalizedSearch)
+      );
+    });
 
     const mapped = filtered.map((item) => {
       return {
@@ -660,13 +676,13 @@ export const projectsApi = {
         activeTasksCount: item.openTasksCount,
         participants: [],
         participantsCount: item.participantsCount,
-        viewerRole: item.role
+        viewerRole: item.role,
       };
     });
 
     return {
       data: mapped,
-      total: mapped.length
+      total: mapped.length,
     };
   },
 
@@ -674,9 +690,13 @@ export const projectsApi = {
     void viewerId;
     const response = await request({ method: 'GET', url: '/api/v1/organizations/my' });
 
-    const sorted = sortOrganizations((response || []).map(org => mapOrganizationListItem({
-      ...org
-    })));
+    const sorted = sortOrganizations(
+      (response || []).map((org) =>
+        mapOrganizationListItem({
+          ...org,
+        })
+      )
+    );
 
     return sorted;
   },
@@ -692,23 +712,29 @@ export const projectsApi = {
       logoUrl: getImageUrl(organization.logoUrl),
       ownerId: organization.ownerId,
       viewerRole: organization.viewerRole,
-      participants: sortParticipants((organization.participants || []).map((participant) => ({
-        ...participant,
-        avatar: getImageUrl(participant.avatar),
-        role: participant.role || 'MEMBER'
-      }))),
-      projects: sortProjects((organization.projects || []).map((project) => ({
-        id: project.id,
-        name: project.name,
-        description: project.description || '',
-        activeTasksCount: project.activeTasksCount || 0,
-        participants: (project.participants || []).map(mapParticipant),
-        viewerRole: project.viewerRole || PROJECT_MEMBER_ROLE.GUEST
-      }))),
-      joinRequests: sortJoinRequests((organization.joinRequests || []).map((request) => ({
-        ...request,
-        avatar: getImageUrl(request.avatar),
-      })))
+      participants: sortParticipants(
+        (organization.participants || []).map((participant) => ({
+          ...participant,
+          avatar: getImageUrl(participant.avatar),
+          role: participant.role || 'MEMBER',
+        }))
+      ),
+      projects: sortProjects(
+        (organization.projects || []).map((project) => ({
+          id: project.id,
+          name: project.name,
+          description: project.description || '',
+          activeTasksCount: project.activeTasksCount || 0,
+          participants: (project.participants || []).map(mapParticipant),
+          viewerRole: project.viewerRole || PROJECT_MEMBER_ROLE.GUEST,
+        }))
+      ),
+      joinRequests: sortJoinRequests(
+        (organization.joinRequests || []).map((request) => ({
+          ...request,
+          avatar: getImageUrl(request.avatar),
+        }))
+      ),
     };
   },
 
@@ -746,16 +772,17 @@ export const projectsApi = {
     const response = await request({ method: 'GET', url: '/api/v1/projects/public/search' });
 
     const normalizedSearch = query.trim().toLowerCase();
-    const filtered = sortProjectsByName((response || [])
-      .map(mapProjectListItem))
-      .filter(p => {
-        if (!normalizedSearch) return true;
-        return p.name.toLowerCase().includes(normalizedSearch) || (p.description || '').toLowerCase().includes(normalizedSearch);
-      });
+    const filtered = sortProjectsByName((response || []).map(mapProjectListItem)).filter((p) => {
+      if (!normalizedSearch) return true;
+      return (
+        p.name.toLowerCase().includes(normalizedSearch) ||
+        (p.description || '').toLowerCase().includes(normalizedSearch)
+      );
+    });
 
     return {
       data: filtered,
-      total: filtered.length
+      total: filtered.length,
     };
   },
 
@@ -765,16 +792,19 @@ export const projectsApi = {
     const response = await request({ method: 'GET', url: '/api/v1/organizations/search' });
 
     const normalizedSearch = query.trim().toLowerCase();
-    const filtered = sortOrganizationsByName((response || [])
-      .map(org => mapOrganizationListItem({ ...org, isAdmin: false })))
-      .filter(o => {
-        if (!normalizedSearch) return true;
-        return o.name.toLowerCase().includes(normalizedSearch) || (o.description || '').toLowerCase().includes(normalizedSearch);
-      });
+    const filtered = sortOrganizationsByName(
+      (response || []).map((org) => mapOrganizationListItem({ ...org, isAdmin: false }))
+    ).filter((o) => {
+      if (!normalizedSearch) return true;
+      return (
+        o.name.toLowerCase().includes(normalizedSearch) ||
+        (o.description || '').toLowerCase().includes(normalizedSearch)
+      );
+    });
 
     return {
       data: filtered,
-      total: filtered.length
+      total: filtered.length,
     };
   },
 
@@ -787,18 +817,24 @@ export const projectsApi = {
   },
 
   async approveOrganizationJoinRequest(organizationId, requestUserId) {
-    return request({ method: 'POST', url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/approve` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/approve`,
+    });
   },
 
   async rejectOrganizationJoinRequest(organizationId, requestUserId) {
-    return request({ method: 'POST', url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/reject` });
+    return request({
+      method: 'POST',
+      url: `/api/v1/organizations/${organizationId}/join-requests/${requestUserId}/reject`,
+    });
   },
 
   async createOrganization(payload) {
     const data = await request({
       method: 'POST',
       url: '/api/v1/organizations',
-      data: mapCreateOrganizationPayload(payload)
+      data: mapCreateOrganizationPayload(payload),
     });
     return { accepted: true, organizationId: data?.id };
   },
@@ -818,9 +854,9 @@ export const projectsApi = {
       aiEvaluation: {
         qualityScore: 4.2,
         cyclomaticComplexity: 'B (Хорошо)',
-        solidViolations: { count: 2, severity: 'Не критично' }
+        solidViolations: { count: 2, severity: 'Не критично' },
       },
-      aiReviewEvaluation: null
+      aiReviewEvaluation: null,
     };
     reviewMockStore.set(Number(taskId), nextReview);
     await this.updateTask(taskId, { status: TASK_STATUS.IN_REVIEW });
@@ -841,7 +877,7 @@ export const projectsApi = {
       if (review.id === numId) {
         return {
           ...clone(review),
-          projectId: review.projectId || 9999
+          projectId: review.projectId || 9999,
         };
       }
     }
@@ -874,15 +910,15 @@ export const projectsApi = {
       return null;
     };
 
-    const files = (review.files && review.files.length > 0) ? review.files : MOCK_LARGE_FILE_TREE;
+    const files = review.files && review.files.length > 0 ? review.files : MOCK_LARGE_FILE_TREE;
     const file = findFile(files);
     if (!file) throw new Error('File not found');
 
     return {
       path: file.path,
       content: file.content || `Содержимое файла ${file.name}`,
-      originalContent: file.originalContent || (file.isDiff ? (file.originalContent || 'Старый код') : ''),
-      isDiff: !!file.isDiff
+      originalContent: file.originalContent || (file.isDiff ? file.originalContent || 'Старый код' : ''),
+      isDiff: !!file.isDiff,
     };
   },
 
@@ -892,7 +928,7 @@ export const projectsApi = {
     const filtered = (review.finalReviews || []).filter((item) => item.reviewerId !== payload.reviewerId);
     filtered.push({
       id: Date.now(),
-      ...payload
+      ...payload,
     });
     review.finalReviews = filtered;
     reviewMockStore.set(Number(taskId), review);
@@ -931,12 +967,12 @@ export const projectsApi = {
       likedBy: [],
       dislikes: 0,
       dislikedBy: [],
-      isClosed: false
+      isClosed: false,
     };
     review.comments.push(nextComment);
     if (review.status === 'NEW' || review.status === 'WAITING') {
       review.status = 'IN_PROGRESS';
-      const assigned = MOCK_ASSIGNED_REVIEWS.find(r => r.id === Number(taskId));
+      const assigned = MOCK_ASSIGNED_REVIEWS.find((r) => r.id === Number(taskId));
       if (assigned) assigned.status = 'IN_PROGRESS';
     }
     reviewMockStore.set(Number(taskId), review);
@@ -965,7 +1001,7 @@ export const projectsApi = {
         likes: 0,
         likedBy: [],
         dislikes: 0,
-        dislikedBy: []
+        dislikedBy: [],
       });
     }
     reviewMockStore.set(Number(taskId), review);
@@ -1007,7 +1043,7 @@ export const projectsApi = {
   async closeCommentThread(taskId, commentId, action = 'close') {
     const review = reviewMockStore.get(Number(taskId));
     if (!review) throw new Error('Review not found');
-    const target = review.comments.find(c => c.id === commentId);
+    const target = review.comments.find((c) => c.id === commentId);
     if (target) {
       const closing = action === 'close';
       target.isClosed = closing;
@@ -1021,7 +1057,7 @@ export const projectsApi = {
         createdAt: new Date().toISOString(),
         likedBy: [],
         dislikedBy: [],
-        replies: []
+        replies: [],
       });
     }
     reviewMockStore.set(Number(taskId), review);
@@ -1033,8 +1069,8 @@ export const projectsApi = {
     if (!review) throw new Error('Review not found');
 
     const filterComment = (comments, id) => {
-      const filtered = comments.filter(c => c.id !== id);
-      filtered.forEach(c => {
+      const filtered = comments.filter((c) => c.id !== id);
+      filtered.forEach((c) => {
         if (c.replies) {
           c.replies = filterComment(c.replies, id);
         }
@@ -1052,5 +1088,5 @@ export const projectsApi = {
     void commentId;
     void payload;
     return { success: true };
-  }
+  },
 };
