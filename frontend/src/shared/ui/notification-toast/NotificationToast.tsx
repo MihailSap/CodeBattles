@@ -1,7 +1,19 @@
 import { BellIcon, CrossIcon } from '@/shared/ui/icons';
 import notificationToastStyles from './NotificationToast.module.scss';
 
-const NotificationToast = ({ notification, isVisible, onClose }: LegacyValue) => {
+interface NotificationToastData {
+  title: string;
+  time: string;
+  text: string;
+}
+
+interface NotificationToastProps {
+  notification: NotificationToastData | null;
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+const NotificationToast = ({ notification, isVisible, onClose }: NotificationToastProps) => {
   if (!notification) {
     return null;
   }

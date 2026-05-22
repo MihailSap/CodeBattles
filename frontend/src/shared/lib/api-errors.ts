@@ -59,24 +59,45 @@ const CONTEXT_STATUS_MESSAGES = {
   },
 };
 
-export const getApiErrorMessage = (error: LegacyValue, fallback: LegacyValue, context: LegacyValue) => {
-  if (error?.code === 'ECONNABORTED') {
+type StatusMessageMap = Record<number, string>;
+
+interface ApiErrorLike {
+  code?: string;
+  response?: {
+    status?: number;
+  };
+}
+
+const toApiErrorLike = (value: unknown): ApiErrorLike =>
+  typeof value === 'object' && value !== null ? (value as ApiErrorLike) : {};
+
+export const getApiErrorMessage = (error: unknown, fallback: string, context: string): string => {
+  const errorLike = toApiErrorLike(error);
+
+  if (errorLike.code === 'ECONNABORTED') {
     return TIMEOUT_ERROR_MESSAGE;
   }
 
-  if (!error?.response) {
+  if (!errorLike.response) {
     return NETWORK_ERROR_MESSAGE;
   }
 
-  const status = error.response.status;
-  const contextMessage = (CONTEXT_STATUS_MESSAGES as LegacyValue)[context]?.[status];
+  const status = errorLike.response.status;
+
+  const contextStatusMap = CONTEXT_STATUS_MESSAGES[context as keyof typeof CONTEXT_STATUS_MESSAGES] as
+    | StatusMessageMap
+    | undefined;
+
+  const contextMessage = status ? contextStatusMap?.[status] : undefined;
 
   if (contextMessage) {
     return contextMessage;
   }
 
-  if ((COMMON_STATUS_MESSAGES as LegacyValue)[status]) {
-    return (COMMON_STATUS_MESSAGES as LegacyValue)[status];
+  const commonStatusMap = COMMON_STATUS_MESSAGES as StatusMessageMap;
+
+  if (status && commonStatusMap[status]) {
+    return commonStatusMap[status];
   }
 
   return fallback;

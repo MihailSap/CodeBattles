@@ -2,27 +2,27 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { projectsApi } from './projects-api';
 
 const projectListTag = {
-  type: 'Project',
+  type: 'Project' as const,
   id: 'LIST',
 };
 
 const dashboardTag = {
-  type: 'Dashboard',
+  type: 'Dashboard' as const,
   id: 'PROJECTS',
 };
 
 const organizationListTag = {
-  type: 'Organization',
+  type: 'Organization' as const,
   id: 'LIST',
 };
 
 const reviewListTag = {
-  type: 'Review',
+  type: 'Review' as const,
   id: 'LIST',
 };
 
 export const projectApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
+  endpoints: (build) => ({
     getProjectsDashboard: build.query({
       queryFn: (params: LegacyValue = {}) => toQueryResult(() => projectsApi.getProjectsDashboard(params)),
       providesTags: [dashboardTag, projectListTag, organizationListTag],
@@ -44,7 +44,7 @@ export const projectApiSlice = baseApi.injectEndpoints({
       queryFn: ({ projectId, taskId }: LegacyValue) => toQueryResult(() => projectsApi.getTaskById(projectId, taskId)),
       providesTags: (_result: LegacyValue, _error: LegacyValue, { projectId, taskId }: LegacyValue) => [
         {
-          type: 'Task',
+          type: 'Task' as const,
           id: taskId,
         },
         {
@@ -184,11 +184,11 @@ export const projectApiSlice = baseApi.injectEndpoints({
         ...(projectId
           ? [
               {
-                type: 'Project',
+                type: 'Project' as const,
                 id: projectId,
               },
               {
-                type: 'Task',
+                type: 'Task' as const,
                 id: `PROJECT-${projectId}`,
               },
             ]
@@ -208,17 +208,17 @@ export const projectApiSlice = baseApi.injectEndpoints({
 
         return [
           {
-            type: 'Task',
+            type: 'Task' as const,
             id: taskId,
           },
           ...(projectId
             ? [
                 {
-                  type: 'Project',
+                  type: 'Project' as const,
                   id: projectId,
                 },
                 {
-                  type: 'Task',
+                  type: 'Task' as const,
                   id: `PROJECT-${projectId}`,
                 },
               ]

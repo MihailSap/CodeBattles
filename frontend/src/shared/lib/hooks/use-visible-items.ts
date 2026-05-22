@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-export const useVisibleItems = (items: LegacyValue, chunkSize: LegacyValue) => {
-  const sentinelRef = useRef<LegacyValue>(null);
+export const useVisibleItems = <T>(items: T[], chunkSize: number) => {
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [visibleCount, setVisibleCount] = useState(chunkSize);
 
   useEffect(() => {
@@ -12,14 +12,14 @@ export const useVisibleItems = (items: LegacyValue, chunkSize: LegacyValue) => {
     }
 
     const observer = new IntersectionObserver(
-      (entries: LegacyValue) => {
+      (entries) => {
         const [entry] = entries;
 
-        if (!entry.isIntersecting) {
+        if (!entry?.isIntersecting) {
           return;
         }
 
-        setVisibleCount((previousState: LegacyValue) => {
+        setVisibleCount((previousState) => {
           if (previousState >= items.length) {
             return previousState;
           }

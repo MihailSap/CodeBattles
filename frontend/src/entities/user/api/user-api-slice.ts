@@ -1,69 +1,72 @@
 import { baseApi, toQueryResult } from '@/shared/api';
 import { userApi } from './user-api';
 
+import type { User } from '../model/types';
+import type { PaginationParams, PaginatedResponse } from '@/shared/api';
+
 export const userApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
-    getUsers: build.query({
-      queryFn: (params: LegacyValue = {}) => toQueryResult(() => userApi.getAll(params)),
-      providesTags: (result: LegacyValue) => {
+  endpoints: (build) => ({
+    getUsers: build.query<PaginatedResponse<User>, PaginationParams>({
+      queryFn: (params = {}) => toQueryResult(() => userApi.getAll(params)),
+      providesTags: (result) => {
         const users = result?.content || [];
 
         return [
           {
-            type: 'Users',
+            type: 'Users' as const,
             id: 'LIST',
           },
-          ...users.map((user: LegacyValue) => ({
-            type: 'Users',
+          ...users.map((user) => ({
+            type: 'Users' as const,
             id: user.id,
           })),
         ];
       },
     }),
-    deleteUser: build.mutation({
-      queryFn: (userId: LegacyValue) => toQueryResult(() => userApi.delete(userId)),
+    deleteUser: build.mutation<void, number | string>({
+      queryFn: (userId) => toQueryResult(() => userApi.delete(userId)),
       invalidatesTags: [
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: 'LIST',
         },
       ],
     }),
-    makeAdmin: build.mutation({
-      queryFn: (userId: LegacyValue) => toQueryResult(() => userApi.makeAdmin(userId)),
-      invalidatesTags: (_result: LegacyValue, _error: LegacyValue, userId: LegacyValue) => [
+    makeAdmin: build.mutation<void, number | string>({
+      queryFn: (userId) => toQueryResult(() => userApi.makeAdmin(userId)),
+      invalidatesTags: (_result, _error, userId) => [
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: userId,
         },
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: 'LIST',
         },
       ],
     }),
-    makeNotAdmin: build.mutation({
-      queryFn: (userId: LegacyValue) => toQueryResult(() => userApi.makeNotAdmin(userId)),
-      invalidatesTags: (_result: LegacyValue, _error: LegacyValue, userId: LegacyValue) => [
+    makeNotAdmin: build.mutation<void, number | string>({
+      queryFn: (userId) => toQueryResult(() => userApi.makeNotAdmin(userId)),
+      invalidatesTags: (_result, _error, userId) => [
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: userId,
         },
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: 'LIST',
         },
       ],
     }),
-    enableUser: build.mutation({
-      queryFn: (userId: LegacyValue) => toQueryResult(() => userApi.enableUser(userId)),
-      invalidatesTags: (_result: LegacyValue, _error: LegacyValue, userId: LegacyValue) => [
+    enableUser: build.mutation<void, number | string>({
+      queryFn: (userId) => toQueryResult(() => userApi.enableUser(userId)),
+      invalidatesTags: (_result, _error, userId) => [
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: userId,
         },
         {
-          type: 'Users',
+          type: 'Users' as const,
           id: 'LIST',
         },
       ],

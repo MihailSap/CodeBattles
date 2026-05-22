@@ -389,7 +389,7 @@ const ProfilePage = () => {
 
     try {
       if (shouldDeleteAvatar) {
-        await deleteAvatar().unwrap();
+        await deleteAvatar(undefined).unwrap();
       }
 
       const savedProfile = await updateProfileSection({
@@ -409,7 +409,7 @@ const ProfilePage = () => {
       setIsProfileEditMode(false);
 
       dispatch(
-        (patchAuthUser as LegacyValue)({
+        patchAuthUser({
           name: nextProfile.name,
           registeredAt: nextProfile.registeredAt,
           avatarPath: nextProfile.avatarPath,

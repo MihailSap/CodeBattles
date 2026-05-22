@@ -2,8 +2,8 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { profileApi } from './profile-api';
 
 export const profileApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
-    getProfilePageData: build.query({
+  endpoints: (build) => ({
+    getProfilePageData: build.query<LegacyValue, LegacyValue>({
       queryFn: (userId: LegacyValue = 'me') => toQueryResult(() => profileApi.getProfilePageData(userId)),
       providesTags: (_result: LegacyValue, _error: LegacyValue, userId: LegacyValue = 'me') => [
         {
@@ -12,7 +12,7 @@ export const profileApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    updateProfileSection: build.mutation({
+    updateProfileSection: build.mutation<LegacyValue, LegacyValue>({
       queryFn: (payload: LegacyValue) => toQueryResult(() => profileApi.updateProfileSection(payload)),
       invalidatesTags: [
         {
@@ -25,7 +25,7 @@ export const profileApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    updateSkillsSection: build.mutation({
+    updateSkillsSection: build.mutation<LegacyValue, LegacyValue>({
       queryFn: ({ userId, skills }: LegacyValue) => toQueryResult(() => profileApi.updateSkillsSection(userId, skills)),
       invalidatesTags: (_result: LegacyValue, _error: LegacyValue, { userId }: LegacyValue) => [
         {
@@ -38,7 +38,7 @@ export const profileApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    deleteAvatar: build.mutation({
+    deleteAvatar: build.mutation<LegacyValue, LegacyValue>({
       queryFn: () => toQueryResult(() => profileApi.deleteAvatar()),
       invalidatesTags: [
         {

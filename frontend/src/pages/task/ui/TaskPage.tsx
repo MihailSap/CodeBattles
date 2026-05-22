@@ -30,6 +30,16 @@ import { lazyNamed } from '@/shared/lib';
 import { formatDeadline, getDeadlineToneClass } from '@/entities/project';
 import taskPageStyles from './TaskPage.module.scss';
 import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
+type AccessErrorShape = {
+  status?: number;
+  code?: string;
+  projectId?: string;
+  projectPrivacy?: string;
+};
+
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' && value !== null;
+
 
 const AssigneesSelector = lazyNamed(() => import('@/features/manage-task'), 'AssigneesSelector');
 const SolutionTab = lazyNamed(() => import('@/widgets/solution-workspace'), 'SolutionTab');
@@ -159,8 +169,10 @@ const TaskPage = () => {
       return;
     }
 
-    if (taskError?.status === 403 && taskError?.code === ACCESS_ERROR_CODE.FORBIDDEN_TASK_ASSIGNEE) {
-      navigate(ROUTES.projectById.replace(':projectId', taskError.projectId || projectId), {
+    const accessError = isAccessErrorShape(taskError) ? taskError : undefined;
+
+    if (accessError?.status === 403 && accessError?.code === ACCESS_ERROR_CODE.FORBIDDEN_TASK_ASSIGNEE) {
+      navigate(ROUTES.projectById.replace(':projectId', accessError?.projectId || projectId || ''), {
         replace: true,
         state: {
           snackbarMessage: 'Вы не являетесь исполнителем данной задачи',
@@ -171,10 +183,10 @@ const TaskPage = () => {
       return;
     }
 
-    if (taskError?.status === 403 && taskError?.code === ACCESS_ERROR_CODE.FORBIDDEN_TASK_PROJECT_MEMBER) {
+    if (accessError?.status === 403 && accessError?.code === ACCESS_ERROR_CODE.FORBIDDEN_TASK_PROJECT_MEMBER) {
       const target =
-        taskError.projectPrivacy === PROJECT_PRIVACY.PUBLIC
-          ? ROUTES.projectById.replace(':projectId', taskError.projectId || projectId)
+        accessError?.projectPrivacy === PROJECT_PRIVACY.PUBLIC
+          ? ROUTES.projectById.replace(':projectId', accessError?.projectId || projectId || '')
           : ROUTES.projects;
 
       navigate(target, {

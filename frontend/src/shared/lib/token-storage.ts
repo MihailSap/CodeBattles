@@ -1,4 +1,5 @@
 import { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } from '@/shared/config/auth';
+import type { TokensResponse } from '@/shared/api';
 
 export const tokenStorage = {
   getAccessToken() {
@@ -7,7 +8,7 @@ export const tokenStorage = {
   getRefreshToken() {
     return localStorage.getItem(REFRESH_TOKEN_KEY);
   },
-  setTokens({ accessToken, refreshToken }: LegacyValue) {
+  setTokens({ accessToken, refreshToken }: Partial<TokensResponse>) {
     if (accessToken) {
       localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     }

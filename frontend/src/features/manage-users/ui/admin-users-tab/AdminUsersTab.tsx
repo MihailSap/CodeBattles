@@ -24,12 +24,21 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
   const [confirmState, setConfirmState] = useState<LegacyValue>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
+  const usersQueryParams: {
+    page: number;
+    size: number;
+    filter?: string;
+  } = {
+    page,
+    size: PAGE_SIZE,
+  };
+
+  if (debouncedSearch) {
+    usersQueryParams.filter = debouncedSearch;
+  }
+
   const usersQuery = useGetUsersQuery(
-    {
-      page,
-      size: PAGE_SIZE,
-      filter: debouncedSearch || undefined,
-    },
+    usersQueryParams,
     {
       skip: !isActive,
       refetchOnMountOrArgChange: 30,
@@ -41,7 +50,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
   const [makeNotAdmin, makeNotAdminState] = useMakeNotAdminMutation();
   const [enableUser, enableUserState] = useEnableUserMutation();
   const users = Array.isArray(usersQuery.data?.content) ? usersQuery.data.content : [];
-  const totalPages = Number.isFinite(usersQuery.data?.totalPages) ? usersQuery.data.totalPages : 0;
+  const totalPages = Number.isFinite(usersQuery.data?.totalPages) ? Number(usersQuery.data?.totalPages ?? 0) : 0;
   const isLoading = usersQuery.isLoading || usersQuery.isFetching;
 
   const isSubmittingAction =

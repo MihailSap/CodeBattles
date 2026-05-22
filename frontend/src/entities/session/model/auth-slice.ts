@@ -4,10 +4,29 @@ import { userApi } from '@/entities/user';
 import { getApiErrorMessage } from '@/shared/lib';
 import { tokenStorage } from '@/shared/lib';
 
-const createLegacyAsyncThunk: LegacyValue = createAsyncThunk;
+import type { PayloadAction } from '@reduxjs/toolkit';
+import type { RootState } from '@/app/providers/store';
+import type { User } from '@/entities/user';
+import type { AuthState, LoginPayload, RegisterPayload, ResetPasswordPayload } from './types';
 
-const EMPTY_USER = {
-  id: null,
+interface AuthResultPayload {
+  user: User;
+  userId: number | null;
+}
+
+interface InitializeAuthPayload extends AuthResultPayload {
+  isAuthenticated: boolean;
+}
+
+interface AuthThunkConfig {
+  state: RootState;
+  rejectValue: string;
+}
+
+const createLegacyAsyncThunk = createAsyncThunk.withTypes<AuthThunkConfig>();
+
+const EMPTY_USER: User = {
+  id: 0,
   name: '',
   email: '',
   login: '',
@@ -17,7 +36,7 @@ const EMPTY_USER = {
   enabled: false,
 };
 
-const normalizeUser = (user: LegacyValue = null) => {
+const normalizeUser = (user: User | Partial<User> | null = null): User => {
   if (!user || typeof user !== 'object') {
     return {
       ...EMPTY_USER,
@@ -30,21 +49,22 @@ const normalizeUser = (user: LegacyValue = null) => {
   };
 };
 
-export const fetchCurrentUser = createLegacyAsyncThunk(
+export const fetchCurrentUser = createLegacyAsyncThunk<User | null, void>(
   'auth/fetchCurrentUser',
-  async (_: LegacyValue, { rejectWithValue }: LegacyValue) => {
+  async (_, { rejectWithValue }) => {
     try {
       const user = await userApi.getCurrentUser();
 
       return user;
-    } catch (error: LegacyValue) {
+    } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось получить данные пользователя', 'currentUser'));
     }
   }
 );
-export const initializeAuth = createLegacyAsyncThunk(
+
+export const initializeAuth = createLegacyAsyncThunk<InitializeAuthPayload, void>(
   'auth/initialize',
-  async (_: LegacyValue, { dispatch, rejectWithValue }: LegacyValue) => {
+  async (_, { dispatch, rejectWithValue }) => {
     const accessToken = tokenStorage.getAccessToken();
     const refreshToken = tokenStorage.getRefreshToken();
 
@@ -64,16 +84,17 @@ export const initializeAuth = createLegacyAsyncThunk(
         userId: user?.id ?? null,
         isAuthenticated: true,
       };
-    } catch (errorMessage: LegacyValue) {
+    } catch (errorMessage: unknown) {
       tokenStorage.clearTokens();
 
-      return rejectWithValue(errorMessage || 'Сессия недействительна, войдите снова');
+      return rejectWithValue(typeof errorMessage === 'string' ? errorMessage : 'Сессия недействительна, войдите снова');
     }
   }
 );
-export const loginUser = createLegacyAsyncThunk(
+
+export const loginUser = createLegacyAsyncThunk<AuthResultPayload, LoginPayload>(
   'auth/loginUser',
-  async (payload: LegacyValue, { dispatch, rejectWithValue }: LegacyValue) => {
+  async (payload, { dispatch, rejectWithValue }) => {
     try {
       const response = await authApi.login(payload);
       tokenStorage.setTokens(response.data);
@@ -82,33 +103,34 @@ export const loginUser = createLegacyAsyncThunk(
       return {
         user: normalizeUser(user),
         userId: user?.id ?? null,
-        tokens: response.data,
       };
-    } catch (error: LegacyValue) {
+    } catch (error: unknown) {
       tokenStorage.clearTokens();
 
       return rejectWithValue(getApiErrorMessage(error, 'Ошибка входа', 'login'));
     }
   }
 );
-export const registerUser = createLegacyAsyncThunk(
+
+export const registerUser = createLegacyAsyncThunk<null, RegisterPayload>(
   'auth/registerUser',
-  async (payload: LegacyValue, { rejectWithValue }: LegacyValue) => {
+  async (payload, { rejectWithValue }) => {
     try {
       await authApi.register(payload);
       tokenStorage.clearTokens();
 
       return null;
-    } catch (error: LegacyValue) {
+    } catch (error: unknown) {
       tokenStorage.clearTokens();
 
       return rejectWithValue(getApiErrorMessage(error, 'Ошибка регистрации', 'register'));
     }
   }
 );
-export const verifyEmailUser = createLegacyAsyncThunk(
+
+export const verifyEmailUser = createLegacyAsyncThunk<AuthResultPayload, string>(
   'auth/verifyEmailUser',
-  async (token: LegacyValue, { dispatch, rejectWithValue }: LegacyValue) => {
+  async (token, { dispatch, rejectWithValue }) => {
     try {
       const response = await authApi.verifyEmail(token);
       tokenStorage.setTokens(response.data);
@@ -117,42 +139,44 @@ export const verifyEmailUser = createLegacyAsyncThunk(
       return {
         user: normalizeUser(user),
         userId: user?.id ?? null,
-        tokens: response.data,
       };
-    } catch (error: LegacyValue) {
+    } catch (error: unknown) {
       tokenStorage.clearTokens();
 
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось подтвердить почту', 'verifyEmail'));
     }
   }
 );
-export const requestPasswordReset = createLegacyAsyncThunk(
+
+export const requestPasswordReset = createLegacyAsyncThunk<string, string>(
   'auth/requestPasswordReset',
-  async (email: LegacyValue, { rejectWithValue }: LegacyValue) => {
+  async (email, { rejectWithValue }) => {
     try {
       const response = await authApi.forgotPassword(email);
 
-      return response.data;
-    } catch (error: LegacyValue) {
+      return typeof response.data === 'string' ? response.data : 'Ссылка для сброса отправлена';
+    } catch (error: unknown) {
       return rejectWithValue(
         getApiErrorMessage(error, 'Не удалось отправить ссылку для сброса пароля', 'forgotPassword')
       );
     }
   }
 );
-export const resetPasswordByToken = createLegacyAsyncThunk(
+
+export const resetPasswordByToken = createLegacyAsyncThunk<string, ResetPasswordPayload>(
   'auth/resetPasswordByToken',
-  async (payload: LegacyValue, { rejectWithValue }: LegacyValue) => {
+  async (payload, { rejectWithValue }) => {
     try {
       const response = await authApi.resetPassword(payload);
 
-      return response.data;
-    } catch (error: LegacyValue) {
+      return typeof response.data === 'string' ? response.data : 'Пароль изменен';
+    } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось изменить пароль', 'resetPassword'));
     }
   }
 );
-export const logoutUser = createLegacyAsyncThunk('auth/logoutUser', async () => {
+
+export const logoutUser = createLegacyAsyncThunk<null, void>('auth/logoutUser', async () => {
   const refreshToken = tokenStorage.getRefreshToken();
   const accessToken = tokenStorage.getAccessToken();
 
@@ -166,10 +190,12 @@ export const logoutUser = createLegacyAsyncThunk('auth/logoutUser', async () => 
 
   return null;
 });
-export const updateUserLogin = createLegacyAsyncThunk(
+
+export const updateUserLogin = createLegacyAsyncThunk<User | null, string>(
   'auth/updateUserLogin',
-  async (newLogin: LegacyValue, { getState, rejectWithValue }: LegacyValue) => {
-    const { userId } = getState().auth;
+  async (newLogin, { getState, rejectWithValue }) => {
+    const state = getState();
+    const { userId } = state.auth;
 
     if (!userId && userId !== 0) {
       return rejectWithValue('Не удалось определить ID пользователя');
@@ -178,16 +204,18 @@ export const updateUserLogin = createLegacyAsyncThunk(
     try {
       const response = await userApi.updateLogin(userId, newLogin);
 
-      return response.data;
-    } catch (error: LegacyValue) {
+      return response.data as User | null;
+    } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить логин', 'updateLogin'));
     }
   }
 );
-export const updateUserPassword = createLegacyAsyncThunk(
+
+export const updateUserPassword = createLegacyAsyncThunk<string, string>(
   'auth/updateUserPassword',
-  async (newPassword: LegacyValue, { getState, rejectWithValue }: LegacyValue) => {
-    const { userId } = getState().auth;
+  async (newPassword, { getState, rejectWithValue }) => {
+    const state = getState();
+    const { userId } = state.auth;
 
     if (!userId && userId !== 0) {
       return rejectWithValue('Не удалось определить ID пользователя');
@@ -196,14 +224,14 @@ export const updateUserPassword = createLegacyAsyncThunk(
     try {
       const response = await userApi.updatePassword(userId, newPassword);
 
-      return response.data;
-    } catch (error: LegacyValue) {
+      return typeof response.data === 'string' ? response.data : 'Пароль обновлен';
+    } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить пароль', 'updatePassword'));
     }
   }
 );
 
-const initialState = {
+const initialState: AuthState = {
   user: normalizeUser(),
   userId: null,
   isAuthenticated: false,
@@ -217,31 +245,31 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    clearAuthMessages(state: LegacyValue) {
+    clearAuthMessages(state: AuthState) {
       state.error = null;
       state.successMessage = null;
     },
-    patchAuthUser(state: LegacyValue, action: LegacyValue) {
+    patchAuthUser(state: AuthState, action: PayloadAction<Partial<User>>) {
       state.user = normalizeUser({
         ...state.user,
         ...action.payload,
       });
     },
   },
-  extraReducers: (builder: LegacyValue) => {
+  extraReducers: (builder) => {
     builder
-      .addCase(initializeAuth.pending, (state: LegacyValue) => {
+      .addCase(initializeAuth.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(initializeAuth.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(initializeAuth.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
         state.isInitialized = true;
         state.isAuthenticated = action.payload.isAuthenticated;
         state.user = action.payload.user;
         state.userId = action.payload.userId;
       })
-      .addCase(initializeAuth.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(initializeAuth.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.isInitialized = true;
         state.isAuthenticated = false;
@@ -249,92 +277,92 @@ const authSlice = createSlice({
         state.userId = null;
         state.error = action.payload || 'Сессия недействительна';
       })
-      .addCase(loginUser.pending, (state: LegacyValue) => {
+      .addCase(loginUser.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(loginUser.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(loginUser.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.userId = action.payload.userId;
         state.successMessage = 'Вы успешно вошли в аккаунт';
       })
-      .addCase(loginUser.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(loginUser.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Ошибка входа';
       })
-      .addCase(registerUser.pending, (state: LegacyValue) => {
+      .addCase(registerUser.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(registerUser.fulfilled, (state: LegacyValue) => {
+      .addCase(registerUser.fulfilled, (state: AuthState) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = normalizeUser();
         state.userId = null;
         state.successMessage = 'Письмо с подтверждением отправлено';
       })
-      .addCase(registerUser.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(registerUser.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Ошибка регистрации';
       })
-      .addCase(verifyEmailUser.pending, (state: LegacyValue) => {
+      .addCase(verifyEmailUser.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(verifyEmailUser.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(verifyEmailUser.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.userId = action.payload.userId;
         state.successMessage = 'Почта успешно подтверждена';
       })
-      .addCase(verifyEmailUser.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(verifyEmailUser.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Не удалось подтвердить почту';
       })
-      .addCase(requestPasswordReset.pending, (state: LegacyValue) => {
+      .addCase(requestPasswordReset.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(requestPasswordReset.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(requestPasswordReset.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
-        state.successMessage = typeof action.payload === 'string' ? action.payload : 'Ссылка для сброса отправлена';
+        state.successMessage = action.payload;
       })
-      .addCase(requestPasswordReset.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(requestPasswordReset.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Не удалось отправить ссылку для сброса пароля';
       })
-      .addCase(resetPasswordByToken.pending, (state: LegacyValue) => {
+      .addCase(resetPasswordByToken.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(resetPasswordByToken.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(resetPasswordByToken.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
-        state.successMessage = typeof action.payload === 'string' ? action.payload : 'Пароль изменен';
+        state.successMessage = action.payload;
       })
-      .addCase(resetPasswordByToken.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(resetPasswordByToken.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Не удалось изменить пароль';
       })
-      .addCase(fetchCurrentUser.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(fetchCurrentUser.fulfilled, (state: AuthState, action) => {
         state.user = normalizeUser(action.payload);
         state.isAuthenticated = true;
         state.userId = action.payload?.id ?? state.userId;
       })
-      .addCase(fetchCurrentUser.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(fetchCurrentUser.rejected, (state: AuthState, action) => {
         state.error = action.payload || 'Не удалось получить пользователя';
       })
-      .addCase(logoutUser.pending, (state: LegacyValue) => {
+      .addCase(logoutUser.pending, (state: AuthState) => {
         state.isLoading = true;
       })
-      .addCase(logoutUser.fulfilled, (state: LegacyValue) => {
+      .addCase(logoutUser.fulfilled, (state: AuthState) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = normalizeUser();
@@ -342,37 +370,37 @@ const authSlice = createSlice({
         state.successMessage = null;
         state.error = null;
       })
-      .addCase(logoutUser.rejected, (state: LegacyValue) => {
+      .addCase(logoutUser.rejected, (state: AuthState) => {
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = normalizeUser();
         state.userId = null;
       })
-      .addCase(updateUserLogin.pending, (state: LegacyValue) => {
+      .addCase(updateUserLogin.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(updateUserLogin.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(updateUserLogin.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
         state.user = normalizeUser(action.payload);
         state.userId = action.payload?.id ?? state.userId;
         state.successMessage = 'Логин успешно обновлен';
       })
-      .addCase(updateUserLogin.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(updateUserLogin.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Не удалось обновить логин';
       })
-      .addCase(updateUserPassword.pending, (state: LegacyValue) => {
+      .addCase(updateUserPassword.pending, (state: AuthState) => {
         state.isLoading = true;
         state.error = null;
         state.successMessage = null;
       })
-      .addCase(updateUserPassword.fulfilled, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(updateUserPassword.fulfilled, (state: AuthState, action) => {
         state.isLoading = false;
-        state.successMessage = typeof action.payload === 'string' ? action.payload : 'Пароль обновлен';
+        state.successMessage = action.payload;
       })
-      .addCase(updateUserPassword.rejected, (state: LegacyValue, action: LegacyValue) => {
+      .addCase(updateUserPassword.rejected, (state: AuthState, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Не удалось обновить пароль';
       });

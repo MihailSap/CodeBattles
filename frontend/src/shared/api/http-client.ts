@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
+import type { CustomInternalAxiosRequestConfig } from './types';
 
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -10,9 +11,9 @@ const refreshClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
-let refreshRequestPromise: LegacyValue = null;
+let refreshRequestPromise: Promise<string> | null = null;
 
-const requestNewAccessToken = async () => {
+const requestNewAccessToken = async (): Promise<string> => {
   const refreshToken = tokenStorage.getRefreshToken();
 
   if (!refreshToken) {
@@ -53,10 +54,10 @@ const requestNewAccessToken = async () => {
     });
   }
 
-  return tokenStorage.getAccessToken();
+  return tokenStorage.getAccessToken() ?? '';
 };
 
-const getFreshAccessToken = async () => {
+const getFreshAccessToken = async (): Promise<string> => {
   if (!refreshRequestPromise) {
     refreshRequestPromise = requestNewAccessToken().finally(() => {
       refreshRequestPromise = null;
@@ -66,7 +67,7 @@ const getFreshAccessToken = async () => {
   return refreshRequestPromise;
 };
 
-httpClient.interceptors.request.use((config: LegacyValue) => {
+httpClient.interceptors.request.use((config) => {
   const accessToken = tokenStorage.getAccessToken();
 
   if (accessToken) {
@@ -77,15 +78,16 @@ httpClient.interceptors.request.use((config: LegacyValue) => {
 });
 
 httpClient.interceptors.response.use(
-  (response: LegacyValue) => response,
-  async (error: LegacyValue) => {
-    const originalRequest = error.config;
+  (response) => response,
+  async (error: unknown) => {
+    const axiosError = error as AxiosError;
+    const originalRequest = axiosError.config as CustomInternalAxiosRequestConfig | undefined;
 
     if (!originalRequest || originalRequest._retry) {
       return Promise.reject(error);
     }
 
-    const status = error.response?.status;
+    const status = axiosError.response?.status;
     const shouldRefreshByStatus = status === 401;
 
     if (!shouldRefreshByStatus) {
@@ -101,10 +103,12 @@ httpClient.interceptors.response.use(
         throw new Error('Failed to refresh access token');
       }
 
+      originalRequest.headers = originalRequest.headers ?? axios.AxiosHeaders.from({});
+
       originalRequest.headers.Authorization = `Bearer ${freshAccessToken}`;
 
       return httpClient(originalRequest);
-    } catch (refreshError: LegacyValue) {
+    } catch (refreshError: unknown) {
       tokenStorage.clearTokens();
 
       return Promise.reject(refreshError);

@@ -2,8 +2,8 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { leaderboardApi } from './leaderboard-api';
 
 export const leaderboardApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
-    getLeaderboard: build.query({
+  endpoints: (build) => ({
+    getLeaderboard: build.query<LegacyValue, LegacyValue>({
       queryFn: (params: LegacyValue) => toQueryResult(() => leaderboardApi.getLeaderboard(params)),
       providesTags: [
         {
@@ -12,7 +12,7 @@ export const leaderboardApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    searchLeaderboardOrganizations: build.query({
+    searchLeaderboardOrganizations: build.query<LegacyValue, LegacyValue>({
       queryFn: (params: LegacyValue) => toQueryResult(() => leaderboardApi.searchOrganizations(params)),
       providesTags: [
         {
@@ -21,7 +21,7 @@ export const leaderboardApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    searchLeaderboardProjects: build.query({
+    searchLeaderboardProjects: build.query<LegacyValue, LegacyValue>({
       queryFn: (params: LegacyValue) => toQueryResult(() => leaderboardApi.searchProjects(params)),
       providesTags: [
         {
@@ -30,7 +30,7 @@ export const leaderboardApiSlice = baseApi.injectEndpoints({
         },
       ],
     }),
-    resetUserRating: build.mutation({
+    resetUserRating: build.mutation<LegacyValue, LegacyValue>({
       queryFn: (userId: LegacyValue) => toQueryResult(() => leaderboardApi.resetUserRating(userId)),
       invalidatesTags: [
         {

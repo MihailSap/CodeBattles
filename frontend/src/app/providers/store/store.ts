@@ -12,8 +12,9 @@ export const store = configureStore({
     theme: themeReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
-  middleware: (getDefaultMiddleware: LegacyValue) => getDefaultMiddleware().concat(baseApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(baseApi.middleware),
 });
+
 setupListeners(store.dispatch);
 
 export type AppStore = typeof store;

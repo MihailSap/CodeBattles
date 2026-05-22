@@ -36,7 +36,7 @@ const TaskCreatePage = () => {
     setValue,
     formState: { errors, isSubmitted, isValid, touchedFields },
   } = useForm<LegacyValue>({
-    resolver: zodResolver(taskCreateFormSchema) as LegacyValue,
+    resolver: zodResolver(taskCreateFormSchema),
     defaultValues: initialState,
     mode: 'onChange',
   });

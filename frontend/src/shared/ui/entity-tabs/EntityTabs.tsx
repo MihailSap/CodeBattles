@@ -1,7 +1,18 @@
 import entityTabsStyles from './EntityTabs.module.scss';
 
-const EntityTabs = ({ tabs, activeKey, onChange }: LegacyValue) => {
-  const activeTabIndex = tabs.findIndex((tab: LegacyValue) => tab.key === activeKey);
+interface TabItem {
+  key: string;
+  label: string;
+}
+
+interface EntityTabsProps {
+  tabs: TabItem[];
+  activeKey: string | null;
+  onChange: (key: string) => void;
+}
+
+const EntityTabs = ({ tabs, activeKey, onChange }: EntityTabsProps) => {
+  const activeTabIndex = tabs.findIndex((tab) => tab.key === activeKey);
 
   return (
     <div className={entityTabsStyles.wrap}>
@@ -19,7 +30,7 @@ const EntityTabs = ({ tabs, activeKey, onChange }: LegacyValue) => {
           aria-hidden="true"
         />
 
-        {tabs.map((tab: LegacyValue) => (
+        {tabs.map((tab) => (
           <button
             key={tab.key}
             className={[entityTabsStyles.tab, activeKey === tab.key ? entityTabsStyles.isActive : '']

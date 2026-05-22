@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const DEFAULT_SNACKBAR = {
+type SnackbarType = string;
+
+interface SnackbarState {
+  message: string;
+  type: SnackbarType;
+}
+
+const DEFAULT_SNACKBAR: SnackbarState = {
   message: '',
   type: 'success',
 };
 
 const DEFAULT_DURATION = 3000;
 
-export const useSnackbar = (duration: LegacyValue = DEFAULT_DURATION) => {
-  const [snackbar, setSnackbar] = useState(DEFAULT_SNACKBAR);
-  const timeoutRef = useRef<LegacyValue>(null);
+export const useSnackbar = (duration = DEFAULT_DURATION) => {
+  const [snackbar, setSnackbar] = useState<SnackbarState>(DEFAULT_SNACKBAR);
+  const timeoutRef = useRef<number | null>(null);
 
   const clearAutoClose = useCallback(() => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
@@ -24,7 +31,7 @@ export const useSnackbar = (duration: LegacyValue = DEFAULT_DURATION) => {
   }, [clearAutoClose]);
 
   const showSnackbar = useCallback(
-    (message: LegacyValue, type: LegacyValue = 'success') => {
+    (message: string, type: SnackbarType = 'success') => {
       clearAutoClose();
 
       setSnackbar({

@@ -50,7 +50,7 @@ const filterUsersByScope = ({ scope, entityId }: LegacyValue) => {
 
 const makeLeaderboard = ({ scope, entityId, period, category, query, viewerId, page, size }: LegacyValue) => {
   const normalizedQuery = normalizeQuery(query);
-  const sortMetric = LEADERBOARD_SORT_METRIC[category];
+  const sortMetric = LEADERBOARD_SORT_METRIC[category] ?? 'totalRating';
 
   const scopedUsers = filterUsersByScope({
     scope,

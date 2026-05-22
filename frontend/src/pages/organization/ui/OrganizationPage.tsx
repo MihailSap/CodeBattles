@@ -35,6 +35,16 @@ import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
 import organizationPageStyles from './OrganizationPage.module.scss';
 import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
+type AccessErrorShape = {
+  status?: number;
+  code?: string;
+  projectId?: string;
+  projectPrivacy?: string;
+};
+
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' && value !== null;
+
 
 const tabs = {
   projects: 'Проекты',
@@ -79,14 +89,14 @@ const OrganizationPage = () => {
     },
     control: settingsControl,
   } = useForm<LegacyValue>({
-    resolver: zodResolver(organizationSettingsFormSchema) as LegacyValue,
+    resolver: zodResolver(organizationSettingsFormSchema),
     defaultValues: getOrganizationSettingsDefaults(),
     mode: 'onChange',
   });
 
   const settingsDraft = useWatch({
     control: settingsControl,
-  }) as LegacyValue;
+  });
 
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const debouncedProjectSearch = useDebouncedValue(projectSearch, 300);
@@ -114,7 +124,9 @@ const OrganizationPage = () => {
       return;
     }
 
-    if (organizationError?.status === 403 && organizationError?.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
+    const accessError = isAccessErrorShape(organizationError) ? organizationError : undefined;
+
+    if (accessError?.status === 403 && accessError?.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
       navigate(ROUTES.projects, {
         replace: true,
         state: {

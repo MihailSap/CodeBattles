@@ -4,7 +4,12 @@ import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import protectedRouteStyles from './ProtectedRoute.module.scss';
 
-const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }: LegacyValue) => {
+interface ProtectedRouteProps {
+  onlyUnauthorized?: boolean;
+  onlyAdmin?: boolean;
+}
+
+const ProtectedRoute = ({ onlyUnauthorized = false, onlyAdmin = false }: ProtectedRouteProps) => {
   const location = useLocation();
   const { isInitialized, isAuthenticated, user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';

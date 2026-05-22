@@ -166,28 +166,31 @@ const AuthPage = () => {
   const onSubmit = async (form: LegacyValue) => {
     dispatch(clearAuthMessages());
 
-    const payload = isLoginMode
-      ? {
+    if (isLoginMode) {
+      const result = await dispatch(
+        loginUser({
           email: form.email.trim(),
           password: form.password,
-        }
-      : {
+        })
+      );
+
+      if (loginUser.fulfilled.match(result)) {
+        navigate(postLoginRedirect, {
+          replace: true,
+        });
+      }
+    } else {
+      const result = await dispatch(
+        registerUser({
           login: form.login.trim(),
           email: form.email.trim(),
           password: form.password,
-        };
+        })
+      );
 
-    const action = isLoginMode ? loginUser(payload) : registerUser(payload);
-    const result = await dispatch(action);
-
-    if (loginUser.fulfilled.match(result)) {
-      navigate(postLoginRedirect, {
-        replace: true,
-      });
-    }
-
-    if (registerUser.fulfilled.match(result)) {
-      setRegistrationCompleted(true);
+      if (registerUser.fulfilled.match(result)) {
+        setRegistrationCompleted(true);
+      }
     }
   };
 

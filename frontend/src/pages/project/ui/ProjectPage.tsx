@@ -42,6 +42,16 @@ import {
   truncateText,
 } from '@/entities/project';
 import projectPageStyles from './ProjectPage.module.scss';
+type AccessErrorShape = {
+  status?: number;
+  code?: string;
+  projectId?: string;
+  projectPrivacy?: string;
+};
+
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' && value !== null;
+
 
 const InviteLinkModal = lazyNamed(() => import('@/features/generate-invite-link'), 'InviteLinkModal');
 const ProjectSkillsSelector = lazyNamed(() => import('@/entities/stack'), 'ProjectSkillsSelector');
@@ -101,14 +111,14 @@ const ProjectPage = () => {
       touchedFields: settingsTouchedFields,
     },
   } = useForm<LegacyValue>({
-    resolver: zodResolver(projectSettingsFormSchema) as LegacyValue,
+    resolver: zodResolver(projectSettingsFormSchema),
     defaultValues: getProjectSettingsDefaults(),
     mode: 'onChange',
   });
 
   const settingsDraft = useWatch({
     control: settingsControl,
-  }) as LegacyValue;
+  });
 
   const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
 
@@ -139,7 +149,9 @@ const ProjectPage = () => {
       return;
     }
 
-    if (projectError?.status === 403 && projectError?.code === ACCESS_ERROR_CODE.FORBIDDEN_PROJECT) {
+    const accessError = isAccessErrorShape(projectError) ? projectError : undefined;
+
+    if (accessError?.status === 403 && accessError?.code === ACCESS_ERROR_CODE.FORBIDDEN_PROJECT) {
       navigate(ROUTES.projects, {
         replace: true,
         state: {
@@ -150,7 +162,7 @@ const ProjectPage = () => {
       return;
     }
 
-    if (projectError?.status === 403 && projectError?.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
+    if (accessError?.status === 403 && accessError?.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
       navigate(ROUTES.projects, {
         replace: true,
         state: {

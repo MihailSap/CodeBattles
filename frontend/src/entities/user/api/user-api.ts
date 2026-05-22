@@ -1,19 +1,35 @@
 import { httpClient } from '@/shared/api';
 import { getImageUrl } from '@/shared/lib';
 
-const mapUser = (user: LegacyValue) => {
-  if (!user) return null;
-  const fileName = user.avatarPath || user.avatar || user.avatarFileTitle;
+import type { User } from '../model/types';
+import type { PaginatedResponse, PaginationParams } from '@/shared/api';
+
+type RawUser = Partial<User> & {
+  avatar?: string;
+  avatarPath?: string;
+  avatarFileTitle?: string;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
+
+const mapUser = (user: unknown): User | null => {
+  if (!isRecord(user)) {
+    return null;
+  }
+
+  const rawUser = user as RawUser;
+  const fileName = rawUser.avatarPath || rawUser.avatar || rawUser.avatarFileTitle;
 
   return {
-    ...user,
+    ...(rawUser as User),
     avatarPath: getImageUrl(fileName),
   };
 };
 
-export const userApi: LegacyValue = {
-  async getAll({ page = 0, size = 10, filter }: LegacyValue = {}) {
-    const params: LegacyValue = {
+export const userApi = {
+  async getAll({ page = 0, size = 10, search: filter }: PaginationParams = {}): Promise<PaginatedResponse<User>> {
+    const params: Record<string, unknown> = {
       page,
       size,
     };
@@ -26,41 +42,43 @@ export const userApi: LegacyValue = {
       params,
     });
 
+    const content = Array.isArray(response.data?.content) ? response.data.content : [];
+
     return {
       ...response.data,
-      content: (response.data.content || []).map(mapUser),
+      content: content.map(mapUser).filter((user: User | null): user is User => user !== null),
     };
   },
-  async getById(userId: LegacyValue) {
+  async getById(userId: number | string): Promise<User | null> {
     const response = await httpClient.get(`/api/v1/users/${userId}`);
 
     return mapUser(response.data);
   },
-  delete(userId: LegacyValue) {
-    return httpClient.delete(`/api/v1/users/${userId}`);
+  async delete(userId: number | string): Promise<void> {
+    await httpClient.delete(`/api/v1/users/${userId}`);
   },
-  async getCurrentUser() {
+  async getCurrentUser(): Promise<User | null> {
     const response = await httpClient.get('/api/v1/auth/current-user');
 
     return mapUser(response.data);
   },
-  makeAdmin(userId: LegacyValue) {
-    return httpClient.patch(`/api/v1/users/${userId}/admin`);
+  async makeAdmin(userId: number | string): Promise<void> {
+    await httpClient.patch(`/api/v1/users/${userId}/admin`);
   },
-  makeNotAdmin(userId: LegacyValue) {
-    return httpClient.patch(`/api/v1/users/${userId}/not-admin`);
+  async makeNotAdmin(userId: number | string): Promise<void> {
+    await httpClient.patch(`/api/v1/users/${userId}/not-admin`);
   },
-  updateLogin(userId: LegacyValue, newLogin: LegacyValue) {
+  updateLogin(userId: number | string, newLogin: string) {
     return httpClient.patch(`/api/v1/users/${userId}/login`, {
       newLogin,
     });
   },
-  updatePassword(userId: LegacyValue, newPassword: LegacyValue) {
+  updatePassword(userId: number | string, newPassword: string) {
     return httpClient.patch(`/api/v1/users/${userId}/password`, {
       newPassword,
     });
   },
-  enableUser(userId: LegacyValue) {
-    return httpClient.patch(`/api/v1/users/${userId}/enable`);
+  async enableUser(userId: number | string): Promise<void> {
+    await httpClient.patch(`/api/v1/users/${userId}/enable`);
   },
 };

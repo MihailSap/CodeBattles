@@ -2,22 +2,22 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { adminApi } from './admin-api';
 
 const adminComplaintsListTag = {
-  type: 'AdminComplaint',
+  type: 'AdminComplaint' as const,
   id: 'LIST',
 };
 
 const adminEventsListTag = {
-  type: 'AdminEvent',
+  type: 'AdminEvent' as const,
   id: 'LIST',
 };
 
 const adminSettingsTag = {
-  type: 'AdminSettings',
+  type: 'AdminSettings' as const,
   id: 'CURRENT',
 };
 
 export const adminApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
+  endpoints: (build) => ({
     getAdminComplaints: build.query({
       queryFn: (params: LegacyValue = {}) => toQueryResult(() => adminApi.getComplaints(params)),
       providesTags: [adminComplaintsListTag],

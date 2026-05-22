@@ -9,6 +9,8 @@ import RouteErrorPage from '@/pages/route-error';
 import ProtectedRoute from './ui/ProtectedRoute';
 import { store } from '../providers/store';
 
+import type { ReactNode } from 'react';
+
 const AuthPage = lazy(() => import('@/pages/auth'));
 const LandingPage = lazy(() => import('@/pages/landing'));
 const MainPage = lazy(() => import('@/pages/main'));
@@ -34,7 +36,7 @@ const RootFallback = () => (
   </div>
 );
 
-const withSuspense = (element: LegacyValue) => (
+const withSuspense = (element: ReactNode) => (
   <Suspense
     fallback={
       <div className="page-loader">
@@ -175,4 +177,5 @@ const router = createBrowserRouter([
 ]);
 
 const AppRouter = () => <RouterProvider router={router} />;
+
 export default AppRouter;

@@ -7,9 +7,15 @@ const TYPE_CLASS = {
   error: snackbarStyles.isError,
 };
 
-const normalizeType = (type: LegacyValue) => (String(type).toLowerCase().includes('error') ? 'error' : 'success');
+const normalizeType = (type: string) => (type.toLowerCase().includes('error') ? 'error' : 'success');
 
-const Snackbar = ({ message, type = 'success', onClose }: LegacyValue) => {
+interface SnackbarProps {
+  message: string;
+  type?: string;
+  onClose: () => void;
+}
+
+const Snackbar = ({ message, type = 'success', onClose }: SnackbarProps) => {
   const [displayedMessage, setDisplayedMessage] = useState('');
   const [displayedType, setDisplayedType] = useState('success');
   const [isVisible, setIsVisible] = useState(false);

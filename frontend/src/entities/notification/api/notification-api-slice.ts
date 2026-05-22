@@ -1,19 +1,20 @@
 import { baseApi, toQueryResult } from '@/shared/api';
 import { isNotificationExpired } from '../lib/notification-utils';
 import { notificationsApi } from './notifications-api';
+import type { AppNotification, NotificationCompletion } from '../model/types';
 
 const notificationListTag = {
-  type: 'Notification',
+  type: 'Notification' as const,
   id: 'LIST',
 };
 
-const removeExpiredNotifications = (draft: LegacyValue) => {
-  const activeNotifications = draft.filter((notification: LegacyValue) => !isNotificationExpired(notification));
+const removeExpiredNotifications = (draft: AppNotification[]) => {
+  const activeNotifications = draft.filter((notification) => !isNotificationExpired(notification));
   draft.splice(0, draft.length, ...activeNotifications);
 };
 
-const upsertNotification = (draft: LegacyValue, notification: LegacyValue) => {
-  const existingIndex = draft.findIndex((item: LegacyValue) => item.id === notification.id);
+const upsertNotification = (draft: AppNotification[], notification: AppNotification) => {
+  const existingIndex = draft.findIndex((item) => item.id === notification.id);
 
   if (existingIndex >= 0) {
     draft[existingIndex] = notification;
@@ -22,27 +23,27 @@ const upsertNotification = (draft: LegacyValue, notification: LegacyValue) => {
   }
 
   draft.sort(
-    (left: LegacyValue, right: LegacyValue) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
   );
 };
 
 export const notificationApiSlice = baseApi.injectEndpoints({
-  endpoints: (build: LegacyValue) => ({
-    getNotifications: build.query({
+  endpoints: (build) => ({
+    getNotifications: build.query<AppNotification[], void>({
       queryFn: () => toQueryResult(() => notificationsApi.getNotifications()),
-      providesTags: (result: LegacyValue) =>
+      providesTags: (result) =>
         result
           ? [
-              ...result.map((notification: LegacyValue) => ({
-                type: 'Notification',
+              ...result.map((notification) => ({
+                type: 'Notification' as const,
                 id: notification.id,
               })),
               notificationListTag,
             ]
           : [notificationListTag],
       async onCacheEntryAdded(
-        _arg: LegacyValue,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved }: LegacyValue
+        _arg,
+        { updateCachedData, cacheDataLoaded, cacheEntryRemoved }
       ) {
         let unsubscribe = () => {};
         let expirationTimerId = null;
@@ -50,17 +51,19 @@ export const notificationApiSlice = baseApi.injectEndpoints({
         try {
           await cacheDataLoaded;
 
-          unsubscribe = notificationsApi.subscribe((event: LegacyValue) => {
+          unsubscribe = notificationsApi.subscribe((event: { type: string; notification?: AppNotification; notificationId?: number | string }) => {
             if (event.type === 'notification.upserted' && event.notification) {
-              updateCachedData((draft: LegacyValue) => {
-                upsertNotification(draft, event.notification);
+              const notification = event.notification;
+
+              updateCachedData((draft) => {
+                upsertNotification(draft, notification);
                 removeExpiredNotifications(draft);
               });
             }
 
             if (event.type === 'notification.deleted' && event.notificationId) {
-              updateCachedData((draft: LegacyValue) => {
-                const index = draft.findIndex((notification: LegacyValue) => notification.id === event.notificationId);
+              updateCachedData((draft) => {
+                const index = draft.findIndex((notification) => notification.id === event.notificationId);
 
                 if (index >= 0) {
                   draft.splice(index, 1);
@@ -83,12 +86,12 @@ export const notificationApiSlice = baseApi.injectEndpoints({
         }
       },
     }),
-    markAllNotificationsRead: build.mutation({
+    markAllNotificationsRead: build.mutation<{ updatedCount?: number }, void>({
       queryFn: () => toQueryResult(() => notificationsApi.markAllRead()),
-      async onQueryStarted(_arg: LegacyValue, { dispatch, queryFulfilled }: LegacyValue) {
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft: LegacyValue) => {
-            draft.forEach((notification: LegacyValue) => {
+          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft) => {
+            draft.forEach((notification) => {
               notification.isRead = true;
             });
           })
@@ -102,13 +105,13 @@ export const notificationApiSlice = baseApi.injectEndpoints({
       },
       invalidatesTags: [notificationListTag],
     }),
-    deleteNotification: build.mutation({
-      queryFn: (notificationId: LegacyValue) =>
+    deleteNotification: build.mutation<{ id: number | string }, number | string>({
+      queryFn: (notificationId) =>
         toQueryResult(() => notificationsApi.deleteNotification(notificationId)),
-      async onQueryStarted(notificationId: LegacyValue, { dispatch, queryFulfilled }: LegacyValue) {
+      async onQueryStarted(notificationId, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft: LegacyValue) => {
-            const index = draft.findIndex((notification: LegacyValue) => notification.id === notificationId);
+          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft) => {
+            const index = draft.findIndex((notification) => notification.id === notificationId);
 
             if (index >= 0) {
               draft.splice(index, 1);
@@ -122,20 +125,20 @@ export const notificationApiSlice = baseApi.injectEndpoints({
           patchResult.undo();
         }
       },
-      invalidatesTags: (_result: LegacyValue, _error: LegacyValue, notificationId: LegacyValue) => [
+      invalidatesTags: (_result, _error, notificationId) => [
         {
-          type: 'Notification',
+          type: 'Notification' as const,
           id: notificationId,
         },
         notificationListTag,
       ],
     }),
-    completeNotification: build.mutation({
-      queryFn: (payload: LegacyValue) => toQueryResult(() => notificationsApi.completeNotification(payload)),
-      async onQueryStarted(payload: LegacyValue, { dispatch, queryFulfilled }: LegacyValue) {
+    completeNotification: build.mutation<{ deletedIds: (number | string)[] }, NotificationCompletion>({
+      queryFn: (payload) => toQueryResult(() => notificationsApi.completeNotification(payload)),
+      async onQueryStarted(payload, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
-          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft: LegacyValue) => {
-            const matchesPayload = (notification: LegacyValue) => {
+          notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft) => {
+            const matchesPayload = (notification: AppNotification) => {
               if (!notification.completion || notification.completion.action !== payload.action) {
                 return false;
               }
@@ -152,7 +155,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
               );
             };
 
-            const activeNotifications = draft.filter((notification: LegacyValue) => !matchesPayload(notification));
+            const activeNotifications = draft.filter((notification) => !matchesPayload(notification));
             draft.splice(0, draft.length, ...activeNotifications);
           })
         );

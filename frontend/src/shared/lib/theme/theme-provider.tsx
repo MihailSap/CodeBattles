@@ -2,10 +2,20 @@
 import { createContext, useEffect, useContext, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/providers/store';
 import { selectTheme, toggleTheme } from './model/theme-slice';
+import type { ReactNode } from 'react';
 
-const ThemeContext = createContext<LegacyValue>({});
+interface ThemeContextValue {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
 
-export const ThemeProvider = ({ children }: LegacyValue) => {
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const dispatch = useAppDispatch();
   const theme = useAppSelector(selectTheme);
 
@@ -25,4 +35,12 @@ export const ThemeProvider = ({ children }: LegacyValue) => {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = (): ThemeContextValue => {
+  const context = useContext(ThemeContext);
+
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+
+  return context;
+};
