@@ -6,13 +6,14 @@ export type Styles = {
   assigneeName: string;
   assigneesList: string;
   assigneesWrap: string;
+  content2: string;
   offsetSection: string;
   reviewItem: string;
   reviewList: string;
   reviewTitle: string;
+  root: string;
   solution: string;
   statusTag: string;
-  taskPageContent: string;
 };
 
 export type ClassNames = keyof Styles;

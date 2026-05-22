@@ -5,6 +5,7 @@ export type Styles = {
   field: string;
   fieldLabel: string;
   fieldMenu: string;
+  fieldMenuUp: string;
   fieldTrigger: string;
   footer: string;
   formFields: string;
