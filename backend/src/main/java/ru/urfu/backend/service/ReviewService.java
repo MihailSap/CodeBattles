@@ -1,5 +1,6 @@
 package ru.urfu.backend.service;
 
+import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.*;
@@ -7,6 +8,8 @@ import ru.urfu.backend.model.*;
 import java.util.List;
 
 public interface ReviewService {
+
+    List<Review> getDashboardReviews(User user, Long projectId, DashboardTaskFilterStatus status);
 
     Review getById(Long id);
 

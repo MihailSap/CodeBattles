@@ -7,12 +7,15 @@ import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserTask;
 import ru.urfu.backend.model.enums.UserTaskType;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
 
     Optional<UserTask> findByUserAndTask(User user, Task task);
+
+    List<UserTask> findAllByUserAndUserTaskType(User user, UserTaskType userTaskType);
 
     void deleteByTaskAndUserTaskType(Task task, UserTaskType userTaskType);
 }

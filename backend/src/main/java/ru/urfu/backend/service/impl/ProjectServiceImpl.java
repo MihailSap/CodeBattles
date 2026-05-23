@@ -40,6 +40,16 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<Project> getUserProjects(User user) {
+        return userProjectRepository.findAllByUser(user)
+                .stream()
+                .map(UserProject::getProject)
+                .distinct()
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public ProjectMemberRole getProjectMemberRole(User user, Project project){
         Optional<UserProject> userProject = userProjectRepository.findByUserAndProject(user, project);
         if(userProject.isEmpty()) return ProjectMemberRole.GUEST;

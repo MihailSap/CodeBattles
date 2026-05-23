@@ -1,5 +1,6 @@
 package ru.urfu.backend.service;
 
+import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
@@ -7,7 +8,11 @@ import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.Task;
 import ru.urfu.backend.model.User;
 
+import java.util.List;
+
 public interface TaskService {
+
+    List<Task> getDashboardTasks(User user, Long projectId, DashboardTaskFilterStatus status);
 
     Task getById(Long id);
 

@@ -3,6 +3,7 @@ package ru.urfu.backend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.*;
@@ -37,6 +38,53 @@ public class ReviewServiceImpl implements ReviewService {
         this.reviewRepository = reviewRepository;
         this.reviewIterationRepository = reviewIterationRepository;
         this.reviewFileContentRepository = reviewFileContentRepository;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Review> getDashboardReviews(
+            User user, Long projectId, DashboardTaskFilterStatus status) {
+        List<Review> reviews = reviewRepository.findByUser(user);
+        LocalDateTime now = LocalDateTime.now();
+        return reviews.stream()
+                .filter(review -> ReviewStatus.NEW.equals(review.getStatus())
+                        || ReviewStatus.IN_PROGRESS.equals(review.getStatus())
+                )
+                .filter(review -> projectId == null || review.getTask()
+                        .getProject()
+                        .getId()
+                        .equals(projectId)
+                )
+                .filter(review -> {
+                    if(status == null || DashboardTaskFilterStatus.ALL.equals(status)){
+                        return true;
+                    }
+                    LocalDateTime deadline = review.getLastIteration().getDeadline();
+                    boolean overdue = deadline != null && deadline.isBefore(now);
+                    if(DashboardTaskFilterStatus.ACTIVE.equals(status)){
+                        return !overdue;
+                    }
+                    if(DashboardTaskFilterStatus.OVERDUE.equals(status)){
+                        return overdue;
+                    }
+
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    LocalDateTime aDeadline = a.getLastIteration().getDeadline();
+                    LocalDateTime bDeadline = b.getLastIteration().getDeadline();
+                    if(aDeadline == null && bDeadline == null){
+                        return 0;
+                    }
+                    if(aDeadline == null){
+                        return 1;
+                    }
+                    if(bDeadline == null){
+                        return -1;
+                    }
+                    return aDeadline.compareTo(bDeadline);
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)

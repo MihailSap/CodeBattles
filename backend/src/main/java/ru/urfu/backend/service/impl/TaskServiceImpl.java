@@ -3,6 +3,7 @@ package ru.urfu.backend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
@@ -38,6 +39,48 @@ public class TaskServiceImpl implements TaskService {
         this.userTaskRepository = userTaskRepository;
         this.taskRepository = taskRepository;
         this.userService = userService;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Task> getDashboardTasks(
+            User user, Long projectId, DashboardTaskFilterStatus status) {
+        List<UserTask> userTasks = userTaskRepository
+                .findAllByUserAndUserTaskType(user, UserTaskType.ASSIGNEE);
+        LocalDateTime now = LocalDateTime.now();
+        return userTasks.stream()
+                .map(UserTask::getTask)
+                .filter(task -> !TaskStatus.DONE.equals(task.getStatus()))
+                .filter(task -> projectId == null || task.getProject().getId().equals(projectId))
+                .filter(task -> {
+                    if(status == null || DashboardTaskFilterStatus.ALL.equals(status)){
+                        return true;
+                    }
+                    LocalDateTime deadline = task.getDeadline();
+                    boolean overdue = deadline != null && deadline.isBefore(now);
+                    if(DashboardTaskFilterStatus.ACTIVE.equals(status)){
+                        return !overdue;
+                    }
+                    if(DashboardTaskFilterStatus.OVERDUE.equals(status)){
+                        return overdue;
+                    }
+                    return true;
+                })
+                .sorted((a, b) -> {
+                    LocalDateTime aDeadline = a.getDeadline();
+                    LocalDateTime bDeadline = b.getDeadline();
+                    if(aDeadline == null && bDeadline == null){
+                        return 0;
+                    }
+                    if(aDeadline == null){
+                        return 1;
+                    }
+                    if(bDeadline == null){
+                        return -1;
+                    }
+                    return aDeadline.compareTo(bDeadline);
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
