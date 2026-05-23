@@ -1,12 +1,15 @@
 package ru.urfu.backend.dto.review;
 
-public record ViewerAssignmentDto(
+import ru.urfu.backend.model.enums.ReviewStatus;
+
+public record ViewerAssignmentResponse(
         Long reviewerId,
-        String status,
+        ReviewStatus status,
         Integer commentsCount,
         Boolean finalReviewSubmitted,
-        String checkedInTime,
+        Boolean checkedInTime,
         Boolean expired,
         Boolean allOwnThreadsResolved
-) {}
+) {
+}
 

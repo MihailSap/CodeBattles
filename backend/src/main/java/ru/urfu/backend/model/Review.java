@@ -1,28 +1,22 @@
 package ru.urfu.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.ReviewStatus;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "review")
 public class Review extends BaseEntity {
 
-    private String body;
-
-    private LocalDateTime uploadedAt;
-
-    private LocalDateTime completedAt;
-
-    private LocalDateTime deadline = LocalDateTime.now().plusDays(14);
-
     private Boolean revealAuthorAfterReview = false;
 
-    private ReviewStatus status = ReviewStatus.NEW;
+    private ReviewStatus status;
+
+    private Integer reviewerIndex;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
@@ -36,15 +30,8 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "solution_id")
     private Solution solution;
 
-    public Review(){}
-
-    public String getBody() {
-        return body;
-    }
-
-    public void setBody(String body) {
-        this.body = body;
-    }
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ReviewIteration> reviewIterations = new HashSet<>();
 
     public Task getTask() {
         return task;
@@ -70,14 +57,6 @@ public class Review extends BaseEntity {
         this.solution = solution;
     }
 
-    public LocalDateTime getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(LocalDateTime deadline) {
-        this.deadline = deadline;
-    }
-
     public ReviewStatus getStatus() {
         return status;
     }
@@ -94,19 +73,26 @@ public class Review extends BaseEntity {
         this.revealAuthorAfterReview = revealAuthorAfterReview;
     }
 
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
+    public Integer getReviewerIndex() {
+        return reviewerIndex;
     }
 
-    public void setUploadedAt(LocalDateTime completedAt) {
-        this.uploadedAt = completedAt;
+    public void setReviewerIndex(Integer reviewerIndex) {
+        this.reviewerIndex = reviewerIndex;
     }
 
-    public LocalDateTime getCompletedAt() {
-        return completedAt;
+    public Set<ReviewIteration> getReviewIterations() {
+        return reviewIterations;
     }
 
-    public void setCompletedAt(LocalDateTime completedAt) {
-        this.completedAt = completedAt;
+    public void setReviewIterations(Set<ReviewIteration> reviewIterations) {
+        this.reviewIterations = reviewIterations;
     }
+
+    public ReviewIteration getLastIteration() {
+        return reviewIterations.stream()
+                .max(Comparator.comparing(ReviewIteration::getIterationNumber))
+                .orElse(null);
+    }
+
 }

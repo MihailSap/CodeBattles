@@ -5,7 +5,7 @@ import ru.urfu.backend.model.enums.TaskStatus;
 
 import java.util.List;
 
-public record TaskCloseResponse(
+public record TaskDoneResponse(
         Long taskId,
         TaskStatus taskStatus,
         List<Long> reviewId,

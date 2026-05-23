@@ -4,10 +4,9 @@ import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.ReviewCommentCategory;
 import ru.urfu.backend.model.enums.ReviewCommentSeverity;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-public record ReviewCommentDto(
+public record ReviewCommentResponse(
         Long id,
         Long reviewId,
         Long parentId,
@@ -28,6 +27,6 @@ public record ReviewCommentDto(
         String closedAt,
         List<Long> likedBy,
         List<Long> dislikedBy,
-        List<ReviewCommentDto> replies
+        List<ReviewCommentResponse> replies
 ) {}
 

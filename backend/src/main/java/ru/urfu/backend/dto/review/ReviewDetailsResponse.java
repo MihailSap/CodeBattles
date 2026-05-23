@@ -7,7 +7,7 @@ import ru.urfu.backend.model.enums.TaskStatus;
 
 import java.util.List;
 
-public record ReviewDetailsDto(
+public record ReviewDetailsResponse(
         Long id,
         Long taskId,
         Long projectId,
@@ -25,13 +25,13 @@ public record ReviewDetailsDto(
         Boolean revealAuthorAfterReview,
         List<ReviewUserResponse> assignees,
         List<ReviewUserResponse> reviewers,
-        ViewerAssignmentDto viewerAssignment,
-        List<FileDto> files,
-        List<CommentDto> comments,
-        List<HistoryEventDto> history,
-        List<FinalReviewDto> finalReviews,
+        ViewerAssignmentResponse viewerAssignment,
+        List<ReviewFileContentResponse> files,
+        List<CommentResponse> comments,
+        List<ReviewHistoryResponse> history,
+        List<FinalReviewResponse> finalReviews,
         AiEvaluationDto aiEvaluation,
         AiReviewEvaluationDto aiReviewEvaluation,
-        PermissionsDto permissions
+        PermissionsResponse permissions
 ) {}
 

@@ -4,11 +4,13 @@ import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.project.ProjectParticipantDto;
 import ru.urfu.backend.dto.project.ProjectTaskDto;
 import ru.urfu.backend.dto.tasks.TaskDetailsResponse;
+import ru.urfu.backend.dto.tasks.TaskDoneResponse;
 import ru.urfu.backend.dto.tasks.TaskListItemResponse;
 import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.Task;
 import ru.urfu.backend.model.UserTask;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.UserTaskType;
 
 import java.util.ArrayList;
@@ -100,6 +102,16 @@ public class TaskMapper {
                 userTask.getUser().getFullName(),
                 userTask.getUser().getAvatarFileTitle(),
                 ProjectMemberRole.OWNER //FIXME: Убрать заглушку
+        );
+    }
+
+    public TaskDoneResponse mapToTaskDoneResponse(Task task, List<Long> reviewIds){
+        return new TaskDoneResponse(
+                task.getId(),
+                task.getStatus(),
+                reviewIds,
+                ReviewStatus.COMPLETED,
+                task.getCompletedAt().toString()
         );
     }
 }

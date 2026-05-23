@@ -65,3 +65,5 @@ databaseChangeLog:
       file: db/changelog/changeset/032-create-solution-tables.yaml
   - include:
       file: db/changelog/changeset/033-update-task-and-review.yaml
+  - include:
+      file: db/changelog/changeset/034-refactor-review-and-comments.yaml

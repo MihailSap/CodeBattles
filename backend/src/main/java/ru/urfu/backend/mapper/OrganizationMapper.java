@@ -8,6 +8,7 @@ import ru.urfu.backend.dto.project.ProjectItemResponse;
 import ru.urfu.backend.dto.project.ProjectListItemDto;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.service.ProjectService;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class OrganizationMapper {
         this.projectService = projectService;
     }
 
-    public OrganizationDetailsResponse mapToOrganizationDetailsDto(Organization organization, String viewerRole) {
+    public OrganizationDetailsResponse mapToOrganizationDetailsDto(User user, Organization organization, String viewerRole) {
         return new OrganizationDetailsResponse(
                 organization.getId(),
                 organization.getTitle(),
@@ -37,7 +38,7 @@ public class OrganizationMapper {
                 getAdminId(organization),
                 viewerRole,
                 getParticipants(organization),
-                getProjects(organization),
+                getProjects(user, organization),
                 getJoinRequests(organization)
         );
     }
@@ -139,25 +140,48 @@ public class OrganizationMapper {
         return null;
     }
 
-    private List<ProjectItemResponse> getProjects(Organization organization){
+    private List<ProjectItemResponse> getProjects(User user, Organization organization){
         List<ProjectItemResponse> projects = new ArrayList<>();
         for(Project project : organization.getProjects()){
+            ProjectMemberRole projectMemberRole;
+            if(projectService.isUserOwnerInProject(project, user)){
+                projectMemberRole = ProjectMemberRole.OWNER;
+            } else if(projectService.isUserMemberInProject(project, user)){
+                projectMemberRole = ProjectMemberRole.MEMBER;
+            } else {
+                if(project.getIsPrivate()) continue;
+                projectMemberRole = ProjectMemberRole.GUEST;
+            }
             projects.add(new ProjectItemResponse(
                     project.getId(),
                     project.getTitle(),
                     project.getDescription(),
-                    0, //FIXME
+                    getActiveTasksCount(project),
                     projectMapper.mapToProjectParticipantDtos(project.getUsers()),
-                    ProjectMemberRole.MEMBER //FIXME
+                    projectMemberRole
             ));
         }
         return projects;
     }
 
+    private int getActiveTasksCount(Project project){
+        Set<Task> tasks = project.getTasks();
+        if(tasks.isEmpty()) return 0;
+        int count = 0;
+        for(Task task : tasks){
+            if(!TaskStatus.DONE.equals(task.getStatus())){
+                count++;
+            }
+        }
+        return count;
+    }
+
     private List<OrganizationParticipantResponse> getParticipants(Organization organization) {
         List<OrganizationParticipantResponse> participants = new ArrayList<>();
         for (UserOrganization userOrganization : organization.getMembers()) {
-            participants.add(mapToOrganizationParticipantResponse(userOrganization));
+            if(userOrganization.getEnabled()){
+                participants.add(mapToOrganizationParticipantResponse(userOrganization));
+            }
         }
         return participants;
     }

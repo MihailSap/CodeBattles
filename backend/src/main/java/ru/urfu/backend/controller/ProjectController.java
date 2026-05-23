@@ -121,7 +121,7 @@ public class ProjectController {
             throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
         }
 
-        if(project.getIsPrivate()
+        if(!project.getIsPrivate()
                 && !projectService.isUserOwnerInProject(project, user)
                 && !projectService.isUserMemberInProject(project, user)){
             return projectMapper.mapToProjectDetailsDto(project, ProjectMemberRole.GUEST);

@@ -1,0 +1,331 @@
+databaseChangeLog:
+  - changeSet:
+      id: 034-create-review-iteration
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: review_iteration
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_review_iteration
+                    nullable: false
+              - column:
+                  name: uploaded_at
+                  type: TIMESTAMP
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+              - column:
+                  name: deadline
+                  type: TIMESTAMP
+              - column:
+                  name: iteration_number
+                  type: INTEGER
+              - column:
+                  name: task_status_after_iteration
+                  type: VARCHAR(50)
+              - column:
+                  name: review_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: review_iteration
+            baseColumnNames: review_id
+            referencedTableName: review
+            referencedColumnNames: id
+            constraintName: fk_review_iteration_review
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 034-update-review-table
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: review
+            columns:
+              - column:
+                  name: reviewer_index
+                  type: INTEGER
+
+        - dropColumn:
+            tableName: review
+            columnName: body
+
+        - dropColumn:
+            tableName: review
+            columnName: uploaded_at
+
+        - dropColumn:
+            tableName: review
+            columnName: completed_at
+
+        - dropColumn:
+            tableName: review
+            columnName: deadline
+
+  - changeSet:
+      id: 034-create-review-file-content
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: review_file_content
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_review_file_content
+                    nullable: false
+              - column:
+                  name: path
+                  type: VARCHAR(1000)
+              - column:
+                  name: language
+                  type: VARCHAR(255)
+              - column:
+                  name: is_diff
+                  type: BOOLEAN
+              - column:
+                  name: content
+                  type: TEXT
+              - column:
+                  name: old_content
+                  type: TEXT
+              - column:
+                  name: unsupported_preview
+                  type: BOOLEAN
+              - column:
+                  name: review_iteration_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: review_file_content
+            baseColumnNames: review_iteration_id
+            referencedTableName: review_iteration
+            referencedColumnNames: id
+            constraintName: fk_review_file_content_iteration
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 034-create-review-verdict
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: review_verdict
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_review_verdict
+                    nullable: false
+              - column:
+                  name: architecture
+                  type: INTEGER
+              - column:
+                  name: readability
+                  type: INTEGER
+              - column:
+                  name: testability
+                  type: INTEGER
+              - column:
+                  name: scalability
+                  type: INTEGER
+              - column:
+                  name: overall_score
+                  type: INTEGER
+              - column:
+                  name: comment
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: verdict
+                  type: VARCHAR(50)
+              - column:
+                  name: review_iteration_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+
+        - addForeignKeyConstraint:
+            baseTableName: review_verdict
+            baseColumnNames: review_iteration_id
+            referencedTableName: review_iteration
+            referencedColumnNames: id
+            constraintName: fk_review_verdict_iteration
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 034-create-comment
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: comment
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_comment
+                    nullable: false
+              - column:
+                  name: file
+                  type: VARCHAR(1000)
+              - column:
+                  name: start_line
+                  type: INTEGER
+              - column:
+                  name: end_line
+                  type: INTEGER
+              - column:
+                  name: text
+                  type: TEXT
+              - column:
+                  name: reveal_name
+                  type: BOOLEAN
+              - column:
+                  name: closed_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: comment_author_role
+                  type: VARCHAR(50)
+              - column:
+                  name: category
+                  type: VARCHAR(50)
+              - column:
+                  name: severity
+                  type: VARCHAR(50)
+              - column:
+                  name: review_id
+                  type: BIGINT
+              - column:
+                  name: user_id
+                  type: BIGINT
+              - column:
+                  name: parent_comment_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: comment
+            baseColumnNames: review_id
+            referencedTableName: review_iteration
+            referencedColumnNames: id
+            constraintName: fk_comment_review_iteration
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: comment
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_comment_user
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: comment
+            baseColumnNames: parent_comment_id
+            referencedTableName: comment
+            referencedColumnNames: id
+            constraintName: fk_comment_parent
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 034-create-comment-reaction
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: comment_reaction
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_comment_reaction
+                    nullable: false
+              - column:
+                  name: reaction
+                  type: VARCHAR(50)
+              - column:
+                  name: user_id
+                  type: BIGINT
+              - column:
+                  name: comment_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: comment_reaction
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_comment_reaction_user
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: comment_reaction
+            baseColumnNames: comment_id
+            referencedTableName: comment
+            referencedColumnNames: id
+            constraintName: fk_comment_reaction_comment
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 034-create-comment-report
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: comment_report
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_comment_report
+                    nullable: false
+              - column:
+                  name: message
+                  type: TEXT
+              - column:
+                  name: reason
+                  type: VARCHAR(50)
+              - column:
+                  name: comment_id
+                  type: BIGINT
+              - column:
+                  name: user_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: comment_report
+            baseColumnNames: comment_id
+            referencedTableName: comment
+            referencedColumnNames: id
+            constraintName: fk_comment_report_comment
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: comment_report
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_comment_report_user
+            onDelete: CASCADE

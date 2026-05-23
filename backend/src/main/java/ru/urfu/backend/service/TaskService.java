@@ -17,9 +17,9 @@ public interface TaskService {
 
     Task updateStatusInReview(Task task);
 
-    Task complete(Task task);
+    Task updateStatusRework(Task task);
 
-    void delete(Long id);
+    Task updateStatusDone(Task task);
 
     void delete(Task task);
 

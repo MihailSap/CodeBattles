@@ -14,6 +14,7 @@ import ru.urfu.backend.repository.SolutionManualTextRepository;
 import ru.urfu.backend.repository.SolutionRepository;
 import ru.urfu.backend.service.SolutionService;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
@@ -37,17 +38,16 @@ public class SolutionServiceImpl implements SolutionService {
 
     @Transactional
     @Override
-    public Solution createManualTextSolution(SolutionSubmitRequest request, User user, Task task){
+    public Solution createManualTextSolution(SolutionSubmitRequest request, Task task){
         Solution solution = new Solution();
         solution.setRevealAuthorAfterReview(request.revealAuthorAfterReview());
         solution.setTask(task);
         solution.setUploadType(request.uploadType());
+        solution.setUploadedAt(LocalDateTime.now());
         solutionRepository.save(solution);
 
         createSolutionManualText(request, solution);
-
-        //TODO: Удалить
-        return solutionRepository.save(solution);
+        return solution;
     }
 
     @Transactional
@@ -55,13 +55,12 @@ public class SolutionServiceImpl implements SolutionService {
     public Solution updateManualTextSolution(SolutionSubmitRequest request, Solution solution) {
         solution.setRevealAuthorAfterReview(request.revealAuthorAfterReview());
         solution.setUploadType(request.uploadType());
+        solution.setUploadedAt(LocalDateTime.now());
         solutionRepository.save(solution);
 
         solutionManualTextRepository.delete(solution.getSolutionManualText());
         createSolutionManualText(request, solution);
-
-        //TODO: Удалить
-        return solutionRepository.save(solution);
+        return solution;
     }
 
     @Transactional
@@ -73,6 +72,8 @@ public class SolutionServiceImpl implements SolutionService {
         solutionManualText.setContent(solutionManualCodeRequest.content());
         solutionManualText.setFileName(solutionManualCodeRequest.fileName());
         solutionManualText.setLanguage(solutionManualCodeRequest.language());
+
+        solution.setSolutionManualText(solutionManualText);
         return solutionManualTextRepository.save(solutionManualText);
     }
 
@@ -80,6 +81,13 @@ public class SolutionServiceImpl implements SolutionService {
     @Override
     public Solution revealAuthor(Solution solution, RevealAuthorAfterReviewRequest request) {
         solution.setRevealAuthorAfterReview(request.revealAuthorAfterReview());
+        return solutionRepository.save(solution);
+    }
+
+    @Transactional
+    @Override
+    public Solution updateUploadedAtSolution(Solution solution){
+        solution.setUploadedAt(LocalDateTime.now());
         return solutionRepository.save(solution);
     }
 }

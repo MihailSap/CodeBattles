@@ -65,6 +65,22 @@ public class OrganizationController {
         this.userService = userService;
     }
 
+    @Operation(description = "Получение организации по id")
+    @GetMapping("/{organizationId}")
+    public OrganizationDetailsResponse getOrganizationById(@PathVariable("organizationId") Long organizationId) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        Organization organization = organizationService.getById(organizationId);
+        if(!organizationService.isUserExistsInOrganization(organization, user)) {
+            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+        }
+        String viewerRole = "GUEST";
+        if(organizationService.isUserExistsInOrganization(organization, user)) {
+            UserOrganization userOrganization = organizationService.getUserOrganization(user, organization);
+            viewerRole = userOrganization.getAdmin() ? "OWNER" : "MEMBER";
+        }
+        return organizationMapper.mapToOrganizationDetailsDto(user, organization, viewerRole);
+    }
+
     @Operation(description = "Получение организаций пользователя")
     @GetMapping("/my")
     public List<OrganizationListItemResponse> getMyOrganizations(
@@ -124,22 +140,6 @@ public class OrganizationController {
         return ResponseEntity.status(201).body(new CreatedResponse(organization.getId()));
     }
 
-    @Operation(description = "Получение организации по id")
-    @GetMapping("/{organizationId}")
-    public OrganizationDetailsResponse getOrganizationById(@PathVariable("organizationId") Long organizationId) throws UserNotFoundException {
-        User user = authService.getAuthenticatedUser();
-        Organization organization = organizationService.getById(organizationId);
-        if(!organizationService.isUserExistsInOrganization(organization, user)) {
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
-        }
-        String viewerRole = "GUEST";
-        if(organizationService.isUserExistsInOrganization(organization, user)) {
-            UserOrganization userOrganization = organizationService.getUserOrganization(user, organization);
-            viewerRole = userOrganization.getAdmin() ? "OWNER" : "MEMBER";
-        }
-        return organizationMapper.mapToOrganizationDetailsDto(organization, viewerRole);
-    }
-
     @Operation(description = "Обновление организации по id")
     @PatchMapping("/{organizationId}")
     public OrganizationDetailsResponse updateOrganizationById(
@@ -155,7 +155,7 @@ public class OrganizationController {
             UserOrganization userOrganization = organizationService.getUserOrganization(user, organization);
             viewerRole = userOrganization.getAdmin() ? "OWNER" : "MEMBER";
         }
-        return organizationMapper.mapToOrganizationDetailsDto(updatedOrganization, viewerRole);
+        return organizationMapper.mapToOrganizationDetailsDto(user, updatedOrganization, viewerRole);
     }
 
     @Operation(description = "Удаление организации по id")

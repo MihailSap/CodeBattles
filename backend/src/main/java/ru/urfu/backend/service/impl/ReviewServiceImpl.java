@@ -3,13 +3,16 @@ package ru.urfu.backend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.model.Review;
-import ru.urfu.backend.model.Solution;
-import ru.urfu.backend.model.User;
+import ru.urfu.backend.model.*;
+import ru.urfu.backend.model.enums.ReviewStatus;
+import ru.urfu.backend.model.enums.TaskStatus;
+import ru.urfu.backend.repository.ReviewFileContentRepository;
+import ru.urfu.backend.repository.ReviewIterationRepository;
 import ru.urfu.backend.repository.ReviewRepository;
+import ru.urfu.backend.repository.ReviewVerdictRepository;
 import ru.urfu.backend.service.ReviewService;
-import ru.urfu.backend.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,52 +22,210 @@ import java.util.List;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
-    private final UserService userService;
+    private final ReviewVerdictRepository reviewVerdictRepository;
+    private final ReviewIterationRepository reviewIterationRepository;
+    private final ReviewFileContentRepository reviewFileContentRepository;
 
     @Autowired
     public ReviewServiceImpl(
+            ReviewVerdictRepository reviewVerdictRepository,
             ReviewRepository reviewRepository,
-            UserService userService
+            ReviewIterationRepository reviewIterationRepository,
+            ReviewFileContentRepository reviewFileContentRepository
     ) {
+        this.reviewVerdictRepository = reviewVerdictRepository;
         this.reviewRepository = reviewRepository;
-        this.userService = userService;
+        this.reviewIterationRepository = reviewIterationRepository;
+        this.reviewFileContentRepository = reviewFileContentRepository;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Review getById(Long id) {
         return reviewRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ревью не найдено"));
     }
 
+    @Transactional
+    @Override
+    public void completeExpiredReviews(List<Review> reviews) {
+        LocalDateTime now = LocalDateTime.now();
+        for (Review review : reviews) {
+            if (ReviewStatus.COMPLETED.equals(review.getStatus())) {
+                continue;
+            }
+            ReviewIteration reviewIteration = review.getLastIteration();
+            if (reviewIteration == null) {
+                continue;
+            }
+            if (now.isAfter(reviewIteration.getDeadline())) {
+                review.setStatus(ReviewStatus.COMPLETED);
+                reviewRepository.save(review);
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     @Override
-    public List<Review> getByUser(User user) {
-        LocalDateTime threshold = LocalDateTime.now().minusDays(7);
-        return reviewRepository.findByUserAndCompletedAtAfter(user, threshold);
+    public List<Review> getReviewsByUser(User user) {
+        List<Review> reviews = reviewRepository.findByUser(user);
+        completeExpiredReviews(reviews);
+        LocalDateTime now = LocalDateTime.now();
+        List<Review> filteredReviews = new ArrayList<>();
+        for (Review review : reviews) {
+            ReviewIteration reviewIteration = review.getLastIteration();
+            if (reviewIteration == null) {
+                continue;
+            }
+            LocalDateTime completedAt = reviewIteration.getCompletedAt();
+            LocalDateTime deadline = reviewIteration.getDeadline();
+            if (ReviewStatus.COMPLETED.equals(review.getStatus())) {
+                LocalDateTime visibleUntil;
+                if (completedAt != null) {
+                    visibleUntil = completedAt.plusDays(7);
+                }
+                else {
+                    visibleUntil = deadline.plusDays(7);
+                }
+                if (now.isBefore(visibleUntil)) {
+                    filteredReviews.add(review);
+                }
+                continue;
+            }
+            filteredReviews.add(review);
+        }
+        return filteredReviews;
     }
 
     @Transactional
     @Override
-    public Review create(User user,Solution solution){
+    public List<Review> create(List<User> reviewers, Solution solution) throws UserNotFoundException {
+        List<Review> reviews = new ArrayList<>();
+        int reviewerIndex = 1;
+        for (User reviewer : reviewers) {
+            Review review = create(reviewer, solution, reviewerIndex);
+            reviews.add(review);
+            reviewerIndex++;
+        }
+        return reviews;
+    }
+
+    @Transactional
+    @Override
+    public Review create(User user, Solution solution, Integer reviewerIndex) {
         Review review = new Review();
         review.setUser(user);
         review.setTask(solution.getTask());
         review.setSolution(solution);
+        review.setReviewerIndex(reviewerIndex);
+        review.setStatus(ReviewStatus.NEW);
+        reviewRepository.save(review);
+
+        ReviewIteration reviewIteration = createReviewIteration(review);
+        createReviewFileContent(reviewIteration, solution.getSolutionManualText());
+
+        return review;
+    }
+
+    @Transactional
+    @Override
+    public ReviewIteration createReviewIteration(Review review){
+        LocalDateTime now = LocalDateTime.now();
+        ReviewIteration reviewIteration = new ReviewIteration();
+        reviewIteration.setReview(review);
+        reviewIteration.setUploadedAt(now);
+        reviewIteration.setDeadline(now.plusDays(14));
+        reviewIteration.setTaskStatusAfterIteration(TaskStatus.IN_REVIEW);
+
+        ReviewIteration lastReviewIteration = review.getLastIteration();
+        if(lastReviewIteration == null){
+            reviewIteration.setIterationNumber(1);
+        } else {
+            reviewIteration.setIterationNumber(lastReviewIteration.getIterationNumber() + 1);
+        }
+        return reviewIterationRepository.save(reviewIteration);
+    }
+
+    @Transactional
+    @Override
+    public ReviewFileContent createReviewFileContent(
+            ReviewIteration reviewIteration,
+            SolutionManualText solutionManualText){
+
+        ReviewFileContent reviewFileContent = new ReviewFileContent();
+        reviewFileContent.setLanguage(solutionManualText.getLanguage());
+        reviewFileContent.setContent(solutionManualText.getContent());
+        reviewFileContent.setPath(solutionManualText.getFileName());
+        reviewFileContent.setReviewIteration(reviewIteration);
+        reviewFileContent.setUnsupportedPreview(false);
+        reviewFileContent.setDiff(false);
+        reviewFileContent.setOldContent(null);
+
+        return reviewFileContentRepository.save(reviewFileContent);
+    }
+
+    @Transactional
+    @Override
+    public ReviewFileContent createReviewFileContent(
+            ReviewIteration previousIteration, ReviewIteration currentIteration, SolutionManualText solutionManualText){
+        ReviewFileContent reviewFileContent = new ReviewFileContent();
+        reviewFileContent.setLanguage(solutionManualText.getLanguage());
+        reviewFileContent.setContent(solutionManualText.getContent());
+        reviewFileContent.setPath(solutionManualText.getFileName());
+        reviewFileContent.setReviewIteration(currentIteration);
+        reviewFileContent.setUnsupportedPreview(false);
+
+        ReviewFileContent previousFileContent = previousIteration
+                .getReviewFileContents()
+                .stream()
+                .filter(file -> solutionManualText.getFileName().equals(file.getPath()))
+                .findFirst()
+                .orElse(null);
+
+        if(previousFileContent == null){
+            reviewFileContent.setDiff(false);
+            reviewFileContent.setOldContent(null);
+        } else {
+            reviewFileContent.setDiff(true);
+            reviewFileContent.setOldContent(previousFileContent.getContent());
+        }
+
+        return reviewFileContentRepository.save(reviewFileContent);
+    }
+
+    @Transactional
+    @Override
+    public ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review) {
+        ReviewVerdict reviewVerdict = new ReviewVerdict();
+        reviewVerdict.setReviewIteration(review.getLastIteration());
+        reviewVerdict.setVerdict(request.verdict());
+        reviewVerdict.setArchitecture(request.architecture());
+        reviewVerdict.setReadability(request.readability());
+        reviewVerdict.setScalability(request.scalability());
+        reviewVerdict.setTestability(request.testability());
+        reviewVerdict.setComment(request.comment());
+        int overallScore = Math.round((
+                request.architecture() + request.readability() + request.testability() + request.scalability()) / 4.0f);
+
+        reviewVerdict.setOverallScore(overallScore);
+        return reviewVerdictRepository.save(reviewVerdict);
+    }
+
+    @Transactional
+    @Override
+    public Review updateStatusInProgress(Review review) {
+        review.setStatus(ReviewStatus.IN_PROGRESS);
         return reviewRepository.save(review);
     }
 
     @Transactional
     @Override
-    public List<Review> create(List<Long> reviewerIds, Solution solution) throws UserNotFoundException {
-        List<Review> reviews = new ArrayList<>();
-        for(Long reviewerId : reviewerIds){
-            Review review = new Review();
-            review.setUser(userService.getById(reviewerId));
-            review.setSolution(solution);
-            review.setTask(solution.getTask());
-            reviewRepository.save(review);
-            reviews.add(review);
-        }
-        return reviews;
+    public Review updateStatusCompleted(Review review) {
+        ReviewIteration reviewIteration = review.getLastIteration();
+        reviewIteration.setCompletedAt(LocalDateTime.now());
+        reviewIterationRepository.save(reviewIteration);
+
+        review.setStatus(ReviewStatus.COMPLETED);
+        return reviewRepository.save(review);
     }
 }

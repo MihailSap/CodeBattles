@@ -10,9 +10,11 @@ public interface SolutionService {
 
     Solution getById(Long id);
 
+    Solution updateUploadedAtSolution(Solution solution);
+
     Solution revealAuthor(Solution solution, RevealAuthorAfterReviewRequest request);
 
-    Solution createManualTextSolution(SolutionSubmitRequest request, User user, Task task);
+    Solution createManualTextSolution(SolutionSubmitRequest request, Task task);
 
     Solution updateManualTextSolution(SolutionSubmitRequest request, Solution solution);
 }

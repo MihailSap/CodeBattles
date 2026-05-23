@@ -16,7 +16,7 @@ public class Solution extends BaseEntity {
 
     private SolutionUploadType uploadType;
 
-    private LocalDateTime uploadedAt = LocalDateTime.now();
+    private LocalDateTime uploadedAt;
 
     @OneToOne
     @JoinColumn(name = "task_id", nullable = false, unique = true)

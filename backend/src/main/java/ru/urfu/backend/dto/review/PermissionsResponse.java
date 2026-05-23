@@ -1,6 +1,6 @@
 package ru.urfu.backend.dto.review;
 
-public record PermissionsDto(
+public record PermissionsResponse(
         Boolean canAddComments,
         Boolean canSubmitFinalReview,
         Boolean canReply,

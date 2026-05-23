@@ -1,6 +1,6 @@
 package ru.urfu.backend.model.enums;
 
-public enum ReviewVerdict {
+public enum ReviewVerdictType {
     APPROVED,
     REWORK
 }

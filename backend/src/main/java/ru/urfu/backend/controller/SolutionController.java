@@ -7,46 +7,49 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
+import ru.urfu.backend.dto.review.ReviewResendRequest;
 import ru.urfu.backend.dto.solution.RevealAuthorAfterReviewRequest;
 import ru.urfu.backend.dto.solution.RevealAuthorAfterReviewResponse;
 import ru.urfu.backend.dto.solution.SolutionSubmitRequest;
 import ru.urfu.backend.dto.solution.SolutionSubmitResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.mapper.SolutionMapper;
 import ru.urfu.backend.model.*;
-import ru.urfu.backend.model.enums.ReviewStatus;
-import ru.urfu.backend.model.enums.SolutionUploadType;
-import ru.urfu.backend.model.enums.TaskStatus;
-import ru.urfu.backend.model.enums.UserTaskType;
-import ru.urfu.backend.service.AuthService;
-import ru.urfu.backend.service.ReviewService;
-import ru.urfu.backend.service.SolutionService;
-import ru.urfu.backend.service.TaskService;
+import ru.urfu.backend.model.enums.*;
+import ru.urfu.backend.service.*;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
-@Tag(name = "Управление решениями заданий")
+@Tag(name = "Управление решениями задач")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping(PathsConstants.ROOT + PathsConstants.SOLUTIONS)
 public class SolutionController {
 
     private final AuthService authService;
+    private final UserService userService;
     private final TaskService taskService;
     private final SolutionService solutionService;
     private final ReviewService reviewService;
+    private final SolutionMapper solutionMapper;
 
     @Autowired
     public SolutionController(
             AuthService authService,
+            UserService userService,
             TaskService taskService,
             SolutionService solutionService,
-            ReviewService reviewService
+            ReviewService reviewService,
+            SolutionMapper solutionMapper
     ) {
         this.authService = authService;
+        this.userService = userService;
         this.taskService = taskService;
         this.solutionService = solutionService;
         this.reviewService = reviewService;
+        this.solutionMapper = solutionMapper;
     }
 
     @Operation(description = "Первичная отправка решения")
@@ -62,22 +65,22 @@ public class SolutionController {
         if(!TaskStatus.IN_PROGRESS.equals(task.getStatus())){
             throw new RuntimeException("Задача не находится в статусе IN_PROGRESS");
         }
+        if(task.getSolution() != null){
+            throw new RuntimeException("Для данной задачи уже создано решение");
+        }
         if(SolutionUploadType.MANUAL_TEXT.equals(request.uploadType())){
-            Solution solution = solutionService.createManualTextSolution(request, user, task);
+            Solution solution = solutionService.createManualTextSolution(request, task);
+            int reviewerIndex = 1;
             for(UserTask userTask : task.getUsers()){
                 if(UserTaskType.REVIEWER.equals(userTask.getUserTaskType())){
-                    reviewService.create(userTask.getUser(), solution);
+                    reviewService.create(userTask.getUser(), solution, reviewerIndex);
+                    reviewerIndex++;
                 }
             }
-            Task updatedTask = taskService.updateStatusInReview(task);
-            SolutionSubmitResponse response = new SolutionSubmitResponse(
-                    updatedTask.getId(),
-                    updatedTask.getStatus(),
-                    ReviewStatus.NEW,
-                    solution.getUploadedAt().toString(),
-                    LocalDateTime.now().plusDays(14).toString()
-            );
-            return ResponseEntity.status(201).body(response);
+            taskService.updateStatusInReview(task);
+            return ResponseEntity.status(201).body(
+                    solutionMapper.mapToSolutionSubmitResponse(
+                            solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
         } else {
             //TODO: Реализовать работу с другими solution
             throw new RuntimeException("Этот тип данных ещё не поддерживается");
@@ -104,13 +107,21 @@ public class SolutionController {
             if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
                 taskService.updateStatusInReview(task);
             }
-            return new SolutionSubmitResponse(
-                    task.getId(),
-                    task.getStatus(),
-                    ReviewStatus.IN_PROGRESS,
-                    updatedSolution.getUploadedAt().toString(),
-                    LocalDateTime.now().plusDays(14).toString()
-            );
+            for(Review review : updatedSolution.getReviews()){
+                ReviewIteration previousIteration =
+                        review.getLastIteration();
+
+                ReviewIteration currentIteration =
+                        reviewService.createReviewIteration(review);
+
+                reviewService.createReviewFileContent(
+                        previousIteration,
+                        currentIteration,
+                        updatedSolution.getSolutionManualText());
+            }
+            return solutionMapper.mapToSolutionSubmitResponse(
+                    updatedSolution, ReviewStatus.IN_PROGRESS,
+                    updatedSolution.getUploadedAt().plusDays(14).toString());
         } else {
             //TODO: Реализовать работу с другими solution
             throw new RuntimeException("Такой тип данных ещё не поддерживается");
@@ -133,9 +144,53 @@ public class SolutionController {
             throw new RuntimeException("Задача должна находиться в статусе IN_REVIEW или REWORK");
         }
         Solution updatedSolution = solutionService.revealAuthor(solution, request);
-        return new RevealAuthorAfterReviewResponse(
-                updatedSolution.getTask().getId(),
-                updatedSolution.getRevealAuthorAfterReview()
-        );
+        return solutionMapper.mapToRevealAuthorAfterReviewResponse(updatedSolution);
+    }
+
+    @Operation(description = "Ручная отправка задачи на ревью")
+    @PostMapping("/resend")
+    public ResponseEntity<SolutionSubmitResponse> resend(
+            @RequestBody ReviewResendRequest request
+    ) throws UserNotFoundException {
+        Long taskId = request.taskId();
+        User user = authService.getAuthenticatedUser();
+        Task task = taskService.getById(taskId);
+        Solution solution = task.getSolution();
+        if(!taskService.isUserAssigneeInTask(user, task)){
+            throw new RuntimeException("403 FORBIDDEN_TASK");
+        }
+        if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
+            throw new RuntimeException("Задача должна находиться в статусе IN_REVIEW");
+        }
+        if(!ReviewType.MANUAL_ASSIGNEES.equals(task.getReviewType())){
+            throw new RuntimeException("Задача должна иметь тип ревью MANUAL_ASSIGNEES");
+        }
+        if(request.reviewerIds().isEmpty()){
+            throw new RuntimeException("Список ревьюеров пуст");
+        }
+
+        for(Review review : task.getReviews()){
+            ReviewIteration reviewIteration = review.getLastIteration();
+            if(reviewIteration == null || reviewIteration.getDeadline() == null){
+                throw new RuntimeException("Некорректные данные ревью");
+            }
+            if(reviewIteration.getReviewVerdict() != null){
+                throw new RuntimeException("Найдено итоговое ревью на задачу, ручная отправка невозможна");
+            }
+            if(!reviewIteration.getDeadline().isBefore(LocalDateTime.now())){
+                throw new RuntimeException("Дедлайн по ревью ещё не истёк");
+            }
+        }
+
+        List<User> reviewers = new ArrayList<>();
+        for(Long reviewerId : request.reviewerIds()){
+            reviewers.add(userService.getById(reviewerId));
+        }
+
+        List<Review> reviews = reviewService.create(reviewers, solution);
+
+        return ResponseEntity.status(201).body(
+                solutionMapper.mapToSolutionSubmitResponse(solution, ReviewStatus.NEW,
+                        reviews.get(0).getLastIteration().getDeadline().toString()));
     }
 }

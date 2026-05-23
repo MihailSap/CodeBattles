@@ -1,6 +1,8 @@
 package ru.urfu.backend.dto.review;
 
-public record FinalReviewDto(
+import ru.urfu.backend.model.enums.ReviewVerdictType;
+
+public record FinalReviewResponse(
         Long id,
         Long reviewerId,
         Integer reviewerIndex,
@@ -12,7 +14,7 @@ public record FinalReviewDto(
         Integer scalability,
         Integer overallScore,
         String comment,
-        String verdict,
+        ReviewVerdictType verdict,
         String createdAt,
         Boolean counted,
         Boolean expired

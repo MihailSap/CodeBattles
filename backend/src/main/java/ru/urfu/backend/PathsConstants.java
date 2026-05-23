@@ -13,4 +13,5 @@ public interface PathsConstants {
     String PROFILE = "/profile";
     String SOLUTIONS = "/solutions";
     String REVIEWS = "/reviews";
+    String COMMENTS = "/comments";
 }

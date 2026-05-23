@@ -120,13 +120,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Transactional
     @Override
-    public void delete(Long id){
-        Task task = getById(id);
-        taskRepository.delete(task);
-    }
-
-    @Transactional
-    @Override
     public void delete(Task task){
         taskRepository.delete(task);
     }
@@ -167,13 +160,20 @@ public class TaskServiceImpl implements TaskService {
         return taskRepository.save(task);
     }
 
+    @Override
+    public Task updateStatusRework(Task task) {
+        task.setUpdatedAt(LocalDateTime.now());
+        task.setStatus(TaskStatus.REWORK);
+        return taskRepository.save(task);
+    }
+
     @Transactional
     @Override
-    public Task complete(Task task){
+    public Task updateStatusDone(Task task){
         LocalDateTime now = LocalDateTime.now();
-        task.setStatus(TaskStatus.DONE);
         task.setUpdatedAt(now);
         task.setCompletedAt(now);
+        task.setStatus(TaskStatus.DONE);
         return taskRepository.save(task);
     }
 }

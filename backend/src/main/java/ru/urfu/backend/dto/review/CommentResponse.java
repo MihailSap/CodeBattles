@@ -1,6 +1,6 @@
 package ru.urfu.backend.dto.review;
 
-public record CommentDto(
+public record CommentResponse(
         Long id,
         Long authorId,
         String authorName,
