@@ -1,0 +1,277 @@
+.root {
+  border-radius: 20px;
+  box-shadow: var(--shadow-section);
+  background-color: var(--color-surface-panel);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  color: var(--color-text-primary);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.searchWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: min(26.875rem, 100%);
+}
+
+.searchInput {
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid var(--color-accent-muted);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.625rem 0.75rem;
+}
+
+.searchInput {
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
+.tableWrap {
+  border: 1px solid rgba(21, 101, 192, 0.2);
+  border-radius: 14px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 47.5rem;
+  border-collapse: collapse;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.table thead tr {
+  background-color: rgba(21, 101, 192, 0.16);
+}
+
+.table th {
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.table td {
+  text-align: center;
+  padding: 0.6875rem 0.75rem;
+  border-top: 1px solid rgba(21, 101, 192, 0.16);
+  vertical-align: middle;
+}
+
+.row {
+  &.isAdmin {
+    background-color: rgba(21, 101, 192, 0.08);
+  }
+}
+
+.row {
+  &.isMe {
+    outline: 2px solid var(--color-accent-muted);
+    outline-offset: -2px;
+    box-shadow: inset 4px 0 0 0 var(--color-accent-muted);
+  }
+}
+
+.checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.checkbox {
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 10px;
+  border: 2px solid;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.actionButton {
+  &.isDelete {
+    color: var(--color-danger);
+    border-color: rgba(248, 81, 73, 0.55);
+  }
+}
+
+.actionButton {
+  &.isApprove {
+    color: var(--color-success);
+    border-color: rgba(46, 160, 67, 0.6);
+  }
+}
+
+.actionButton {
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+.loadingCell,
+.emptyCell {
+  padding: 1.25rem 0.75rem;
+}
+
+.tableLoader {
+  min-height: 11.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableLoader .spinner {
+  width: 2.875rem;
+  height: 2.875rem;
+  border-width: 4px;
+}
+
+.emptyCell {
+  color: var(--color-text-muted);
+  text-align: center;
+  font-size: 1rem;
+}
+
+.isError {
+  border: 2px solid var(--color-danger-border);
+  border-radius: 14px;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.paginationLabel {
+  min-width: 2.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.paginationButton {
+  border-radius: 10px;
+  border: 2px solid var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.paginationButton {
+  &:disabled {
+    border-color: var(--color-button-disabled);
+    background-color: var(--color-button-disabled);
+    cursor: not-allowed;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .actionButton.isDelete:hover:enabled {
+    background-color: rgba(248, 81, 73, 0.14);
+  }
+
+  .actionButton.isApprove:hover:enabled {
+    background-color: rgba(46, 160, 67, 0.14);
+  }
+
+  .paginationButton:hover:enabled {
+    background-color: var(--color-surface);
+    color: var(--color-accent);
+  }
+}
+
+@media (max-width: 47.5rem) {
+  .table th,
+  .table td {
+    padding: 0.625rem 0.5rem;
+  }
+
+  .actionButton {
+    width: 1.875rem;
+    height: 1.875rem;
+  }
+}
+
+@media (max-width: 35rem) {
+  .root {
+    padding: 0.75rem;
+  }
+
+  .searchInput {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.875rem;
+  }
+
+  .paginationButton {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.75rem;
+  }
+
+  .actionButton {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 1rem;
+  }
+}

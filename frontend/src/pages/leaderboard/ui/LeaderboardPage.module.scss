@@ -1,0 +1,94 @@
+.root {
+  min-height: calc(100dvh - var(--app-header-height));
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  width: 100%;
+  max-width: 93.75rem;
+  margin: 0 auto;
+  padding: 1.875rem 1.25rem;
+}
+
+.title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.section {
+  margin-top: 1.25rem;
+  padding: 0.9375rem 1.25rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow-section);
+  background: var(--color-page-bg);
+}
+
+.tabsWrap {
+  margin-top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.tabsTab {
+  padding: 0.3125rem 1.25rem;
+}
+
+.controls,
+.block {
+  margin-top: 0.9375rem;
+}
+
+.message {
+  margin-top: 0.9375rem;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.loader {
+  min-height: 20rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table {
+  margin-top: 0.9375rem;
+}
+
+@media (max-width: 31.25rem) {
+  .content {
+    padding: 1.25rem 0.625rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .section {
+    margin-top: 0.9375rem;
+    padding: 0.625rem 0.9375rem;
+  }
+
+  .tabsTab {
+    padding: 0.3125rem;
+    font-size: 0.75rem;
+  }
+
+  .controls,
+  .block,
+  .table {
+    margin-top: 0.625rem;
+  }
+
+  .message {
+    font-size: 0.875rem;
+    margin-top: 0.625rem;
+  }
+}

@@ -1,0 +1,165 @@
+.root {
+  position: fixed;
+  top: calc(var(--app-header-height) + 1.25rem);
+  right: 1.25rem;
+  max-width: 26.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9375rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  z-index: var(--z-toast);
+  opacity: 1;
+  transform: translateX(120%);
+  opacity: 0;
+  overflow: hidden;
+}
+
+.root {
+  &.isVisible {
+    animation: snackbar-slide-in 0.26s ease forwards;
+  }
+}
+
+.root {
+  &.isHidden {
+    animation: snackbar-slide-out 0.26s ease forwards;
+  }
+}
+
+@keyframes snackbar-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes snackbar-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+.root {
+  &.isSuccess {
+    background-color: var(--color-page-bg);
+    border-color: var(--color-success);
+    color: var(--color-success);
+    box-shadow: var(--shadow-success-soft);
+  }
+}
+
+.root {
+  &.isError {
+    background-color: var(--color-page-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+    box-shadow: var(--shadow-danger-focus);
+  }
+}
+
+.message {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.close {
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.close svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0.25rem;
+  background-color: currentColor;
+  opacity: 0.7;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.root {
+  &.isVisible {
+    .progress {
+      animation: snackbar-progress-shrink 3s linear forwards;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .close {
+    &:hover {
+      color: inherit;
+    }
+  }
+
+  .root.isSuccess .close {
+    &:hover {
+      background-color: var(--color-success-surface);
+    }
+  }
+
+  .root.isError .close {
+    &:hover {
+      background-color: var(--color-danger-surface);
+    }
+  }
+}
+
+@keyframes snackbar-progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .root {
+    top: calc(var(--app-header-height) + 0.625rem);
+    right: 0.625rem;
+    max-width: min(20rem, calc(100vw - 2.5rem));
+    gap: 0.625rem;
+  }
+
+  .message {
+    font-size: 0.875rem;
+  }
+
+  .close {
+    width: 1.625rem;
+    height: 1.625rem;
+  }
+
+  .close svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+}

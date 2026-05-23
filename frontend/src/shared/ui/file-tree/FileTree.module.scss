@@ -1,0 +1,91 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.node {
+  display: flex;
+  align-items: center;
+  padding: 0.3125rem;
+  cursor: pointer;
+  border-radius: 7px;
+  --color-transition: var(--transition-fast);
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
+  color: var(--color-accent);
+}
+
+.node {
+  &.isSelected {
+    color: var(--color-success);
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9375rem;
+  height: 0.9375rem;
+  margin-right: 0.3125rem;
+  flex-shrink: 0;
+}
+
+.folderIcon,
+.fileIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.folderIcon svg,
+.fileIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.name {
+  font-size: 0.875rem;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 15.625rem;
+}
+
+.commentDot {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  background-color: var(--color-danger);
+  border-radius: 50%;
+  margin-left: 0.3125rem;
+  flex-shrink: 0;
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .node {
+    &:hover {
+      background-color: var(--color-accent-hover-bg);
+    }
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .name {
+    font-size: 0.75rem;
+  }
+}
