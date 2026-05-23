@@ -1,11 +1,11 @@
 export type Styles = {
   actions: string;
+  dropdownMenu: string;
   dropdowns: string;
-  menu: string;
+  dropdownTrigger: string;
   myRating: string;
   root: string;
   search: string;
-  trigger: string;
 };
 
 export type ClassNames = keyof Styles;

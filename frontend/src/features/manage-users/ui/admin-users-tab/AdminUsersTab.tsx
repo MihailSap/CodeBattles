@@ -37,13 +37,10 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
     usersQueryParams.filter = debouncedSearch;
   }
 
-  const usersQuery = useGetUsersQuery(
-    usersQueryParams,
-    {
-      skip: !isActive,
-      refetchOnMountOrArgChange: 30,
-    }
-  );
+  const usersQuery = useGetUsersQuery(usersQueryParams, {
+    skip: !isActive,
+    refetchOnMountOrArgChange: 30,
+  });
 
   const [deleteUser, deleteUserState] = useDeleteUserMutation();
   const [makeAdmin, makeAdminState] = useMakeAdminMutation();

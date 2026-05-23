@@ -166,9 +166,13 @@ const LeaderboardPage = () => {
         <h1 className={leaderboardPageStyles.title}>Лидерборд</h1>
 
         <section className={leaderboardPageStyles.section}>
-          <div className={leaderboardPageStyles.tabs}>
-            <EntityTabs tabs={LEADERBOARD_TABS} activeKey={activeScope} onChange={handleScopeChange} />
-          </div>
+          <EntityTabs
+            tabs={LEADERBOARD_TABS}
+            activeKey={activeScope}
+            onChange={handleScopeChange}
+            wrapClassName={leaderboardPageStyles.tabsWrap}
+            tabClassName={leaderboardPageStyles.tabsTab}
+          />
 
           {isEntityScope && (
             <div className={leaderboardPageStyles.block}>

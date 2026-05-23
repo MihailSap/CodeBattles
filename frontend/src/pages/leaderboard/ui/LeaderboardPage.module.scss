@@ -27,13 +27,14 @@
   background: var(--color-page-bg);
 }
 
-.tabs .wrap {
+.tabsWrap {
   margin-top: 0;
+  width: 100%;
   display: flex;
   justify-content: center;
 }
 
-.tabs .tab {
+.tabsTab {
   padding: 0.3125rem 1.25rem;
 }
 
@@ -61,9 +62,6 @@
   margin-top: 0.9375rem;
 }
 
-@media (max-width: 48rem) {
-}
-
 @media (max-width: 31.25rem) {
   .content {
     padding: 1.25rem 0.625rem;
@@ -78,7 +76,7 @@
     padding: 0.625rem 0.9375rem;
   }
 
-  .tabs .tab {
+  .tabsTab {
     padding: 0.3125rem;
     font-size: 0.75rem;
   }

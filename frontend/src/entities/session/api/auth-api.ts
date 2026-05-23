@@ -38,7 +38,10 @@ export const authApi = {
       refreshToken,
     });
   },
-  getNewRefreshToken(refreshToken: string, accessToken: string | null = tokenStorage.getAccessToken()): Promise<AxiosResponse<Partial<TokensResponse>>> {
+  getNewRefreshToken(
+    refreshToken: string,
+    accessToken: string | null = tokenStorage.getAccessToken()
+  ): Promise<AxiosResponse<Partial<TokensResponse>>> {
     return authClient.post(
       '/api/v1/auth/refresh',
       {

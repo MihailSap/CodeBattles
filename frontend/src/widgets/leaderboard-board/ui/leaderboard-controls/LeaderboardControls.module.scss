@@ -14,12 +14,12 @@
   flex-wrap: wrap;
 }
 
-.dropdowns .trigger {
+.dropdownTrigger {
   min-width: 11.875rem;
   background: var(--color-surface);
 }
 
-.dropdowns .menu {
+.dropdownMenu {
   background: var(--color-surface);
 }
 
@@ -118,6 +118,7 @@
 @media (max-width: 43.75rem) {
   .dropdowns {
     flex-direction: column;
+    width: 100%;
   }
 }
 
@@ -136,7 +137,7 @@
     width: 100%;
   }
 
-  .dropdowns .trigger {
+  .dropdownTrigger {
     min-width: 0;
   }
 

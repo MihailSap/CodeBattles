@@ -9,13 +9,15 @@ interface EntityTabsProps {
   tabs: TabItem[];
   activeKey: string | null;
   onChange: (key: string) => void;
+  wrapClassName?: string;
+  tabClassName?: string;
 }
 
-const EntityTabs = ({ tabs, activeKey, onChange }: EntityTabsProps) => {
+const EntityTabs = ({ tabs, activeKey, onChange, wrapClassName = '', tabClassName = '' }: EntityTabsProps) => {
   const activeTabIndex = tabs.findIndex((tab) => tab.key === activeKey);
 
   return (
-    <div className={entityTabsStyles.wrap}>
+    <div className={[entityTabsStyles.wrap, wrapClassName].filter(Boolean).join(' ')}>
       <div
         className={entityTabsStyles.root}
         style={{
@@ -33,7 +35,7 @@ const EntityTabs = ({ tabs, activeKey, onChange }: EntityTabsProps) => {
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            className={[entityTabsStyles.tab, activeKey === tab.key ? entityTabsStyles.isActive : '']
+            className={[entityTabsStyles.tab, tabClassName, activeKey === tab.key ? entityTabsStyles.isActive : '']
               .filter(Boolean)
               .join(' ')}
             type="button"

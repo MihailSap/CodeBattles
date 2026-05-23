@@ -1,39 +1,208 @@
 .root {
   min-height: calc(100dvh - var(--app-header-height));
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-page-bg);
+  background: var(--color-surface);
 }
 
-.root > .header {
-  flex-shrink: 0;
+.header {
+  display: none;
 }
 
-.card {
-  width: min(32.5rem, calc(100% - 1.5rem));
-  margin: 1.75rem auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  border: 1px solid rgba(21, 101, 192, 0.25);
-  border-radius: 14px;
-  padding: 1.25rem;
-  background-color: var(--color-surface-panel);
+.content {
+  max-width: 93.75rem;
+  margin: 0 auto;
+  padding: 1.875rem 1.25rem;
 }
 
-.title {
+.pageTitle {
   color: var(--color-text-primary);
+  font-weight: 600;
   font-size: 1.5rem;
+  text-align: center;
 }
 
-.text {
+.sectionCard {
+  margin-top: 1.25rem;
+  padding: 0.9375rem 1.25rem;
+  border-radius: 15px;
+  box-shadow: var(--shadow-section);
+  background: var(--color-page-bg);
+}
+
+.tabsWrap {
+  margin-top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.tabsTab {
+  padding: 0.3125rem 1.25rem;
+}
+
+.filters {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.9375rem;
+  flex-wrap: wrap;
+}
+
+.dropdownTrigger {
+  min-width: 9.75rem;
+  background: var(--color-surface);
+}
+
+.dropdownMenu {
+  background: var(--color-surface);
+}
+
+.block {
+  margin-top: 1.25rem;
+}
+
+.blockTitle {
   color: var(--color-text-primary);
-  font-size: 0.9375rem;
+  font-weight: 600;
+  font-size: 1.25rem;
+  text-align: center;
 }
 
-@media (max-width: 43.75rem) {
-  .card {
-    margin: 1.125rem auto;
+.emptyText {
+  margin-top: 0.9375rem;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.tableWrap {
+  margin-top: 0.9375rem;
+  border-radius: 7px;
+  border: 1px solid var(--color-leaderboard-border);
+  width: max-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-x: auto;
+}
+
+.table {
+  width: max-content;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+  text-align: center;
+  border-top: 1px solid var(--color-leaderboard-border);
+  color: var(--color-text-primary);
+}
+
+.table th {
+  font-weight: 500;
+  border-top: none;
+  border-bottom: 1px solid var(--color-leaderboard-border);
+}
+
+.table td {
+  font-weight: 600;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.primaryLink {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.deadline {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.deadline {
+  &.isError {
+    color: var(--color-danger);
+  }
+}
+
+.deadline {
+  &.isWarning {
+    color: var(--color-status-warning);
+  }
+}
+
+.deadline {
+  &.isSuccess {
+    color: var(--color-success);
+  }
+}
+
+.isOverdueRow td {
+  border-top: 2px solid var(--color-danger);
+  border-bottom: 2px solid var(--color-danger);
+}
+
+.isOverdueRow td:first-child {
+  border-left: 2px solid var(--color-danger);
+  border-radius: 6px 0 0 6px;
+}
+
+.isOverdueRow td:last-child {
+  border-right: 2px solid var(--color-danger);
+  border-radius: 0 6px 6px 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .table tbody tr:hover td {
+    background: var(--color-accent-hover-bg);
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .content {
+    padding: 1.25rem 0.625rem;
+  }
+
+  .pageTitle {
+    font-size: 1.25rem;
+  }
+
+  .sectionCard {
+    margin-top: 0.9375rem;
+    padding: 0.625rem 0.9375rem;
+  }
+
+  .tabsTab {
+    padding: 0.3125rem;
+    font-size: 0.75rem;
+  }
+
+  .filters,
+  .block {
+    margin-top: 0.625rem;
+  }
+
+  .tableWrap {
+    margin-top: 0.625rem;
+  }
+
+  .emptyText {
+    font-size: 0.875rem;
+    margin-top: 0.625rem;
+  }
+
+  .blockTitle {
+    font-size: 1rem;
+  }
+
+  .table th, .table td {
+    padding: 0.5rem 0.9375rem;
+    font-size: 0.875rem;
   }
 }

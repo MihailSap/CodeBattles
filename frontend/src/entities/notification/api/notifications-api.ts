@@ -36,10 +36,7 @@ const notifyMockListeners = (event: NotificationEvent): void => {
 const getTargetId = (target: NotificationTarget = { kind: '' }): number | string | undefined =>
   target.reviewId || target.taskId || target.organizationId || target.userId || target.kind;
 
-const isSameTarget = (
-  left: NotificationTarget = { kind: '' },
-  right: NotificationTarget = { kind: '' }
-): boolean => {
+const isSameTarget = (left: NotificationTarget = { kind: '' }, right: NotificationTarget = { kind: '' }): boolean => {
   if (!left || !right || left.kind !== right.kind) {
     return false;
   }
@@ -107,17 +104,20 @@ const startMockRealtime = (): void => {
   mockRealtimeStarted = true;
 
   MOCK_REALTIME_NOTIFICATIONS.slice(0, MOCK_REALTIME_NOTIFICATIONS_LIMIT).forEach((notification, index) => {
-    window.setTimeout(() => {
-      const storedNotification = upsertMockNotification({
-        ...(clone(notification) as AppNotification),
-        createdAt: new Date().toISOString(),
-      });
+    window.setTimeout(
+      () => {
+        const storedNotification = upsertMockNotification({
+          ...(clone(notification) as AppNotification),
+          createdAt: new Date().toISOString(),
+        });
 
-      notifyMockListeners({
-        type: 'notification.upserted',
-        notification: storedNotification,
-      });
-    }, 1000 + index * 6000);
+        notifyMockListeners({
+          type: 'notification.upserted',
+          notification: storedNotification,
+        });
+      },
+      1000 + index * 6000
+    );
   });
 };
 

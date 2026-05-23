@@ -25,13 +25,22 @@ const LeaderboardControls = ({
   return (
     <div className={leaderboardControlsStyles.root}>
       <div className={leaderboardControlsStyles.dropdowns}>
-        <ReviewDropdown label="Период:" value={period} options={periodDropdownOptions} onChange={onPeriodChange} />
+        <ReviewDropdown
+          label="Период:"
+          value={period}
+          options={periodDropdownOptions}
+          onChange={onPeriodChange}
+          triggerClassName={leaderboardControlsStyles.dropdownTrigger}
+          menuClassName={leaderboardControlsStyles.dropdownMenu}
+        />
 
         <ReviewDropdown
           label="Категория:"
           value={category}
           options={categoryDropdownOptions}
           onChange={onCategoryChange}
+          triggerClassName={leaderboardControlsStyles.dropdownTrigger}
+          menuClassName={leaderboardControlsStyles.dropdownMenu}
         />
       </div>
 

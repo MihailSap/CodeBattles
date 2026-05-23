@@ -49,9 +49,7 @@ type AccessErrorShape = {
   projectPrivacy?: string;
 };
 
-const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
-  typeof value === 'object' && value !== null;
-
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
 
 const InviteLinkModal = lazyNamed(() => import('@/features/generate-invite-link'), 'InviteLinkModal');
 const ProjectSkillsSelector = lazyNamed(() => import('@/entities/stack'), 'ProjectSkillsSelector');

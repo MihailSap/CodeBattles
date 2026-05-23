@@ -37,9 +37,7 @@ type AccessErrorShape = {
   projectPrivacy?: string;
 };
 
-const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
-  typeof value === 'object' && value !== null;
-
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
 
 const AssigneesSelector = lazyNamed(() => import('@/features/manage-task'), 'AssigneesSelector');
 const SolutionTab = lazyNamed(() => import('@/widgets/solution-workspace'), 'SolutionTab');

@@ -10,7 +10,11 @@ const withDelay = (value: LegacyValue, ms: LegacyValue = REVIEWS_NETWORK_DELAY_M
 
 const clone = (value: LegacyValue) => JSON.parse(JSON.stringify(value));
 
-const paginate = <T>(items: T[], page: number = 1, pageSize: number = REVIEWS_PAGE_SIZE_DEFAULT): PaginatedResponse<T> => {
+const paginate = <T>(
+  items: T[],
+  page: number = 1,
+  pageSize: number = REVIEWS_PAGE_SIZE_DEFAULT
+): PaginatedResponse<T> => {
   const normalizedPage = Math.max(1, Number(page) || 1);
   const normalizedPageSize = Math.max(1, Number(pageSize) || REVIEWS_PAGE_SIZE_DEFAULT);
   const start = (normalizedPage - 1) * normalizedPageSize;
@@ -46,18 +50,21 @@ export interface GetAssignedReviewsParams extends PaginationParams {
 }
 
 export const reviewsApi = {
-  async getAssignedReviews(viewerId: number | string, params: GetAssignedReviewsParams = {}): Promise<PaginatedResponse<AssignedReview>> {
+  async getAssignedReviews(
+    viewerId: number | string,
+    params: GetAssignedReviewsParams = {}
+  ): Promise<PaginatedResponse<AssignedReview>> {
     const { page = 1, pageSize = REVIEWS_PAGE_SIZE_DEFAULT, status = '', sort = REVIEW_SORT.NEAREST_FIRST } = params;
 
-    const filtered = (MOCK_ASSIGNED_REVIEWS as AssignedReview[]).filter(
-      (review) => Number(review.reviewerId) === Number(viewerId)
-    ).filter((review) => {
-      if (!status) {
-        return true;
-      }
+    const filtered = (MOCK_ASSIGNED_REVIEWS as AssignedReview[])
+      .filter((review) => Number(review.reviewerId) === Number(viewerId))
+      .filter((review) => {
+        if (!status) {
+          return true;
+        }
 
-      return review.status === status;
-    });
+        return review.status === status;
+      });
 
     const sorted = sortByDeadline(filtered, sort);
 

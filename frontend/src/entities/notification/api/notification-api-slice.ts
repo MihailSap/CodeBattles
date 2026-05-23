@@ -22,9 +22,7 @@ const upsertNotification = (draft: AppNotification[], notification: AppNotificat
     draft.unshift(notification);
   }
 
-  draft.sort(
-    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
-  );
+  draft.sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 };
 
 export const notificationApiSlice = baseApi.injectEndpoints({
@@ -41,36 +39,35 @@ export const notificationApiSlice = baseApi.injectEndpoints({
               notificationListTag,
             ]
           : [notificationListTag],
-      async onCacheEntryAdded(
-        _arg,
-        { updateCachedData, cacheDataLoaded, cacheEntryRemoved }
-      ) {
+      async onCacheEntryAdded(_arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
         let unsubscribe = () => {};
         let expirationTimerId = null;
 
         try {
           await cacheDataLoaded;
 
-          unsubscribe = notificationsApi.subscribe((event: { type: string; notification?: AppNotification; notificationId?: number | string }) => {
-            if (event.type === 'notification.upserted' && event.notification) {
-              const notification = event.notification;
+          unsubscribe = notificationsApi.subscribe(
+            (event: { type: string; notification?: AppNotification; notificationId?: number | string }) => {
+              if (event.type === 'notification.upserted' && event.notification) {
+                const notification = event.notification;
 
-              updateCachedData((draft) => {
-                upsertNotification(draft, notification);
-                removeExpiredNotifications(draft);
-              });
+                updateCachedData((draft) => {
+                  upsertNotification(draft, notification);
+                  removeExpiredNotifications(draft);
+                });
+              }
+
+              if (event.type === 'notification.deleted' && event.notificationId) {
+                updateCachedData((draft) => {
+                  const index = draft.findIndex((notification) => notification.id === event.notificationId);
+
+                  if (index >= 0) {
+                    draft.splice(index, 1);
+                  }
+                });
+              }
             }
-
-            if (event.type === 'notification.deleted' && event.notificationId) {
-              updateCachedData((draft) => {
-                const index = draft.findIndex((notification) => notification.id === event.notificationId);
-
-                if (index >= 0) {
-                  draft.splice(index, 1);
-                }
-              });
-            }
-          });
+          );
 
           expirationTimerId = window.setInterval(() => {
             updateCachedData(removeExpiredNotifications);
@@ -106,8 +103,7 @@ export const notificationApiSlice = baseApi.injectEndpoints({
       invalidatesTags: [notificationListTag],
     }),
     deleteNotification: build.mutation<{ id: number | string }, number | string>({
-      queryFn: (notificationId) =>
-        toQueryResult(() => notificationsApi.deleteNotification(notificationId)),
+      queryFn: (notificationId) => toQueryResult(() => notificationsApi.deleteNotification(notificationId)),
       async onQueryStarted(notificationId, { dispatch, queryFulfilled }) {
         const patchResult = dispatch(
           notificationApiSlice.util.updateQueryData('getNotifications', undefined, (draft) => {

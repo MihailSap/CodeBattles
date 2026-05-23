@@ -6,11 +6,10 @@ export type Styles = {
   message: string;
   root: string;
   section: string;
-  tab: string;
   table: string;
-  tabs: string;
+  tabsTab: string;
+  tabsWrap: string;
   title: string;
-  wrap: string;
 };
 
 export type ClassNames = keyof Styles;

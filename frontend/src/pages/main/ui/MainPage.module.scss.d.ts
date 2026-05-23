@@ -1,9 +1,26 @@
 export type Styles = {
-  card: string;
+  block: string;
+  blockTitle: string;
+  clickableRow: string;
+  content: string;
+  deadline: string;
+  dropdownMenu: string;
+  dropdownTrigger: string;
+  emptyText: string;
+  filters: string;
   header: string;
+  isError: string;
+  isOverdueRow: string;
+  isSuccess: string;
+  isWarning: string;
+  pageTitle: string;
+  primaryLink: string;
   root: string;
-  text: string;
-  title: string;
+  sectionCard: string;
+  table: string;
+  tableWrap: string;
+  tabsTab: string;
+  tabsWrap: string;
 };
 
 export type ClassNames = keyof Styles;

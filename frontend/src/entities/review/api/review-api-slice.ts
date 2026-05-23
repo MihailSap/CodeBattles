@@ -6,9 +6,11 @@ import type { PaginatedResponse } from '@/shared/api';
 
 export const reviewApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getAssignedReviews: build.query<PaginatedResponse<AssignedReview>, { viewerId: number | string; params?: GetAssignedReviewsParams }>({
-      queryFn: ({ viewerId, params = {} }) =>
-        toQueryResult(() => reviewsApi.getAssignedReviews(viewerId, params)),
+    getAssignedReviews: build.query<
+      PaginatedResponse<AssignedReview>,
+      { viewerId: number | string; params?: GetAssignedReviewsParams }
+    >({
+      queryFn: ({ viewerId, params = {} }) => toQueryResult(() => reviewsApi.getAssignedReviews(viewerId, params)),
       providesTags: [
         {
           type: 'Review' as const,
