@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 035-add-data-to-comment-report
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: comment_report
+            columns:
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+              - column:
+                  name: created_at
+                  type: TIMESTAMP

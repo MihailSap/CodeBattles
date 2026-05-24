@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 036-create-system-settings
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: system_settings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: review_deadline_days
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ai_system_prompt
+                  type: TEXT
+                  constraints:
+                    nullable: false
+
+        - insert:
+            tableName: system_settings
+            columns:
+              - column:
+                  name: review_deadline_days
+                  valueNumeric: 14
+              - column:
+                  name: ai_system_prompt
+                  value: "Это базовый системный промпт. Необходимо его обновить"

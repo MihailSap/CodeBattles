@@ -3,6 +3,7 @@ package ru.urfu.backend.service;
 import ru.urfu.backend.dto.comment.*;
 import ru.urfu.backend.model.*;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CommentService {
@@ -10,6 +11,10 @@ public interface CommentService {
     Comment getById(Long id);
 
     Comment getRootComment(Comment comment);
+
+    List<CommentReport> getAllReports();
+
+    CommentReport getReportById(Long id);
 
     int getReplyDepth(Comment comment);
 
@@ -26,6 +31,8 @@ public interface CommentService {
     CommentReaction createReaction(ToggleReactionRequest request, User user, Comment comment);
 
     Comment updateState(UpdateThreadStateRequest request, User user, Comment comment);
+
+    CommentReport deactivateCommentReport(CommentReport report);
 
     void delete(Comment comment);
 }

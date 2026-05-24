@@ -13,6 +13,7 @@ import ru.urfu.backend.repository.CommentRepository;
 import ru.urfu.backend.service.CommentService;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,6 +50,17 @@ public class CommentServiceImpl implements CommentService {
         }
 
         return current;
+    }
+
+    @Override
+    public List<CommentReport> getAllReports() {
+        return commentReportRepository.findAll();
+    }
+
+    @Override
+    public CommentReport getReportById(Long id) {
+        return commentReportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Жалоба на комментарий с id=%s не найдена".formatted(id)));
     }
 
     @Transactional(readOnly = true)
@@ -145,9 +157,20 @@ public class CommentServiceImpl implements CommentService {
         return comment;
     }
 
+    @Override
+    public CommentReport deactivateCommentReport(CommentReport report) {
+        report.setActive(false);
+        return commentReportRepository.save(report);
+    }
+
     @Transactional
     @Override
     public void delete(Comment comment) {
-        commentRepository.delete(comment);
+        Comment parent = comment.getParentComment();
+        if (parent != null) {
+            parent.removeReply(comment);
+        } else {
+            commentRepository.delete(comment);
+        }
     }
 }

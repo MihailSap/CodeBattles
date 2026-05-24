@@ -64,7 +64,7 @@ public class ReviewController {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
         Task task = review.getTask();
-        if(!user.equals(review.getUser())) {
+        if(!user.equals(review.getUser()) && !Role.ADMIN.equals(user.getRole())) {
             throw new RuntimeException("403 FORBIDDEN_REVIEW");
         }
         if(task.getSolution() == null){
@@ -116,7 +116,7 @@ public class ReviewController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
-        if(!user.equals(review.getUser())) {
+        if(!user.equals(review.getUser()) && !Role.ADMIN.equals(user.getRole())) {
             throw new RuntimeException("403 FORBIDDEN_REVIEW");
         }
         return reviewMapper.mapToReviewFileContentResponses(review.getLastIteration());

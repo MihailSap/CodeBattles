@@ -14,6 +14,7 @@ import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.ReviewVerdictType;
+import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.service.*;
 
@@ -88,7 +89,8 @@ public class TasksController {
         Project project = task.getProject();
         if(!projectService.isUserOwnerInProject(project, user)
                 && !taskService.isUserReviewerInTask(user, task)
-                && !taskService.isUserAssigneeInTask(user, task)){
+                && !taskService.isUserAssigneeInTask(user, task)
+                && !Role.ADMIN.equals(user.getRole())){
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
         }
         return taskMapper.mapToTaskDetailsResponse(task);

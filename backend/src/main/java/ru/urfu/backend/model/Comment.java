@@ -60,6 +60,16 @@ public class Comment extends BaseEntity {
     @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> replies = new HashSet<>();
 
+    public void addReply(Comment reply){
+        replies.add(reply);
+        reply.setParentComment(this);
+    }
+
+    public void removeReply(Comment reply){
+        replies.remove(reply);
+        reply.setParentComment(null);
+    }
+
     public ReviewIteration getReviewIteration() {
         return reviewIteration;
     }

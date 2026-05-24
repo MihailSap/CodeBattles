@@ -4,11 +4,17 @@ import jakarta.persistence.*;
 import ru.urfu.backend.model.base.BaseEntity;
 import ru.urfu.backend.model.enums.ReportReason;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "comment_report")
 public class CommentReport extends BaseEntity {
 
     private String message;
+
+    private Boolean isActive = true;
+
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     private ReportReason reason;
@@ -51,5 +57,21 @@ public class CommentReport extends BaseEntity {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
     }
 }
