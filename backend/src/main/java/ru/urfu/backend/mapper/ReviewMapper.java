@@ -75,8 +75,12 @@ public class ReviewMapper {
     }
 
     private List<ReviewHistoryResponse> mapToHistoryEventResponse(Review review){
+        ReviewIteration lastReviewIteration = review.getLastIteration();
         List<ReviewHistoryResponse> historyResponses = new ArrayList<>();
         for(ReviewIteration reviewIteration : review.getReviewIterations()){
+            if(reviewIteration.equals(lastReviewIteration)){
+                continue;
+            }
             historyResponses.add(mapToReviewHistoryResponse(reviewIteration));
         }
         return historyResponses;
