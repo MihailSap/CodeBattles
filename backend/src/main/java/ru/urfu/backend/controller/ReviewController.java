@@ -32,6 +32,7 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final TaskService taskService;
     private final ReviewMapper reviewMapper;
+    private int count = 0;
 
     @Autowired
     public ReviewController(
@@ -87,13 +88,14 @@ public class ReviewController {
             @PathVariable("reviewId") Long reviewId,
             @RequestBody SubmitFinalReviewRequest request
     ) throws UserNotFoundException {
+        count++;
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
         if(!user.equals(review.getUser())){
             throw new RuntimeException("Запрещено завершать чужие ревью");
         }
         if(ReviewStatus.COMPLETED.equals(review.getStatus())){
-            throw new RuntimeException("Запрещено отправить вердикт на завершенное ревью");
+            throw new RuntimeException("Запрещено отправить вердикт на завершенное ревью. Количество обращений: %s".formatted(count));
         }
         if(review.getLastIteration().getDeadline().isBefore(LocalDateTime.now())){
             throw new RuntimeException("Дедлайн данного ревью истёк, отправка невозможна");
