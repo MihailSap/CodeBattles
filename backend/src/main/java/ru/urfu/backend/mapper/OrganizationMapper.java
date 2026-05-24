@@ -64,6 +64,9 @@ public class OrganizationMapper {
             if (userProject.isPresent()) {
                 projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(
                         project, userProject.get().getProjectMemberRole()));
+            } else if(!project.getIsPrivate()){
+                    projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(
+                            project, ProjectMemberRole.GUEST));
             }
         }
 
