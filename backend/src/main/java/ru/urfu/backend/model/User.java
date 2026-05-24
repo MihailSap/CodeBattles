@@ -22,7 +22,7 @@ public class User extends BaseEntity {
 
     private Role role;
 
-    private Boolean enabled;
+    private Boolean enabled = false;
 
     private String verificationToken;
 

@@ -12,11 +12,13 @@ import ru.urfu.backend.dto.leaderboard.LeaderboardEntityResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.LeaderboardMapper;
 import ru.urfu.backend.model.Organization;
+import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.OrganizationService;
+import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.UserService;
 
 import java.util.Comparator;
@@ -29,20 +31,20 @@ import java.util.List;
 public class LeaderboardController {
 
     private final AuthService authService;
-    private final UserService userService;
     private final OrganizationService organizationService;
+    private final ProjectService projectService;
     private final LeaderboardMapper leaderboardMapper;
 
     @Autowired
     public LeaderboardController(
             AuthService authService,
-            UserService userService,
             OrganizationService organizationService,
+            ProjectService projectService,
             LeaderboardMapper leaderboardMapper
     ) {
         this.authService = authService;
-        this.userService = userService;
         this.organizationService = organizationService;
+        this.projectService = projectService;
         this.leaderboardMapper = leaderboardMapper;
     }
 
@@ -75,6 +77,23 @@ public class LeaderboardController {
 
         organizations.sort(Comparator.comparing(Organization::getLastActivityAt,
                 Comparator.nullsLast(Comparator.reverseOrder())));
-        return leaderboardMapper.mapToLeaderboardEntityResponses(organizations);
+        return leaderboardMapper.mapOrganizationsToLeaderboardEntityResponses(organizations);
+    }
+
+    @Operation(description = "Получение доступных проектов для лидерборда")
+    @GetMapping("/projects")
+    public List<LeaderboardEntityResponse> getProjects()
+            throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        List<Project> projects;
+        if(Role.ADMIN.equals(user.getRole())){
+            projects = projectService.getAllProjects();
+        } else {
+            projects = projectService.getUserProjects(user);
+        }
+
+        projects.sort(Comparator.comparing(Project::getLastActivityAt,
+                Comparator.nullsLast(Comparator.reverseOrder())));
+        return leaderboardMapper.mapProjectsToLeaderboardEntityResponses(projects);
     }
 }

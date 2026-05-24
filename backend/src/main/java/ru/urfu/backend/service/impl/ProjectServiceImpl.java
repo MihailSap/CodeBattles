@@ -40,6 +40,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Transactional(readOnly = true)
     @Override
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<Project> getUserProjects(User user) {
         return userProjectRepository.findAllByUser(user)
                 .stream()

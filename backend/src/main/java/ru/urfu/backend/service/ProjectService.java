@@ -17,6 +17,8 @@ import java.util.Optional;
 
 public interface ProjectService {
 
+    List<Project> getAllProjects();
+
     List<Project> getUserProjects(User user);
 
     List<Project> getPublicProjects(User user);

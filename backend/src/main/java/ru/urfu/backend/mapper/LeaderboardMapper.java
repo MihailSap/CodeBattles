@@ -3,6 +3,7 @@ package ru.urfu.backend.mapper;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.leaderboard.LeaderboardEntityResponse;
 import ru.urfu.backend.model.Organization;
+import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.UserOrganization;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class LeaderboardMapper {
         return organizations;
     }
 
-    public List<LeaderboardEntityResponse> mapToLeaderboardEntityResponses(List<Organization> organizations) {
+    public List<LeaderboardEntityResponse> mapOrganizationsToLeaderboardEntityResponses(List<Organization> organizations) {
         List<LeaderboardEntityResponse> leaderboardEntityResponses = new ArrayList<>();
         for (Organization organization : organizations) {
             leaderboardEntityResponses.add(mapToLeaderboardEntityResponse(organization));
@@ -27,11 +28,27 @@ public class LeaderboardMapper {
         return leaderboardEntityResponses;
     }
 
-    public LeaderboardEntityResponse mapToLeaderboardEntityResponse(Organization organization){
+    public List<LeaderboardEntityResponse> mapProjectsToLeaderboardEntityResponses(List<Project> projects) {
+        List<LeaderboardEntityResponse> leaderboardEntityResponses = new ArrayList<>();
+        for (Project project : projects) {
+            leaderboardEntityResponses.add(mapToLeaderboardEntityResponse(project));
+        }
+        return leaderboardEntityResponses;
+    }
+
+    private LeaderboardEntityResponse mapToLeaderboardEntityResponse(Organization organization){
         return new LeaderboardEntityResponse(
                 organization.getId(),
                 organization.getTitle(),
                 organization.getLastActivityAt() == null ? null : organization.getLastActivityAt().toString()
+        );
+    }
+
+    private LeaderboardEntityResponse mapToLeaderboardEntityResponse(Project project){
+        return new LeaderboardEntityResponse(
+                project.getId(),
+                project.getTitle(),
+                project.getLastActivityAt() == null ? null : project.getLastActivityAt().toString()
         );
     }
 }

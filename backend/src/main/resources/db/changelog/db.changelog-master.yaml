@@ -75,3 +75,5 @@ databaseChangeLog:
       file: db/changelog/changeset/037-add-last-activity-at.yaml
   - include:
       file: db/changelog/changeset/038-rename-comment-review-id.yaml
+  - include:
+      file: db/changelog/changeset/039-update-enabled.yaml
