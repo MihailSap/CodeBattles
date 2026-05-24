@@ -118,7 +118,10 @@ public class ReviewController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
-        if(!user.equals(review.getUser()) && !Role.ADMIN.equals(user.getRole())) {
+        Project project = review.getTask().getProject();
+        if(!user.equals(review.getUser())
+                && !Role.ADMIN.equals(user.getRole())
+                && !projectService.isUserOwnerInProject(project, user)) {
             throw new RuntimeException("403 FORBIDDEN_REVIEW");
         }
         return reviewMapper.mapToReviewFileContentResponses(review.getLastIteration());

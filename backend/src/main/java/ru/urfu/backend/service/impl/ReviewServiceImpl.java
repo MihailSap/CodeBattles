@@ -113,7 +113,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public List<Review> getReviewsByUser(User user) {
         List<Review> reviews = reviewRepository.findByUser(user);
@@ -244,20 +244,48 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     @Override
     public ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review) {
+        ReviewIteration reviewIteration = review.getLastIteration();
+
         ReviewVerdict reviewVerdict = new ReviewVerdict();
-        reviewVerdict.setReviewIteration(review.getLastIteration());
+        reviewVerdict.setReviewIteration(reviewIteration);
+
+        reviewIteration.setReviewVerdict(reviewVerdict);
+
         reviewVerdict.setVerdict(request.verdict());
         reviewVerdict.setArchitecture(request.architecture());
         reviewVerdict.setReadability(request.readability());
         reviewVerdict.setScalability(request.scalability());
         reviewVerdict.setTestability(request.testability());
         reviewVerdict.setComment(request.comment());
+
         int overallScore = Math.round((
-                request.architecture() + request.readability() + request.testability() + request.scalability()) / 4.0f);
+                request.architecture()
+                        + request.readability()
+                        + request.testability()
+                        + request.scalability()
+        ) / 4.0f);
 
         reviewVerdict.setOverallScore(overallScore);
         return reviewVerdictRepository.save(reviewVerdict);
     }
+
+//    @Transactional
+//    @Override
+//    public ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review) {
+//        ReviewVerdict reviewVerdict = new ReviewVerdict();
+//        reviewVerdict.setReviewIteration(review.getLastIteration());
+//        reviewVerdict.setVerdict(request.verdict());
+//        reviewVerdict.setArchitecture(request.architecture());
+//        reviewVerdict.setReadability(request.readability());
+//        reviewVerdict.setScalability(request.scalability());
+//        reviewVerdict.setTestability(request.testability());
+//        reviewVerdict.setComment(request.comment());
+//        int overallScore = Math.round((
+//                request.architecture() + request.readability() + request.testability() + request.scalability()) / 4.0f);
+//
+//        reviewVerdict.setOverallScore(overallScore);
+//        return reviewVerdictRepository.save(reviewVerdict);
+//    }
 
     @Transactional
     @Override
