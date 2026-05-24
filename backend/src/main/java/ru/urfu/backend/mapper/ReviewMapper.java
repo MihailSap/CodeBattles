@@ -8,6 +8,7 @@ import ru.urfu.backend.model.enums.UserTaskType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -36,6 +37,53 @@ public class ReviewMapper {
             reviewListItemDtos.add(mapToReviewListItemDto(review));
         }
         return reviewListItemDtos;
+    }
+
+    public ReviewDetailsResponse mapToReviewDetailsResponseByTask(Review review, PermissionsResponse permissionsResponse){
+        Task task = review.getTask();
+        Set<ReviewIteration> reviewIterations = new HashSet<>();
+        Set<Comment> comments = new HashSet<>();
+        for(Review review1 : task.getReviews()){
+            for(ReviewIteration reviewIteration1 : review1.getReviewIterations()){
+                reviewIterations.add(reviewIteration1);
+                comments.addAll(reviewIteration1.getComments());
+            }
+        }
+
+        Project project = task.getProject();
+        Organization organization = project.getOrganization();
+        Solution solution = task.getSolution();
+        Set<UserTask> userTasks = task.getUsers();
+        ReviewIteration reviewIteration = review.getLastIteration();
+        return new ReviewDetailsResponse(
+                review.getId(),
+                task.getId(),
+                project.getId(),
+                solution.getId(),
+                mapToReviewProjectResponse(project),
+                mapToReviewOrganizationResponse(organization),
+                task.getTitle(),
+                task.getStatus(),
+                review.getStatus(),
+                task.getReviewType(),
+                solution.getUploadType(),
+                reviewIteration.getUploadedAt() == null ? "" : reviewIteration.getUploadedAt().toString(),
+                reviewIteration.getDeadline() == null ? "" : reviewIteration.getDeadline().toString(),
+                reviewIteration.getCompletedAt() == null ? "" : reviewIteration.getCompletedAt().toString(),
+                getVisibleUntil(reviewIteration),
+                review.getRevealAuthorAfterReview(),
+                solution.getRevealAuthorAfterReview(),
+                mapToAssignees(userTasks),
+                mapToReviewers(userTasks),
+                mapToViewerAssignmentResponse(review),
+                mapToReviewFileContentResponses(review.getLastIteration()),
+                commentMapper.mapToReviewCommentResponses(comments),
+                mapToHistoryEventResponse(review),
+                mapToFinalReviewResponses(reviewIterations),
+                null, //TODO: Доработать, когда появится ИИ ревью
+                null, //TODO: Доработать, когда появится ИИ ревью
+                permissionsResponse
+        );
     }
 
     public ReviewDetailsResponse mapToReviewDetailsResponse(Review review, PermissionsResponse permissionsResponse){

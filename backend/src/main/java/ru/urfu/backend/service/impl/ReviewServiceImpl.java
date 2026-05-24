@@ -304,4 +304,10 @@ public class ReviewServiceImpl implements ReviewService {
         review.setStatus(ReviewStatus.COMPLETED);
         return reviewRepository.save(review);
     }
+
+    @Override
+    public Review updateRevealName(Boolean revealName, Review review) {
+        review.setRevealAuthorAfterReview(revealName);
+        return reviewRepository.save(review);
+    }
 }

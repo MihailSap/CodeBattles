@@ -148,13 +148,12 @@ public class CommentServiceImpl implements CommentService {
     public Comment updateState(UpdateThreadStateRequest request, User user, Comment comment) {
         if(ThreadAction.CLOSE.equals(request.action()) && comment.getClosedAt() == null){
             comment.setClosedAt(LocalDateTime.now());
-            comment.setUpdatedAt(LocalDateTime.now());
         } else if(ThreadAction.REOPEN.equals(request.action()) && comment.getClosedAt() != null){
             comment.setClosedAt(null);
-            comment.setUpdatedAt(LocalDateTime.now());
         }
 
-        return comment;
+        comment.setUpdatedAt(LocalDateTime.now());
+        return commentRepository.save(comment);
     }
 
     @Override

@@ -103,13 +103,14 @@ public class ReviewController {
 
         ReviewVerdict reviewVerdict = reviewService.createVerdict(request, review);
         Review updatedReview = reviewService.updateStatusCompleted(review);
+        Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
 
         Task task = review.getTask();
         if (ReviewVerdictType.REWORK.equals(request.verdict())) {
             taskService.updateStatusRework(task);
         }
 
-        return ResponseEntity.status(201).body(reviewMapper.mapToSubmitFinalReviewResponse(updatedReview));
+        return ResponseEntity.status(201).body(reviewMapper.mapToSubmitFinalReviewResponse(secondUpdatedReview));
     }
 
     @GetMapping("/{reviewId}/files")
@@ -158,6 +159,6 @@ public class ReviewController {
                 true,
                 true
         );
-        return reviewMapper.mapToReviewDetailsResponse(review, permissionsResponse);
+        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
     }
 }

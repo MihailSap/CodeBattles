@@ -34,4 +34,6 @@ public interface ReviewService {
     Review updateStatusInProgress(Review review);
 
     Review updateStatusCompleted(Review review);
+
+    Review updateRevealName(Boolean revealName, Review review);
 }
