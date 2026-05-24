@@ -99,9 +99,10 @@ public class CommentController {
     public ResponseEntity<ReportCommentResponse> report(
             @PathVariable("commentId") Long commentId,
             @RequestBody ReportCommentRequestDto request
-    ) {
+    ) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
-        CommentReport report = commentService.createReport(request, comment);
+        CommentReport report = commentService.createReport(request, user, comment);
         return ResponseEntity.status(201).body(commentMapper.mapToReportCommentResponse(report));
     }
 

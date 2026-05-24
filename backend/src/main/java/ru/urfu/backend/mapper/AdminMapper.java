@@ -36,7 +36,7 @@ public class AdminMapper {
                 commentReport.getId(),
                 comment.getId(),
                 comment.getText(),
-                mapToAdminUserBriefDto(commentReport.getUser()),
+                mapToAdminUserBriefDto(commentReport.getComment().getUser()),
                 mapToAdminComplaintTargetDto(comment),
                 commentReport.getReason(),
                 mapToAdminUserBriefDto(commentReport.getUser()),
@@ -56,8 +56,7 @@ public class AdminMapper {
         Review review = comment.getReviewIteration().getReview();
         return new AdminComplaintTargetDto(
                 "review",
-                "",
-                "",
+                comment.getReviewIteration().getReview().getTask().getTitle(),
                 review.getTask().getProject().getId(),
                 review.getTask().getId(),
                 review.getId()
