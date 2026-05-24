@@ -9,6 +9,7 @@ public record TaskDetailsResponse(
         Long id,
         Long projectId,
         Long organizationId,
+        Long solutionId,
         String projectName,
         Boolean isProjectPrivate,
         Boolean aiReviewEnabled,

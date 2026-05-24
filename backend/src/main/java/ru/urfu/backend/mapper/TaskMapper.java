@@ -66,6 +66,7 @@ public class TaskMapper {
                 task.getId(),
                 project.getId(),
                 project.getOrganization() == null ? null : project.getOrganization().getId(),
+                task.getSolution() == null ? null : task.getSolution().getId(),
                 project.getTitle(),
                 project.getIsPrivate(),
                 project.getAiReviewEnabled(),
