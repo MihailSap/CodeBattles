@@ -14,6 +14,7 @@ public class SolutionMapper {
             Solution solution, ReviewStatus reviewStatus, String deadline){
         Task task = solution.getTask();
         return new SolutionSubmitResponse(
+                solution.getId(),
                 task.getId(),
                 task.getStatus(),
                 reviewStatus,

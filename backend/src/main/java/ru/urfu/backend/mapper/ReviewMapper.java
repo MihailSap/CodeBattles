@@ -66,42 +66,11 @@ public class ReviewMapper {
                 mapToViewerAssignmentResponse(review),
                 mapToReviewFileContentResponses(review.getLastIteration()),
                 commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
-//                mapToCommentDtos(reviewIteration.getComments()), //FIXME
                 mapToHistoryEventResponse(review),
                 mapToFinalReviewResponses(review.getReviewIterations()),
                 null, //TODO: Доработать, когда появится ИИ ревью
                 null, //TODO: Доработать, когда появится ИИ ревью
                 permissionsResponse
-        );
-    }
-
-    private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
-        List<FinalReviewResponse> finalReviewResponses = new ArrayList<>();
-        for(ReviewIteration reviewIteration : reviewIterations){
-            if(reviewIteration.getReviewVerdict() == null){
-                continue;
-            }
-            finalReviewResponses.add(mapToFinalReviewResponse(reviewIteration));
-        }
-        return finalReviewResponses;
-    }
-    
-    public List<ReviewFileContentResponse> mapToReviewFileContentResponses(ReviewIteration reviewIteration){
-        List<ReviewFileContentResponse> reviewFileContentResponses = new ArrayList<>();
-        for(ReviewFileContent reviewFileContent : reviewIteration.getReviewFileContents()){
-            reviewFileContentResponses.add(mapToReviewFileContentResponse(reviewFileContent));
-        }
-        return reviewFileContentResponses;
-    }
-
-    private ReviewFileContentResponse mapToReviewFileContentResponse(ReviewFileContent reviewFileContent) {
-        return new ReviewFileContentResponse(
-                reviewFileContent.getPath(),
-                reviewFileContent.getLanguage(),
-                reviewFileContent.getDiff(),
-                reviewFileContent.getContent(),
-                reviewFileContent.getOldContent(),
-                reviewFileContent.getUnsupportedPreview()
         );
     }
 
@@ -122,7 +91,60 @@ public class ReviewMapper {
                 reviewIteration.getTaskStatusAfterIteration(),
                 mapToReviewFileContentResponses(reviewIteration),
                 mapToCommentDtos(reviewIteration.getComments()),
-                mapToFinalReviewResponse(reviewIteration)
+                reviewIteration.getReviewVerdict() == null ? null : mapToFinalReviewResponse(reviewIteration)
+        );
+    }
+
+    private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
+        List<FinalReviewResponse> finalReviewResponses = new ArrayList<>();
+        for(ReviewIteration reviewIteration : reviewIterations){
+            if(reviewIteration.getReviewVerdict() == null){
+                continue;
+            }
+            finalReviewResponses.add(mapToFinalReviewResponse(reviewIteration));
+        }
+        return finalReviewResponses;
+    }
+
+    private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){
+        ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();
+        Review review = reviewIteration.getReview();
+        User reviewer = review.getUser();
+        return new FinalReviewResponse(
+                review.getId(),
+                reviewer.getId(),
+                review.getReviewerIndex(),
+                reviewer.getFullName(),
+                review.getRevealAuthorAfterReview(),
+                reviewVerdict.getArchitecture(),
+                reviewVerdict.getReadability(),
+                reviewVerdict.getTestability(),
+                reviewVerdict.getScalability(),
+                reviewVerdict.getOverallScore(),
+                reviewVerdict.getComment(),
+                reviewVerdict.getVerdict(),
+                reviewVerdict.getCreatedAt().toString(),
+                isCheckedInTime(reviewIteration),
+                isExpired(reviewIteration)
+        );
+    }
+    
+    public List<ReviewFileContentResponse> mapToReviewFileContentResponses(ReviewIteration reviewIteration){
+        List<ReviewFileContentResponse> reviewFileContentResponses = new ArrayList<>();
+        for(ReviewFileContent reviewFileContent : reviewIteration.getReviewFileContents()){
+            reviewFileContentResponses.add(mapToReviewFileContentResponse(reviewFileContent));
+        }
+        return reviewFileContentResponses;
+    }
+
+    private ReviewFileContentResponse mapToReviewFileContentResponse(ReviewFileContent reviewFileContent) {
+        return new ReviewFileContentResponse(
+                reviewFileContent.getPath(),
+                reviewFileContent.getLanguage(),
+                reviewFileContent.getDiff(),
+                reviewFileContent.getContent(),
+                reviewFileContent.getOldContent(),
+                reviewFileContent.getUnsupportedPreview()
         );
     }
 
@@ -208,29 +230,6 @@ public class ReviewMapper {
         );
     }
 
-    private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){
-        ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();
-        Review review = reviewIteration.getReview();
-        User reviewer = review.getUser();
-        return new FinalReviewResponse(
-                review.getId(),
-                reviewer.getId(),
-                review.getReviewerIndex(),
-                reviewer.getFullName(),
-                review.getRevealAuthorAfterReview(),
-                reviewVerdict.getArchitecture(),
-                reviewVerdict.getReadability(),
-                reviewVerdict.getTestability(),
-                reviewVerdict.getScalability(),
-                reviewVerdict.getOverallScore(),
-                reviewVerdict.getComment(),
-                reviewVerdict.getVerdict(),
-                reviewVerdict.getCreatedAt().toString(),
-                isCheckedInTime(reviewIteration),
-                isExpired(reviewIteration)
-        );
-    }
-
     private ReviewProjectResponse mapToReviewProjectResponse(Project project) {
         return new ReviewProjectResponse(
                 project.getId(),
@@ -310,17 +309,5 @@ public class ReviewMapper {
         }
 
         return deadline.plusDays(7).toString();
-    }
-
-    //TODO: Избавиться от констант
-    private PermissionsResponse mapToPermissionsResponse(){
-        return new PermissionsResponse(
-            true,
-                true,
-                true,
-                true,
-                true,
-                true
-        );
     }
 }
