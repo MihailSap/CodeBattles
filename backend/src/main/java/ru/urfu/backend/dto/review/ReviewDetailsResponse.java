@@ -1,5 +1,6 @@
 package ru.urfu.backend.dto.review;
 
+import ru.urfu.backend.dto.comment.ReviewCommentResponse;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.ReviewType;
 import ru.urfu.backend.model.enums.SolutionUploadType;
@@ -27,7 +28,7 @@ public record ReviewDetailsResponse(
         List<ReviewUserResponse> reviewers,
         ViewerAssignmentResponse viewerAssignment,
         List<ReviewFileContentResponse> files,
-        List<CommentResponse> comments,
+        List<ReviewCommentResponse> comments,
         List<ReviewHistoryResponse> history,
         List<FinalReviewResponse> finalReviews,
         AiEvaluationDto aiEvaluation,

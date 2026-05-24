@@ -15,6 +15,14 @@ import java.util.Set;
 @Component
 public class CommentMapper {
 
+    public List<ReviewCommentResponse> mapToReviewCommentResponses(Set<Comment> comments) {
+        List<ReviewCommentResponse> reviewCommentResponses = new ArrayList<>();
+        for (Comment comment : comments) {
+            reviewCommentResponses.add(mapToReviewCommentDto(comment));
+        }
+        return reviewCommentResponses;
+    }
+
     public ReviewCommentResponse mapToReviewCommentDto(Comment comment){
         List<Long> likedBy = new ArrayList<>();
         List<Long> dislikedBy = new ArrayList<>();

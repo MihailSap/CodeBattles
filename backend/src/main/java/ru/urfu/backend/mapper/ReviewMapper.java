@@ -1,5 +1,6 @@
 package ru.urfu.backend.mapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.review.*;
 import ru.urfu.backend.model.*;
@@ -12,6 +13,13 @@ import java.util.Set;
 
 @Component
 public class ReviewMapper {
+
+    private final CommentMapper commentMapper;
+
+    @Autowired
+    public ReviewMapper(CommentMapper commentMapper) {
+        this.commentMapper = commentMapper;
+    }
 
     public SubmitFinalReviewResponse mapToSubmitFinalReviewResponse(Review review){
         return new SubmitFinalReviewResponse(
@@ -57,7 +65,8 @@ public class ReviewMapper {
                 mapToReviewers(userTasks),
                 mapToViewerAssignmentResponse(review),
                 mapToReviewFileContentResponses(review.getLastIteration()),
-                mapToCommentDtos(review.getLastIteration().getComments()),
+                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
+//                mapToCommentDtos(reviewIteration.getComments()), //FIXME
                 mapToHistoryEventResponse(review),
                 mapToFinalReviewResponses(review.getReviewIterations()),
                 null, //TODO: Доработать, когда появится ИИ ревью
