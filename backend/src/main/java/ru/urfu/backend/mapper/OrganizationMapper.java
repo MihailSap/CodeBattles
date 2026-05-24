@@ -62,9 +62,8 @@ public class OrganizationMapper {
         for (Project project : projects) {
             Optional<UserProject> userProject = projectService.getOptionalUserProject(user, project);
             if (userProject.isPresent()) {
-                projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, userProject.get().getProjectMemberRole()));
-            } else {
-                projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(project, ProjectMemberRole.GUEST));
+                projectDetailsDtos.add(projectMapper.mapToProjectListItemDto(
+                        project, userProject.get().getProjectMemberRole()));
             }
         }
 
