@@ -18,7 +18,9 @@ public class CommentMapper {
     public List<ReviewCommentResponse> mapToReviewCommentResponses(Set<Comment> comments) {
         List<ReviewCommentResponse> reviewCommentResponses = new ArrayList<>();
         for (Comment comment : comments) {
-            reviewCommentResponses.add(mapToReviewCommentDto(comment));
+            if (comment.getParentComment() == null) {
+                reviewCommentResponses.add(mapToReviewCommentDto(comment));
+            }
         }
         return reviewCommentResponses;
     }
@@ -55,8 +57,16 @@ public class CommentMapper {
                 comment.getClosedAt() == null ? "" : comment.getClosedAt().toString(),
                 likedBy,
                 dislikedBy,
-                null //FIXME
+                mapReplies(comment.getReplies())
         );
+    }
+
+    private List<ReviewCommentResponse> mapReplies(Set<Comment> replies) {
+        List<ReviewCommentResponse> replyDtos = new ArrayList<>();
+        for (Comment reply : replies) {
+            replyDtos.add(mapToReviewCommentDto(reply)); // рекурсия
+        }
+        return replyDtos;
     }
 
     public ReportCommentResponse mapToReportCommentResponse(CommentReport commentReport){
