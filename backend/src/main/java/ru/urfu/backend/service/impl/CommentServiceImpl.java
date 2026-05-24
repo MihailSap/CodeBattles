@@ -111,9 +111,9 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
-    public CommentReport createReport(ReportCommentRequestDto request, User user, Comment comment) {
+    public CommentReport createReport(ReportCommentRequestDto request, Comment comment) {
         CommentReport report = new CommentReport();
-        report.setUser(user);
+        report.setUser(comment.getUser());
         report.setComment(comment);
         report.setMessage(request.message());
         report.setReason(request.reason());
