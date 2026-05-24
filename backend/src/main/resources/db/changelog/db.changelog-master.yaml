@@ -71,3 +71,5 @@ databaseChangeLog:
       file: db/changelog/changeset/035-add-data-to-comment-report.yaml
   - include:
       file: db/changelog/changeset/036-create-system-settings.yaml
+  - include:
+      file: db/changelog/changeset/037-add-last-activity-at.yaml

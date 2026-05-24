@@ -10,6 +10,8 @@ import java.util.List;
 
 public interface OrganizationService {
 
+    List<Organization> getAllOrganizations();
+
     List<UserOrganization> getMyOrganizations(User user);
 
     Page<UserOrganization> getMyOrganizations(User user, int page, int size);

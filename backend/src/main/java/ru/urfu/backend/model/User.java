@@ -32,6 +32,8 @@ public class User extends BaseEntity {
 
     private String avatarFileTitle;
 
+    private Boolean isResetRating = false;
+
     private LocalDateTime registeredAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -248,5 +250,13 @@ public class User extends BaseEntity {
 
     public void setCommentReactions(Set<CommentReaction> commentReactions) {
         this.commentReactions = commentReactions;
+    }
+
+    public Boolean getResetRating() {
+        return isResetRating;
+    }
+
+    public void setResetRating(Boolean resetRating) {
+        isResetRating = resetRating;
     }
 }

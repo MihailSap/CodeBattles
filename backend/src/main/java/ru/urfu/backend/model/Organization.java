@@ -6,6 +6,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import ru.urfu.backend.model.base.BaseEntity;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +21,8 @@ public class Organization extends BaseEntity {
     private String avatarFileTitle;
 
     private String link;
+
+    private LocalDateTime lastActivityAt;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserOrganization> members = new HashSet<>();
@@ -75,5 +78,13 @@ public class Organization extends BaseEntity {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 }

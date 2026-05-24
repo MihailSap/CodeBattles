@@ -37,6 +37,8 @@ public interface UserService {
 
     User enableUser(User user);
 
+//    User resetRating(User user);
+
     User makeAdmin(User user);
 
     void updateStack(User user, List<StackRequest> stackRequests);

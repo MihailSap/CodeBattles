@@ -20,6 +20,7 @@ import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.specification.OrganizationSpecification;
 import ru.urfu.backend.specification.UserOrganizationSpecification;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,12 @@ public class OrganizationServiceImpl implements OrganizationService {
         this.userOrganizationSpecification = userOrganizationSpecification;
         this.organizationSpecification = organizationSpecification;
         this.fileService = fileService;
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Organization> getAllOrganizations() {
+        return organizationRepository.findAll();
     }
 
     @Transactional(readOnly = true)
@@ -107,6 +114,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setTitle(request.name());
         organization.setDescription(request.description());
         organization.setLink(request.link());
+        organization.setLastActivityAt(LocalDateTime.now());
 
         String avatarTitle = fileService.save(request.logo());
         organization.setAvatarFileTitle(avatarTitle);
@@ -177,6 +185,8 @@ public class OrganizationServiceImpl implements OrganizationService {
             String avatarTitle = fileService.save(avatar);
             organization.setAvatarFileTitle(avatarTitle);
         }
+
+        organization.setLastActivityAt(LocalDateTime.now());
 
         return organizationRepository.save(organization);
     }

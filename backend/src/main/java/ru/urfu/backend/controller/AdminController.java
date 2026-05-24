@@ -91,7 +91,7 @@ public class AdminController {
 
     @Operation(description = "Обновление сроков на выполнение ревью")
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/system-settings/review-deadline")
+    @PatchMapping("/system-settings/review-deadline")
     public AdminSystemSettingsDto updateReviewDeadline(@RequestBody UpdateReviewDeadlineRequest request){
         SystemSettings systemSettings = systemSettingsService.getSystemSettings();
         SystemSettings updatedSystemSettings = systemSettingsService.updateReviewDeadline(
@@ -101,7 +101,7 @@ public class AdminController {
 
     @Operation(description = "Обновление системного промпта ИИ модели")
     @PreAuthorize("hasAuthority('ADMIN')")
-    @GetMapping("/system-settings/ai-system-prompt")
+    @PatchMapping("/system-settings/ai-system-prompt")
     public AdminSystemSettingsDto updateAiSystemPrompt(@RequestBody UpdateAiSystemPromptRequest request){
         SystemSettings systemSettings = systemSettingsService.getSystemSettings();
         SystemSettings updatedSystemSettings = systemSettingsService.updateAiSystemPrompt(
