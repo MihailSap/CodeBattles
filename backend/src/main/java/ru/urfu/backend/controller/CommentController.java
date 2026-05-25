@@ -12,8 +12,10 @@ import ru.urfu.backend.dto.comment.*;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.CommentMapper;
 import ru.urfu.backend.model.*;
+import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.TaskStatus;
+import ru.urfu.backend.model.enums.ThreadAction;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.CommentService;
 import ru.urfu.backend.service.ReviewService;
@@ -81,6 +83,7 @@ public class CommentController {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
         Comment rootComment = commentService.getRootComment(comment);
+        Task task = comment.getReviewIteration().getReview().getTask();
         if(rootComment.getClosedAt() != null){
             throw new RuntimeException("Тред закрыт");
         }
@@ -90,7 +93,25 @@ public class CommentController {
             throw new RuntimeException("Превышена максимальная вложенность комментариев");
         }
 
-        Comment reply = commentService.createReply(request, user, comment);
+        if(!taskService.isUserReviewerInTask(user, task)
+                && !taskService.isUserAssigneeInTask(user, task)){
+            throw new RuntimeException(
+                    "Оставлять комментарии могут только исполнители и ревьюеры данной задачи");
+        }
+        if(TaskStatus.DONE.equals(task.getStatus())){
+            throw new RuntimeException("Запрещено оставлять комментарии к завершенной задаче");
+        }
+
+        CommentAuthorRole commentAuthorRole;
+        if(taskService.isUserReviewerInTask(user, task)){
+            commentAuthorRole = CommentAuthorRole.REVIEWER;
+        } else if(taskService.isUserAssigneeInTask(user, task)){
+            commentAuthorRole = CommentAuthorRole.ASSIGNEE;
+        } else {
+            commentAuthorRole = CommentAuthorRole.SYSTEM;
+        }
+
+        Comment reply = commentService.createReply(request, user, comment, commentAuthorRole);
         return ResponseEntity.status(201).body(commentMapper.mapToReviewCommentDto(reply));
     }
 
@@ -114,6 +135,23 @@ public class CommentController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
+        Task task = comment.getReviewIteration().getReview().getTask();
+        if(ThreadAction.CLOSE.equals(request.action())){
+            if(!taskService.isUserAssigneeInTask(user, task)){
+                throw new RuntimeException("Закрывать тред может только исполнитель задачи");
+            }
+            if(comment.getClosedAt() != null){
+                throw new RuntimeException("Данный тред уже закрыт");
+            }
+        } else if(ThreadAction.REOPEN.equals(request.action())){
+            if(!user.equals(comment.getUser())){
+                throw new RuntimeException("Переоткрывать тред может только его автор");
+            }
+            if(comment.getClosedAt() == null){
+                throw new RuntimeException("Данный тред уже открыт");
+            }
+        }
+
         Comment updatedComment = commentService.updateState(request, user, comment);
         return commentMapper.mapToReviewCommentDto(updatedComment);
     }

@@ -2,6 +2,7 @@ package ru.urfu.backend.service;
 
 import ru.urfu.backend.dto.comment.*;
 import ru.urfu.backend.model.*;
+import ru.urfu.backend.model.enums.CommentAuthorRole;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,7 @@ public interface CommentService {
 
     Comment getRootComment(Comment comment);
 
-    List<CommentReport> getAllReports();
+    List<CommentReport> getAllActiveReports();
 
     CommentReport getReportById(Long id);
 
@@ -24,7 +25,7 @@ public interface CommentService {
 
     Comment createComment(CreateReviewCommentRequest request, User user, Review review);
 
-    Comment createReply(CreateReplyRequest request, User user, Comment comment);
+    Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole);
 
     CommentReport createReport(ReportCommentRequestDto request, User user, Comment comment);
 

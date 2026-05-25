@@ -42,7 +42,7 @@ public class AdminController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/complaints/comments")
     public List<AdminCommentComplaintDto> getCommentReports(){
-        List<CommentReport> reports = commentService.getAllReports();
+        List<CommentReport> reports = commentService.getAllActiveReports();
         return adminMapper.mapToAdminCommentComplaintDtos(reports);
     }
 

@@ -53,8 +53,8 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentReport> getAllReports() {
-        return commentReportRepository.findAll();
+    public List<CommentReport> getAllActiveReports() {
+        return commentReportRepository.findAllByActiveTrue();
     }
 
     @Override
@@ -97,13 +97,14 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
-    public Comment createReply(CreateReplyRequest request, User user, Comment comment) {
+    public Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole) {
         Comment reply = new Comment();
         reply.setUser(user);
         reply.setReviewIteration(comment.getReviewIteration());
         reply.setParentComment(comment);
         reply.setText(request.text());
         reply.setRevealName(comment.getRevealName());
+        reply.setCommentAuthorRole(authorRole);
         reply.setUpdatedAt(LocalDateTime.now());
 
         return commentRepository.save(reply);
