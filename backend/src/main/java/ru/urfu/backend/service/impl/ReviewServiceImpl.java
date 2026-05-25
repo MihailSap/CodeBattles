@@ -269,24 +269,6 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewVerdictRepository.save(reviewVerdict);
     }
 
-//    @Transactional
-//    @Override
-//    public ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review) {
-//        ReviewVerdict reviewVerdict = new ReviewVerdict();
-//        reviewVerdict.setReviewIteration(review.getLastIteration());
-//        reviewVerdict.setVerdict(request.verdict());
-//        reviewVerdict.setArchitecture(request.architecture());
-//        reviewVerdict.setReadability(request.readability());
-//        reviewVerdict.setScalability(request.scalability());
-//        reviewVerdict.setTestability(request.testability());
-//        reviewVerdict.setComment(request.comment());
-//        int overallScore = Math.round((
-//                request.architecture() + request.readability() + request.testability() + request.scalability()) / 4.0f);
-//
-//        reviewVerdict.setOverallScore(overallScore);
-//        return reviewVerdictRepository.save(reviewVerdict);
-//    }
-
     @Transactional
     @Override
     public Review updateStatusInProgress(Review review) {

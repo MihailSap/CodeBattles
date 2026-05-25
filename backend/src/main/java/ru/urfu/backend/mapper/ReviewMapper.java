@@ -39,22 +39,77 @@ public class ReviewMapper {
         return reviewListItemDtos;
     }
 
-    public ReviewDetailsResponse mapToReviewDetailsResponseByTask(Review review, PermissionsResponse permissionsResponse){
+//    public ReviewDetailsResponse mapToReviewDetailsResponseByTask(Review review, PermissionsResponse permissionsResponse){
+//        Task task = review.getTask();
+//        Set<ReviewIteration> reviewIterations = new HashSet<>();
+//        Set<Comment> comments = new HashSet<>();
+//        for(Review review1 : task.getReviews()){
+//            for(ReviewIteration reviewIteration1 : review1.getReviewIterations()){
+//                reviewIterations.add(reviewIteration1);
+//                comments.addAll(reviewIteration1.getComments());
+//            }
+//        }
+//
+//        Project project = task.getProject();
+//        Organization organization = project.getOrganization();
+//        Solution solution = task.getSolution();
+//        Set<UserTask> userTasks = task.getUsers();
+//        ReviewIteration reviewIteration = review.getLastIteration();
+//        return new ReviewDetailsResponse(
+//                review.getId(),
+//                task.getId(),
+//                project.getId(),
+//                solution.getId(),
+//                mapToReviewProjectResponse(project),
+//                mapToReviewOrganizationResponse(organization),
+//                task.getTitle(),
+//                task.getStatus(),
+//                review.getStatus(),
+//                task.getReviewType(),
+//                solution.getUploadType(),
+//                reviewIteration.getUploadedAt() == null ? "" : reviewIteration.getUploadedAt().toString(),
+//                reviewIteration.getDeadline() == null ? "" : reviewIteration.getDeadline().toString(),
+//                reviewIteration.getCompletedAt() == null ? "" : reviewIteration.getCompletedAt().toString(),
+//                getVisibleUntil(reviewIteration),
+//                review.getRevealAuthorAfterReview(),
+//                solution.getRevealAuthorAfterReview(),
+//                mapToAssignees(userTasks),
+//                mapToReviewers(userTasks),
+//                mapToViewerAssignmentResponse(review),
+//                mapToReviewFileContentResponses(review.getLastIteration()),
+//                commentMapper.mapToReviewCommentResponses(comments),
+//                mapToHistoryEventResponse(review),
+//                mapToFinalReviewResponses(reviewIterations),
+//                null, //TODO: Доработать, когда появится ИИ ревью
+//                null, //TODO: Доработать, когда появится ИИ ревью
+//                permissionsResponse
+//        );
+//    }
+
+    public ReviewDetailsResponse mapToReviewDetailsResponseByTask(
+            Review review,
+            PermissionsResponse permissionsResponse
+    ) {
         Task task = review.getTask();
-        Set<ReviewIteration> reviewIterations = new HashSet<>();
-        Set<Comment> comments = new HashSet<>();
-        for(Review review1 : task.getReviews()){
-            for(ReviewIteration reviewIteration1 : review1.getReviewIterations()){
-                reviewIterations.add(reviewIteration1);
-                comments.addAll(reviewIteration1.getComments());
+        Set<ReviewIteration> currentIterations = new HashSet<>();
+        Set<ReviewIteration> historyIterations = new HashSet<>();
+        Set<Comment> currentComments = new HashSet<>();
+        for (Review taskReview : task.getReviews()) {
+            ReviewIteration currentIteration = taskReview.getLastIteration();
+            if (currentIteration != null) {
+                currentIterations.add(currentIteration);
+                currentComments.addAll(currentIteration.getComments());
+            }
+            for (ReviewIteration iteration : taskReview.getReviewIterations()) {
+                if (!iteration.equals(currentIteration)) {
+                    historyIterations.add(iteration);
+                }
             }
         }
-
         Project project = task.getProject();
         Organization organization = project.getOrganization();
         Solution solution = task.getSolution();
-        Set<UserTask> userTasks = task.getUsers();
-        ReviewIteration reviewIteration = review.getLastIteration();
+        ReviewIteration viewerIteration = review.getLastIteration();
         return new ReviewDetailsResponse(
                 review.getId(),
                 task.getId(),
@@ -67,23 +122,44 @@ public class ReviewMapper {
                 review.getStatus(),
                 task.getReviewType(),
                 solution.getUploadType(),
-                reviewIteration.getUploadedAt() == null ? "" : reviewIteration.getUploadedAt().toString(),
-                reviewIteration.getDeadline() == null ? "" : reviewIteration.getDeadline().toString(),
-                reviewIteration.getCompletedAt() == null ? "" : reviewIteration.getCompletedAt().toString(),
-                getVisibleUntil(reviewIteration),
+                viewerIteration.getUploadedAt() == null ? "" : viewerIteration.getUploadedAt().toString(),
+                viewerIteration.getDeadline() == null ? "" : viewerIteration.getDeadline().toString(),
+                viewerIteration.getCompletedAt() == null ? "" : viewerIteration.getCompletedAt().toString(),
+                getVisibleUntil(viewerIteration),
                 review.getRevealAuthorAfterReview(),
                 solution.getRevealAuthorAfterReview(),
-                mapToAssignees(userTasks),
-                mapToReviewers(userTasks),
+                mapToAssignees(task.getUsers()),
+                mapToReviewers(task.getUsers()),
                 mapToViewerAssignmentResponse(review),
-                mapToReviewFileContentResponses(review.getLastIteration()),
-                commentMapper.mapToReviewCommentResponses(comments),
-                mapToHistoryEventResponse(review),
-                mapToFinalReviewResponses(reviewIterations),
-                null, //TODO: Доработать, когда появится ИИ ревью
-                null, //TODO: Доработать, когда появится ИИ ревью
+                mapToReviewFileContentResponses(viewerIteration),
+                commentMapper.mapToReviewCommentResponses(currentComments),
+                mapToHistoryResponses(historyIterations),
+                mapToFinalReviewResponses(currentIterations),
+                null,
+                null,
                 permissionsResponse
         );
+    }
+
+    private List<ReviewHistoryResponse> mapToHistoryResponses(Set<ReviewIteration> historyIterations) {
+        List<ReviewHistoryResponse> responses = new ArrayList<>();
+        historyIterations.stream()
+                .sorted((a, b) -> {
+                    int iterationCompare = Integer.compare(
+                            a.getIterationNumber(),
+                            b.getIterationNumber()
+                    );
+                    if (iterationCompare != 0) {
+                        return iterationCompare;
+                    }
+                    return Integer.compare(
+                            a.getReview().getReviewerIndex(),
+                            b.getReview().getReviewerIndex()
+                    );
+                })
+                .forEach(iteration -> responses.add(mapToReviewHistoryResponse(iteration)));
+
+        return responses;
     }
 
     public ReviewDetailsResponse mapToReviewDetailsResponse(Review review, PermissionsResponse permissionsResponse){
@@ -150,15 +226,27 @@ public class ReviewMapper {
     }
 
     private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
-        List<FinalReviewResponse> finalReviewResponses = new ArrayList<>();
-        for(ReviewIteration reviewIteration : reviewIterations){
-            if(reviewIteration.getReviewVerdict() == null){
-                continue;
-            }
-            finalReviewResponses.add(mapToFinalReviewResponse(reviewIteration));
-        }
-        return finalReviewResponses;
+        List<FinalReviewResponse> responses = new ArrayList<>();
+        reviewIterations.stream()
+                .filter(iteration -> iteration.getReviewVerdict() != null)
+                .sorted((a, b) -> Integer.compare(
+                        a.getReview().getReviewerIndex(),
+                        b.getReview().getReviewerIndex()
+                ))
+                .forEach(iteration -> responses.add(mapToFinalReviewResponse(iteration)));
+        return responses;
     }
+
+//    private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
+//        List<FinalReviewResponse> finalReviewResponses = new ArrayList<>();
+//        for(ReviewIteration reviewIteration : reviewIterations){
+//            if(reviewIteration.getReviewVerdict() == null){
+//                continue;
+//            }
+//            finalReviewResponses.add(mapToFinalReviewResponse(reviewIteration));
+//        }
+//        return finalReviewResponses;
+//    }
 
     private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){
         ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();

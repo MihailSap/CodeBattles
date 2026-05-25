@@ -105,8 +105,14 @@ public class ReviewController {
         Review updatedReview = reviewService.updateStatusCompleted(review);
         Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
 
+        boolean toRework = true;
         Task task = review.getTask();
-        if (ReviewVerdictType.REWORK.equals(request.verdict())) {
+        for(Review taskReview : task.getReviews()){
+            if(taskReview.getLastIteration().getReviewVerdict() == null){
+                toRework = false;
+            }
+        }
+        if (toRework) {
             taskService.updateStatusRework(task);
         }
 

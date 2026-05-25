@@ -108,11 +108,9 @@ public class SolutionController {
                 taskService.updateStatusInReview(task);
             }
             for(Review review : updatedSolution.getReviews()){
-                ReviewIteration previousIteration =
-                        review.getLastIteration();
-
-                ReviewIteration currentIteration =
-                        reviewService.createReviewIteration(review);
+                Review updatedReview = reviewService.updateStatusInProgress(review);
+                ReviewIteration previousIteration = updatedReview.getLastIteration();
+                ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
 
                 reviewService.createReviewFileContent(
                         previousIteration,
