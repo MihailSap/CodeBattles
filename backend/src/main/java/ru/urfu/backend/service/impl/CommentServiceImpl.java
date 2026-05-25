@@ -97,13 +97,13 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
-    public Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole) {
+    public Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole, boolean revealName) {
         Comment reply = new Comment();
         reply.setUser(user);
         reply.setReviewIteration(comment.getReviewIteration());
         reply.setParentComment(comment);
         reply.setText(request.text());
-        reply.setRevealName(comment.getRevealName());
+        reply.setRevealName(revealName);
         reply.setCommentAuthorRole(authorRole);
         reply.setUpdatedAt(LocalDateTime.now());
 

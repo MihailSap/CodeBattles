@@ -25,7 +25,7 @@ public interface CommentService {
 
     Comment createComment(CreateReviewCommentRequest request, User user, Review review);
 
-    Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole);
+    Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole, boolean revealName);
 
     CommentReport createReport(ReportCommentRequestDto request, User user, Comment comment);
 

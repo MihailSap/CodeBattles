@@ -64,7 +64,7 @@ public class CommentMapper {
     private List<ReviewCommentResponse> mapReplies(Set<Comment> replies) {
         List<ReviewCommentResponse> replyDtos = new ArrayList<>();
         for (Comment reply : replies) {
-            replyDtos.add(mapToReviewCommentDto(reply)); // рекурсия
+            replyDtos.add(mapToReviewCommentDto(reply));
         }
         return replyDtos;
     }

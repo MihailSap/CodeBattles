@@ -21,6 +21,7 @@ import ru.urfu.backend.service.CommentService;
 import ru.urfu.backend.service.ReviewService;
 import ru.urfu.backend.service.TaskService;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Tag(name = "Управление комментариями")
@@ -84,6 +85,12 @@ public class CommentController {
         Comment comment = commentService.getById(commentId);
         Comment rootComment = commentService.getRootComment(comment);
         Task task = comment.getReviewIteration().getReview().getTask();
+
+        ReviewIteration commentReviewIteration = comment.getReviewIteration();
+        ReviewIteration lastReviewIteration = commentReviewIteration.getReview().getLastIteration();
+        if(commentReviewIteration.equals(lastReviewIteration)){
+            throw new RuntimeException("Нельзя отвечать на комментарии, которые находятся в history");
+        }
         if(rootComment.getClosedAt() != null){
             throw new RuntimeException("Тред закрыт");
         }
@@ -92,26 +99,26 @@ public class CommentController {
         if(replyDepth + 1 > 5){
             throw new RuntimeException("Превышена максимальная вложенность комментариев");
         }
-
-        if(!taskService.isUserReviewerInTask(user, task)
-                && !taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException(
-                    "Оставлять комментарии могут только исполнители и ревьюеры данной задачи");
-        }
-        if(TaskStatus.DONE.equals(task.getStatus())){
+        if(TaskStatus.DONE.equals(task.getStatus())
+                && task.getCompletedAt() != null
+                && task.getCompletedAt().plusDays(7).isBefore(LocalDateTime.now())){
             throw new RuntimeException("Запрещено оставлять комментарии к завершенной задаче");
         }
 
         CommentAuthorRole commentAuthorRole;
+        boolean revealName;
         if(taskService.isUserReviewerInTask(user, task)){
             commentAuthorRole = CommentAuthorRole.REVIEWER;
+            revealName = reviewService.getByUserAndTask(user, task).getRevealAuthorAfterReview();
         } else if(taskService.isUserAssigneeInTask(user, task)){
             commentAuthorRole = CommentAuthorRole.ASSIGNEE;
+            revealName = task.getSolution().getRevealAuthorAfterReview();
         } else {
-            commentAuthorRole = CommentAuthorRole.SYSTEM;
+            throw new RuntimeException(
+                    "Оставлять комментарии могут только исполнители и ревьюеры данной задачи");
         }
 
-        Comment reply = commentService.createReply(request, user, comment, commentAuthorRole);
+        Comment reply = commentService.createReply(request, user, comment, commentAuthorRole, revealName);
         return ResponseEntity.status(201).body(commentMapper.mapToReviewCommentDto(reply));
     }
 

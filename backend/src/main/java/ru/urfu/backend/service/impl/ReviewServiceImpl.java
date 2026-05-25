@@ -42,6 +42,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional(readOnly = true)
     @Override
+    public Review getByUserAndTask(User user, Task task) {
+        return reviewRepository.findByUserAndTask(user, task)
+                .orElseThrow(() -> new RuntimeException("У данного пользователя нет ревью для этой задачи"));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public List<Review> getDashboardReviews(
             User user, Long projectId, DashboardTaskFilterStatus status) {
         List<Review> reviews = reviewRepository.findByUser(user);

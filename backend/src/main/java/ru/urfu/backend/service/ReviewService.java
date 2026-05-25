@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ReviewService {
 
+    Review getByUserAndTask(User user, Task task);
+
     List<Review> getDashboardReviews(User user, Long projectId, DashboardTaskFilterStatus status);
 
     Review getById(Long id);
