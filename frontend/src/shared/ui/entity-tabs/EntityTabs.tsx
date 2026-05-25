@@ -6,7 +6,7 @@ interface TabItem {
 }
 
 interface EntityTabsProps {
-  tabs: TabItem[];
+  tabs: readonly TabItem[];
   activeKey: string | null;
   onChange: (key: string) => void;
   wrapClassName?: string;

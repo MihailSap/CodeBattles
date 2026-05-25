@@ -27,23 +27,27 @@ const ProjectInviteJoinPage = () => {
           return;
         }
 
-        navigate(`${ROUTES.projects}/${result.projectId}`, {
+        if (result.projectId === undefined) {
+          throw new Error('Project id is missing after invite join');
+        }
+
+        navigate(`${ROUTES.projects}/${String(result.projectId)}`, {
           replace: true,
           state: {
             snackbarMessage: 'Вы присоединились к проекту',
             snackbarType: 'success',
           },
         });
-      } catch (error: LegacyValue) {
+      } catch (error: unknown) {
         if (!isMounted) {
           return;
         }
 
-        if (error?.code === ACCESS_ERROR_CODE.ALREADY_MEMBER) {
+        if (error instanceof Error && error.code === ACCESS_ERROR_CODE.ALREADY_MEMBER) {
           const inviteInfo = await projectsApi.getInviteInfo(token).catch(() => null);
 
-          if (inviteInfo?.projectId) {
-            navigate(`${ROUTES.projects}/${inviteInfo.projectId}`, {
+          if (inviteInfo?.id) {
+            navigate(`${ROUTES.projects}/${String(inviteInfo.id)}`, {
               replace: true,
               state: {
                 snackbarMessage: 'Вы уже являетесь участником этого проекта',
@@ -55,7 +59,7 @@ const ProjectInviteJoinPage = () => {
           }
         }
 
-        if (error?.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
+        if (error instanceof Error && error.code === ACCESS_ERROR_CODE.FORBIDDEN_ORGANIZATION) {
           navigate(ROUTES.projects, {
             replace: true,
             state: {

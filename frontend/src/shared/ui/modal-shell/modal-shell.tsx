@@ -1,4 +1,24 @@
 import { CrossIcon } from '@/shared/ui/icons';
+import type { ReactNode } from 'react';
+
+interface ModalShellProps {
+  isOpen: boolean;
+  onClose?: () => void;
+  overlayClassName?: string;
+  dialogClassName?: string;
+  headerClassName?: string;
+  titleClassName?: string;
+  closeClassName?: string;
+  title?: ReactNode;
+  titleId?: string;
+  closeAriaLabel?: string;
+  showCloseButton?: boolean;
+  closeDisabled?: boolean;
+  ariaLabel?: string;
+  ariaLabelledBy?: string;
+  closeOnBackdrop?: boolean;
+  children: ReactNode;
+}
 
 const ModalShell = ({
   isOpen,
@@ -17,7 +37,7 @@ const ModalShell = ({
   ariaLabelledBy,
   closeOnBackdrop = true,
   children,
-}: LegacyValue) => {
+}: ModalShellProps) => {
   if (!isOpen) {
     return null;
   }

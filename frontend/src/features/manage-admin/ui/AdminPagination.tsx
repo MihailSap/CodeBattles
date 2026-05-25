@@ -1,6 +1,13 @@
 import adminUsersTabStyles from '../../manage-users/ui/admin-users-tab/AdminUsersTab.module.scss';
 
-const AdminPagination = ({ page, totalPages, isLoading = false, onChange }: LegacyValue) => {
+interface AdminPaginationProps {
+  page: number;
+  totalPages: number;
+  isLoading?: boolean;
+  onChange: (page: number) => void;
+}
+
+const AdminPagination = ({ page, totalPages, isLoading = false, onChange }: AdminPaginationProps) => {
   const canGoPrev = page > 0;
   const canGoNext = totalPages > 0 && page < totalPages - 1;
   const currentPageLabel = totalPages < 1 ? '0/0' : `${page + 1}/${totalPages}`;

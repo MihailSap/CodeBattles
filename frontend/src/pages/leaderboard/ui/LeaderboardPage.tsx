@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
-import { UnwrapIcon } from '@/shared/ui/icons';
 import { LeaderboardControls } from '@/widgets/leaderboard-board';
 import { LeaderboardEntitySearch } from '@/widgets/leaderboard-board';
 import { LeaderboardTable } from '@/widgets/leaderboard-board';
@@ -16,12 +15,17 @@ import {
   useResetUserRatingMutation,
   useSearchLeaderboardOrganizationsQuery,
   useSearchLeaderboardProjectsQuery,
+  type LeaderboardCategory,
+  type LeaderboardEntity,
+  type LeaderboardEntry,
+  type LeaderboardPeriod,
+  type LeaderboardScope,
 } from '@/entities/leaderboard';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import leaderboardPageStyles from './LeaderboardPage.module.scss';
 
-const getEntityConfig = (scope: LegacyValue) => {
+const getEntityConfig = (scope: Exclude<LeaderboardScope, 'global'>) => {
   if (scope === LEADERBOARD_SCOPE.ORGANIZATIONS) {
     return {
       placeholder: 'Введите название организации',
@@ -44,25 +48,30 @@ const getEntityConfig = (scope: LegacyValue) => {
 const LeaderboardPage = () => {
   const { user, userId } = useAuth();
   const currentUserId = userId || 57;
-  const [activeScope, setActiveScope] = useState(LEADERBOARD_SCOPE.GLOBAL);
-  const [period, setPeriod] = useState(LEADERBOARD_PERIOD.ALL_TIME);
-  const [category, setCategory] = useState(LEADERBOARD_CATEGORY.OVERALL);
+  const [activeScope, setActiveScope] = useState<LeaderboardScope>(LEADERBOARD_SCOPE.GLOBAL);
+  const [period, setPeriod] = useState<LeaderboardPeriod>(LEADERBOARD_PERIOD.ALL_TIME);
+  const [category, setCategory] = useState<LeaderboardCategory>(LEADERBOARD_CATEGORY.OVERALL);
   const [userSearch, setUserSearch] = useState('');
   const [entitySearch, setEntitySearch] = useState('');
-  const [selectedEntity, setSelectedEntity] = useState<LegacyValue>(null);
+  const [selectedEntity, setSelectedEntity] = useState<LeaderboardEntity | null>(null);
   const [shouldScrollToCurrent, setShouldScrollToCurrent] = useState(false);
-  const [resetRatingUser, setResetRatingUser] = useState<LegacyValue>(null);
-  const currentUserRowRef = useRef<LegacyValue>(null);
+  const [resetRatingUser, setResetRatingUser] = useState<LeaderboardEntry | null>(null);
+  const currentUserRowRef = useRef<HTMLDivElement>(null);
   const debouncedUserSearch = useDebouncedValue(userSearch, 300);
   const debouncedEntitySearch = useDebouncedValue(entitySearch, 300);
   const isEntityScope = activeScope !== LEADERBOARD_SCOPE.GLOBAL;
-  const entityConfig = useMemo(() => getEntityConfig(activeScope), [activeScope]);
+
+  const entityConfig = useMemo(
+    () => getEntityConfig(activeScope === LEADERBOARD_SCOPE.ORGANIZATIONS ? activeScope : LEADERBOARD_SCOPE.PROJECTS),
+    [activeScope]
+  );
+
   const canResetRatings = user?.role === 'ADMIN';
 
   const leaderboardParams = useMemo(
     () => ({
       scope: activeScope,
-      entityId: selectedEntity?.id,
+      entityId: selectedEntity?.id ?? null,
       period,
       category,
       query: debouncedUserSearch,
@@ -127,14 +136,25 @@ const LeaderboardPage = () => {
     queueMicrotask(() => setShouldScrollToCurrent(false));
   }, [isLeaderboardLoading, leaderboard, shouldScrollToCurrent]);
 
-  const handleScopeChange = (nextScope: LegacyValue) => {
-    setActiveScope(nextScope);
+  const handleScopeChange = (nextScope: string) => {
+    if (!Object.values(LEADERBOARD_SCOPE).some((scope) => scope === nextScope)) {
+      return;
+    }
+
+    const validatedScope: LeaderboardScope =
+      nextScope === LEADERBOARD_SCOPE.ORGANIZATIONS
+        ? LEADERBOARD_SCOPE.ORGANIZATIONS
+        : nextScope === LEADERBOARD_SCOPE.PROJECTS
+          ? LEADERBOARD_SCOPE.PROJECTS
+          : LEADERBOARD_SCOPE.GLOBAL;
+
+    setActiveScope(validatedScope);
     setSelectedEntity(null);
     setEntitySearch('');
     setUserSearch('');
   };
 
-  const handleEntitySelect = (entity: LegacyValue) => {
+  const handleEntitySelect = (entity: LeaderboardEntity) => {
     setSelectedEntity(entity);
     setEntitySearch(entity.name);
     setUserSearch('');
@@ -144,7 +164,7 @@ const LeaderboardPage = () => {
     setShouldScrollToCurrent(true);
   };
 
-  const handleResetRatingRequest = (targetUser: LegacyValue) => {
+  const handleResetRatingRequest = (targetUser: LeaderboardEntry) => {
     setResetRatingUser(targetUser);
   };
 
@@ -182,7 +202,7 @@ const LeaderboardPage = () => {
                 options={entityOptions}
                 selectedEntity={selectedEntity}
                 emptyText={isEntitiesLoading ? 'Загрузка...' : entityEmptyText}
-                onValueChange={(value: LegacyValue) => {
+                onValueChange={(value) => {
                   setEntitySearch(value);
 
                   if (selectedEntity && value !== selectedEntity.name) {

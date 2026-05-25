@@ -1,6 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import type { LeaderboardEntity } from '@/entities/leaderboard';
 import { CheckIcon, SearchIcon } from '@/shared/ui/icons';
 import leaderboardEntitySearchStyles from './LeaderboardEntitySearch.module.scss';
+
+interface LeaderboardEntitySearchProps {
+  value: string;
+  placeholder: string;
+  options: readonly LeaderboardEntity[];
+  selectedEntity: LeaderboardEntity | null;
+  emptyText: string;
+  onValueChange: (value: string) => void;
+  onSelect: (entity: LeaderboardEntity) => void;
+}
 
 const LeaderboardEntitySearch = ({
   value,
@@ -10,17 +21,17 @@ const LeaderboardEntitySearch = ({
   emptyText,
   onValueChange,
   onSelect,
-}: LegacyValue) => {
+}: LeaderboardEntitySearchProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const rootRef = useRef<LegacyValue>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isOpen) {
       return undefined;
     }
 
-    const handleClickOutside = (event: LegacyValue) => {
-      if (rootRef.current && !rootRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (rootRef.current && event.target instanceof Node && !rootRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
@@ -40,7 +51,7 @@ const LeaderboardEntitySearch = ({
         type="search"
         value={value}
         placeholder={placeholder}
-        onChange={(event: LegacyValue) => {
+        onChange={(event: ChangeEvent<HTMLInputElement>) => {
           onValueChange(event.target.value);
           setIsOpen(true);
         }}
@@ -50,7 +61,7 @@ const LeaderboardEntitySearch = ({
       {isOpen && (
         <div className={leaderboardEntitySearchStyles.dropdown}>
           {options.length > 0 ? (
-            options.map((option: LegacyValue) => (
+            options.map((option) => (
               <button
                 className={leaderboardEntitySearchStyles.option}
                 key={option.id}

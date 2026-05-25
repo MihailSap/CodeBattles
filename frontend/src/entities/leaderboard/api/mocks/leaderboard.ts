@@ -9,7 +9,37 @@ const avatarPool = [
   'https://img.freepik.com/free-photo/beautiful-woman-portrait-garden_1328-1859.jpg',
   'https://img.freepik.com/free-photo/beautiful-portrait-teenager-woman_23-2149453399.jpg',
   'https://img.freepik.com/free-photo/portrait-young-girl-wearing-sunglasses-looking-cool_23-2149238391.jpg',
-];
+] as const;
+
+import type { LeaderboardPeriod } from '../../model';
+
+export interface LeaderboardMetrics {
+  totalRating: number;
+  codeQuality: number;
+  aiCodeQuality: number;
+  fixedCommentsPercent: number;
+  aiReviewQuality: number;
+  likesCount: number;
+  reviewDepthPercent: number;
+  completedReviewsCount: number;
+  completedTasksCount: number;
+}
+
+export interface LeaderboardEntity {
+  id: number;
+  name: string;
+  lastActivityAt: string;
+}
+
+export interface LeaderboardMockUser {
+  id: number;
+  name: string;
+  login: string;
+  avatar?: string;
+  organizationIds: number[];
+  projectIds: number[];
+  stats: Record<LeaderboardPeriod, LeaderboardMetrics>;
+}
 
 const firstNames = [
   'Александр',
@@ -175,7 +205,7 @@ export const MOCK_LEADERBOARD_PROJECTS = [
   },
 ];
 
-const getMemberships = (id: LegacyValue) => {
+const getMemberships = (id: number): { organizationIds: number[]; projectIds: number[] } => {
   if (id === 57) {
     return {
       organizationIds: [1, 2, 3, 5, 6, 8],
@@ -201,9 +231,9 @@ const getMemberships = (id: LegacyValue) => {
   };
 };
 
-const toFixedNumber = (value: LegacyValue) => Number(value.toFixed(2));
+const toFixedNumber = (value: number): number => Number(value.toFixed(2));
 
-const createStats = (id: LegacyValue, index: LegacyValue, periodMultiplier: LegacyValue) => {
+const createStats = (id: number, index: number, periodMultiplier: number): LeaderboardMetrics => {
   const isCurrentMockUser = id === 57;
   const ratingBase = isCurrentMockUser ? 6 : 2450 - index * 13;
   const qualityBase = isCurrentMockUser ? 1.7 : 5 - index * 0.011;
@@ -235,23 +265,23 @@ const createStats = (id: LegacyValue, index: LegacyValue, periodMultiplier: Lega
   };
 };
 
-export const MOCK_LEADERBOARD_USERS = Array.from(
+export const MOCK_LEADERBOARD_USERS: LeaderboardMockUser[] = Array.from(
   {
     length: 120,
   },
-  (_: LegacyValue, index: LegacyValue) => {
+  (_, index) => {
     const id = index + 1;
     const memberships = getMemberships(id);
-    const firstName = firstNames[index % firstNames.length];
-    const lastName = lastNames[index % lastNames.length];
-    const middleName = middleNames[index % middleNames.length];
+    const firstName = firstNames[index % firstNames.length] ?? '';
+    const lastName = lastNames[index % lastNames.length] ?? '';
+    const middleName = middleNames[index % middleNames.length] ?? '';
     const name = id === 57 ? 'Муравьев Илья Германович' : `${lastName} ${firstName} ${middleName}`;
 
     return {
       id,
       name,
       login: id === 57 ? 'imimorgo5' : `code_player_${String(id).padStart(3, '0')}`,
-      avatar: avatarPool[index % avatarPool.length],
+      avatar: avatarPool[index % avatarPool.length] ?? avatarPool[0],
       organizationIds: memberships.organizationIds,
       projectIds: memberships.projectIds,
       stats: {

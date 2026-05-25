@@ -6,7 +6,11 @@ import EntityTabs from '@/shared/ui/entity-tabs';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { gitUploadFormSchema } from '../../model/upload-schemas';
+import {
+  gitUploadFormSchema,
+  type GitSolutionUploadPayload,
+  type GitUploadFormValues,
+} from '../../model/upload-schemas';
 import gitUploadModalStyles from './GitUploadModal.module.scss';
 
 const TABS = [
@@ -104,10 +108,23 @@ const MOCK_PRS = {
 const PR_REPOS_BY_PLATFORM = {
   github: ['gh_repo_1', 'gh_repo_2'],
   gitlab: ['gl_repo_1', 'gl_repo_2'],
-};
+} as const;
 
-const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue) => {
-  const [activeTab, setActiveTab] = useState('github');
+type GitPlatform = keyof typeof MOCK_REPOSITORIES;
+type RepositoryKey = keyof typeof MOCK_PRS;
+
+interface GitUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (payload: GitSolutionUploadPayload) => void | Promise<void>;
+  isSubmitting: boolean;
+}
+
+const isGitPlatform = (value: string): value is GitPlatform => value === 'github' || value === 'gitlab';
+const isRepositoryKey = (value: string): value is RepositoryKey => value in MOCK_PRS;
+
+const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: GitUploadModalProps) => {
+  const [activeTab, setActiveTab] = useState<GitPlatform>('github');
 
   const {
     control,
@@ -115,7 +132,7 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
     reset,
     setValue,
     formState: { isValid },
-  } = useForm({
+  } = useForm<GitUploadFormValues>({
     resolver: zodResolver(gitUploadFormSchema),
     defaultValues: {
       repository: '',
@@ -142,20 +159,23 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
     return isSubmitting || !isValid;
   };
 
-  const currentRepositories = (MOCK_REPOSITORIES as LegacyValue)[activeTab] || [];
+  const currentRepositories = MOCK_REPOSITORIES[activeTab];
 
-  const currentPrOptions = selectedRepo
-    ? (MOCK_PRS as LegacyValue)[selectedRepo] || []
-    : ((PR_REPOS_BY_PLATFORM as LegacyValue)[activeTab] || []).flatMap(
-        (repoKey: LegacyValue) => (MOCK_PRS as LegacyValue)[repoKey] || []
-      );
+  const currentPrOptions =
+    selectedRepo && isRepositoryKey(selectedRepo)
+      ? MOCK_PRS[selectedRepo]
+      : PR_REPOS_BY_PLATFORM[activeTab].flatMap((repoKey) => MOCK_PRS[repoKey]);
 
-  const handleTabChange = (tabKey: LegacyValue) => {
+  const handleTabChange = (tabKey: string) => {
+    if (!isGitPlatform(tabKey)) {
+      return;
+    }
+
     setActiveTab(tabKey);
     reset();
   };
 
-  const submit = async ({ repository, targetBranch, pullRequest }: LegacyValue) => {
+  const submit = async ({ repository, targetBranch, pullRequest }: GitUploadFormValues) => {
     if (isSubmitDisabled()) return;
 
     await onSubmit({
@@ -201,7 +221,7 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
             <Controller
               control={control}
               name="repository"
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <ReviewDropdown
                   label="Репозиторий:"
                   options={currentRepositories}
@@ -210,7 +230,7 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
                   labelClassName={gitUploadModalStyles.fieldLabel}
                   triggerClassName={gitUploadModalStyles.fieldTrigger}
                   menuClassName={gitUploadModalStyles.fieldMenu}
-                  onChange={(value: LegacyValue) => {
+                  onChange={(value) => {
                     field.onChange(value);
 
                     setValue('pullRequest', '', {
@@ -225,7 +245,7 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
             <Controller
               control={control}
               name="targetBranch"
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <ReviewDropdown
                   label="Целевая ветка:"
                   options={MOCK_BRANCHES}
@@ -242,7 +262,7 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue
             <Controller
               control={control}
               name="pullRequest"
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <ReviewDropdown
                   label="Pull Request:"
                   options={currentPrOptions}

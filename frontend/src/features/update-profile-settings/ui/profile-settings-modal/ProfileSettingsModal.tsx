@@ -1,8 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { profileSettingsApi } from '@/features/update-profile-settings';
-import { profilePasswordFormSchema } from '@/entities/session';
+import {
+  profileSettingsApi,
+  type LinkedAccountProvider,
+  type LinkedAccounts,
+  type NotificationSettings,
+} from '../../api/profile-settings-api';
+import { profilePasswordFormSchema, type ProfilePasswordFormValues } from '@/entities/session';
 import { useAuth } from '@/entities/session';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
@@ -21,14 +26,19 @@ const initialNotifications = {
   reviewAssignments: true,
   newComments: true,
   achievements: true,
-};
+} satisfies NotificationSettings;
 
 const initialLinkedAccounts = {
   githubLogin: '',
   gitlabLogin: '',
-};
+} satisfies LinkedAccounts;
 
-const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
+interface ProfileSettingsModalProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const ProfileSettingsModal = ({ isOpen = false, onClose }: ProfileSettingsModalProps) => {
   const { userId } = useAuth();
 
   const {
@@ -41,16 +51,16 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
       isValid: isPasswordFormValid,
       touchedFields: passwordTouchedFields,
     },
-  } = useForm({
+  } = useForm<ProfilePasswordFormValues>({
     resolver: zodResolver(profilePasswordFormSchema),
     defaultValues: initialPasswordForm,
     mode: 'onChange',
   });
 
   const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<NotificationSettings>(initialNotifications);
   const [isNotificationsSaving, setIsNotificationsSaving] = useState(false);
-  const [linkedAccounts, setLinkedAccounts] = useState(initialLinkedAccounts);
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccounts>(initialLinkedAccounts);
   const [isLinkedAccountsLoading, setIsLinkedAccountsLoading] = useState(false);
   const [isLinkActionLoading, setIsLinkActionLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -62,7 +72,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
       return;
     }
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose?.();
       }
@@ -123,32 +133,32 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
     };
   }, [isOpen, userId]);
 
-  const getPasswordFieldError = (name: LegacyValue) => {
-    if (!((passwordTouchedFields as LegacyValue)[name] || isPasswordSubmitted)) {
+  const getPasswordFieldError = (name: keyof ProfilePasswordFormValues): string => {
+    if (!(passwordTouchedFields[name] || isPasswordSubmitted)) {
       return '';
     }
 
-    return String((passwordErrors as LegacyValue)[name]?.message || '');
+    return String(passwordErrors[name]?.message ?? '');
   };
 
-  const submitPassword = async (passwordForm: LegacyValue) => {
+  const submitPassword = async (passwordForm: ProfilePasswordFormValues) => {
     setIsPasswordSubmitting(true);
 
     try {
       await profileSettingsApi.updatePassword(passwordForm.currentPassword, passwordForm.password);
       showSnackbar('Пароль успешно обновлён', 'success');
       resetPasswordForm(initialPasswordForm);
-    } catch (error: LegacyValue) {
-      showSnackbar(error?.message || 'Не удалось обновить пароль', 'error');
+    } catch (error: unknown) {
+      showSnackbar(error instanceof Error ? error.message : 'Не удалось обновить пароль', 'error');
     } finally {
       setIsPasswordSubmitting(false);
     }
   };
 
-  const handleNotificationChange = async (key: LegacyValue) => {
+  const handleNotificationChange = async (key: keyof NotificationSettings) => {
     const nextSettings = {
       ...notifications,
-      [key]: !(notifications as LegacyValue)[key],
+      [key]: !notifications[key],
     };
 
     setNotifications(nextSettings);
@@ -165,7 +175,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
     }
   };
 
-  const handleUnlinkAccount = async (provider: LegacyValue) => {
+  const handleUnlinkAccount = async (provider: LinkedAccountProvider) => {
     setIsLinkActionLoading(true);
 
     try {
@@ -184,7 +194,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
     }
   };
 
-  const handleLinkAccount = async (provider: LegacyValue) => {
+  const handleLinkAccount = async (provider: LinkedAccountProvider) => {
     setIsLinkActionLoading(true);
 
     try {
@@ -214,7 +224,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: LegacyValue) => {
   return (
     <ModalShell
       isOpen={isOpen}
-      onClose={onClose}
+      {...(onClose ? { onClose } : {})}
       overlayClassName={profileSettingsModalStyles.overlay}
       dialogClassName={profileSettingsModalStyles.root}
       ariaLabelledBy="profile-settings-modal-title"

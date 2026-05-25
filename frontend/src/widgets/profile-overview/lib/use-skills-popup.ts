@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import profilePageStyles from '../../../pages/profile/ui/ProfilePage.module.scss';
+import { type MouseEvent as ReactMouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import type { ProfileSkills } from '@/entities/profile';
+import profileOverviewLayoutStyles from '../ui/ProfileOverviewLayout.module.scss';
 
 const VIEWPORT_PADDING = 12;
 const POPUP_MAX_HEIGHT = 240;
@@ -7,13 +8,21 @@ const POPUP_MAX_WIDTH = 320;
 const POPUP_MIN_WIDTH = 180;
 const POPUP_GAP = 8;
 
+export type SkillGroupKey = keyof ProfileSkills;
+
+export interface SkillsPopupPosition {
+  top: number;
+  left: number;
+  width: number;
+}
+
 export const useSkillsPopup = () => {
-  const popupAnchorRef = useRef<LegacyValue>(null);
-  const [openedSkillsPopup, setOpenedSkillsPopup] = useState<LegacyValue>(null);
-  const [popupDirection, setPopupDirection] = useState('down');
+  const popupAnchorRef = useRef<HTMLButtonElement | null>(null);
+  const [openedSkillsPopup, setOpenedSkillsPopup] = useState<SkillGroupKey | null>(null);
+  const [popupDirection, setPopupDirection] = useState<'down' | 'up'>('down');
   const [popupMaxHeight, setPopupMaxHeight] = useState(240);
-  const [mobilePopupPosition, setMobilePopupPosition] = useState<LegacyValue>(null);
-  const [popupHorizontalAlign, setPopupHorizontalAlign] = useState('left');
+  const [mobilePopupPosition, setMobilePopupPosition] = useState<SkillsPopupPosition | null>(null);
+  const [popupHorizontalAlign, setPopupHorizontalAlign] = useState<'left' | 'right' | 'center'>('left');
 
   const closeSkillsPopup = useCallback(() => {
     setOpenedSkillsPopup(null);
@@ -30,10 +39,7 @@ export const useSkillsPopup = () => {
 
     const triggerRect = anchor.getBoundingClientRect();
 
-    const boundsElement =
-      anchor.closest(`.${profilePageStyles.sectionBody}`) ||
-      anchor.closest(`.${profilePageStyles.content}`) ||
-      anchor.closest('form');
+    const boundsElement = anchor.closest(`.${profileOverviewLayoutStyles.sectionBody}`) || anchor.closest('form');
 
     const boundsRect = boundsElement?.getBoundingClientRect();
     const minLeft = boundsRect ? Math.max(VIEWPORT_PADDING, boundsRect.left + VIEWPORT_PADDING) : VIEWPORT_PADDING;
@@ -51,7 +57,7 @@ export const useSkillsPopup = () => {
     const canOpenToRight = spaceRight >= popupWidth;
     const canOpenToLeft = spaceLeft >= popupWidth;
     let left = triggerRect.left;
-    let horizontalAlign = 'left';
+    let horizontalAlign: 'left' | 'right' | 'center' = 'left';
 
     if (!canOpenToRight && canOpenToLeft) {
       left = triggerRect.right - popupWidth;
@@ -84,10 +90,10 @@ export const useSkillsPopup = () => {
   }, []);
 
   const openSkillsPopup = useCallback(
-    (groupKey: LegacyValue, event: LegacyValue) => {
+    (groupKey: SkillGroupKey, event: ReactMouseEvent<HTMLButtonElement>) => {
       popupAnchorRef.current = event.currentTarget;
 
-      setOpenedSkillsPopup((previousState: LegacyValue) => {
+      setOpenedSkillsPopup((previousState) => {
         if (previousState === groupKey) {
           popupAnchorRef.current = null;
           setMobilePopupPosition(null);
@@ -110,15 +116,18 @@ export const useSkillsPopup = () => {
       return undefined;
     }
 
-    const handleOutsideClick = (event: LegacyValue) => {
-      if (event.target.closest('[data-skills-popup="true"]') || event.target.closest('[data-skills-add="true"]')) {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        event.target instanceof Element &&
+        (event.target.closest('[data-skills-popup="true"]') || event.target.closest('[data-skills-add="true"]'))
+      ) {
         return;
       }
 
       closeSkillsPopup();
     };
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeSkillsPopup();
       }

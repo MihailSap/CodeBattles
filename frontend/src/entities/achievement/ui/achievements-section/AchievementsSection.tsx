@@ -1,23 +1,29 @@
 import { memo } from 'react';
 import { CheckIcon } from '@/shared/ui/icons';
+import type { Achievement } from '../../model/achievements';
 import achievementsSectionStyles from './AchievementsSection.module.scss';
-import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
 
-const AchievementsSection = ({ achievements, canEditProfile, receivedAchievementIdSet }: LegacyValue) => {
+interface AchievementsSectionProps {
+  achievements: Achievement[];
+  canEditProfile: boolean;
+  receivedAchievementIdSet: ReadonlySet<number>;
+}
+
+const AchievementsSection = ({ achievements, canEditProfile, receivedAchievementIdSet }: AchievementsSectionProps) => {
   return (
-    <section className={[profilePageStyles.section, achievementsSectionStyles.isAchievements].join(' ')}>
-      <div className={profilePageStyles.sectionHead}>
-        <div className={profilePageStyles.sectionTitleWrap}>
-          <h2 className={profilePageStyles.sectionTitle}>Достижения</h2>
+    <section className={[achievementsSectionStyles.section, achievementsSectionStyles.isAchievements].join(' ')}>
+      <div className={achievementsSectionStyles.sectionHead}>
+        <div className={achievementsSectionStyles.sectionTitleWrap}>
+          <h2 className={achievementsSectionStyles.sectionTitle}>Достижения</h2>
         </div>
       </div>
 
-      <div className={[profilePageStyles.sectionBody, achievementsSectionStyles.body].join(' ')}>
+      <div className={[achievementsSectionStyles.sectionBody, achievementsSectionStyles.body].join(' ')}>
         {achievements.length === 0 && !canEditProfile ? (
           <p className={achievementsSectionStyles.empty}>Еще не получено ни одного достижения</p>
         ) : (
           <div className={achievementsSectionStyles.list}>
-            {achievements.map((achievement: LegacyValue) => {
+            {achievements.map((achievement) => {
               const isReceived = receivedAchievementIdSet.has(achievement.id);
 
               return (

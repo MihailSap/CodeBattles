@@ -1,9 +1,39 @@
-import { useState, memo, useMemo } from 'react';
+import { type ChangeEvent, useState, memo, useMemo } from 'react';
 import { AIIcon, LikeIcon, DislikeIcon, DeleteIcon, ComplaintIcon } from '@/shared/ui/icons';
-import { COMMENT_CATEGORY_LABEL, COMMENT_CATEGORY_COLOR } from '@/entities/review';
+import { COMMENT_CATEGORY_LABEL, COMMENT_CATEGORY_COLOR, type ReviewComment } from '@/entities/review';
+import type { User } from '@/entities/user';
+import type { EntityId } from '@/entities/project';
 import commentsBlockStyles from './CommentsBlock.module.scss';
 
-const getDisplayName = (comment: LegacyValue, currentUserId: LegacyValue) => {
+type PageContext = 'task' | 'review';
+type CommentAction = (commentId: EntityId) => void | Promise<void>;
+type ReplyAction = (commentId: EntityId, text: string) => void | Promise<void>;
+
+interface CommentsBlockProps {
+  comments: readonly ReviewComment[];
+  currentUser?: User | null | undefined;
+  onReply?: ReplyAction | undefined;
+  onLike?: CommentAction | undefined;
+  onDislike?: CommentAction | undefined;
+  onDelete?: CommentAction | undefined;
+  onReport?: CommentAction | undefined;
+  onCloseThread?: CommentAction | undefined;
+  onReopenThread?: CommentAction | undefined;
+  readOnly?: boolean;
+  pageContext?: PageContext;
+  allowReply?: boolean;
+  title?: string;
+  emptyText?: string;
+  isHistory?: boolean;
+}
+
+interface CommentThreadProps extends Omit<CommentsBlockProps, 'comments' | 'title' | 'emptyText' | 'isHistory'> {
+  comment: ReviewComment;
+  level?: number;
+  threadClosed?: boolean;
+}
+
+const getDisplayName = (comment: ReviewComment, currentUserId?: EntityId): string => {
   if (comment.authorRole === 'AI') return 'AI';
   if (comment.authorRole === 'System') return 'Система';
   if (comment.authorId === currentUserId) return 'Вы';
@@ -30,7 +60,8 @@ const CommentThread = memo(
     readOnly = false,
     pageContext = 'task',
     allowReply = true,
-  }: LegacyValue) => {
+    threadClosed = false,
+  }: CommentThreadProps) => {
     const [isExpanded, setIsExpanded] = useState(!comment.isClosed);
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState('');
@@ -40,6 +71,7 @@ const CommentThread = memo(
     const isMine = comment.authorId === currentUser?.id;
     const maxDepthReached = level >= 5;
     const displayName = getDisplayName(comment, currentUser?.id);
+    const isThreadClosed = threadClosed || Boolean(comment.isClosed);
 
     const handleReplySubmit = async () => {
       if (replyText.length >= 15 && onReply && !isReplySubmitting) {
@@ -57,9 +89,9 @@ const CommentThread = memo(
     const dislikedBy = Array.isArray(comment.dislikedBy) ? comment.dislikedBy : [];
     const likesCount = likedBy.length;
     const dislikesCount = dislikedBy.length;
-    const userLiked = likedBy.includes(currentUser?.id);
-    const userDisliked = dislikedBy.includes(currentUser?.id);
-    const canReplyHere = !readOnly && !isSystem && !comment.isClosed && !maxDepthReached && allowReply && onReply;
+    const userLiked = currentUser !== null && currentUser !== undefined && likedBy.includes(currentUser.id);
+    const userDisliked = currentUser !== null && currentUser !== undefined && dislikedBy.includes(currentUser.id);
+    const canReplyHere = !readOnly && !isSystem && !isThreadClosed && !maxDepthReached && allowReply && onReply;
     const canLike = !isMine && !isSystem && onLike;
     const canDislike = !isMine && !isSystem && isAI && onDislike;
 
@@ -85,7 +117,7 @@ const CommentThread = memo(
           <div className={commentsBlockStyles.message}>
             <span className={commentsBlockStyles.text}>{comment.text}</span>
             <span className={commentsBlockStyles.commentSystemDate}>
-              {new Date(comment.createdAt).toLocaleString('ru-RU', {
+              {new Date(comment.createdAt ?? '').toLocaleString('ru-RU', {
                 day: '2-digit',
                 month: '2-digit',
                 hour: '2-digit',
@@ -123,7 +155,7 @@ const CommentThread = memo(
                 {displayName}
               </span>
               <span className={commentsBlockStyles.date}>
-                {new Date(comment.createdAt).toLocaleString('ru-RU', {
+                {new Date(comment.createdAt ?? '').toLocaleString('ru-RU', {
                   day: '2-digit',
                   month: '2-digit',
                   hour: '2-digit',
@@ -248,7 +280,7 @@ const CommentThread = memo(
                 className={commentsBlockStyles.textarea}
                 placeholder="Ваш ответ (минимум 15 символов)..."
                 value={replyText}
-                onChange={(e: LegacyValue) => setReplyText(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setReplyText(event.target.value)}
               />
               <div className={commentsBlockStyles.actions}>
                 <button className={commentsBlockStyles.cancelButton} type="button" onClick={() => setIsReplying(false)}>
@@ -269,7 +301,7 @@ const CommentThread = memo(
 
         {isExpanded && hasReplies && (
           <div className={commentsBlockStyles.replies}>
-            {comment.replies.map((reply: LegacyValue) => (
+            {comment.replies.map((reply) => (
               <CommentThread
                 key={reply.id}
                 comment={reply}
@@ -285,6 +317,7 @@ const CommentThread = memo(
                 readOnly={readOnly}
                 pageContext={pageContext}
                 allowReply={allowReply}
+                threadClosed={isThreadClosed}
               />
             ))}
           </div>
@@ -311,19 +344,19 @@ const CommentsBlock = memo(
     title = 'Комментарии',
     emptyText = 'Выберите участок кода с комментариями',
     isHistory = false,
-  }: LegacyValue) => {
-    const humanComments = useMemo(() => (comments || []).filter((c: LegacyValue) => c.authorRole !== 'AI'), [comments]);
-    const aiComments = useMemo(() => (comments || []).filter((c: LegacyValue) => c.authorRole === 'AI'), [comments]);
+  }: CommentsBlockProps) => {
+    const humanComments = useMemo(() => comments.filter((comment) => comment.authorRole !== 'AI'), [comments]);
+    const aiComments = useMemo(() => comments.filter((comment) => comment.authorRole === 'AI'), [comments]);
 
     const sortedHuman = useMemo(
       () =>
         [...humanComments].sort(
-          (a: LegacyValue, b: LegacyValue) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          (left, right) => new Date(left.createdAt ?? '').getTime() - new Date(right.createdAt ?? '').getTime()
         ),
       [humanComments]
     );
 
-    if (!comments || comments.length === 0) {
+    if (comments.length === 0) {
       return (
         <div
           className={[commentsBlockStyles.root, isHistory ? commentsBlockStyles.isHistory : '']
@@ -342,7 +375,7 @@ const CommentsBlock = memo(
       >
         <h3 className={commentsBlockStyles.title}>{title}</h3>
         <div className={commentsBlockStyles.list}>
-          {sortedHuman.map((comment: LegacyValue) => (
+          {sortedHuman.map((comment) => (
             <CommentThread
               key={comment.id}
               comment={comment}
@@ -366,7 +399,7 @@ const CommentsBlock = memo(
               <div className={commentsBlockStyles.aiDivider}>
                 <span>AI-комментарии</span>
               </div>
-              {aiComments.map((comment: LegacyValue) => (
+              {aiComments.map((comment) => (
                 <CommentThread
                   key={comment.id}
                   comment={comment}

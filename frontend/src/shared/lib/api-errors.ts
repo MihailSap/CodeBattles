@@ -60,6 +60,10 @@ const CONTEXT_STATUS_MESSAGES = {
 };
 
 type StatusMessageMap = Record<number, string>;
+type ErrorContext = keyof typeof CONTEXT_STATUS_MESSAGES;
+
+const isErrorContext = (context: string): context is ErrorContext =>
+  Object.keys(CONTEXT_STATUS_MESSAGES).some((knownContext) => knownContext === context);
 
 interface ApiErrorLike {
   code?: string;
@@ -68,8 +72,25 @@ interface ApiErrorLike {
   };
 }
 
-const toApiErrorLike = (value: unknown): ApiErrorLike =>
-  typeof value === 'object' && value !== null ? (value as ApiErrorLike) : {};
+const toApiErrorLike = (value: unknown): ApiErrorLike => {
+  if (typeof value !== 'object' || value === null) {
+    return {};
+  }
+
+  const record = Object.entries(value);
+  const code = record.find(([key]) => key === 'code')?.[1];
+  const rawResponse = record.find(([key]) => key === 'response')?.[1];
+
+  const responseStatus =
+    typeof rawResponse === 'object' && rawResponse !== null
+      ? Object.entries(rawResponse).find(([key]) => key === 'status')?.[1]
+      : undefined;
+
+  return {
+    ...(typeof code === 'string' ? { code } : {}),
+    ...(typeof responseStatus === 'number' ? { response: { status: responseStatus } } : {}),
+  };
+};
 
 export const getApiErrorMessage = (error: unknown, fallback: string, context: string): string => {
   const errorLike = toApiErrorLike(error);
@@ -84,9 +105,9 @@ export const getApiErrorMessage = (error: unknown, fallback: string, context: st
 
   const status = errorLike.response.status;
 
-  const contextStatusMap = CONTEXT_STATUS_MESSAGES[context as keyof typeof CONTEXT_STATUS_MESSAGES] as
-    | StatusMessageMap
-    | undefined;
+  const contextStatusMap: Partial<StatusMessageMap> | undefined = isErrorContext(context)
+    ? CONTEXT_STATUS_MESSAGES[context]
+    : undefined;
 
   const contextMessage = status ? contextStatusMap?.[status] : undefined;
 
@@ -94,7 +115,7 @@ export const getApiErrorMessage = (error: unknown, fallback: string, context: st
     return contextMessage;
   }
 
-  const commonStatusMap = COMMON_STATUS_MESSAGES as StatusMessageMap;
+  const commonStatusMap: Partial<StatusMessageMap> = COMMON_STATUS_MESSAGES;
 
   if (status && commonStatusMap[status]) {
     return commonStatusMap[status];

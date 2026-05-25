@@ -1,6 +1,7 @@
-import { TASK_REVIEW_TYPE, TASK_STATUS } from '../../model';
+import { TASK_REVIEW_TYPE, TASK_STATUS } from '@/entities/project/@x/task';
+import type { Task } from '@/entities/project/@x/task';
 
-const makeDate = (daysFromNow: LegacyValue, hour: LegacyValue, minute: LegacyValue) => {
+const makeDate = (daysFromNow: number, hour: number, minute: number): string => {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
   date.setHours(hour, minute, 0, 0);
@@ -149,4 +150,4 @@ export const MOCK_TASKS = [
     assigneeIds: [14],
     reviewerIds: [57],
   },
-];
+] satisfies Task[];

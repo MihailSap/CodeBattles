@@ -1,15 +1,25 @@
-import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Snackbar from '@/shared/ui/snackbar';
 import Spinner from '@/shared/ui/spinner';
 import tasksCountIcon from '@/shared/assets/tasks-count-icon.svg';
-import { CheckIcon } from '@/shared/ui/icons';
-import FileTree from '@/shared/ui/file-tree';
+import FileTree, { type FileTreeItem } from '@/shared/ui/file-tree';
 import CodeViewer from '@/shared/ui/code-viewer';
 import { CommentsBlock } from '@/widgets/solution-workspace';
 import { ReviewResultsSidebar } from '@/widgets/review-workspace';
 import ScrollToTopButton from '@/shared/ui/scroll-to-top-button';
-import { projectsApi } from '@/entities/project';
+import { taskApi, type Task } from '@/entities/task';
+import {
+  REVIEW_STATUS,
+  reviewApi,
+  useInvalidateReviewMutation,
+  type ReportReason,
+  type ReviewDetail,
+  type ReviewFile,
+} from '@/entities/review';
+import type { EntityId } from '@/entities/project';
+import type { CommentPayload } from '@/features/comment-solution';
+import type { FinalReviewSubmitPayload } from '@/features/review-solution';
 import { ROUTES } from '@/shared/config/routes';
 import { REVIEW_STATUS_LABEL, getDeadlineInfo } from '@/entities/review';
 import {
@@ -19,45 +29,78 @@ import {
 } from '@/entities/notification';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { getLanguageByFileName, lazyNamed } from '@/shared/lib';
+import { getLanguageByFileName } from '@/shared/lib';
 import { AvatarIcon, CommentIcon } from '@/shared/ui/icons';
 import reviewPageStyles from './ReviewPage.module.scss';
-import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
-import taskPageStyles from '../../task/ui/TaskPage.module.scss';
+import {
+  detailLayoutStyles as projectPageStyles,
+  taskDetailLayoutStyles as taskPageStyles,
+} from '@/widgets/detail-layout';
 import solutionTabStyles from '../../../widgets/solution-workspace/ui/solution-tab/SolutionTab.module.scss';
 
-const CommentModal = lazyNamed(() => import('@/features/comment-solution'), 'CommentModal');
-const FinalReviewForm = lazyNamed(() => import('@/features/review-solution'), 'FinalReviewForm');
-const ReportModal = lazyNamed(() => import('@/features/report-review'), 'ReportModal');
+const CommentModal = lazy(() =>
+  import('@/features/comment-solution').then(({ CommentModal }) => ({ default: CommentModal }))
+);
+
+const FinalReviewForm = lazy(() =>
+  import('@/features/review-solution').then(({ FinalReviewForm }) => ({ default: FinalReviewForm }))
+);
+
+const ReportModal = lazy(() =>
+  import('@/features/report-review').then(({ ReportModal }) => ({ default: ReportModal }))
+);
+
+interface SelectedLineRange {
+  startLine: number;
+  endLine: number;
+}
+
+interface ContextLineData {
+  startLine: number;
+  endLine: number;
+}
+
+interface LineSelectionPayload {
+  startLineNumber: number;
+  endLineNumber: number;
+}
+
+interface LoadedReviewFile {
+  content?: string;
+  originalContent?: string;
+  isDiff?: boolean;
+  error?: boolean;
+}
 
 const ReviewPage = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
   const { userId, user } = useAuth();
-  const [task, setTask] = useState<LegacyValue>(null);
-  const [review, setReview] = useState<LegacyValue>(null);
+  const [task, setTask] = useState<Task | null>(null);
+  const [review, setReview] = useState<ReviewDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<LegacyValue>(null);
-  const [selectedLineRange, setSelectedLineRange] = useState<LegacyValue>(null);
+  const [selectedFile, setSelectedFile] = useState<FileTreeItem | null>(null);
+  const [selectedLineRange, setSelectedLineRange] = useState<SelectedLineRange | null>(null);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
-  const [contextLineData, setContextLineData] = useState<LegacyValue>(null);
+  const [contextLineData, setContextLineData] = useState<ContextLineData | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportingCommentId, setReportingCommentId] = useState<LegacyValue>(null);
+  const [reportingCommentId, setReportingCommentId] = useState<EntityId | null>(null);
   const [completeNotification] = useCompleteNotificationMutation();
+  const [invalidateAssignedReviews] = useInvalidateReviewMutation();
   const [fileContentLoading, setFileContentLoading] = useState(false);
-  const [fileContentMap, setFileContentMap] = useState<LegacyValue>({});
-  const numericUserId = Number(userId);
+  const [fileContentMap, setFileContentMap] = useState<Record<string, LoadedReviewFile>>({});
+  const numericUserId = Number(userId ?? 0);
   const isAdmin = user?.role === 'ADMIN';
 
-  const findFileByPath = useCallback((nodes: LegacyValue, path: LegacyValue): LegacyValue => {
+  const findFileByPath = useCallback((nodes: readonly ReviewFile[], path: string): ReviewFile | null => {
     for (const node of nodes) {
       if (node.path === path) return node;
 
       if (node.children) {
-        const found: LegacyValue = findFileByPath(node.children, path);
+        const found = findFileByPath(node.children, path);
         if (found) return found;
       }
     }
@@ -66,12 +109,12 @@ const ReviewPage = () => {
   }, []);
 
   const loadData = useCallback(async () => {
-    const findFirstFileInternal = (nodes: LegacyValue): LegacyValue => {
+    const findFirstFileInternal = (nodes: readonly ReviewFile[]): ReviewFile | null => {
       for (const node of nodes) {
         if (!node.isDirectory) return node;
 
         if (node.children) {
-          const found: LegacyValue = findFirstFileInternal(node.children);
+          const found = findFirstFileInternal(node.children);
           if (found) return found;
         }
       }
@@ -79,8 +122,14 @@ const ReviewPage = () => {
       return null;
     };
 
+    if (!reviewId) {
+      navigate(ROUTES.reviews, { replace: true });
+
+      return;
+    }
+
     try {
-      const reviewData = await projectsApi.getReviewById(reviewId);
+      const reviewData = await reviewApi.getReviewById(reviewId);
 
       if (!reviewData) {
         navigate(ROUTES.reviews, {
@@ -92,10 +141,7 @@ const ReviewPage = () => {
 
       setReview(reviewData);
 
-      const [taskData] = await Promise.all([
-        projectsApi.getTaskById(reviewData.projectId, reviewData.taskId),
-        projectsApi.getProjectById(reviewData.projectId),
-      ]);
+      const taskData = await taskApi.getTaskById(reviewData.projectId, reviewData.taskId);
 
       setTask(taskData);
       const isUserReviewer = taskData.reviewerIds?.includes(numericUserId);
@@ -113,7 +159,7 @@ const ReviewPage = () => {
       }
 
       if (reviewData.files?.length > 0) {
-        setSelectedFile((prev: LegacyValue) => {
+        setSelectedFile((prev) => {
           if (prev) {
             const stillExists = findFileByPath(reviewData.files, prev.path);
             if (stillExists) return stillExists;
@@ -121,10 +167,10 @@ const ReviewPage = () => {
 
           const firstFile = findFirstFileInternal(reviewData.files);
 
-          return firstFile || reviewData.files[0];
+          return firstFile ?? reviewData.files[0] ?? null;
         });
       }
-    } catch (err: LegacyValue) {
+    } catch (err: unknown) {
       console.error('Review data load error:', err);
       showSnackbar('Ошибка загрузки данных ревью', reviewPageStyles.isError);
     } finally {
@@ -137,21 +183,27 @@ const ReviewPage = () => {
   }, [loadData]);
 
   const fetchFileContent = useCallback(
-    async (filePath: LegacyValue) => {
+    async (filePath: string) => {
       if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
+      const contentReviewId = review?.id ?? reviewId;
+
+      if (!contentReviewId) {
+        return;
+      }
+
       setFileContentLoading(true);
 
       try {
-        const data = await projectsApi.getReviewFileContent(reviewId, filePath);
+        const data = await reviewApi.getReviewFileContent(contentReviewId, filePath);
 
-        setFileContentMap((prev: LegacyValue) => ({
+        setFileContentMap((prev) => ({
           ...prev,
           [filePath]: data,
         }));
-      } catch (err: LegacyValue) {
+      } catch (err: unknown) {
         console.error('Failed to fetch file content:', err);
 
-        setFileContentMap((prev: LegacyValue) => ({
+        setFileContentMap((prev) => ({
           ...prev,
           [filePath]: {
             error: true,
@@ -163,11 +215,11 @@ const ReviewPage = () => {
         setFileContentLoading(false);
       }
     },
-    [reviewId, fileContentMap, showSnackbar]
+    [reviewId, review?.id, fileContentMap, showSnackbar]
   );
 
   const handleSelectFile = useCallback(
-    (file: LegacyValue) => {
+    (file: FileTreeItem) => {
       setSelectedFile(file);
       setSelectedLineRange(null);
 
@@ -191,21 +243,25 @@ const ReviewPage = () => {
   }, [task?.reviewerIds, userId, numericUserId]);
 
   const isAdminReadOnlyView = isAdmin && !isReviewer;
-  const isCompleted = review?.status === 'COMPLETED';
+  const isCompleted = review?.status === REVIEW_STATUS.COMPLETED;
+  const isTaskCompleted = task?.status === 'DONE';
 
   const myFinalReview = useMemo(
-    () => (review?.finalReviews || []).find((fr: LegacyValue) => fr.reviewerId === numericUserId),
+    () => (review?.finalReviews ?? []).find((finalReview) => Number(finalReview.reviewerId) === numericUserId),
     [review?.finalReviews, numericUserId]
   );
 
   const alreadySubmittedReview = !!myFinalReview;
   const isReadOnlyMode = alreadySubmittedReview || isCompleted;
   const canAddNewComments = isReviewer && !isReadOnlyMode;
-  const canDiscussThreads = isReviewer && (isCompleted || (!alreadySubmittedReview && !isCompleted));
+
+  const canDiscussThreads =
+    isReviewer && !isTaskCompleted && (isCompleted || (!alreadySubmittedReview && !isCompleted));
+
   const taskId = review?.taskId;
 
   const handleLineContextMenu = useCallback(
-    (data: LegacyValue) => {
+    (data: LineSelectionPayload) => {
       if (!canAddNewComments) return;
 
       setContextLineData({
@@ -218,29 +274,26 @@ const ReviewPage = () => {
     [canAddNewComments]
   );
 
-  const handleLineClick = useCallback((range: LegacyValue) => {
+  const handleLineClick = useCallback((range: SelectedLineRange) => {
     setSelectedLineRange(range);
   }, []);
 
-  const handleAddComment = async ({ text, category, severity }: LegacyValue) => {
-    if (!contextLineData || !selectedFile) return;
+  const handleAddComment = async ({ text, category, severity }: CommentPayload) => {
+    if (!review || !contextLineData || !selectedFile) return;
     setIsCommentSubmitting(true);
 
     try {
-      await projectsApi.addReviewComment(taskId, {
+      await reviewApi.addReviewComment(review.id, {
         file: selectedFile.path,
         startLine: contextLineData.startLine,
         endLine: contextLineData.endLine,
         text,
         category,
         severity,
-        authorId: numericUserId,
-        authorName: 'Вы',
-        authorRole: 'Reviewer',
-        createdAt: new Date().toISOString(),
       });
 
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       setIsCommentModalOpen(false);
       showSnackbar('Комментарий добавлен', reviewPageStyles.success);
     } catch {
@@ -250,9 +303,13 @@ const ReviewPage = () => {
     }
   };
 
-  const handleReply = async (commentId: LegacyValue, text: LegacyValue) => {
+  const handleReply = async (commentId: EntityId, text: string) => {
+    if (!taskId) {
+      return;
+    }
+
     try {
-      await projectsApi.replyToReviewComment(taskId, commentId, {
+      await reviewApi.replyToReviewComment(taskId, commentId, {
         authorId: numericUserId,
         authorName: 'Вы',
         authorRole: 'Reviewer',
@@ -261,68 +318,101 @@ const ReviewPage = () => {
       });
 
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       showSnackbar('Ответ отправлен', reviewPageStyles.success);
     } catch {
       showSnackbar('Ошибка отправки ответа. Попробуйте позже.', reviewPageStyles.isError);
     }
   };
 
-  const handleLike = async (commentId: LegacyValue) => {
+  const handleLike = async (commentId: EntityId) => {
+    if (!review) {
+      return;
+    }
+
     try {
-      await projectsApi.toggleCommentLike(taskId, commentId, numericUserId, false);
+      await reviewApi.toggleCommentLike(review.id, commentId, numericUserId, false);
+
       await loadData();
-    } catch (err: LegacyValue) {
+      await invalidateAssignedReviews().unwrap();
+    } catch (err: unknown) {
       console.error('Like error:', err);
     }
   };
 
   const handleDislike = useCallback(
-    async (commentId: LegacyValue) => {
+    async (commentId: EntityId) => {
+      if (!review) {
+        return;
+      }
+
       try {
-        await projectsApi.toggleCommentLike(taskId, commentId, numericUserId, true);
+        await reviewApi.toggleCommentLike(review.id, commentId, numericUserId, true);
+
         await loadData();
-      } catch (err: LegacyValue) {
+        await invalidateAssignedReviews().unwrap();
+      } catch (err: unknown) {
         console.error('Dislike error:', err);
       }
     },
-    [taskId, numericUserId, loadData]
+    [review, numericUserId, loadData, invalidateAssignedReviews]
   );
 
-  const handleDeleteComment = async (commentId: LegacyValue) => {
+  const handleDeleteComment = async (commentId: EntityId) => {
+    if (!review) {
+      return;
+    }
+
     try {
-      await projectsApi.deleteReviewComment(taskId, commentId);
+      await reviewApi.deleteReviewComment(review.id, commentId);
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       showSnackbar('Комментарий удален', reviewPageStyles.success);
     } catch {
       showSnackbar('Ошибка удаления комментария', reviewPageStyles.isError);
     }
   };
 
-  const handleCloseThread = async (commentId: LegacyValue) => {
+  const handleCloseThread = async (commentId: EntityId) => {
+    if (!review) {
+      return;
+    }
+
     try {
-      await projectsApi.closeCommentThread(taskId, commentId, 'close');
+      await reviewApi.closeCommentThread(review.id, commentId, 'close');
+
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       showSnackbar('Тред закрыт', reviewPageStyles.success);
     } catch {
       showSnackbar('Ошибка закрытия треда', reviewPageStyles.isError);
     }
   };
 
-  const handleReopenThread = async (commentId: LegacyValue) => {
+  const handleReopenThread = async (commentId: EntityId) => {
+    if (!review) {
+      return;
+    }
+
     try {
-      await projectsApi.closeCommentThread(taskId, commentId, 'open');
+      await reviewApi.closeCommentThread(review.id, commentId, 'reopen');
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       showSnackbar('Тред переоткрыт', reviewPageStyles.success);
     } catch {
       showSnackbar('Ошибка открытия треда', reviewPageStyles.isError);
     }
   };
 
-  const handleFinalSubmit = async (payload: LegacyValue) => {
+  const handleFinalSubmit = async (payload: FinalReviewSubmitPayload) => {
+    if (!review || !taskId) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await projectsApi.submitFinalReview(taskId, {
+      await reviewApi.submitFinalReview(review.id, {
         ...payload,
         reviewerId: numericUserId,
         reviewerName: 'Вы',
@@ -338,6 +428,7 @@ const ReviewPage = () => {
       });
 
       await loadData();
+      await invalidateAssignedReviews().unwrap();
       showSnackbar('Результаты ревью успешно сохранены', reviewPageStyles.success);
     } catch {
       showSnackbar('Ошибка сохранения результатов ревью. Попробуйте позже.', reviewPageStyles.isError);
@@ -346,11 +437,15 @@ const ReviewPage = () => {
     }
   };
 
-  const handleReportSubmit = async (reason: LegacyValue, comment: LegacyValue) => {
+  const handleReportSubmit = async (reason: ReportReason, comment: string) => {
+    if (!review || reportingCommentId === null) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await projectsApi.reportComment(taskId, reportingCommentId, {
+      await reviewApi.reportComment(review.id, reportingCommentId, {
         reason,
         comment,
       });
@@ -364,29 +459,29 @@ const ReviewPage = () => {
     }
   };
 
-  const openReportModal = (commentId: LegacyValue) => {
+  const openReportModal = (commentId: EntityId) => {
     setReportingCommentId(commentId);
     setIsReportModalOpen(true);
   };
 
-  const allComments = useMemo(() => review?.comments || [], [review?.comments]);
+  const allComments = useMemo(() => review?.comments ?? [], [review?.comments]);
 
   const visibleComments = useMemo(
-    () =>
-      task?.aiReviewEnabled ? allComments : allComments.filter((comment: LegacyValue) => comment.authorRole !== 'AI'),
+    () => (task?.aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
     [allComments, task?.aiReviewEnabled]
   );
 
-  const fileComments = visibleComments.filter((c: LegacyValue) => c.file === selectedFile?.path);
-  const commentedFiles = [...new Set(visibleComments.map((c: LegacyValue) => c.file))];
+  const fileComments = visibleComments.filter((comment) => comment.file === selectedFile?.path);
+
+  const commentedFiles = [
+    ...new Set(visibleComments.flatMap((comment) => (comment.file === undefined ? [] : [comment.file]))),
+  ];
 
   const displayedComments = selectedLineRange
     ? fileComments.filter(
-        (c: LegacyValue) => c.startLine === selectedLineRange.startLine && c.endLine === selectedLineRange.endLine
+        (comment) => comment.startLine === selectedLineRange.startLine && comment.endLine === selectedLineRange.endLine
       )
     : [];
-
-  const showAssigneesName = isCompleted && review?.revealAuthorAfterReview;
 
   const assigneesToReveal = useMemo(() => {
     if (!task?.assignees) return null;
@@ -395,38 +490,33 @@ const ReviewPage = () => {
       return task.assignees;
     }
 
-    const isCompletedStatus = review?.status === 'COMPLETED';
-    const finalReviews = review?.finalReviews || [];
-    const allApproved = finalReviews.length > 0 && finalReviews.every((fr: LegacyValue) => fr.verdict === 'APPROVED');
     const shouldReveal = review?.revealAuthorAfterReview;
 
-    if (isCompletedStatus && allApproved && shouldReveal) {
+    if (isTaskCompleted && shouldReveal) {
       return task.assignees;
     }
 
     return null;
-  }, [isAdminReadOnlyView, task?.assignees, review?.status, review?.finalReviews, review?.revealAuthorAfterReview]);
+  }, [isAdminReadOnlyView, isTaskCompleted, task?.assignees, review?.revealAuthorAfterReview]);
 
   const commentsCount = visibleComments.length;
 
   const humanComments = useMemo(
-    () => visibleComments.filter((c: LegacyValue) => c.authorRole !== 'AI'),
+    () => visibleComments.filter((comment) => comment.authorRole !== 'AI'),
     [visibleComments]
   );
 
   const isAllResolved = useMemo(
-    () => humanComments.length > 0 && humanComments.every((c: LegacyValue) => c.isClosed),
+    () => humanComments.length > 0 && humanComments.every((comment) => comment.isClosed),
     [humanComments]
   );
-
-  const allThreadsResolved = isAllResolved;
 
   const myHistoryComments = useMemo(() => {
     if (!review?.history) return [];
 
     return review.history
-      .flatMap((h: LegacyValue) => h.comments || [])
-      .filter((c: LegacyValue) => c.authorId === numericUserId);
+      .flatMap((history) => history.comments)
+      .filter((comment) => Number(comment.authorId) === numericUserId);
   }, [review?.history, numericUserId]);
 
   const deadlineInfo = useMemo(() => {
@@ -466,7 +556,7 @@ const ReviewPage = () => {
     );
   }
 
-  const currentFileContent = fileContentMap[selectedFile?.path];
+  const currentFileContent = selectedFile ? fileContentMap[selectedFile.path] : undefined;
 
   return (
     <div className={reviewPageStyles.root}>
@@ -509,7 +599,7 @@ const ReviewPage = () => {
             <div className={[taskPageStyles.assigneesWrap, taskPageStyles.offsetSection].join(' ')}>
               <h3 className={projectPageStyles.descriptionLabel}>Исполнители:</h3>
               <div className={taskPageStyles.assigneesList}>
-                {assigneesToReveal.map((assignee: LegacyValue) => (
+                {assigneesToReveal.map((assignee) => (
                   <div key={assignee.id} className={taskPageStyles.assigneeItem}>
                     <span className={taskPageStyles.assigneeAvatar}>
                       {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
@@ -592,7 +682,7 @@ const ReviewPage = () => {
                   <p>Ошибка загрузки файла</p>
                   <button
                     className={solutionTabStyles.manualButton}
-                    onClick={() => fetchFileContent(selectedFile.path)}
+                    onClick={() => selectedFile && fetchFileContent(selectedFile.path)}
                   >
                     Повторить
                   </button>
@@ -603,23 +693,18 @@ const ReviewPage = () => {
                 key={selectedFile?.path}
                 value={currentFileContent?.content || (selectedFile?.isDirectory ? '' : '')}
                 language={getLanguageByFileName(selectedFile?.name)}
-                isDiff={selectedFile?.isDiff || currentFileContent?.isDiff}
+                isDiff={Boolean(selectedFile?.isDiff || currentFileContent?.isDiff)}
                 originalValue={currentFileContent?.originalContent || ''}
                 comments={fileComments}
                 onLineClick={handleLineClick}
-                onLineContextMenu={canAddNewComments ? handleLineContextMenu : undefined}
+                {...(canAddNewComments ? { onLineContextMenu: handleLineContextMenu } : {})}
                 canComment={canAddNewComments}
               />
             )}
 
             {isReviewer && !alreadySubmittedReview && !isCompleted && (
               <Suspense fallback={null}>
-                <FinalReviewForm
-                  onSubmit={handleFinalSubmit}
-                  isSubmitting={isSubmitting}
-                  allThreadsResolved={allThreadsResolved}
-                  taskId={review.id}
-                />
+                <FinalReviewForm onSubmit={handleFinalSubmit} isSubmitting={isSubmitting} taskId={review.id} />
               </Suspense>
             )}
 
@@ -640,8 +725,11 @@ const ReviewPage = () => {
             {isCompleted && (
               <ReviewResultsSidebar
                 review={review}
-                showAssigneesName={showAssigneesName}
                 aiReviewEnabled={Boolean(task?.aiReviewEnabled)}
+                canRevealReviewerNames={isTaskCompleted}
+                currentReviewerId={numericUserId}
+                showReviewerSummary={isTaskCompleted}
+                showAiSolutionEvaluation={isTaskCompleted}
               />
             )}
           </div>
@@ -649,9 +737,7 @@ const ReviewPage = () => {
           <div className={reviewPageStyles.colRight}>
             <CommentsBlock
               comments={displayedComments}
-              currentUser={{
-                id: numericUserId,
-              }}
+              currentUser={user ?? { id: numericUserId, login: '' }}
               onReply={canDiscussThreads ? handleReply : undefined}
               onLike={canDiscussThreads ? handleLike : undefined}
               onDislike={canDiscussThreads ? handleDislike : undefined}
@@ -668,9 +754,7 @@ const ReviewPage = () => {
             {myHistoryComments.length > 0 && (
               <CommentsBlock
                 comments={myHistoryComments}
-                currentUser={{
-                  id: numericUserId,
-                }}
+                currentUser={user ?? { id: numericUserId, login: '' }}
                 readOnly
                 isHistory
                 pageContext="review"

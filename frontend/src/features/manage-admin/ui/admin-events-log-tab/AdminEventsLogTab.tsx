@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ChangeEvent, type ReactNode, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ADMIN_EVENT_TYPE,
@@ -6,6 +6,7 @@ import {
   ADMIN_EVENT_TYPE_OPTIONS,
   useGetAdminEventsQuery,
 } from '@/entities/admin';
+import type { AdminEvent, AdminEventType, AdminUserBrief } from '@/entities/admin';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import Spinner from '@/shared/ui/spinner';
 import { ROUTES } from '@/shared/config/routes';
@@ -26,9 +27,13 @@ const EVENT_TYPE_CLASS = {
   [ADMIN_EVENT_TYPE.SYSTEM_AI_PROMPT_CHANGED]: adminEventsLogTabStyles.isSystemAiPromptChanged,
 };
 
-const getProfileUrl = (userId: LegacyValue) => ROUTES.profileByUserId.replace(':userId', userId);
+const getProfileUrl = (userId: number): string => ROUTES.profileByUserId.replace(':userId', String(userId));
 
-const UserLink = ({ user }: LegacyValue) => {
+interface UserLinkProps {
+  user?: AdminUserBrief | undefined;
+}
+
+const UserLink = ({ user }: UserLinkProps) => {
   if (!user?.id) {
     return <span>{user?.fullName || user?.login || 'Система'}</span>;
   }
@@ -40,7 +45,13 @@ const UserLink = ({ user }: LegacyValue) => {
   );
 };
 
-const EventField = ({ label, children, wide = false }: LegacyValue) => (
+interface EventFieldProps {
+  label: string;
+  children?: ReactNode;
+  wide?: boolean;
+}
+
+const EventField = ({ label, children, wide = false }: EventFieldProps) => (
   <div
     className={[adminEventsLogTabStyles.field, wide ? adminEventsLogTabStyles.isWide : ''].filter(Boolean).join(' ')}
   >
@@ -49,7 +60,7 @@ const EventField = ({ label, children, wide = false }: LegacyValue) => (
   </div>
 );
 
-const renderTypedEventFields = (event: LegacyValue) => {
+const renderTypedEventFields = (event: AdminEvent): ReactNode => {
   if (event.type === ADMIN_EVENT_TYPE.COMMENT_COMPLAINT_CREATED) {
     return (
       <>
@@ -124,10 +135,12 @@ const renderTypedEventFields = (event: LegacyValue) => {
     return (
       <>
         <EventField label="Было">
-          {event.previousValue?.length > 119 ? event.previousValue.slice(0, 119) + '...' : event.previousValue || '—'}
+          {event.previousValue && event.previousValue.length > 119
+            ? event.previousValue.slice(0, 119) + '...'
+            : event.previousValue || '—'}
         </EventField>
         <EventField label="Стало">
-          {event.newValue?.length > 119 ? event.newValue.slice(0, 119) + '...' : event.newValue || '—'}
+          {event.newValue && event.newValue.length > 119 ? event.newValue.slice(0, 119) + '...' : event.newValue || '—'}
         </EventField>
       </>
     );
@@ -140,19 +153,21 @@ const renderTypedEventFields = (event: LegacyValue) => {
   );
 };
 
-const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
+interface AdminEventsLogTabProps {
+  isActive: boolean;
+}
+
+const AdminEventsLogTab = ({ isActive }: AdminEventsLogTabProps) => {
   const [page, setPage] = useState(0);
-  const [type, setType] = useState('');
+  const [type, setType] = useState<AdminEventType | ''>('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
   const eventsQuery = useGetAdminEventsQuery(
     {
-      page,
-      size: PAGE_SIZE,
-      type: type || undefined,
-      dateFrom: dateFrom || undefined,
-      dateTo: dateTo || undefined,
+      ...(type ? { type } : {}),
+      ...(dateFrom ? { dateFrom } : {}),
+      ...(dateTo ? { dateTo } : {}),
     },
     {
       skip: !isActive,
@@ -160,8 +175,9 @@ const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
     }
   );
 
-  const events = Array.isArray(eventsQuery.data?.content) ? eventsQuery.data.content : [];
-  const totalPages = Number.isFinite(eventsQuery.data?.totalPages) ? eventsQuery.data.totalPages : 0;
+  const allEvents = eventsQuery.data ?? [];
+  const totalPages = Math.ceil(allEvents.length / PAGE_SIZE);
+  const events = allEvents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const isLoading = eventsQuery.isLoading || eventsQuery.isFetching;
 
   useEffect(() => {
@@ -189,8 +205,9 @@ const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
           labelClassName={adminEventsLogTabStyles.typeLabel}
           triggerClassName={adminEventsLogTabStyles.typeTrigger}
           menuClassName={adminEventsLogTabStyles.typeMenu}
-          onChange={(nextType: LegacyValue) => {
-            setType(nextType);
+          onChange={(nextType: string) => {
+            const validType = Object.values(ADMIN_EVENT_TYPE).find((eventType) => eventType === nextType) ?? '';
+            setType(validType);
             setPage(0);
           }}
         />
@@ -199,7 +216,7 @@ const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
           <input
             type="date"
             value={dateFrom}
-            onChange={(event: LegacyValue) => {
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
               setDateFrom(event.target.value);
               setPage(0);
             }}
@@ -210,7 +227,7 @@ const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
           <input
             type="date"
             value={dateTo}
-            onChange={(event: LegacyValue) => {
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
               setDateTo(event.target.value);
               setPage(0);
             }}
@@ -243,7 +260,7 @@ const AdminEventsLogTab = ({ isActive }: LegacyValue) => {
         )}
 
         {!isLoading &&
-          events.map((event: LegacyValue) => (
+          events.map((event: AdminEvent) => (
             <article
               className={[adminEventsLogTabStyles.item, EVENT_TYPE_CLASS[event.type]].filter(Boolean).join(' ')}
               key={event.id}

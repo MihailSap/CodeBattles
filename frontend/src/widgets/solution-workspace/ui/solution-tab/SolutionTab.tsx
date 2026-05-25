@@ -1,55 +1,126 @@
-import { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
-import { projectsApi } from '@/entities/project';
+import { type ChangeEvent, lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { taskApi, type Task } from '@/entities/task';
+import {
+  reviewApi,
+  useGetAssignedReviewsQuery,
+  type ReportReason,
+  type ReviewComment,
+  type ReviewDetail,
+  type ReviewFile,
+} from '@/entities/review';
+import type { EntityId } from '@/entities/project';
+import type { User } from '@/entities/user';
+import type { SolutionUploadPayload } from '@/features/upload-solution';
 import {
   NOTIFICATION_COMPLETION_ACTION,
   NOTIFICATION_TARGET_KIND,
   useCompleteNotificationMutation,
 } from '@/entities/notification';
-import FileTree from '@/shared/ui/file-tree';
+import { ROUTES } from '@/shared/config/routes';
+import FileTree, { type FileTreeItem } from '@/shared/ui/file-tree';
 import CodeViewer from '@/shared/ui/code-viewer';
 import { CommentsBlock } from '@/widgets/solution-workspace';
 import { ReviewResultsSidebar } from '@/widgets/review-workspace';
 import ScrollToTopButton from '@/shared/ui/scroll-to-top-button';
 import Spinner from '@/shared/ui/spinner';
-import { getLanguageByFileName, lazyNamed } from '@/shared/lib';
-import { UnwrapIcon } from '@/shared/ui/icons';
-import { MOCK_LARGE_FILE_TREE } from '@/entities/project';
+import { getLanguageByFileName } from '@/shared/lib';
 import solutionTabStyles from './SolutionTab.module.scss';
 
-const GitUploadModal = lazyNamed(() => import('@/features/upload-solution'), 'GitUploadModal');
-const ReportModal = lazyNamed(() => import('@/features/report-review'), 'ReportModal');
-const SolutionUploadModal = lazyNamed(() => import('@/features/upload-solution'), 'SolutionUploadModal');
+const GitUploadModal = lazy(() =>
+  import('@/features/upload-solution').then(({ GitUploadModal }) => ({ default: GitUploadModal }))
+);
 
-const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly = false }: LegacyValue) => {
-  const [review, setReview] = useState<LegacyValue>(null);
+const ReportModal = lazy(() =>
+  import('@/features/report-review').then(({ ReportModal }) => ({ default: ReportModal }))
+);
+
+const SolutionUploadModal = lazy(() =>
+  import('@/features/upload-solution').then(({ SolutionUploadModal }) => ({ default: SolutionUploadModal }))
+);
+
+interface SelectedLineRange {
+  startLine: number;
+  endLine: number;
+}
+
+interface LoadedReviewFile {
+  content?: string;
+  originalContent?: string;
+  isDiff?: boolean;
+  error?: boolean;
+}
+
+interface SolutionTabProps {
+  task: Task;
+  currentUser: User;
+  aiReviewEnabled?: boolean;
+  onSnackbar?: (message: string, type: string) => void;
+  onTaskUpdated?: () => void | Promise<void>;
+  readOnly?: boolean;
+}
+
+const hasLineLocation = (
+  comment: ReviewComment
+): comment is ReviewComment & { file: string; startLine: number; endLine: number } =>
+  comment.file !== undefined && comment.startLine !== undefined && comment.endLine !== undefined;
+
+const SolutionTab = ({
+  task,
+  currentUser,
+  aiReviewEnabled,
+  onSnackbar,
+  onTaskUpdated,
+  readOnly = false,
+}: SolutionTabProps) => {
+  const [review, setReview] = useState<ReviewDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [isGitModalOpen, setIsGitModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<LegacyValue>(null);
-  const [selectedLineRange, setSelectedLineRange] = useState<LegacyValue>(null);
+  const [selectedFile, setSelectedFile] = useState<FileTreeItem | null>(null);
+  const [selectedLineRange, setSelectedLineRange] = useState<SelectedLineRange | null>(null);
   const [revealName, setRevealName] = useState(false);
+  const [isVisibilityUpdating, setIsVisibilityUpdating] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportingCommentId, setReportingCommentId] = useState<LegacyValue>(null);
+  const [reportingCommentId, setReportingCommentId] = useState<EntityId | null>(null);
   const [fileContentLoading, setFileContentLoading] = useState(false);
-  const [fileContentMap, setFileContentMap] = useState<LegacyValue>({});
+  const [fileContentMap, setFileContentMap] = useState<Record<string, LoadedReviewFile>>({});
   const [completeNotification] = useCompleteNotificationMutation();
-  const isAssignee = !readOnly && task.assigneeIds?.includes(currentUser?.id);
+  const isAssignee = !readOnly && Boolean(task.assigneeIds?.includes(currentUser.id));
+  const isRealTaskReviewer = !task.isMock && !readOnly && Boolean(task.reviewerIds?.includes(currentUser.id));
+
+  const {
+    data: assignedReviews = [],
+    isFetching: isAssignedReviewsFetching,
+    isError: isAssignedReviewsError,
+  } = useGetAssignedReviewsQuery(
+    {
+      viewerId: currentUser.id,
+    },
+    {
+      skip: !isRealTaskReviewer,
+    }
+  );
+
+  const assignedTaskReview = assignedReviews.find(
+    (assignedReview) => Number(assignedReview.taskId) === Number(task.id)
+  );
 
   const showSnackbar = useCallback(
-    (message: LegacyValue, type: LegacyValue = solutionTabStyles.isSuccess) => {
+    (message: string, type: string = solutionTabStyles.isSuccess) => {
       if (onSnackbar) onSnackbar(message, type);
     },
     [onSnackbar]
   );
 
   const loadReview = useCallback(async () => {
-    const findFirstFileInternal = (nodes: LegacyValue): LegacyValue => {
+    const findFirstFileInternal = (nodes: readonly ReviewFile[]): ReviewFile | null => {
       for (const node of nodes) {
         if (!node.isDirectory) return node;
 
         if (node.children) {
-          const found: LegacyValue = findFirstFileInternal(node.children);
+          const found = findFirstFileInternal(node.children);
           if (found) return found;
         }
       }
@@ -57,46 +128,54 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
       return null;
     };
 
+    if (task.isMock || isRealTaskReviewer || task.status === 'IN_PROGRESS') {
+      setReview(null);
+      setLoading(false);
+
+      return;
+    }
+
     try {
-      const data = await projectsApi.getReviewByTaskId(task.id);
+      const data = await reviewApi.getReviewByTaskId(task.id);
       setReview(data);
+      setRevealName(Boolean(data?.revealAuthorAfterReview));
 
       if (data?.files?.length > 0) {
-        setSelectedFile((prev: LegacyValue) => {
+        setSelectedFile((prev) => {
           if (prev) return prev;
           const firstFile = findFirstFileInternal(data.files);
 
-          return firstFile || data.files[0];
+          return firstFile ?? data.files[0] ?? null;
         });
       }
-    } catch (err: LegacyValue) {
+    } catch (err: unknown) {
       console.error('Load review error:', err);
       showSnackbar('Ошибка загрузки данных решения', solutionTabStyles.isError);
     } finally {
       setLoading(false);
     }
-  }, [task.id, showSnackbar]);
+  }, [task.id, task.isMock, task.status, isRealTaskReviewer, showSnackbar]);
 
   useEffect(() => {
     loadReview();
   }, [loadReview]);
 
   const fetchFileContent = useCallback(
-    async (filePath: LegacyValue) => {
+    async (filePath: string) => {
       if (fileContentMap[filePath] && !fileContentMap[filePath].error) return;
       setFileContentLoading(true);
 
       try {
-        const data = await projectsApi.getReviewFileContent(task.id, filePath);
+        const data = await reviewApi.getReviewFileContent(review?.id || task.id, filePath);
 
-        setFileContentMap((prev: LegacyValue) => ({
+        setFileContentMap((prev) => ({
           ...prev,
           [filePath]: data,
         }));
-      } catch (err: LegacyValue) {
+      } catch (err: unknown) {
         console.error('Failed to fetch file content:', err);
 
-        setFileContentMap((prev: LegacyValue) => ({
+        setFileContentMap((prev) => ({
           ...prev,
           [filePath]: {
             error: true,
@@ -106,11 +185,11 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
         setFileContentLoading(false);
       }
     },
-    [task.id, fileContentMap]
+    [task.id, review?.id, fileContentMap]
   );
 
   const handleSelectFile = useCallback(
-    (file: LegacyValue) => {
+    (file: FileTreeItem) => {
       setSelectedFile(file);
       setSelectedLineRange(null);
 
@@ -127,11 +206,17 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     }
   }, [selectedFile, fileContentMap, fetchFileContent]);
 
-  const handleUploadSubmit = async (payload: LegacyValue) => {
+  const handleUploadSubmit = async (payload: SolutionUploadPayload) => {
+    if (payload.type !== 'manual') {
+      showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
+
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await projectsApi.submitSolution(task.id, {
+      await taskApi.submitSolution(task.id, {
         ...payload,
         revealAuthorAfterReview: revealName,
       });
@@ -145,7 +230,8 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
         },
       });
 
-      await loadReview();
+      await onTaskUpdated?.();
+
       setIsManualModalOpen(false);
       setIsGitModalOpen(false);
       showSnackbar('Решение успешно отправлено на ревью');
@@ -156,11 +242,20 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     }
   };
 
-  const handleResubmit = async (payload: LegacyValue) => {
+  const handleResubmit = async (payload: SolutionUploadPayload) => {
+    if (payload.type !== 'manual') {
+      showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
+
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await projectsApi.resubmitSolution(task.id, payload);
+      await taskApi.resubmitSolution(task.id, {
+        ...payload,
+        revealAuthorAfterReview: revealName,
+      });
 
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
@@ -171,7 +266,8 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
         },
       });
 
-      await loadReview();
+      await onTaskUpdated?.();
+
       setIsManualModalOpen(false);
       setIsGitModalOpen(false);
       showSnackbar('Решение переотправлено на ревью');
@@ -184,7 +280,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
 
   const handleFinishReview = async () => {
     try {
-      await projectsApi.finishReview(task.id);
+      await taskApi.finishReview(task.id);
 
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.ACCEPT_REVIEW_RESULT,
@@ -195,7 +291,8 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
         },
       });
 
-      await loadReview();
+      await onTaskUpdated?.();
+
       showSnackbar('Ревью завершено');
     } catch {
       showSnackbar('Ошибка завершения ревью', solutionTabStyles.isError);
@@ -203,9 +300,9 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
   };
 
   const handleReply = useCallback(
-    async (commentId: LegacyValue, text: LegacyValue) => {
+    async (commentId: EntityId, text: string) => {
       try {
-        await projectsApi.replyToReviewComment(task.id, commentId, {
+        await reviewApi.replyToReviewComment(task.id, commentId, {
           authorId: currentUser.id,
           authorName: currentUser.fullName || 'Вы',
           text,
@@ -222,30 +319,30 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     [task.id, currentUser.id, currentUser.fullName, loadReview, showSnackbar]
   );
 
-  const handleLike = async (commentId: LegacyValue) => {
+  const handleLike = async (commentId: EntityId) => {
     try {
-      await projectsApi.toggleCommentLike(task.id, commentId, currentUser.id, false);
+      await reviewApi.toggleCommentLike(review?.id || task.id, commentId, currentUser.id, false);
       await loadReview();
-    } catch (err: LegacyValue) {
+    } catch (err: unknown) {
       console.error('Like error:', err);
     }
   };
 
   const handleDislike = useCallback(
-    async (commentId: LegacyValue) => {
+    async (commentId: EntityId) => {
       try {
-        await projectsApi.toggleCommentLike(task.id, commentId, currentUser.id, true);
+        await reviewApi.toggleCommentLike(review?.id || task.id, commentId, currentUser.id, true);
         await loadReview();
-      } catch (err: LegacyValue) {
+      } catch (err: unknown) {
         console.error('Dislike error:', err);
       }
     },
-    [task.id, currentUser.id, loadReview]
+    [task.id, review?.id, currentUser.id, loadReview]
   );
 
-  const handleDeleteComment = async (commentId: LegacyValue) => {
+  const handleDeleteComment = async (commentId: EntityId) => {
     try {
-      await projectsApi.deleteReviewComment(task.id, commentId);
+      await reviewApi.deleteReviewComment(review?.id || task.id, commentId);
       await loadReview();
       showSnackbar('Комментарий удалён');
     } catch {
@@ -253,9 +350,9 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     }
   };
 
-  const handleCloseThread = async (commentId: LegacyValue) => {
+  const handleCloseThread = async (commentId: EntityId) => {
     try {
-      await projectsApi.closeCommentThread(task.id, commentId, 'close');
+      await reviewApi.closeCommentThread(review?.id || task.id, commentId, 'close');
       await loadReview();
       showSnackbar('Тред закрыт');
     } catch {
@@ -263,11 +360,15 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     }
   };
 
-  const handleReportSubmit = async (reason: LegacyValue, comment: LegacyValue) => {
+  const handleReportSubmit = async (reason: ReportReason, comment: string) => {
+    if (reportingCommentId === null) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      await projectsApi.reportComment(task.id, reportingCommentId, {
+      await reviewApi.reportComment(review?.id || task.id, reportingCommentId, {
         reason,
         comment,
       });
@@ -281,23 +382,72 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     }
   };
 
-  const openReportModal = (commentId: LegacyValue) => {
+  const openReportModal = (commentId: EntityId) => {
     setReportingCommentId(commentId);
     setIsReportModalOpen(true);
   };
 
-  const handleLineClick = (range: LegacyValue) => {
+  const handleResend = async () => {
+    setIsSubmitting(true);
+
+    try {
+      await taskApi.resendSolution(task.id, task.reviewerIds ?? []);
+      await onTaskUpdated?.();
+      showSnackbar('Решение переотправлено на ревью');
+    } catch {
+      showSnackbar('Ошибка при переотправке', solutionTabStyles.isError);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLineClick = (range: SelectedLineRange) => {
     setSelectedLineRange(range);
   };
 
+  const handleVisibilityChange = async (checked: boolean) => {
+    if (!review?.solutionId) {
+      showSnackbar('Не удалось определить решение для изменения настройки', solutionTabStyles.isError);
+
+      return;
+    }
+
+    const previousValue = revealName;
+    setRevealName(checked);
+    setIsVisibilityUpdating(true);
+
+    try {
+      await taskApi.updateAuthorVisibility(review.solutionId, checked);
+
+      setReview((currentReview) =>
+        currentReview
+          ? {
+              ...currentReview,
+              revealAuthorAfterReview: checked,
+            }
+          : null
+      );
+    } catch {
+      setRevealName(previousValue);
+      showSnackbar('Не удалось изменить настройку раскрытия имени', solutionTabStyles.isError);
+    } finally {
+      setIsVisibilityUpdating(false);
+    }
+  };
+
   const isNotUploaded = !review;
+  const canUploadInitialSolution = !task.isMock && isNotUploaded && task.status === 'IN_PROGRESS';
   const isWaiting = task.status === 'IN_REVIEW';
   const isCompleted = task.status === 'DONE';
   const isRework = task.status === 'REWORK';
+  const reviewersCount = task.reviewerIds?.length ?? 0;
 
   const allReviewersApproved = useMemo(
-    () => review?.finalReviews?.length > 0 && review.finalReviews.every((fr: LegacyValue) => fr.verdict === 'APPROVED'),
-    [review?.finalReviews]
+    () =>
+      reviewersCount > 0 &&
+      review?.finalReviews.length === reviewersCount &&
+      Boolean(review?.finalReviews.every((finalReview) => finalReview.verdict === 'APPROVED')),
+    [review?.finalReviews, reviewersCount]
   );
 
   const isExpiredWithoutReview = useMemo(
@@ -308,7 +458,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
   const allComments = useMemo(() => review?.comments || [], [review?.comments]);
 
   const visibleComments = useMemo(
-    () => (aiReviewEnabled ? allComments : allComments.filter((comment: LegacyValue) => comment.authorRole !== 'AI')),
+    () => (aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
     [aiReviewEnabled, allComments]
   );
 
@@ -319,7 +469,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
   const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !allReviewersApproved;
 
   const fileComments = useMemo(
-    () => visibleComments.filter((c: LegacyValue) => c.file === selectedFile?.path),
+    () => visibleComments.filter((comment) => hasLineLocation(comment) && comment.file === selectedFile?.path),
     [visibleComments, selectedFile?.path]
   );
 
@@ -327,14 +477,15 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     () =>
       selectedLineRange
         ? fileComments.filter(
-            (c: LegacyValue) => c.startLine === selectedLineRange.startLine && c.endLine === selectedLineRange.endLine
+            (comment) =>
+              comment.startLine === selectedLineRange.startLine && comment.endLine === selectedLineRange.endLine
           )
         : [],
     [fileComments, selectedLineRange]
   );
 
   const commentedFiles = useMemo(
-    () => [...new Set(visibleComments.map((c: LegacyValue) => c.file))],
+    () => [...new Set(visibleComments.flatMap((comment) => (comment.file ? [comment.file] : [])))],
     [visibleComments]
   );
 
@@ -346,17 +497,43 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
     );
   }
 
-  const fileTreeData = review?.files?.length > 0 ? review.files : MOCK_LARGE_FILE_TREE;
-  const currentFileContent = fileContentMap[selectedFile?.path];
+  const fileTreeData = review?.files || [];
+  const currentFileContent = selectedFile ? fileContentMap[selectedFile.path] : undefined;
   const codeContent = currentFileContent?.content || '';
   const originalCodeContent = currentFileContent?.originalContent || (currentFileContent?.isDiff ? 'Старый код' : '');
   const hasHistory = review?.history && review.history.length > 0;
-  const aiFileComments = fileComments.filter((c: LegacyValue) => c.authorRole === 'AI');
-  const revealedReviewers = review?.finalReviews?.filter((fr: LegacyValue) => fr.revealName) || [];
+  const aiFileComments = fileComments.filter((comment) => comment.authorRole === 'AI');
+
+  const revealedReviewers = isCompleted
+    ? (review?.finalReviews.filter((finalReview) => finalReview.revealName) ?? [])
+    : [];
 
   return (
     <div className={solutionTabStyles.root}>
-      {isNotUploaded && isAssignee && (
+      {isRealTaskReviewer && (
+        <div className={solutionTabStyles.uploadBlock}>
+          <div className={solutionTabStyles.uploadText}>Вы являетесь ревьюером этой задачи</div>
+          {assignedTaskReview && (
+            <Link
+              className={solutionTabStyles.manualButton}
+              to={ROUTES.reviewById.replace(':reviewId', String(assignedTaskReview.id))}
+            >
+              Перейти на ревью
+            </Link>
+          )}
+          {!assignedTaskReview && isAssignedReviewsFetching && <Spinner />}
+          {!assignedTaskReview && !isAssignedReviewsFetching && !isAssignedReviewsError && (
+            <div className={solutionTabStyles.cardText}>Ревью появится после отправки решения</div>
+          )}
+          {!assignedTaskReview && isAssignedReviewsError && (
+            <div className={[solutionTabStyles.cardText, solutionTabStyles.cardTextError].join(' ')}>
+              Не удалось получить ссылку на ревью
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isRealTaskReviewer && canUploadInitialSolution && isAssignee && (
         <div className={solutionTabStyles.uploadBlock}>
           <div className={solutionTabStyles.uploadText}>Загрузите решение задачи</div>
           <div className={solutionTabStyles.uploadActions}>
@@ -370,13 +547,21 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
         </div>
       )}
 
-      {isNotUploaded && !isAssignee && (
+      {!isRealTaskReviewer && canUploadInitialSolution && !isAssignee && (
         <div className={solutionTabStyles.uploadBlock}>
           <div className={solutionTabStyles.uploadText}>Решение ещё не загружено</div>
         </div>
       )}
 
-      {review && (isWaiting || isCompleted || isRework) && (
+      {!isRealTaskReviewer && isNotUploaded && (task.isMock || task.status !== 'IN_PROGRESS') && (
+        <div className={solutionTabStyles.uploadBlock}>
+          <div className={solutionTabStyles.uploadText}>
+            {task.isMock ? 'Для демонстрационной задачи ревью недоступно' : 'Данные решения временно недоступны'}
+          </div>
+        </div>
+      )}
+
+      {!isRealTaskReviewer && review && (isWaiting || isCompleted || isRework) && (
         <>
           <div className={solutionTabStyles.content}>
             <div className={solutionTabStyles.colLeft}>
@@ -415,7 +600,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
                     <p>Ошибка загрузки файла</p>
                     <button
                       className={solutionTabStyles.manualButton}
-                      onClick={() => fetchFileContent(selectedFile.path)}
+                      onClick={() => selectedFile && fetchFileContent(selectedFile.path)}
                     >
                       Повторить
                     </button>
@@ -426,7 +611,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
                   key={selectedFile?.path}
                   value={codeContent || (selectedFile?.isDirectory ? '' : '')}
                   language={getLanguageByFileName(selectedFile?.name)}
-                  isDiff={selectedFile?.isDiff || currentFileContent?.isDiff}
+                  isDiff={Boolean(selectedFile?.isDiff || currentFileContent?.isDiff)}
                   originalValue={originalCodeContent}
                   comments={showCodeComments ? fileComments : []}
                   onLineClick={handleLineClick}
@@ -436,7 +621,11 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
 
               {(hasReviewResults || showExpiredAiResults) && (
                 <div className={solutionTabStyles.underCode}>
-                  <ReviewResultsSidebar review={review} aiReviewEnabled={aiReviewEnabled} />
+                  <ReviewResultsSidebar
+                    review={review}
+                    aiReviewEnabled={Boolean(aiReviewEnabled)}
+                    canRevealReviewerNames={isCompleted}
+                  />
                 </div>
               )}
             </div>
@@ -473,11 +662,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
                     <button
                       className={solutionTabStyles.finishButton}
                       type="button"
-                      onClick={() =>
-                        handleResubmit({
-                          type: 'resend',
-                        })
-                      }
+                      onClick={handleResend}
                       style={{
                         marginTop: 20,
                       }}
@@ -498,7 +683,10 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
                       <input
                         type="checkbox"
                         checked={revealName}
-                        onChange={(e: LegacyValue) => setRevealName(e.target.checked)}
+                        onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                          handleVisibilityChange(event.target.checked)
+                        }
+                        disabled={isVisibilityUpdating}
                       />
                       Раскрыть моё имя ревьюерам после завершения ревью
                     </label>
@@ -532,23 +720,33 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
                       <div className={solutionTabStyles.reviewersNames}>
                         <h3 className={solutionTabStyles.reviewersTitle}>Ревьюеры</h3>
                         <div className={solutionTabStyles.reviewersList}>
-                          {revealedReviewers.map((fr: LegacyValue) => (
-                            <span className={solutionTabStyles.reviewerName} key={fr.id || fr.reviewerId}>
-                              {fr.reviewerName}
-                            </span>
-                          ))}
+                          {revealedReviewers.map((fr) =>
+                            fr.reviewerId !== null && fr.reviewerId !== undefined ? (
+                              <Link
+                                className={solutionTabStyles.reviewerName}
+                                key={fr.id || fr.reviewerId}
+                                to={ROUTES.profileByUserId.replace(':userId', String(fr.reviewerId))}
+                              >
+                                {fr.reviewerName}
+                              </Link>
+                            ) : (
+                              <span className={solutionTabStyles.reviewerName} key={fr.id || fr.reviewerName}>
+                                {fr.reviewerName}
+                              </span>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
                     <CommentsBlock
                       comments={displayedComments}
                       currentUser={currentUser}
-                      onReply={isAssignee ? handleReply : undefined}
+                      onReply={isAssignee && isRework ? handleReply : undefined}
                       onLike={isAssignee ? handleLike : undefined}
                       onDislike={isAssignee ? handleDislike : undefined}
                       onDelete={isAssignee ? handleDeleteComment : undefined}
                       onReport={isAssignee ? openReportModal : undefined}
-                      onCloseThread={isAssignee ? handleCloseThread : undefined}
+                      onCloseThread={isAssignee && isRework ? handleCloseThread : undefined}
                       readOnly={!isAssignee}
                       pageContext="task"
                       emptyText="Выберите строку или диапазон строк с комментариями"
@@ -558,7 +756,7 @@ const SolutionTab = ({ task, currentUser, aiReviewEnabled, onSnackbar, readOnly 
 
                 {(isWaiting || isRework || isCompleted) && hasHistory && (
                   <CommentsBlock
-                    comments={review.history.flatMap((h: LegacyValue) => h.comments || [])}
+                    comments={review.history.flatMap((historyItem) => historyItem.comments)}
                     currentUser={currentUser}
                     readOnly
                     isHistory

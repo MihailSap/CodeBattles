@@ -13,8 +13,34 @@ interface QueryErrorLike {
   };
 }
 
-const toQueryErrorLike = (value: unknown): QueryErrorLike =>
-  typeof value === 'object' && value !== null ? (value as QueryErrorLike) : {};
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const toQueryErrorLike = (value: unknown): QueryErrorLike => {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  const responseData =
+    isRecord(value['response']) && isRecord(value['response']['data']) ? value['response']['data'] : undefined;
+
+  const responseStatus = isRecord(value['response']) ? value['response']['status'] : undefined;
+
+  return {
+    ...(typeof value['message'] === 'string' ? { message: value['message'] } : {}),
+    ...(typeof value['code'] === 'string' ? { code: value['code'] } : {}),
+    ...(typeof value['status'] === 'number' ? { status: value['status'] } : {}),
+    ...(typeof responseStatus === 'number' || (responseData && typeof responseData['message'] === 'string')
+      ? {
+          response: {
+            ...(typeof responseStatus === 'number' ? { status: responseStatus } : {}),
+            ...(responseData && typeof responseData['message'] === 'string'
+              ? { data: { message: responseData['message'] } }
+              : {}),
+          },
+        }
+      : {}),
+  };
+};
 
 export const getQueryError = (error: unknown): DomainError => {
   const errorLike = toQueryErrorLike(error);

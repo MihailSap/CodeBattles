@@ -5,6 +5,9 @@ export const gitUploadFormSchema = z.object({
   targetBranch: z.string().min(1, 'Выберите целевую ветку'),
   pullRequest: z.string().min(1, 'Выберите Pull Request'),
 });
+
+export type GitUploadFormValues = z.infer<typeof gitUploadFormSchema>;
+
 export const solutionUploadFormSchema = z
   .object({
     activeTab: z.enum(['manual', 'files', 'archive']),
@@ -13,7 +16,7 @@ export const solutionUploadFormSchema = z
     files: z.array(z.instanceof(File)).default([]),
     archive: z.instanceof(File).nullable().default(null),
   })
-  .superRefine((values: LegacyValue, context: LegacyValue) => {
+  .superRefine((values, context) => {
     if (values.activeTab === 'manual' && values.code.trim() === '') {
       context.addIssue({
         code: 'custom',
@@ -38,3 +41,40 @@ export const solutionUploadFormSchema = z
       });
     }
   });
+
+export type SolutionUploadFormValues = z.infer<typeof solutionUploadFormSchema>;
+export type SolutionUploadFormInput = z.input<typeof solutionUploadFormSchema>;
+
+export interface UploadedFileSummary {
+  name: string;
+  isFileObj?: boolean;
+  isDiff?: boolean;
+  content?: string;
+}
+
+export interface ManualSolutionUploadPayload {
+  type: 'manual';
+  uploadType: 'MANUAL_TEXT';
+  manualCode: {
+    fileName: string;
+    language: string;
+    content: string;
+  };
+  files: UploadedFileSummary[];
+}
+
+export interface FileSolutionUploadPayload {
+  type: 'files' | 'archive';
+  files: UploadedFileSummary[];
+}
+
+export interface GitSolutionUploadPayload {
+  type: 'git';
+  platform: 'github' | 'gitlab';
+  repository: string;
+  targetBranch: string;
+  pullRequest: string;
+  files: UploadedFileSummary[];
+}
+
+export type SolutionUploadPayload = ManualSolutionUploadPayload | FileSolutionUploadPayload | GitSolutionUploadPayload;

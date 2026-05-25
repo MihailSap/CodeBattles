@@ -1,11 +1,16 @@
-import { forwardRef, memo, useMemo } from 'react';
+import { type MouseEvent, forwardRef, memo, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { LEADERBOARD_METRIC_COLUMNS } from '@/entities/leaderboard';
+import {
+  LEADERBOARD_METRIC_COLUMNS,
+  type LeaderboardCategory,
+  type LeaderboardEntry,
+  type LeaderboardMetricDisplayType,
+} from '@/entities/leaderboard';
 import { ROUTES } from '@/shared/config/routes';
 import { AvatarIcon } from '@/shared/ui/icons';
 import leaderboardTableStyles from './LeaderboardTable.module.scss';
 
-const formatMetric = (value: LegacyValue, type: LegacyValue) => {
+const formatMetric = (value: number, type: LeaderboardMetricDisplayType): string => {
   if (type === 'percent') {
     return `${Math.round(Number(value) || 0)}%`;
   }
@@ -17,7 +22,7 @@ const formatMetric = (value: LegacyValue, type: LegacyValue) => {
   return Number(value || 0).toFixed(2);
 };
 
-const getRankClass = (rank: LegacyValue) => {
+const getRankClass = (rank: number): string => {
   if (rank === 1) {
     return leaderboardTableStyles.rankGold;
   }
@@ -33,7 +38,12 @@ const getRankClass = (rank: LegacyValue) => {
   return '';
 };
 
-const getRowClass = ({ rank, isCurrentUser }: LegacyValue) => {
+interface RowState {
+  rank: number;
+  isCurrentUser: boolean;
+}
+
+const getRowClass = ({ rank, isCurrentUser }: RowState): string => {
   const classes = [leaderboardTableStyles.row];
 
   if (rank === 1) {
@@ -55,11 +65,17 @@ const getRowClass = ({ rank, isCurrentUser }: LegacyValue) => {
   return classes.join(' ');
 };
 
-const LeaderboardTable = forwardRef(
-  (
-    { entries, currentUserEntry, category, currentUserId, canResetRatings, onResetRating }: LegacyValue,
-    ref: LegacyValue
-  ) => {
+interface LeaderboardTableProps {
+  entries: readonly LeaderboardEntry[];
+  currentUserEntry: LeaderboardEntry | null;
+  category: LeaderboardCategory;
+  currentUserId: number | string | null;
+  canResetRatings: boolean;
+  onResetRating: (entry: LeaderboardEntry) => void;
+}
+
+const LeaderboardTable = forwardRef<HTMLDivElement, LeaderboardTableProps>(
+  ({ entries, currentUserEntry, category, currentUserId, canResetRatings, onResetRating }, ref) => {
     const columns = LEADERBOARD_METRIC_COLUMNS[category];
 
     const tableRows = useMemo(
@@ -93,7 +109,7 @@ const LeaderboardTable = forwardRef(
             <div className={[leaderboardTableStyles.row, leaderboardTableStyles.isHead].join(' ')}>
               <div className={leaderboardTableStyles.cell}>Место</div>
               <div className={[leaderboardTableStyles.cell, leaderboardTableStyles.isUser].join(' ')}>Пользователь</div>
-              {columns.map((column: LegacyValue) => (
+              {columns.map((column) => (
                 <div className={leaderboardTableStyles.cell} key={column.key}>
                   {column.label}
                 </div>
@@ -101,7 +117,7 @@ const LeaderboardTable = forwardRef(
               {canResetRatings && <div className={leaderboardTableStyles.cell}>Действие</div>}
             </div>
 
-            {entries.map((entry: LegacyValue) => {
+            {entries.map((entry) => {
               const displayName = entry.name || entry.login;
               const isCurrentUser = Number(entry.id) === Number(currentUserId);
 
@@ -112,7 +128,7 @@ const LeaderboardTable = forwardRef(
                     isCurrentUser,
                   })}
                   key={entry.id}
-                  to={ROUTES.profileByUserId.replace(':userId', entry.id)}
+                  to={ROUTES.profileByUserId.replace(':userId', String(entry.id))}
                 >
                   <div
                     className={[leaderboardTableStyles.cell, leaderboardTableStyles.rank, getRankClass(entry.rank)]
@@ -130,7 +146,7 @@ const LeaderboardTable = forwardRef(
                       {displayName}
                     </span>
                   </div>
-                  {columns.map((column: LegacyValue) => (
+                  {columns.map((column) => (
                     <div className={leaderboardTableStyles.cell} key={column.key}>
                       {formatMetric(entry.metrics[column.key], column.type)}
                     </div>
@@ -140,7 +156,7 @@ const LeaderboardTable = forwardRef(
                       <button
                         className={leaderboardTableStyles.resetButton}
                         type="button"
-                        onClick={(event: LegacyValue) => {
+                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
                           event.preventDefault();
                           event.stopPropagation();
                           onResetRating(entry);
@@ -169,7 +185,7 @@ const LeaderboardTable = forwardRef(
                     rank: currentUserEntry.rank,
                     isCurrentUser: true,
                   })}
-                  to={ROUTES.profileByUserId.replace(':userId', currentUserEntry.id)}
+                  to={ROUTES.profileByUserId.replace(':userId', String(currentUserEntry.id))}
                 >
                   <div
                     className={[
@@ -201,7 +217,7 @@ const LeaderboardTable = forwardRef(
                       {currentUserEntry.name || `@${currentUserEntry.login}`}
                     </span>
                   </div>
-                  {columns.map((column: LegacyValue) => (
+                  {columns.map((column) => (
                     <div className={leaderboardTableStyles.cell} key={column.key}>
                       {formatMetric(currentUserEntry.metrics[column.key], column.type)}
                     </div>
@@ -211,7 +227,7 @@ const LeaderboardTable = forwardRef(
                       <button
                         className={leaderboardTableStyles.resetButton}
                         type="button"
-                        onClick={(event: LegacyValue) => {
+                        onClick={(event: MouseEvent<HTMLButtonElement>) => {
                           event.preventDefault();
                           event.stopPropagation();
                           onResetRating(currentUserEntry);

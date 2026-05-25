@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { UnwrapIcon } from '@/shared/ui/icons';
 import scrollToTopButtonStyles from './ScrollToTopButton.module.scss';
 

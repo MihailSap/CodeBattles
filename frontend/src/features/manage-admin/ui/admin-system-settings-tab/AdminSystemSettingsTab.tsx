@@ -15,9 +15,14 @@ import adminComplaintsTabStyles from '../admin-complaints-tab/AdminComplaintsTab
 const DEADLINE_SAVE_DEBOUNCE_MS = 650;
 const MAX_PROMPT_LENGTH = 5000;
 
-const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
+interface AdminSystemSettingsTabProps {
+  isActive: boolean;
+}
+
+const AdminSystemSettingsTab = ({ isActive }: AdminSystemSettingsTabProps) => {
   const [reviewDeadlineDays, setReviewDeadlineDays] = useState(14);
   const [lastSavedDeadlineDays, setLastSavedDeadlineDays] = useState(14);
+  const [hasDeadlineChanges, setHasDeadlineChanges] = useState(false);
   const [promptDraft, setPromptDraft] = useState('');
   const [savedPrompt, setSavedPrompt] = useState('');
   const [error, setError] = useState('');
@@ -37,19 +42,20 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
       return;
     }
 
-    const nextDeadline = settingsQuery.data.reviewDeadlineDays || 14;
+    const nextDeadline = settingsQuery.data.reviewDeadlineDays;
     const nextPrompt = settingsQuery.data.aiSystemPrompt || '';
 
     queueMicrotask(() => {
       setReviewDeadlineDays(nextDeadline);
       setLastSavedDeadlineDays(nextDeadline);
+      setHasDeadlineChanges(false);
       setPromptDraft(nextPrompt);
       setSavedPrompt(nextPrompt);
     });
   }, [settingsQuery.data]);
 
   useEffect(() => {
-    if (!isActive || !settingsQuery.data || debouncedDeadlineDays === lastSavedDeadlineDays) {
+    if (!isActive || !settingsQuery.data || !hasDeadlineChanges || debouncedDeadlineDays === lastSavedDeadlineDays) {
       return;
     }
 
@@ -59,12 +65,12 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
 
         const response = await updateDeadline({
           reviewDeadlineDays: debouncedDeadlineDays,
-          actor,
         }).unwrap();
 
         setLastSavedDeadlineDays(response.reviewDeadlineDays);
+        setHasDeadlineChanges(false);
         showSnackbar(`Срок проверки ревью сохранен: ${response.reviewDeadlineDays} дней`, 'success');
-      } catch (requestError: LegacyValue) {
+      } catch (requestError: unknown) {
         const message = getApiErrorMessage(
           requestError,
           'Не удалось сохранить срок ревью',
@@ -73,12 +79,21 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
 
         setError(message);
         setReviewDeadlineDays(lastSavedDeadlineDays);
+        setHasDeadlineChanges(false);
         showSnackbar(message, 'error');
       }
     };
 
     saveDeadline();
-  }, [actor, debouncedDeadlineDays, isActive, lastSavedDeadlineDays, settingsQuery.data, showSnackbar, updateDeadline]);
+  }, [
+    debouncedDeadlineDays,
+    hasDeadlineChanges,
+    isActive,
+    lastSavedDeadlineDays,
+    settingsQuery.data,
+    showSnackbar,
+    updateDeadline,
+  ]);
 
   const queryError = settingsQuery.isError
     ? getApiErrorMessage(settingsQuery.error, 'Не удалось загрузить настройки системы', 'getAdminSystemSettings')
@@ -97,13 +112,12 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
 
       const response = await updatePrompt({
         aiSystemPrompt: promptDraft,
-        actor,
       }).unwrap();
 
       setSavedPrompt(response.aiSystemPrompt);
       setPromptDraft(response.aiSystemPrompt);
       showSnackbar('Системный промпт сохранен', 'success');
-    } catch (requestError: LegacyValue) {
+    } catch (requestError: unknown) {
       const message = getApiErrorMessage(
         requestError,
         'Не удалось сохранить системный промпт',
@@ -153,7 +167,10 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
                 min="1"
                 max="60"
                 value={reviewDeadlineDays}
-                onChange={(event: LegacyValue) => setReviewDeadlineDays(Math.max(1, Number(event.target.value) || 1))}
+                onChange={(event) => {
+                  setReviewDeadlineDays(Math.max(1, Number(event.target.value) || 1));
+                  setHasDeadlineChanges(true);
+                }}
               />
               <span>дней</span>
             </div>
@@ -165,7 +182,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
             <textarea
               value={promptDraft}
               maxLength={MAX_PROMPT_LENGTH}
-              onChange={(event: LegacyValue) => setPromptDraft(event.target.value)}
+              onChange={(event) => setPromptDraft(event.target.value)}
             />
             <small>
               {promptDraft.length}/{MAX_PROMPT_LENGTH} символов
@@ -203,7 +220,7 @@ const AdminSystemSettingsTab = ({ isActive, actor }: LegacyValue) => {
         <div className={adminComplaintsTabStyles.top}>
           <div>
             <h2 className={adminComplaintsTabStyles.title}>Реакции на AI-комментарии</h2>
-            <p className={adminComplaintsTabStyles.subtitle}>Последние 30 дней</p>
+            <p className={adminComplaintsTabStyles.subtitle}>Последние {stats?.periodDays ?? 0} дней</p>
           </div>
         </div>
 

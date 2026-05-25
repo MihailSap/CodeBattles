@@ -2,9 +2,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 import { useDispatch, useSelector } from 'react-redux';
 
-import authReducer from '@/entities/session/model/auth-slice';
 import { baseApi } from '@/shared/api';
 import { themeReducer } from '@/shared/lib/theme';
+import { authReducer } from '@/entities/session/@x/store';
 
 export const store = configureStore({
   reducer: {

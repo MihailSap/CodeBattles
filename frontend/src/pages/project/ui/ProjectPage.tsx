@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import privateIcon from '@/shared/assets/private-icon.svg';
@@ -12,6 +12,11 @@ import {
   useGetProjectByIdQuery,
   useLeaveProjectMutation,
   useUpdateProjectMutation,
+  type GenerateInvitePayload,
+  type Project,
+  type ProjectSettingsFormInput,
+  type ProjectSettingsFormValues,
+  type UpdateProjectPayload,
 } from '@/entities/project';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
@@ -32,7 +37,6 @@ import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { lazyNamed } from '@/shared/lib';
 import {
   formatDeadline,
   formatLastActivity,
@@ -41,7 +45,7 @@ import {
   sortTasks,
   truncateText,
 } from '@/entities/project';
-import projectPageStyles from './ProjectPage.module.scss';
+import { detailLayoutStyles as projectPageStyles } from '@/widgets/detail-layout';
 type AccessErrorShape = {
   status?: number;
   code?: string;
@@ -51,21 +55,29 @@ type AccessErrorShape = {
 
 const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
 
-const InviteLinkModal = lazyNamed(() => import('@/features/generate-invite-link'), 'InviteLinkModal');
-const ProjectSkillsSelector = lazyNamed(() => import('@/entities/stack'), 'ProjectSkillsSelector');
+const InviteLinkModal = lazy(() =>
+  import('@/features/generate-invite-link').then(({ InviteLinkModal }) => ({ default: InviteLinkModal }))
+);
+
+const ProjectSkillsSelector = lazy(() =>
+  import('@/entities/stack').then(({ ProjectSkillsSelector }) => ({ default: ProjectSkillsSelector }))
+);
 
 const tabs = {
   tasks: 'Задачи',
   participants: 'Участники',
   settings: 'Настройки',
-};
+} as const;
 
-const getProjectSettingsDefaults = (project: LegacyValue = null) => ({
-  name: project?.name || '',
-  repositoryUrl: project?.repositoryUrl || '',
-  description: project?.description || '',
-  stack: project?.stack || [],
-  privacy: project?.privacy || PROJECT_PRIVACY.PUBLIC,
+type ProjectTab = keyof typeof tabs;
+type TasksMode = 'all' | 'mine';
+
+const getProjectSettingsDefaults = (project?: Project): ProjectSettingsFormInput => ({
+  name: project?.name ?? '',
+  repositoryUrl: project?.repositoryUrl ?? '',
+  description: project?.description ?? '',
+  stack: project?.stack ?? [],
+  privacy: project?.privacy ?? PROJECT_PRIVACY.PUBLIC,
   aiReviewEnabled: Boolean(project?.aiReviewEnabled),
 });
 
@@ -77,6 +89,7 @@ const TASK_STATUS_CLASS = {
 };
 
 const DEADLINE_TONE_CLASS = {
+  '': '',
   success: projectPageStyles.isSuccess,
   warning: projectPageStyles.isWarning,
   error: projectPageStyles.isError,
@@ -88,7 +101,7 @@ const ProjectPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tasksMode, setTasksMode] = useState('all');
+  const [tasksMode, setTasksMode] = useState<TasksMode>('all');
   const [taskSearch, setTaskSearch] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
@@ -108,15 +121,34 @@ const ProjectPage = () => {
       isValid: isSettingsValid,
       touchedFields: settingsTouchedFields,
     },
-  } = useForm<LegacyValue>({
+  } = useForm<ProjectSettingsFormInput, unknown, ProjectSettingsFormValues>({
     resolver: zodResolver(projectSettingsFormSchema),
     defaultValues: getProjectSettingsDefaults(),
     mode: 'onChange',
   });
 
-  const settingsDraft = useWatch({
+  const watchedSettings = useWatch({
     control: settingsControl,
   });
+
+  const settingsDraft = useMemo<ProjectSettingsFormValues>(
+    () => ({
+      name: watchedSettings.name ?? '',
+      repositoryUrl: watchedSettings.repositoryUrl ?? '',
+      description: watchedSettings.description ?? '',
+      stack: watchedSettings.stack ?? [],
+      privacy: watchedSettings.privacy ?? PROJECT_PRIVACY.PUBLIC,
+      aiReviewEnabled: watchedSettings.aiReviewEnabled ?? false,
+    }),
+    [
+      watchedSettings.aiReviewEnabled,
+      watchedSettings.description,
+      watchedSettings.name,
+      watchedSettings.privacy,
+      watchedSettings.repositoryUrl,
+      watchedSettings.stack,
+    ]
+  );
 
   const debouncedTaskSearch = useDebouncedValue(taskSearch, 300);
 
@@ -125,7 +157,8 @@ const ProjectPage = () => {
     error: projectError,
     isLoading,
     refetch: refetchProject,
-  } = useGetProjectByIdQuery(projectId, {
+  } = useGetProjectByIdQuery(projectId ?? '', {
+    skip: !projectId,
     refetchOnMountOrArgChange: 30,
   });
 
@@ -187,7 +220,7 @@ const ProjectPage = () => {
     }
   }, [location.pathname, location.search, location.state, navigate, showSnackbar]);
 
-  const allTasks = useMemo(() => sortTasks(project?.tasks || []), [project?.tasks]);
+  const allTasks = useMemo(() => sortTasks(project?.tasks ?? []), [project?.tasks]);
 
   const visibleTasksSource = useMemo(() => {
     if (!project) {
@@ -197,18 +230,18 @@ const ProjectPage = () => {
     const normalizedSearch = debouncedTaskSearch.trim().toLowerCase();
 
     return allTasks
-      .filter((task: LegacyValue) => {
+      .filter((task) => {
         if (tasksMode === 'mine') {
-          return task.assignees.some((assignee: LegacyValue) => assignee.id === Number(userId));
+          return (task.assignees ?? []).some((assignee) => assignee.id === Number(userId));
         }
 
         if (!isOwner) {
-          return task.assignees.some((assignee: LegacyValue) => assignee.id === Number(userId));
+          return (task.assignees ?? []).some((assignee) => assignee.id === Number(userId));
         }
 
         return true;
       })
-      .filter((task: LegacyValue) => {
+      .filter((task) => {
         if (!normalizedSearch) {
           return true;
         }
@@ -217,25 +250,21 @@ const ProjectPage = () => {
       });
   }, [allTasks, isOwner, project, debouncedTaskSearch, tasksMode, userId]);
 
-  const participants = useMemo(() => sortParticipants(project?.participants || []), [project?.participants]);
+  const participants = useMemo(() => sortParticipants(project?.participants ?? []), [project?.participants]);
 
-  const openTasksCount = useMemo(
-    () => allTasks.filter((task: LegacyValue) => task.status !== TASK_STATUS.DONE).length,
-    [allTasks]
-  );
+  const openTasksCount = useMemo(() => allTasks.filter((task) => task.status !== TASK_STATUS.DONE).length, [allTasks]);
 
   const currentUserTaskCount = useMemo(
     () =>
       allTasks.filter(
-        (task: LegacyValue) =>
-          task.assignees.some((assignee: LegacyValue) => assignee.id === Number(userId)) &&
-          task.status !== TASK_STATUS.DONE
+        (task) =>
+          (task.assignees ?? []).some((assignee) => assignee.id === Number(userId)) && task.status !== TASK_STATUS.DONE
       ).length,
     [allTasks, userId]
   );
 
   const availableTabs = useMemo(() => {
-    const baseTabs = [
+    const baseTabs: { key: ProjectTab; label: string }[] = [
       {
         key: 'tasks',
         label: tabs.tasks,
@@ -258,13 +287,18 @@ const ProjectPage = () => {
 
   const requestedTab = searchParams.get('tab');
 
-  const activeTab = availableTabs.some((tab: LegacyValue) => tab.key === requestedTab)
-    ? requestedTab
-    : availableTabs[0]?.key || 'tasks';
+  const activeTab: ProjectTab =
+    requestedTab === 'tasks' || requestedTab === 'participants' || (requestedTab === 'settings' && isOwner)
+      ? requestedTab
+      : 'tasks';
 
-  const handleTabChange = (tabKey: LegacyValue) => {
+  const handleTabChange = (tabKey: string) => {
+    if (tabKey !== 'tasks' && tabKey !== 'participants' && tabKey !== 'settings') {
+      return;
+    }
+
     setSearchParams(
-      (currentParams: LegacyValue) => {
+      (currentParams) => {
         const nextParams = new URLSearchParams(currentParams);
         nextParams.set('tab', tabKey);
 
@@ -276,7 +310,7 @@ const ProjectPage = () => {
     );
   };
 
-  const getSettingsError = (fieldName: string) => {
+  const getSettingsError = (fieldName: keyof ProjectSettingsFormInput): string => {
     if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
       return '';
     }
@@ -288,7 +322,7 @@ const ProjectPage = () => {
   const settingsRepositoryError = getSettingsError('repositoryUrl');
 
   const hasSettingsChanges = useMemo(() => {
-    if (!project || !settingsDraft) {
+    if (!project) {
       return false;
     }
 
@@ -302,7 +336,11 @@ const ProjectPage = () => {
     );
   }, [project, settingsDraft]);
 
-  const handleInviteGenerate = async (payload: LegacyValue) => {
+  const handleInviteGenerate = async (payload: GenerateInvitePayload) => {
+    if (!project) {
+      return null;
+    }
+
     setInviteSubmitting(true);
 
     try {
@@ -316,36 +354,36 @@ const ProjectPage = () => {
     }
   };
 
-  const saveSettings = async (settingsDraft: LegacyValue) => {
-    if (!hasSettingsChanges) {
+  const saveSettings = async (form: ProjectSettingsFormValues) => {
+    if (!project || !hasSettingsChanges) {
       return;
     }
 
     try {
-      const payload: LegacyValue = {};
+      const payload: UpdateProjectPayload = {};
 
-      if (settingsDraft.name.trim() !== project.name) {
-        payload.name = settingsDraft.name.trim();
+      if (form.name.trim() !== project.name) {
+        payload.name = form.name.trim();
       }
 
-      if (settingsDraft.repositoryUrl.trim() !== project.repositoryUrl) {
-        payload.repositoryUrl = settingsDraft.repositoryUrl.trim();
+      if (form.repositoryUrl.trim() !== (project.repositoryUrl ?? '')) {
+        payload.repositoryUrl = form.repositoryUrl.trim();
       }
 
-      if (settingsDraft.description !== project.description) {
-        payload.description = settingsDraft.description;
+      if (form.description !== (project.description ?? '')) {
+        payload.description = form.description;
       }
 
-      if (JSON.stringify(settingsDraft.stack) !== JSON.stringify(project.stack)) {
-        payload.stack = settingsDraft.stack;
+      if (JSON.stringify(form.stack) !== JSON.stringify(project.stack ?? [])) {
+        payload.stack = form.stack;
       }
 
-      if (settingsDraft.privacy !== project.privacy) {
-        payload.privacy = settingsDraft.privacy;
+      if (form.privacy !== project.privacy) {
+        payload.privacy = form.privacy;
       }
 
-      if (settingsDraft.aiReviewEnabled !== project.aiReviewEnabled) {
-        payload.aiReviewEnabled = settingsDraft.aiReviewEnabled;
+      if (form.aiReviewEnabled !== Boolean(project.aiReviewEnabled)) {
+        payload.aiReviewEnabled = form.aiReviewEnabled;
       }
 
       await updateProject({
@@ -355,18 +393,11 @@ const ProjectPage = () => {
 
       const fullProject = await refetchProject().unwrap();
 
-      resetSettings({
-        name: fullProject.name,
-        repositoryUrl: fullProject.repositoryUrl,
-        description: fullProject.description || '',
-        stack: fullProject.stack,
-        privacy: fullProject.privacy,
-        aiReviewEnabled: Boolean(fullProject.aiReviewEnabled),
-      });
+      resetSettings(getProjectSettingsDefaults(fullProject));
 
       showSnackbar('Изменения сохранены', 'success');
-    } catch (error: LegacyValue) {
-      if (error?.code === 'PROJECT_NAME_CONFLICT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.code === 'PROJECT_NAME_CONFLICT') {
         showSnackbar('Проект с таким названием уже существует', 'error');
       } else {
         showSnackbar('Возникла непредвиденная ошибка. Попробуйте позже', 'error');
@@ -381,6 +412,10 @@ const ProjectPage = () => {
   };
 
   const handleLeaveProject = async () => {
+    if (!project) {
+      return;
+    }
+
     try {
       await leaveProject(project.id).unwrap();
 
@@ -399,6 +434,10 @@ const ProjectPage = () => {
   };
 
   const handleDeleteProject = async () => {
+    if (!project) {
+      return;
+    }
+
     try {
       await deleteProject(project.id).unwrap();
 
@@ -433,6 +472,8 @@ const ProjectPage = () => {
   const description = project.description || '';
   const isLongDescription = description.length > 1000;
   const shownDescription = isLongDescription && !showFullDescription ? `${description.slice(0, 1000)}...` : description;
+  const projectStack = project.stack ?? [];
+  const projectParticipants = project.participants ?? [];
 
   return (
     <div className={projectPageStyles.root}>
@@ -447,7 +488,9 @@ const ProjectPage = () => {
                 <img src={privateIcon} alt="Приватный проект" className={projectPageStyles.privateIcon} />
               )}
             </div>
-            <span className={projectPageStyles.roleTag}>{PROJECT_MEMBER_ROLE_LABELS[project.viewerRole]}</span>
+            <span className={projectPageStyles.roleTag}>
+              {PROJECT_MEMBER_ROLE_LABELS[project.viewerRole ?? PROJECT_MEMBER_ROLE.GUEST]}
+            </span>
           </div>
 
           {project.organizationName && <p className={projectPageStyles.organization}>{project.organizationName}</p>}
@@ -460,7 +503,7 @@ const ProjectPage = () => {
                 <button
                   className={projectPageStyles.descriptionToggle}
                   type="button"
-                  onClick={() => setShowFullDescription((prev: LegacyValue) => !prev)}
+                  onClick={() => setShowFullDescription((prev) => !prev)}
                 >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
@@ -474,9 +517,9 @@ const ProjectPage = () => {
             </a>
           )}
 
-          {project.stack.length > 0 && (
+          {projectStack.length > 0 && (
             <div className={projectPageStyles.stackList}>
-              {project.stack.map((skill: LegacyValue) => (
+              {projectStack.map((skill) => (
                 <span key={skill} className={projectPageStyles.stackTag}>
                   {skill}
                 </span>
@@ -487,7 +530,7 @@ const ProjectPage = () => {
           <div className={projectPageStyles.metrics}>
             <div className={projectPageStyles.metricItem}>
               <img src={participantsCountIcon} alt="Участники" />
-              <span>Участников: {project.participants.length}</span>
+              <span>Участников: {projectParticipants.length}</span>
             </div>
             <div className={projectPageStyles.metricItem}>
               <img src={tasksCountIcon} alt="Открытые задачи" />
@@ -545,7 +588,9 @@ const ProjectPage = () => {
                       type="search"
                       placeholder="Поиск"
                       value={taskSearch}
-                      onChange={(event: LegacyValue) => setTaskSearch(event.target.value.slice(0, 100))}
+                      onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                        setTaskSearch(event.target.value.slice(0, 100))
+                      }
                     />
                   </label>
                 )}
@@ -575,12 +620,16 @@ const ProjectPage = () => {
                   <span>Дедлайн</span>
                 </div>
 
-                {visibleTasksSource.map((task: LegacyValue) => (
+                {visibleTasksSource.map((task) => (
                   <div
                     key={task.id}
                     className={projectPageStyles.tableRow}
                     onClick={() =>
-                      navigate(ROUTES.projectTaskById.replace(':projectId', project.id).replace(':taskId', task.id))
+                      navigate(
+                        ROUTES.projectTaskById
+                          .replace(':projectId', String(project.id))
+                          .replace(':taskId', String(task.id))
+                      )
                     }
                     role="presentation"
                   >
@@ -595,19 +644,19 @@ const ProjectPage = () => {
                       {TASK_STATUS_LABELS[task.status]}
                     </span>
                     <span className={projectPageStyles.assignees}>
-                      {task.assignees.slice(0, 6).map((assignee: LegacyValue) => (
+                      {(task.assignees ?? []).slice(0, 6).map((assignee) => (
                         <span key={assignee.id} className={projectPageStyles.assigneeAvatar} title={assignee.fullName}>
                           {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
                         </span>
                       ))}
-                      {task.assignees.length > 6 && (
-                        <span className={projectPageStyles.assigneeMore}>+{task.assignees.length - 6}</span>
+                      {(task.assignees ?? []).length > 6 && (
+                        <span className={projectPageStyles.assigneeMore}>+{(task.assignees ?? []).length - 6}</span>
                       )}
                     </span>
                     <span
                       className={[
                         projectPageStyles.deadline,
-                        (DEADLINE_TONE_CLASS as LegacyValue)[getDeadlineToneClass(task.deadline, task.status)],
+                        DEADLINE_TONE_CLASS[getDeadlineToneClass(task.deadline, task.status)],
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -627,7 +676,7 @@ const ProjectPage = () => {
           <>
             <div className={projectPageStyles.controls}>
               <div className={projectPageStyles.controlsLeft}>
-                <span className={projectPageStyles.participantsCount}>Участники ({project.participants.length})</span>
+                <span className={projectPageStyles.participantsCount}>Участники ({projectParticipants.length})</span>
               </div>
 
               <div className={projectPageStyles.controlsRight}>
@@ -654,7 +703,7 @@ const ProjectPage = () => {
             </div>
 
             <section className={[projectPageStyles.sectionCard, projectPageStyles.participantsList].join(' ')}>
-              {participants.map((participant: LegacyValue) => (
+              {participants.map((participant) => (
                 <Link
                   key={participant.id}
                   className={projectPageStyles.participantRow}
@@ -750,11 +799,11 @@ const ProjectPage = () => {
                   <Controller
                     control={settingsControl}
                     name="stack"
-                    render={({ field }: LegacyValue) => (
+                    render={({ field }) => (
                       <ProjectSkillsSelector
                         title="Технологический стек:"
                         titleClassName={projectPageStyles.settingsTitle}
-                        value={field.value}
+                        value={field.value ?? []}
                         onChange={field.onChange}
                         forceOpenUp
                       />
@@ -766,7 +815,7 @@ const ProjectPage = () => {
               <div className={projectPageStyles.settingsField}>
                 <h3 className={projectPageStyles.settingsTitle}>Приватность</h3>
                 <div className={projectPageStyles.privacyRow}>
-                  {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue: LegacyValue) => (
+                  {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
                     <label key={privacyValue} className={projectPageStyles.privacyItem}>
                       <input type="radio" value={privacyValue} {...registerSettings('privacy')} />
                       <span>{PROJECT_PRIVACY_LABELS[privacyValue]}</span>

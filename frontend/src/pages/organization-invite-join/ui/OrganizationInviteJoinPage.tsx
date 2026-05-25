@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { projectsApi } from '@/entities/project';
+import { organizationApi } from '@/entities/organization';
 import Spinner from '@/shared/ui/spinner';
 import { ACCESS_ERROR_CODE } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
@@ -21,29 +21,33 @@ const OrganizationInviteJoinPage = () => {
 
     const join = async () => {
       try {
-        const result = await projectsApi.joinOrganizationByInvite(token);
+        const result = await organizationApi.joinOrganizationByInvite(token);
 
         if (!isMounted) {
           return;
         }
 
-        navigate(ROUTES.organizationById.replace(':organizationId', result.organizationId), {
+        if (result.organizationId === undefined) {
+          throw new Error('Organization id is missing after invite join');
+        }
+
+        navigate(ROUTES.organizationById.replace(':organizationId', String(result.organizationId)), {
           replace: true,
           state: {
             snackbarMessage: 'Вы присоединились к организации',
             snackbarType: 'success',
           },
         });
-      } catch (error: LegacyValue) {
+      } catch (error: unknown) {
         if (!isMounted) {
           return;
         }
 
-        if (error?.code === ACCESS_ERROR_CODE.ALREADY_MEMBER) {
-          const inviteInfo = await projectsApi.getOrganizationInviteInfo(token).catch(() => null);
+        if (error instanceof Error && error.code === ACCESS_ERROR_CODE.ALREADY_MEMBER) {
+          const inviteInfo = await organizationApi.getOrganizationInviteInfo(token).catch(() => null);
 
-          if (inviteInfo?.organizationId) {
-            navigate(ROUTES.organizationById.replace(':organizationId', inviteInfo.organizationId), {
+          if (inviteInfo?.id) {
+            navigate(ROUTES.organizationById.replace(':organizationId', String(inviteInfo.id)), {
               replace: true,
               state: {
                 snackbarMessage: 'Вы уже являетесь участником этой организации',

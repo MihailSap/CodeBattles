@@ -1,5 +1,8 @@
 import { PROJECT_MEMBER_ROLE, PROJECT_PRIVACY } from '../../model';
+import type { Project } from '../../model/types';
 import { MOCK_USERS } from './users';
+
+const MOCK_PARTICIPANTS = MOCK_USERS.map((user) => ({ ...user, role: PROJECT_MEMBER_ROLE.MEMBER }));
 
 export const MOCK_PROJECTS = [
   {
@@ -15,7 +18,7 @@ export const MOCK_PROJECTS = [
     lastActivityAt: '2026-05-11T00:00:00Z',
     viewerRole: PROJECT_MEMBER_ROLE.OWNER,
     canSeeTasks: true,
-    participants: MOCK_USERS,
+    participants: MOCK_PARTICIPANTS,
     openTasksCount: 4,
     participantsCount: MOCK_USERS.length,
   },
@@ -32,7 +35,7 @@ export const MOCK_PROJECTS = [
     lastActivityAt: '2026-05-10T00:00:00Z',
     viewerRole: PROJECT_MEMBER_ROLE.DEVELOPER,
     canSeeTasks: true,
-    participants: MOCK_USERS,
+    participants: MOCK_PARTICIPANTS,
     openTasksCount: 1,
     participantsCount: MOCK_USERS.length,
   },
@@ -49,7 +52,7 @@ export const MOCK_PROJECTS = [
     lastActivityAt: '2026-05-09T00:00:00Z',
     viewerRole: PROJECT_MEMBER_ROLE.GUEST,
     canSeeTasks: true,
-    participants: MOCK_USERS,
+    participants: MOCK_PARTICIPANTS,
     openTasksCount: 1,
     participantsCount: MOCK_USERS.length,
   },
@@ -66,8 +69,8 @@ export const MOCK_PROJECTS = [
     lastActivityAt: '2026-05-08T00:00:00Z',
     viewerRole: PROJECT_MEMBER_ROLE.OWNER,
     canSeeTasks: true,
-    participants: MOCK_USERS,
+    participants: MOCK_PARTICIPANTS,
     openTasksCount: 1,
     participantsCount: MOCK_USERS.length,
   },
-];
+] satisfies Project[];

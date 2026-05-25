@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Spinner from '@/shared/ui/spinner';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import Snackbar from '@/shared/ui/snackbar';
@@ -9,6 +9,8 @@ import {
   useMakeAdminMutation,
   useMakeNotAdminMutation,
 } from '@/entities/user';
+import type { User } from '@/entities/user';
+import type { EntityId } from '@/entities/project';
 import { useSnackbar } from '@/shared/lib/hooks';
 import { getApiErrorMessage } from '@/shared/lib';
 import adminUsersTabStyles from './AdminUsersTab.module.scss';
@@ -16,12 +18,24 @@ import adminUsersTabStyles from './AdminUsersTab.module.scss';
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 450;
 
-const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: LegacyValue) => {
+type ConfirmState =
+  | { type: 'delete'; targetUser: User }
+  | { type: 'role'; targetUser: User; shouldBeAdmin: boolean }
+  | { type: 'enable'; targetUser: User };
+
+interface AdminUsersTabProps {
+  isActive: boolean;
+  currentUserId: EntityId | null;
+  onSelfDemote: () => void | Promise<void>;
+  onSelfDelete: () => void | Promise<void>;
+}
+
+const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: AdminUsersTabProps) => {
   const [page, setPage] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [error, setError] = useState('');
-  const [confirmState, setConfirmState] = useState<LegacyValue>(null);
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const usersQueryParams: {
@@ -75,14 +89,14 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
     }
   }, [usersQuery.error, usersQuery.isError]);
 
-  const openDeleteConfirm = (targetUser: LegacyValue) => {
+  const openDeleteConfirm = (targetUser: User) => {
     setConfirmState({
       type: 'delete',
       targetUser,
     });
   };
 
-  const openRoleConfirm = (targetUser: LegacyValue, shouldBeAdmin: LegacyValue) => {
+  const openRoleConfirm = (targetUser: User, shouldBeAdmin: boolean) => {
     setConfirmState({
       type: 'role',
       targetUser,
@@ -90,7 +104,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
     });
   };
 
-  const openEnableConfirm = (targetUser: LegacyValue) => {
+  const openEnableConfirm = (targetUser: User) => {
     setConfirmState({
       type: 'enable',
       targetUser,
@@ -144,7 +158,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
         await enableUser(confirmState.targetUser.id).unwrap();
         showSnackbar('Почта пользователя подтверждена', 'success');
       }
-    } catch (requestError: LegacyValue) {
+    } catch (requestError: unknown) {
       const message = getApiErrorMessage(requestError, 'Не удалось выполнить действие', 'adminUserAction');
       setError(message);
       showSnackbar(message, 'error');
@@ -177,7 +191,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
             type="text"
             placeholder="Введите логин или E-Mail"
             value={searchInput}
-            onChange={(event: LegacyValue) => setSearchInput(event.target.value)}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchInput(event.target.value)}
           />
         </label>
       </div>
@@ -214,7 +228,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
 
             {!isLoading &&
               hasUsers &&
-              users.map((targetUser: LegacyValue) => {
+              users.map((targetUser) => {
                 const isAdmin = targetUser.role === 'ADMIN';
                 const isCurrentUser = targetUser.id === currentUserId;
 
@@ -237,7 +251,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
                         className={adminUsersTabStyles.checkbox}
                         type="checkbox"
                         checked={isAdmin}
-                        onChange={(event: LegacyValue) => {
+                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
                           openRoleConfirm(targetUser, event.target.checked);
                         }}
                         disabled={isSubmittingAction}
@@ -245,15 +259,6 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
                     </td>
                     <td>
                       <div className={adminUsersTabStyles.actions}>
-                        <button
-                          className={[adminUsersTabStyles.actionButton, adminUsersTabStyles.isDelete].join(' ')}
-                          type="button"
-                          aria-label={`Удалить пользователя ${targetUser.login || targetUser.id}`}
-                          onClick={() => openDeleteConfirm(targetUser)}
-                          disabled={isSubmittingAction}
-                        >
-                          ×
-                        </button>
                         {!targetUser.enabled && (
                           <button
                             className={[adminUsersTabStyles.actionButton, adminUsersTabStyles.isApprove].join(' ')}
@@ -265,6 +270,15 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
                             ✓
                           </button>
                         )}
+                        <button
+                          className={[adminUsersTabStyles.actionButton, adminUsersTabStyles.isDelete].join(' ')}
+                          type="button"
+                          aria-label={`Удалить пользователя ${targetUser.login || targetUser.id}`}
+                          onClick={() => openDeleteConfirm(targetUser)}
+                          disabled={isSubmittingAction}
+                        >
+                          ×
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -280,7 +294,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
         <button
           className={adminUsersTabStyles.paginationButton}
           type="button"
-          onClick={() => setPage((currentPage: LegacyValue) => currentPage - 1)}
+          onClick={() => setPage((currentPage) => currentPage - 1)}
           disabled={!canGoPrev || isLoading}
         >
           ←
@@ -289,7 +303,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
         <button
           className={adminUsersTabStyles.paginationButton}
           type="button"
-          onClick={() => setPage((currentPage: LegacyValue) => currentPage + 1)}
+          onClick={() => setPage((currentPage) => currentPage + 1)}
           disabled={!canGoNext || isLoading}
         >
           →

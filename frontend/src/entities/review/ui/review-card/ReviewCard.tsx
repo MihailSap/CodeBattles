@@ -1,16 +1,29 @@
 import { memo, useCallback, useMemo } from 'react';
 import { CheckIcon, CommentIcon } from '@/shared/ui/icons';
 import { REVIEW_STATUS, REVIEW_STATUS_LABEL } from '../../model';
+import type { ReviewStatus } from '../../model';
+import type { AssignedReview } from '../../model/types';
 import reviewCardStyles from './ReviewCard.module.scss';
 
-const formatDate = (value: LegacyValue) =>
+interface ReviewCardProps {
+  review: AssignedReview;
+  onClick?: () => void;
+  onOpen?: (reviewId: AssignedReview['id']) => void;
+}
+
+interface DeadlineMeta {
+  text: string;
+  className: string;
+}
+
+const formatDate = (value: string): string =>
   new Date(value).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   });
 
-const getStatusClassName = (status: LegacyValue) => {
+const getStatusClassName = (status: ReviewStatus): string => {
   if (status === REVIEW_STATUS.IN_PROGRESS) {
     return reviewCardStyles.isInProgress;
   }
@@ -22,7 +35,7 @@ const getStatusClassName = (status: LegacyValue) => {
   return reviewCardStyles.isNew;
 };
 
-const getDeadlineMeta = (review: LegacyValue) => {
+const getDeadlineMeta = (review: AssignedReview): DeadlineMeta => {
   const deadlineTime = new Date(review.responseDeadline).getTime();
   const reviewedTime = review.reviewedAt ? new Date(review.reviewedAt).getTime() : null;
 
@@ -64,7 +77,7 @@ const getDeadlineMeta = (review: LegacyValue) => {
   };
 };
 
-const ReviewCard = ({ review, onClick, onOpen }: LegacyValue) => {
+const ReviewCard = ({ review, onClick, onOpen }: ReviewCardProps) => {
   const deadlineMeta = useMemo(() => getDeadlineMeta(review), [review]);
 
   const handleClick = useCallback(() => {

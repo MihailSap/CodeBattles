@@ -1,12 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef } from 'react';
+import { type ChangeEvent, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { CrossIcon, CheckIcon, FileIcon } from '@/shared/ui/icons';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import CodeEditor from '@/shared/ui/code-editor';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { solutionUploadFormSchema } from '../../model/upload-schemas';
+import {
+  solutionUploadFormSchema,
+  type SolutionUploadFormInput,
+  type SolutionUploadFormValues,
+  type SolutionUploadPayload,
+} from '../../model/upload-schemas';
 import solutionUploadModalStyles from './SolutionUploadModal.module.scss';
 
 const TABS = [
@@ -86,11 +91,24 @@ const LANGUAGE_EXTENSION_MAP = {
   shell: 'sh',
   xml: 'xml',
   plaintext: 'txt',
+} as const;
+
+interface SolutionUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (payload: SolutionUploadPayload) => void | Promise<void>;
+  isSubmitting: boolean;
+}
+
+const getLanguageExtension = (language: string): string => {
+  const matchedExtension = Object.entries(LANGUAGE_EXTENSION_MAP).find(([name]) => name === language)?.[1];
+
+  return matchedExtension ?? 'txt';
 };
 
-const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue) => {
-  const fileInputRef = useRef<LegacyValue>(null);
-  const archiveInputRef = useRef<LegacyValue>(null);
+const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: SolutionUploadModalProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const archiveInputRef = useRef<HTMLInputElement>(null);
 
   const {
     control,
@@ -98,8 +116,8 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     reset,
     setValue,
     formState: { isValid },
-  } = useForm<LegacyValue>({
-    resolver: zodResolver(solutionUploadFormSchema) as LegacyValue,
+  } = useForm<SolutionUploadFormInput, unknown, SolutionUploadFormValues>({
+    resolver: zodResolver(solutionUploadFormSchema),
     defaultValues: {
       activeTab: 'manual',
       code: '',
@@ -110,10 +128,14 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     mode: 'onChange',
   });
 
-  const [activeTab = 'manual', files = [], archive = null] = useWatch({
+  const [watchedActiveTab, watchedFiles, watchedArchive] = useWatch({
     control,
     name: ['activeTab', 'files', 'archive'],
-  }) as [string, File[], File | null];
+  });
+
+  const activeTab = watchedActiveTab ?? 'manual';
+  const files = watchedFiles ?? [];
+  const archive = watchedArchive ?? null;
 
   useBodyScrollLock(isOpen);
   if (!isOpen) return null;
@@ -123,13 +145,15 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     onClose();
   };
 
-  const handleCodeChange = (onChange: LegacyValue) => (value: LegacyValue) => {
-    if (value.length <= MAX_CODE_LENGTH) {
-      onChange(value);
+  const handleCodeChange = (onChange: (value: string) => void) => (value: string | undefined) => {
+    const nextValue = value ?? '';
+
+    if (nextValue.length <= MAX_CODE_LENGTH) {
+      onChange(nextValue);
     }
   };
 
-  const handleFileChange = (e: LegacyValue) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
 
@@ -141,7 +165,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     e.target.value = '';
   };
 
-  const handleArchiveChange = (e: LegacyValue) => {
+  const handleArchiveChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setValue('archive', e.target.files[0], {
         shouldDirty: true,
@@ -152,10 +176,10 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     e.target.value = '';
   };
 
-  const removeFile = (index: LegacyValue) => {
+  const removeFile = (index: number) => {
     setValue(
       'files',
-      files.filter((_: LegacyValue, i: LegacyValue) => i !== index),
+      files.filter((_, itemIndex) => itemIndex !== index),
       {
         shouldDirty: true,
         shouldValidate: true,
@@ -167,16 +191,24 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     return isSubmitting || !isValid;
   };
 
-  const submit = async ({ activeTab, code, language, files, archive }: LegacyValue) => {
+  const submit = async ({ activeTab, code, language, files, archive }: SolutionUploadFormValues) => {
     if (isSubmitDisabled()) return;
-    let payload: LegacyValue = {};
+    let payload: SolutionUploadPayload;
 
     if (activeTab === 'manual') {
+      const fileName = `solution.${getLanguageExtension(language)}`;
+
       payload = {
         type: 'manual',
+        uploadType: 'MANUAL_TEXT',
+        manualCode: {
+          fileName,
+          language,
+          content: code,
+        },
         files: [
           {
-            name: `solution.${(LANGUAGE_EXTENSION_MAP as LegacyValue)[language] || 'txt'}`,
+            name: fileName,
             content: code,
           },
         ],
@@ -184,12 +216,12 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
     } else if (activeTab === 'files') {
       payload = {
         type: 'files',
-        files: files.map((f: LegacyValue) => ({
-          name: f.name,
+        files: files.map((file) => ({
+          name: file.name,
           isFileObj: true,
         })),
       };
-    } else {
+    } else if (archive) {
       payload = {
         type: 'archive',
         files: [
@@ -199,6 +231,8 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
           },
         ],
       };
+    } else {
+      return;
     }
 
     await onSubmit(payload);
@@ -222,9 +256,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
         <Controller
           control={control}
           name="activeTab"
-          render={({ field }: LegacyValue) => (
-            <EntityTabs tabs={TABS} activeKey={field.value} onChange={field.onChange} />
-          )}
+          render={({ field }) => <EntityTabs tabs={TABS} activeKey={field.value} onChange={field.onChange} />}
         />
       </div>
 
@@ -240,15 +272,15 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
               <Controller
                 control={control}
                 name="code"
-                render={({ field }: LegacyValue) => (
+                render={({ field }) => (
                   <Controller
                     control={control}
                     name="language"
-                    render={({ field: languageField }: LegacyValue) => (
+                    render={({ field: languageField }) => (
                       <CodeEditor
-                        value={field.value}
+                        value={field.value ?? ''}
                         onChange={handleCodeChange(field.onChange)}
-                        language={languageField.value}
+                        language={languageField.value ?? 'javascript'}
                         onLanguageChange={languageField.onChange}
                       />
                     )}
@@ -280,7 +312,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Legacy
               ) : (
                 <>
                   <div className={solutionUploadModalStyles.filesList}>
-                    {files.map((file: LegacyValue, idx: LegacyValue) => (
+                    {files.map((file, idx) => (
                       <div key={`${file.name}-${idx}`} className={solutionUploadModalStyles.fileItem}>
                         <div className={solutionUploadModalStyles.fileInfo}>
                           <span className={solutionUploadModalStyles.fileIcon}>

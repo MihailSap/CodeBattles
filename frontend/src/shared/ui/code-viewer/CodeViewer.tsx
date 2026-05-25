@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
-import Editor, { DiffEditor } from '@monaco-editor/react';
+import Editor, { DiffEditor, type Monaco, type MonacoDiffEditor } from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 import codeViewerStyles from './CodeViewer.module.scss';
 
 const RANGE_COLORS = [
@@ -23,6 +24,33 @@ const RANGE_COLORS_SELECTED = [
 const AI_RANGE_COLOR = 'rgba(139, 92, 246, 0.12)';
 const AI_RANGE_COLOR_SELECTED = 'rgba(139, 92, 246, 0.3)';
 
+interface CodeCommentRange {
+  startLine?: number;
+  endLine?: number;
+  authorRole: string;
+}
+
+interface SelectedLineRange {
+  startLine: number;
+  endLine: number;
+}
+
+interface SelectionPayload {
+  startLineNumber: number;
+  endLineNumber: number;
+}
+
+interface CodeViewerProps {
+  value: string;
+  originalValue?: string;
+  language?: string;
+  isDiff?: boolean;
+  comments?: CodeCommentRange[];
+  onLineClick?: (range: SelectedLineRange) => void;
+  onLineContextMenu?: (range: SelectionPayload) => void;
+  canComment?: boolean;
+}
+
 const CodeViewer = memo(
   ({
     value,
@@ -33,12 +61,12 @@ const CodeViewer = memo(
     onLineClick,
     onLineContextMenu,
     canComment = false,
-  }: LegacyValue) => {
-    const editorRef = useRef<LegacyValue>(null);
-    const monacoRef = useRef<LegacyValue>(null);
-    const decorationsRef = useRef<LegacyValue>(null);
-    const widgetRef = useRef<LegacyValue>(null);
-    const [selectedRange, setSelectedRange] = useState<LegacyValue>(null);
+  }: CodeViewerProps) => {
+    const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+    const monacoRef = useRef<Monaco | null>(null);
+    const decorationsRef = useRef<editor.IEditorDecorationsCollection | string[] | null>(null);
+    const widgetRef = useRef<editor.IContentWidget | null>(null);
+    const [selectedRange, setSelectedRange] = useState<SelectedLineRange | null>(null);
 
     const [isNarrowScreen, setIsNarrowScreen] = useState(() =>
       typeof window !== 'undefined' ? window.innerWidth <= 500 : false
@@ -72,7 +100,7 @@ const CodeViewer = memo(
       };
     }, [comments, onLineClick, onLineContextMenu, canComment]);
 
-    const rootEditorRef = useRef<LegacyValue>(null);
+    const rootEditorRef = useRef<editor.IStandaloneCodeEditor | MonacoDiffEditor | null>(null);
 
     useEffect(() => {
       return () => {
@@ -87,9 +115,13 @@ const CodeViewer = memo(
     }, []);
 
     const getUniqueRanges = useCallback(() => {
-      const rangeMap = new Map();
+      const rangeMap = new Map<string, SelectedLineRange & { isAI: boolean }>();
 
-      latestProps.current.comments.forEach((c: LegacyValue) => {
+      latestProps.current.comments.forEach((c) => {
+        if (c.startLine === undefined || c.endLine === undefined) {
+          return;
+        }
+
         const key = `${c.startLine}-${c.endLine}`;
 
         if (!rangeMap.has(key)) {
@@ -104,11 +136,11 @@ const CodeViewer = memo(
       return [...rangeMap.values()];
     }, []);
 
-    const removeCommentWidget = useCallback((editor: LegacyValue) => {
-      if (widgetRef.current && editor) {
+    const removeCommentWidget = useCallback((codeEditor: editor.IStandaloneCodeEditor) => {
+      if (widgetRef.current) {
         try {
-          editor.removeContentWidget(widgetRef.current);
-        } catch (err: LegacyValue) {
+          codeEditor.removeContentWidget(widgetRef.current);
+        } catch (err: unknown) {
           console.error('Widget removal error:', err);
         }
 
@@ -117,25 +149,25 @@ const CodeViewer = memo(
     }, []);
 
     const showCommentWidget = useCallback(
-      (editor: LegacyValue, monaco: LegacyValue, lineNumber: LegacyValue) => {
-        removeCommentWidget(editor);
+      (codeEditor: editor.IStandaloneCodeEditor, monaco: Monaco, lineNumber: number) => {
+        removeCommentWidget(codeEditor);
         const domNode = document.createElement('div');
         domNode.className = codeViewerStyles.commentWidget;
         domNode.textContent = 'Комментировать';
 
-        const handleCommentAction = (e: LegacyValue) => {
+        const handleCommentAction = (e: MouseEvent | TouchEvent): void => {
           e.preventDefault();
           e.stopPropagation();
-          const selection = editor.getSelection();
+          const selection = codeEditor.getSelection();
 
-          if (latestProps.current.onLineContextMenu) {
+          if (selection && latestProps.current.onLineContextMenu) {
             latestProps.current.onLineContextMenu({
               startLineNumber: selection.startLineNumber,
               endLineNumber: selection.endLineNumber,
             });
           }
 
-          removeCommentWidget(editor);
+          removeCommentWidget(codeEditor);
         };
 
         domNode.onmousedown = handleCommentAction;
@@ -163,47 +195,53 @@ const CodeViewer = memo(
           }),
         };
 
-        editor.addContentWidget(widget);
+        codeEditor.addContentWidget(widget);
         widgetRef.current = widget;
       },
       [removeCommentWidget]
     );
 
-    const injectRangeStyles = useCallback((ranges: LegacyValue, selected: LegacyValue) => {
-      let styleEl = document.getElementById('code-viewer-range-styles');
+    const injectRangeStyles = useCallback(
+      (ranges: Array<SelectedLineRange & { isAI: boolean }>, selected: SelectedLineRange | null) => {
+        let styleEl = document.getElementById('code-viewer-range-styles');
 
-      if (!styleEl) {
-        styleEl = document.createElement('style');
-        styleEl.id = 'code-viewer-range-styles';
-        document.head.appendChild(styleEl);
-      }
-
-      let css = '';
-
-      ranges.forEach((range: LegacyValue, index: LegacyValue) => {
-        const isAI = range.isAI;
-        const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
-        let color;
-
-        if (isAI) {
-          color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
-        } else {
-          const colorIdx = index % RANGE_COLORS.length;
-          color = isSelected ? RANGE_COLORS_SELECTED[colorIdx] : RANGE_COLORS[colorIdx];
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'code-viewer-range-styles';
+          document.head.appendChild(styleEl);
         }
 
-        css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
-      });
+        let css = '';
 
-      styleEl.textContent = css;
-    }, []);
+        ranges.forEach((range, index) => {
+          const isAI = range.isAI;
+          const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
+          let color;
+
+          if (isAI) {
+            color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
+          } else {
+            const colorIdx = index % RANGE_COLORS.length;
+
+            color = isSelected
+              ? (RANGE_COLORS_SELECTED[colorIdx] ?? AI_RANGE_COLOR_SELECTED)
+              : (RANGE_COLORS[colorIdx] ?? AI_RANGE_COLOR);
+          }
+
+          css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
+        });
+
+        styleEl.textContent = css;
+      },
+      []
+    );
 
     const updateDecorations = useCallback(() => {
       if (!editorRef.current || !monacoRef.current) return;
       const uniqueRanges = getUniqueRanges();
-      const newDecorations: LegacyValue[] = [];
+      const newDecorations: editor.IModelDeltaDecoration[] = [];
 
-      uniqueRanges.forEach((range: LegacyValue, index: LegacyValue) => {
+      uniqueRanges.forEach((range, index) => {
         const isAI = range.isAI;
 
         newDecorations.push({
@@ -231,7 +269,7 @@ const CodeViewer = memo(
       injectRangeStyles(uniqueRanges, selectedRange);
 
       if (editorRef.current.createDecorationsCollection) {
-        if (decorationsRef.current && decorationsRef.current.set) {
+        if (decorationsRef.current && !Array.isArray(decorationsRef.current)) {
           decorationsRef.current.set(newDecorations);
         } else {
           decorationsRef.current = editorRef.current.createDecorationsCollection(newDecorations);
@@ -242,10 +280,14 @@ const CodeViewer = memo(
       }
     }, [selectedRange, getUniqueRanges, injectRangeStyles]);
 
-    const handleEditorDidMount = (editor: LegacyValue, monaco: LegacyValue) => {
-      rootEditorRef.current = editor;
-      const isDiffEditor = !!editor.getModifiedEditor;
-      const mainEditor = isDiffEditor ? editor.getModifiedEditor() : editor;
+    const handleEditorDidMount = (
+      mountedEditor: editor.IStandaloneCodeEditor | MonacoDiffEditor,
+      monaco: Monaco
+    ): void => {
+      rootEditorRef.current = mountedEditor;
+
+      const mainEditor = 'getModifiedEditor' in mountedEditor ? mountedEditor.getModifiedEditor() : mountedEditor;
+
       editorRef.current = mainEditor;
       monacoRef.current = monaco;
 
@@ -256,10 +298,10 @@ const CodeViewer = memo(
           contextMenuGroupId: 'navigation',
           contextMenuOrder: 1.5,
           precondition: 'editorTextFocus',
-          run: (ed: LegacyValue) => {
+          run: (ed) => {
             const selection = ed.getSelection();
 
-            if (latestProps.current.onLineContextMenu) {
+            if (selection && latestProps.current.onLineContextMenu) {
               latestProps.current.onLineContextMenu({
                 startLineNumber: selection.startLineNumber,
                 endLineNumber: selection.endLineNumber,
@@ -269,13 +311,13 @@ const CodeViewer = memo(
         });
       }
 
-      mainEditor.onMouseDown((e: LegacyValue) => {
+      mainEditor.onMouseDown((e) => {
         const isGutter = e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN;
         const isContent = e.target.type === monaco.editor.MouseTargetType.CONTENT_TEXT;
 
         if ((isGutter || isContent) && e.target.position) {
           const lineNum = e.target.position.lineNumber;
-          const range = getUniqueRanges().find((r: LegacyValue) => lineNum >= r.startLine && lineNum <= r.endLine);
+          const range = getUniqueRanges().find((r) => lineNum >= r.startLine && lineNum <= r.endLine);
 
           if (range && latestProps.current.onLineClick) {
             const newRange = {
@@ -289,7 +331,7 @@ const CodeViewer = memo(
         }
       });
 
-      mainEditor.onDidChangeCursorSelection((e: LegacyValue) => {
+      mainEditor.onDidChangeCursorSelection((e) => {
         if (!latestProps.current.canComment) return;
         const sel = e.selection;
 
@@ -309,7 +351,7 @@ const CodeViewer = memo(
         }
       });
 
-      mainEditor.onKeyDown((e: LegacyValue) => {
+      mainEditor.onKeyDown((e) => {
         if (e.keyCode === monaco.KeyCode.Escape) {
           removeCommentWidget(mainEditor);
         }
@@ -374,8 +416,8 @@ const CodeViewer = memo(
       >
         {isDiff ? (
           <DiffEditor
-            language={language}
-            original={originalValue}
+            {...(language !== undefined ? { language } : {})}
+            {...(originalValue !== undefined ? { original: originalValue } : {})}
             modified={value}
             theme="vs-dark"
             options={editorOptions}
@@ -383,7 +425,7 @@ const CodeViewer = memo(
           />
         ) : (
           <Editor
-            language={language}
+            {...(language !== undefined ? { language } : {})}
             value={value}
             theme="vs-dark"
             options={editorOptions}

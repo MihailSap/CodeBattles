@@ -1,5 +1,4 @@
-import React from 'react';
-import Editor from '@monaco-editor/react';
+import Editor, { type OnChange } from '@monaco-editor/react';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import codeEditorStyles from './CodeEditor.module.scss';
 
@@ -88,9 +87,16 @@ const LANGUAGES = [
     value: 'plaintext',
     label: 'Plain Text',
   },
-];
+] as const;
 
-const CodeEditor = ({ value, onChange, language, onLanguageChange }: LegacyValue) => {
+interface CodeEditorProps {
+  value: string;
+  onChange: OnChange;
+  language: string;
+  onLanguageChange: (language: string) => void;
+}
+
+const CodeEditor = ({ value, onChange, language, onLanguageChange }: CodeEditorProps) => {
   return (
     <div className={codeEditorStyles.container}>
       <div className={codeEditorStyles.header}>

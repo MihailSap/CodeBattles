@@ -1,15 +1,39 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, type UIEvent, useEffect, useMemo, useState } from 'react';
+import type { EntityId } from '@/entities/project';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import Spinner from '@/shared/ui/spinner';
 import joinSearchModalStyles from './JoinSearchModal.module.scss';
 
-const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }: LegacyValue) => {
+interface JoinSearchItem {
+  id: EntityId;
+  name: string;
+  logo?: string;
+  participantsCount?: number;
+  openTasksCount?: number;
+  projectsCount?: number;
+  hasPendingRequest?: boolean;
+}
+
+interface JoinSearchResult {
+  data: JoinSearchItem[];
+  hasMore?: boolean;
+}
+
+interface JoinSearchModalProps {
+  mode: 'projects' | 'organizations';
+  fetchItems: (params: { query: string }) => Promise<JoinSearchResult>;
+  onClose: () => void;
+  onJoin?: ((id: EntityId) => void | Promise<void>) | undefined;
+  onRequestAccess?: ((id: EntityId) => void | Promise<void>) | undefined;
+}
+
+const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }: JoinSearchModalProps) => {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query, 300);
-  const [items, setItems] = useState<LegacyValue[]>([]);
-  const [pendingRequestIds, setPendingRequestIds] = useState<LegacyValue[]>([]);
+  const [items, setItems] = useState<JoinSearchItem[]>([]);
+  const [pendingRequestIds, setPendingRequestIds] = useState<EntityId[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   useBodyScrollLock(true);
@@ -30,6 +54,7 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
         }
 
         setItems(result.data);
+        setHasMore(result.hasMore ?? false);
         setPendingRequestIds([]);
       } catch {
         if (!isMounted) {
@@ -62,11 +87,11 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
       query: debouncedQuery,
     });
 
-    setItems((prev: LegacyValue) => [...prev, ...result.data]);
-    setHasMore(result.hasMore);
+    setItems((prev) => [...prev, ...result.data]);
+    setHasMore(result.hasMore ?? false);
   };
 
-  const handleScroll = (event: LegacyValue) => {
+  const handleScroll = (event: UIEvent<HTMLUListElement>) => {
     const target = event.currentTarget;
     const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 24;
 
@@ -94,7 +119,7 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
           type="search"
           placeholder="Поиск по названию и описанию"
           value={query}
-          onChange={(event: LegacyValue) => setQuery(event.target.value.slice(0, 120))}
+          onChange={(event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value.slice(0, 120))}
         />
 
         <ul className={joinSearchModalStyles.list} onScroll={handleScroll}>
@@ -105,7 +130,7 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
           ) : items.length === 0 ? (
             <li className={joinSearchModalStyles.isEmpty}>Ничего не найдено</li>
           ) : (
-            items.map((item: LegacyValue, index: LegacyValue) => (
+            items.map((item, index) => (
               <li
                 key={item.id}
                 className={[joinSearchModalStyles.item, index === items.length - 1 ? joinSearchModalStyles.isLast : '']
@@ -116,15 +141,15 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
                   <div className={joinSearchModalStyles.itemRow}>
                     <div className={joinSearchModalStyles.main}>
                       <p className={joinSearchModalStyles.name}>{item.name}</p>
-                      <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount}</p>
-                      <p className={joinSearchModalStyles.value}>Открытых задач: {item.openTasksCount}</p>
+                      <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount ?? 0}</p>
+                      <p className={joinSearchModalStyles.value}>Открытых задач: {item.openTasksCount ?? 0}</p>
                     </div>
                     <button
                       className={joinSearchModalStyles.action}
                       type="button"
                       onClick={async () => {
-                        await onJoin(item.id);
-                        setItems((prev: LegacyValue) => prev.filter((i: LegacyValue) => i.id !== item.id));
+                        await onJoin?.(item.id);
+                        setItems((prev) => prev.filter((listedItem) => listedItem.id !== item.id));
                       }}
                     >
                       Вступить
@@ -133,11 +158,13 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
                 ) : (
                   <div className={joinSearchModalStyles.itemRow}>
                     <div className={joinSearchModalStyles.organization}>
-                      <img className={joinSearchModalStyles.logo} src={item.logo} alt={`Логотип ${item.name}`} />
+                      {item.logo && (
+                        <img className={joinSearchModalStyles.logo} src={item.logo} alt={`Логотип ${item.name}`} />
+                      )}
                       <div className={joinSearchModalStyles.main}>
                         <p className={joinSearchModalStyles.name}>{item.name}</p>
-                        <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount}</p>
-                        <p className={joinSearchModalStyles.value}>Проектов: {item.projectsCount}</p>
+                        <p className={joinSearchModalStyles.value}>Участников: {item.participantsCount ?? 0}</p>
+                        <p className={joinSearchModalStyles.value}>Проектов: {item.projectsCount ?? 0}</p>
                       </div>
                     </div>
                     {item.hasPendingRequest || pendingRequestIds.includes(item.id) ? (
@@ -147,11 +174,9 @@ const JoinSearchModal = ({ mode, fetchItems, onClose, onJoin, onRequestAccess }:
                         className={joinSearchModalStyles.action}
                         type="button"
                         onClick={async () => {
-                          await onRequestAccess(item.id);
+                          await onRequestAccess?.(item.id);
 
-                          setPendingRequestIds((prev: LegacyValue) =>
-                            prev.includes(item.id) ? prev : [...prev, item.id]
-                          );
+                          setPendingRequestIds((prev) => (prev.includes(item.id) ? prev : [...prev, item.id]));
                         }}
                       >
                         Запросить доступ

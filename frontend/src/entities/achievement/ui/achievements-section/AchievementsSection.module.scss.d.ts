@@ -12,6 +12,10 @@ export type Styles = {
   isReceived: string;
   list: string;
   section: string;
+  sectionBody: string;
+  sectionHead: string;
+  sectionTitle: string;
+  sectionTitleWrap: string;
 };
 
 export type ClassNames = keyof Styles;

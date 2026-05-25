@@ -11,12 +11,10 @@ declare global {
     readonly env: ImportMetaEnv;
   }
 
-  type LegacyValue = ReturnType<typeof JSON.parse>;
-
   interface Error {
-    status?: LegacyValue;
-    code?: LegacyValue;
-    raw?: LegacyValue;
+    status?: number;
+    code?: string;
+    raw?: unknown;
   }
 }
 

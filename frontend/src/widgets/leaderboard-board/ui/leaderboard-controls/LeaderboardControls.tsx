@@ -1,7 +1,22 @@
-import { LEADERBOARD_CATEGORY_OPTIONS, LEADERBOARD_PERIOD_OPTIONS } from '@/entities/leaderboard';
+import {
+  LEADERBOARD_CATEGORY_OPTIONS,
+  LEADERBOARD_PERIOD_OPTIONS,
+  type LeaderboardCategory,
+  type LeaderboardPeriod,
+} from '@/entities/leaderboard';
 import { SearchIcon } from '@/shared/ui/icons';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import leaderboardControlsStyles from './LeaderboardControls.module.scss';
+
+interface LeaderboardControlsProps {
+  period: LeaderboardPeriod;
+  category: LeaderboardCategory;
+  searchValue: string;
+  onPeriodChange: (period: LeaderboardPeriod) => void;
+  onCategoryChange: (category: LeaderboardCategory) => void;
+  onSearchChange: (searchValue: string) => void;
+  onMyRatingClick: () => void;
+}
 
 const LeaderboardControls = ({
   period,
@@ -11,13 +26,13 @@ const LeaderboardControls = ({
   onCategoryChange,
   onSearchChange,
   onMyRatingClick,
-}: LegacyValue) => {
-  const periodDropdownOptions = LEADERBOARD_PERIOD_OPTIONS.map((option: LegacyValue) => ({
+}: LeaderboardControlsProps) => {
+  const periodDropdownOptions = LEADERBOARD_PERIOD_OPTIONS.map((option) => ({
     value: option.key,
     label: option.label,
   }));
 
-  const categoryDropdownOptions = LEADERBOARD_CATEGORY_OPTIONS.map((option: LegacyValue) => ({
+  const categoryDropdownOptions = LEADERBOARD_CATEGORY_OPTIONS.map((option) => ({
     value: option.key,
     label: option.label,
   }));
@@ -51,7 +66,7 @@ const LeaderboardControls = ({
             type="search"
             value={searchValue}
             placeholder="Поиск"
-            onChange={(event: LegacyValue) => onSearchChange(event.target.value)}
+            onChange={(event) => onSearchChange(event.target.value)}
           />
         </label>
 

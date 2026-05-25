@@ -57,10 +57,15 @@
 }
 
 .reviewerName {
+  display: block;
+  padding: 0.3125rem;
+  border-radius: 7px;
   font-size: 1rem;
   font-weight: 400;
   color: var(--color-accent);
   line-height: 1.35;
+  text-decoration: none;
+  --color-transition: var(--transition-fast);
 }
 
 .label {
@@ -141,6 +146,9 @@
 }
 
 .manualButton {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
   padding: 0.1875rem 1.75rem;
   border-radius: 7px;
   border: 2px solid var(--color-accent);
@@ -472,6 +480,10 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .reviewerName:hover {
+    background-color: var(--color-accent-hover-bg);
+  }
+
   .gitButton {
     &:hover {
       background-color: transparent;

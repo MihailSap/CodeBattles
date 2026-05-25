@@ -2,6 +2,17 @@ import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import confirmActionModalStyles from './ConfirmActionModal.module.scss';
 
+interface ConfirmActionModalProps {
+  isOpen: boolean;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void | Promise<void>;
+  isSubmitting?: boolean;
+  isDeleteAction?: boolean;
+}
+
 const ConfirmActionModal = ({
   isOpen,
   title,
@@ -11,7 +22,7 @@ const ConfirmActionModal = ({
   onConfirm,
   isSubmitting,
   isDeleteAction,
-}: LegacyValue) => {
+}: ConfirmActionModalProps) => {
   useBodyScrollLock(isOpen);
 
   if (!isOpen) {

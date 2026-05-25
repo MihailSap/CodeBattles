@@ -1,42 +1,42 @@
-import { MOCK_ASSIGNED_REVIEWS } from '@/entities/project';
-import { REVIEW_SORT, REVIEWS_NETWORK_DELAY_MS, REVIEWS_PAGE_SIZE_DEFAULT } from '../model';
+import { apiRequest } from '@/shared/api';
+import { REVIEW_SORT, type ReviewSort, type ReviewStatus } from '../model';
 import type { AssignedReview } from '../model/types';
-import type { PaginationParams, PaginatedResponse } from '@/shared/api';
 
-const withDelay = (value: LegacyValue, ms: LegacyValue = REVIEWS_NETWORK_DELAY_MS) =>
-  new Promise((resolve: LegacyValue) => {
-    setTimeout(() => resolve(value), ms);
-  });
-
-const clone = (value: LegacyValue) => JSON.parse(JSON.stringify(value));
-
-const paginate = <T>(
-  items: T[],
-  page: number = 1,
-  pageSize: number = REVIEWS_PAGE_SIZE_DEFAULT
-): PaginatedResponse<T> => {
-  const normalizedPage = Math.max(1, Number(page) || 1);
-  const normalizedPageSize = Math.max(1, Number(pageSize) || REVIEWS_PAGE_SIZE_DEFAULT);
-  const start = (normalizedPage - 1) * normalizedPageSize;
-  const end = start + normalizedPageSize;
-  const totalItems = items.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / normalizedPageSize));
-
-  return {
-    items: items.slice(start, end),
-    content: items.slice(start, end),
-    page: normalizedPage,
-    pageSize: normalizedPageSize,
-    size: normalizedPageSize,
-    totalItems,
-    total: totalItems,
-    totalPages,
-    hasNext: normalizedPage < totalPages,
-    hasPrevious: normalizedPage > 1,
+interface ReviewListItemDto {
+  id: number;
+  taskId: number;
+  taskName: string;
+  project: {
+    id: number;
+    name: string;
   };
-};
+  organization: {
+    id: number;
+    name: string;
+  } | null;
+  uploadedAt: string;
+  deadline: string;
+  status: ReviewStatus;
+  commentsCount: number;
+  checkedInTime: boolean | null;
+  completedAt: string;
+}
 
-const sortByDeadline = (items: AssignedReview[], sortDirection: string = REVIEW_SORT.NEAREST_FIRST) => {
+const mapRealReview = (review: ReviewListItemDto): AssignedReview => ({
+  id: review.id,
+  taskId: review.taskId,
+  taskName: review.taskName,
+  project: review.project,
+  organization: review.organization,
+  uploadedAt: review.uploadedAt,
+  responseDeadline: review.deadline,
+  status: review.status,
+  commentsCount: review.commentsCount,
+  checkedByReviewer: review.checkedInTime === true,
+  reviewedAt: review.completedAt || null,
+});
+
+const sortByDeadline = (items: AssignedReview[], sortDirection: ReviewSort = REVIEW_SORT.NEAREST_FIRST) => {
   const direction = sortDirection === REVIEW_SORT.FARTHEST_FIRST ? -1 : 1;
 
   return [...items].sort((left, right) => {
@@ -44,30 +44,25 @@ const sortByDeadline = (items: AssignedReview[], sortDirection: string = REVIEW_
   });
 };
 
-export interface GetAssignedReviewsParams extends PaginationParams {
-  status?: string;
-  sort?: string;
+export interface GetAssignedReviewsParams {
+  status?: ReviewStatus | '';
+  sort?: ReviewSort;
 }
 
 export const reviewsApi = {
   async getAssignedReviews(
-    viewerId: number | string,
+    _viewerId: number | string,
     params: GetAssignedReviewsParams = {}
-  ): Promise<PaginatedResponse<AssignedReview>> {
-    const { page = 1, pageSize = REVIEWS_PAGE_SIZE_DEFAULT, status = '', sort = REVIEW_SORT.NEAREST_FIRST } = params;
+  ): Promise<AssignedReview[]> {
+    const { status = '', sort = REVIEW_SORT.NEAREST_FIRST } = params;
 
-    const filtered = (MOCK_ASSIGNED_REVIEWS as AssignedReview[])
-      .filter((review) => Number(review.reviewerId) === Number(viewerId))
-      .filter((review) => {
-        if (!status) {
-          return true;
-        }
+    const response = await apiRequest<ReviewListItemDto[]>({
+      method: 'GET',
+      url: '/api/v1/reviews',
+    });
 
-        return review.status === status;
-      });
+    const filtered = response.map(mapRealReview).filter((review) => !status || review.status === status);
 
-    const sorted = sortByDeadline(filtered, sort);
-
-    return withDelay(clone(paginate(sorted, page, pageSize))) as Promise<PaginatedResponse<AssignedReview>>;
+    return sortByDeadline(filtered, sort);
   },
 };

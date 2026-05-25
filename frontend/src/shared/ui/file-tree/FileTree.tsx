@@ -1,9 +1,32 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState, type MouseEvent } from 'react';
 import { UnwrapIcon, FileIcon } from '@/shared/ui/icons';
 import fileTreeStyles from './FileTree.module.scss';
 
-const sortTreeNodes = (nodes: LegacyValue) =>
-  [...nodes].sort((a: LegacyValue, b: LegacyValue) => {
+export interface FileTreeItem {
+  path: string;
+  name: string;
+  isDirectory: boolean;
+  isDiff?: boolean;
+  children?: FileTreeItem[];
+}
+
+interface FileTreeNodeProps {
+  node: FileTreeItem;
+  level: number;
+  selectedPath: string;
+  onSelectFile: (node: FileTreeItem) => void;
+  commentedFilesSet: ReadonlySet<string>;
+}
+
+interface FileTreeProps {
+  files: FileTreeItem[];
+  selectedFile?: FileTreeItem | null;
+  onSelectFile: (node: FileTreeItem) => void;
+  commentedFiles?: string[];
+}
+
+const sortTreeNodes = (nodes: readonly FileTreeItem[]): FileTreeItem[] =>
+  [...nodes].sort((a, b) => {
     if (a.isDirectory === b.isDirectory) {
       return a.name.localeCompare(b.name);
     }
@@ -11,17 +34,17 @@ const sortTreeNodes = (nodes: LegacyValue) =>
     return a.isDirectory ? -1 : 1;
   });
 
-const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedFilesSet }: LegacyValue) => {
+const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedFilesSet }: FileTreeNodeProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const sortedChildren = useMemo(() => (node.children ? sortTreeNodes(node.children) : []), [node.children]);
 
-  const handleToggle = useCallback((e: LegacyValue) => {
+  const handleToggle = useCallback((e: MouseEvent<HTMLElement>) => {
     e.stopPropagation();
-    setIsExpanded((prev: LegacyValue) => !prev);
+    setIsExpanded((prev) => !prev);
   }, []);
 
   const handleSelect = useCallback(
-    (e: LegacyValue) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
 
       if (!node.isDirectory) {
@@ -68,7 +91,7 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
 
       {node.isDirectory && isExpanded && sortedChildren.length > 0 && (
         <div className={fileTreeStyles.children}>
-          {sortedChildren.map((child: LegacyValue) => (
+          {sortedChildren.map((child) => (
             <FileTreeNode
               key={child.path}
               node={child}
@@ -86,14 +109,14 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
 
 FileTreeNode.displayName = 'FileTreeNode';
 
-const FileTree = ({ files, selectedFile, onSelectFile, commentedFiles = [] }: LegacyValue) => {
+const FileTree = ({ files, selectedFile, onSelectFile, commentedFiles = [] }: FileTreeProps) => {
   const sortedFiles = useMemo(() => sortTreeNodes(files), [files]);
   const selectedPath = selectedFile?.path || '';
   const commentedFilesSet = useMemo(() => new Set(commentedFiles), [commentedFiles]);
 
   return (
     <div className={fileTreeStyles.root}>
-      {sortedFiles.map((node: LegacyValue) => (
+      {sortedFiles.map((node) => (
         <FileTreeNode
           key={node.path}
           node={node}

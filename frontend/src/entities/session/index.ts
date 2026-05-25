@@ -2,10 +2,18 @@ export { authApi } from './api/auth-api';
 export { useAuth } from './lib/use-auth';
 export {
   loginFormSchema,
+  authLoginPageFormSchema,
+  authRegisterPageFormSchema,
   profilePasswordFormSchema,
   recoveryFormSchema,
   registerFormSchema,
   resetPasswordFormSchema,
+} from './lib/validation';
+export type {
+  AuthPageFormValues,
+  ProfilePasswordFormValues,
+  RecoveryFormValues,
+  ResetPasswordFormValues,
 } from './lib/validation';
 export {
   clearAuthMessages,

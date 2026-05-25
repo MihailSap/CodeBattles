@@ -20,6 +20,10 @@ export const loginFormSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Введите пароль'),
 });
+export const authLoginPageFormSchema = loginFormSchema.extend({
+  login: z.string(),
+  confirmPassword: z.string(),
+});
 export const registerFormSchema = z
   .object({
     login: loginSchema,
@@ -27,10 +31,11 @@ export const registerFormSchema = z
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Повторите пароль'),
   })
-  .refine((values: LegacyValue) => values.password === values.confirmPassword, {
+  .refine((values) => values.password === values.confirmPassword, {
     message: 'Пароли не совпадают',
     path: ['confirmPassword'],
   });
+export const authRegisterPageFormSchema = registerFormSchema;
 export const recoveryFormSchema = z.object({
   email: emailSchema,
 });
@@ -40,7 +45,7 @@ const passwordPairSchema = z
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Повторите пароль'),
   })
-  .refine((values: LegacyValue) => values.password === values.confirmPassword, {
+  .refine((values) => values.password === values.confirmPassword, {
     message: 'Пароли не совпадают',
     path: ['confirmPassword'],
   });
@@ -52,7 +57,12 @@ export const profilePasswordFormSchema = z
     password: passwordSchema,
     confirmPassword: z.string().min(1, 'Повторите пароль'),
   })
-  .refine((values: LegacyValue) => values.password === values.confirmPassword, {
+  .refine((values) => values.password === values.confirmPassword, {
     message: 'Пароли не совпадают',
     path: ['confirmPassword'],
   });
+
+export type ProfilePasswordFormValues = z.infer<typeof profilePasswordFormSchema>;
+export type AuthPageFormValues = z.infer<typeof authLoginPageFormSchema>;
+export type RecoveryFormValues = z.infer<typeof recoveryFormSchema>;
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordFormSchema>;

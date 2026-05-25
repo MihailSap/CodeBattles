@@ -1,5 +1,16 @@
 import { baseApi, toQueryResult } from '@/shared/api';
+
 import { adminApi } from './admin-api';
+import type {
+  AdminCommentComplaint,
+  AdminEvent,
+  AdminEventsFilter,
+  AdminSystemSettings,
+  ResolveAdminComplaintRequest,
+  ResolveAdminComplaintResponse,
+  UpdateAdminAiSystemPromptRequest,
+  UpdateAdminReviewDeadlineRequest,
+} from '../model/types';
 
 const adminComplaintsListTag = {
   type: 'AdminComplaint' as const,
@@ -18,29 +29,31 @@ const adminSettingsTag = {
 
 export const adminApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getAdminComplaints: build.query({
-      queryFn: (params: LegacyValue = {}) => toQueryResult(() => adminApi.getComplaints(params)),
+    getAdminComplaints: build.query<AdminCommentComplaint[], void>({
+      queryFn: () => toQueryResult(() => adminApi.getComplaints()),
       providesTags: [adminComplaintsListTag],
     }),
-    resolveAdminComplaint: build.mutation({
-      queryFn: ({ complaintId, payload }: LegacyValue) =>
-        toQueryResult(() => adminApi.resolveComplaint(complaintId, payload)),
-      invalidatesTags: [adminComplaintsListTag, adminEventsListTag],
+    resolveAdminComplaint: build.mutation<
+      ResolveAdminComplaintResponse,
+      { complaintId: number; payload: ResolveAdminComplaintRequest }
+    >({
+      queryFn: ({ complaintId, payload }) => toQueryResult(() => adminApi.resolveComplaint(complaintId, payload)),
+      invalidatesTags: [adminComplaintsListTag],
     }),
-    getAdminSystemSettings: build.query({
+    getAdminSystemSettings: build.query<AdminSystemSettings, void>({
       queryFn: () => toQueryResult(() => adminApi.getSystemSettings()),
       providesTags: [adminSettingsTag],
     }),
-    updateAdminReviewDeadlineDays: build.mutation({
-      queryFn: (payload: LegacyValue) => toQueryResult(() => adminApi.updateReviewDeadlineDays(payload)),
-      invalidatesTags: [adminSettingsTag, adminEventsListTag],
+    updateAdminReviewDeadlineDays: build.mutation<AdminSystemSettings, UpdateAdminReviewDeadlineRequest>({
+      queryFn: (payload) => toQueryResult(() => adminApi.updateReviewDeadlineDays(payload)),
+      invalidatesTags: [adminSettingsTag],
     }),
-    updateAdminAiSystemPrompt: build.mutation({
-      queryFn: (payload: LegacyValue) => toQueryResult(() => adminApi.updateAiSystemPrompt(payload)),
-      invalidatesTags: [adminSettingsTag, adminEventsListTag],
+    updateAdminAiSystemPrompt: build.mutation<AdminSystemSettings, UpdateAdminAiSystemPromptRequest>({
+      queryFn: (payload) => toQueryResult(() => adminApi.updateAiSystemPrompt(payload)),
+      invalidatesTags: [adminSettingsTag],
     }),
-    getAdminEvents: build.query({
-      queryFn: (params: LegacyValue = {}) => toQueryResult(() => adminApi.getEvents(params)),
+    getAdminEvents: build.query<AdminEvent[], AdminEventsFilter | undefined>({
+      queryFn: (params = {}) => toQueryResult(() => adminApi.getEvents(params)),
       providesTags: [adminEventsListTag],
     }),
   }),

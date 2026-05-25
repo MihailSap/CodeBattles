@@ -1,13 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import {
-  useDeleteTaskMutation,
-  useGetProjectByIdQuery,
-  useGetTaskByIdQuery,
-  useUpdateTaskMutation,
-} from '@/entities/project';
+import { useDeleteTaskMutation, useGetTaskByIdQuery, useUpdateTaskMutation, type Task } from '@/entities/task';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import { AvatarIcon, CheckIcon, CrossIcon } from '@/shared/ui/icons';
@@ -22,14 +17,18 @@ import {
   TASK_STATUS,
   TASK_STATUS_LABELS,
   taskSettingsFormSchema,
+  type EntityId,
+  type TaskSettingsFormInput,
+  type TaskSettingsFormValues,
 } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { lazyNamed } from '@/shared/lib';
 import { formatDeadline, getDeadlineToneClass } from '@/entities/project';
-import taskPageStyles from './TaskPage.module.scss';
-import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
+import {
+  detailLayoutStyles as projectPageStyles,
+  taskDetailLayoutStyles as taskPageStyles,
+} from '@/widgets/detail-layout';
 type AccessErrorShape = {
   status?: number;
   code?: string;
@@ -39,16 +38,24 @@ type AccessErrorShape = {
 
 const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
 
-const AssigneesSelector = lazyNamed(() => import('@/features/manage-task'), 'AssigneesSelector');
-const SolutionTab = lazyNamed(() => import('@/widgets/solution-workspace'), 'SolutionTab');
-const DateTimePicker = lazyNamed(() => import('@/shared/ui/date-time-picker'), 'default');
+const AssigneesSelector = lazy(() =>
+  import('@/features/manage-task').then(({ AssigneesSelector }) => ({ default: AssigneesSelector }))
+);
+
+const SolutionTab = lazy(() =>
+  import('@/widgets/solution-workspace').then(({ SolutionTab }) => ({ default: SolutionTab }))
+);
+
+const DateTimePicker = lazy(() => import('@/shared/ui/date-time-picker'));
 
 const tabs = {
   solution: 'Решение',
   settings: 'Настройки',
-};
+} as const;
 
-const isPastDateTime = (value: LegacyValue) => {
+type TaskTab = keyof typeof tabs;
+
+const isPastDateTime = (value: string): boolean => {
   if (!value) {
     return false;
   }
@@ -63,17 +70,29 @@ const isPastDateTime = (value: LegacyValue) => {
 };
 
 const DEADLINE_TONE_CLASS = {
+  '': '',
   success: projectPageStyles.isSuccess,
   warning: projectPageStyles.isWarning,
   error: projectPageStyles.isError,
 };
+
+const getTaskSettingsDefaults = (task?: Task): TaskSettingsFormInput => ({
+  name: task?.name ?? '',
+  description: task?.description ?? '',
+  requirements: task?.requirements ?? '',
+  evaluationCriteria: task?.evaluationCriteria ?? '',
+  deadline: task?.deadline ?? '',
+  reviewType: task?.reviewType ?? TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
+  reviewerIds: task?.reviewerIds ?? [],
+  assigneeIds: task?.assigneeIds ?? [],
+});
 
 const TaskPage = () => {
   const { userId, user } = useAuth();
   const { projectId, taskId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('solution');
+  const [activeTab, setActiveTab] = useState<TaskTab>('solution');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFullRequirements, setShowFullRequirements] = useState(false);
   const [showFullCriteria, setShowFullCriteria] = useState(false);
@@ -91,24 +110,38 @@ const TaskPage = () => {
       isValid: isSettingsValid,
       touchedFields: settingsTouchedFields,
     },
-  } = useForm({
+  } = useForm<TaskSettingsFormInput, unknown, TaskSettingsFormValues>({
     resolver: zodResolver(taskSettingsFormSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      requirements: '',
-      evaluationCriteria: '',
-      deadline: '',
-      reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
-      reviewerIds: [],
-      assigneeIds: [],
-    },
+    defaultValues: getTaskSettingsDefaults(),
     mode: 'onChange',
   });
 
-  const settingsDraft = useWatch({
+  const watchedSettings = useWatch({
     control: settingsControl,
   });
+
+  const settingsDraft = useMemo<TaskSettingsFormValues>(
+    () => ({
+      name: watchedSettings.name ?? '',
+      description: watchedSettings.description ?? '',
+      requirements: watchedSettings.requirements ?? '',
+      evaluationCriteria: watchedSettings.evaluationCriteria ?? '',
+      deadline: watchedSettings.deadline ?? '',
+      reviewType: watchedSettings.reviewType ?? TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
+      reviewerIds: watchedSettings.reviewerIds ?? [],
+      assigneeIds: watchedSettings.assigneeIds ?? [],
+    }),
+    [
+      watchedSettings.assigneeIds,
+      watchedSettings.deadline,
+      watchedSettings.description,
+      watchedSettings.evaluationCriteria,
+      watchedSettings.name,
+      watchedSettings.requirements,
+      watchedSettings.reviewerIds,
+      watchedSettings.reviewType,
+    ]
+  );
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -119,47 +152,32 @@ const TaskPage = () => {
     refetch: refetchTask,
   } = useGetTaskByIdQuery(
     {
-      projectId,
-      taskId,
+      projectId: projectId ?? '',
+      taskId: taskId ?? '',
     },
     {
+      skip: !projectId || !taskId,
       refetchOnMountOrArgChange: 30,
     }
   );
 
-  const { data: project = null, isLoading: isProjectLoading } = useGetProjectByIdQuery(projectId, {
-    refetchOnMountOrArgChange: 30,
-  });
-
   const [updateTask, { isLoading: isSettingsSubmitting }] = useUpdateTaskMutation();
   const [deleteTask, { isLoading: isDeleteSubmitting }] = useDeleteTaskMutation();
-  const isLoading = isTaskLoading || isProjectLoading;
+  const isLoading = isTaskLoading;
   const isAdmin = user?.role === 'ADMIN';
-  const isOwner = (project?.viewerRole || task?.viewerRole) === PROJECT_MEMBER_ROLE.OWNER;
+  const isOwner = task?.viewerRole === PROJECT_MEMBER_ROLE.OWNER;
   const isTaskAssignee = task?.assigneeIds?.includes(Number(userId));
   const isTaskReviewer = task?.reviewerIds?.includes(Number(userId));
   const isAdminReadOnlyView = isAdmin && !isOwner && !isTaskAssignee && !isTaskReviewer;
   const canManageTask = isOwner && !isAdminReadOnlyView;
   const canViewSettings = isOwner || isAdminReadOnlyView;
-  const shouldShowSolutionTab = task?.isMock !== false;
 
   useEffect(() => {
     if (!task) {
       return;
     }
 
-    queueMicrotask(() =>
-      resetSettings({
-        name: task.name,
-        description: task.description,
-        requirements: task.requirements,
-        evaluationCriteria: task.evaluationCriteria,
-        deadline: task.deadline,
-        reviewType: task.reviewType,
-        reviewerIds: task.reviewerIds,
-        assigneeIds: task.assigneeIds,
-      })
-    );
+    queueMicrotask(() => resetSettings(getTaskSettingsDefaults(task)));
   }, [resetSettings, task]);
 
   useEffect(() => {
@@ -215,7 +233,7 @@ const TaskPage = () => {
   }, [location.pathname, location.state, navigate, showSnackbar]);
 
   const availableTabs = useMemo(() => {
-    const baseTabs = [
+    const baseTabs: { key: TaskTab; label: string }[] = [
       {
         key: 'solution',
         label: tabs.solution,
@@ -233,23 +251,25 @@ const TaskPage = () => {
   }, [canViewSettings]);
 
   useEffect(() => {
-    if (availableTabs.length > 0 && !availableTabs.some((tab: LegacyValue) => tab.key === activeTab)) {
-      queueMicrotask(() => setActiveTab(availableTabs[0].key));
+    const firstAvailableTab = availableTabs[0];
+
+    if (firstAvailableTab && !availableTabs.some((tab) => tab.key === activeTab)) {
+      queueMicrotask(() => setActiveTab(firstAvailableTab.key));
     }
   }, [activeTab, availableTabs]);
 
-  const getSettingsError = (fieldName: LegacyValue) => {
-    if (!((settingsTouchedFields as LegacyValue)[fieldName] || isSettingsSubmitted)) {
+  const getSettingsError = (fieldName: keyof TaskSettingsFormInput): string => {
+    if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
       return '';
     }
 
-    return String((settingsErrors as LegacyValue)[fieldName]?.message || '');
+    return String(settingsErrors[fieldName]?.message ?? '');
   };
 
   const nameError = getSettingsError('name');
 
   const deadlineError = useMemo(() => {
-    if (!settingsDraft?.deadline) {
+    if (!settingsDraft.deadline) {
       return 'Выберите дедлайн';
     }
 
@@ -258,10 +278,10 @@ const TaskPage = () => {
     }
 
     return '';
-  }, [settingsDraft]);
+  }, [settingsDraft.deadline]);
 
   const hasSettingsChanges = useMemo(() => {
-    if (!task || !settingsDraft) {
+    if (!task) {
       return false;
     }
 
@@ -279,12 +299,12 @@ const TaskPage = () => {
 
   const canEditAllFields = task?.status === TASK_STATUS.IN_PROGRESS;
   const canEditRequirementsOnly = task?.status === TASK_STATUS.REWORK;
-  const isManualReviewers = settingsDraft?.reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
-  const draftAssigneeIds = useMemo(() => settingsDraft?.assigneeIds || [], [settingsDraft?.assigneeIds]);
-  const draftReviewerIds = useMemo(() => settingsDraft?.reviewerIds || [], [settingsDraft?.reviewerIds]);
+  const isManualReviewers = settingsDraft.reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+  const draftAssigneeIds = settingsDraft.assigneeIds;
+  const draftReviewerIds = settingsDraft.reviewerIds;
 
   const canSave = useMemo(() => {
-    if (!task || !settingsDraft || !hasSettingsChanges || !canManageTask) {
+    if (!task || !hasSettingsChanges || !canManageTask) {
       return false;
     }
 
@@ -313,39 +333,32 @@ const TaskPage = () => {
     isManualReviewers,
     isSettingsValid,
     nameError,
-    settingsDraft,
     task,
   ]);
 
   const availableAssignees = useMemo(() => {
-    if (!task || !settingsDraft) {
+    if (!task) {
       return [];
     }
 
-    return task.availableAssignees.filter((participant: LegacyValue) => !draftReviewerIds.includes(participant.id));
-  }, [draftReviewerIds, settingsDraft, task]);
+    return (task.availableAssignees ?? []).filter((participant) => !draftReviewerIds.includes(participant.id));
+  }, [draftReviewerIds, task]);
 
   const availableReviewers = useMemo(() => {
-    if (!task || !settingsDraft) {
+    if (!task) {
       return [];
     }
 
-    return task.availableReviewers.filter((participant: LegacyValue) => !draftAssigneeIds.includes(participant.id));
-  }, [draftAssigneeIds, settingsDraft, task]);
+    return (task.availableReviewers ?? []).filter((participant) => !draftAssigneeIds.includes(participant.id));
+  }, [draftAssigneeIds, task]);
 
   const reviewTypes = useMemo(() => {
     const types = Object.values(TASK_REVIEW_TYPE);
 
-    return (project?.aiReviewEnabled ?? task?.aiReviewEnabled)
-      ? types
-      : types.filter((type: LegacyValue) => type !== TASK_REVIEW_TYPE.AI_ONLY);
-  }, [project?.aiReviewEnabled, task?.aiReviewEnabled]);
+    return task?.aiReviewEnabled ? types : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
+  }, [task?.aiReviewEnabled]);
 
   useEffect(() => {
-    if (!settingsDraft) {
-      return;
-    }
-
     if (!isManualReviewers && draftReviewerIds.length > 0) {
       queueMicrotask(() =>
         setSettingsValue('reviewerIds', [], {
@@ -361,8 +374,9 @@ const TaskPage = () => {
       return;
     }
 
-    const availableReviewerIds = new Set(availableReviewers.map((participant: LegacyValue) => participant.id));
-    const nextReviewerIds = draftReviewerIds.filter((id: LegacyValue) => availableReviewerIds.has(id));
+    const availableReviewerIds = new Set<EntityId>(availableReviewers.map((participant) => participant.id));
+
+    const nextReviewerIds = draftReviewerIds.filter((id) => availableReviewerIds.has(id));
 
     if (nextReviewerIds.length !== draftReviewerIds.length) {
       queueMicrotask(() =>
@@ -372,31 +386,22 @@ const TaskPage = () => {
         })
       );
     }
-  }, [availableReviewers, draftReviewerIds, isManualReviewers, setSettingsValue, settingsDraft]);
+  }, [availableReviewers, draftReviewerIds, isManualReviewers, setSettingsValue]);
 
   const handleCancel = () => {
     if (!task) {
       return;
     }
 
-    resetSettings({
-      name: task.name,
-      description: task.description,
-      requirements: task.requirements,
-      evaluationCriteria: task.evaluationCriteria,
-      deadline: task.deadline,
-      reviewType: task.reviewType,
-      reviewerIds: task.reviewerIds,
-      assigneeIds: task.assigneeIds,
-    });
+    resetSettings(getTaskSettingsDefaults(task));
   };
 
-  const saveSettings = async (settingsDraft: LegacyValue) => {
-    if (!task || !settingsDraft || !canSave) {
+  const saveSettings = async (form: TaskSettingsFormValues) => {
+    if (!task || !canSave) {
       return;
     }
 
-    if (isManualReviewers && settingsDraft.reviewerIds.length === 0) {
+    if (isManualReviewers && form.reviewerIds.length === 0) {
       showSnackbar('Выберите хотя бы одного ревьюера', 'error');
 
       return;
@@ -408,10 +413,10 @@ const TaskPage = () => {
           taskId: task.id,
           projectId: task.projectId,
           payload: {
-            requirements: settingsDraft.requirements,
-            evaluationCriteria: settingsDraft.evaluationCriteria,
-            reviewType: settingsDraft.reviewType,
-            reviewerIds: settingsDraft.reviewerIds,
+            requirements: form.requirements,
+            evaluationCriteria: form.evaluationCriteria,
+            reviewType: form.reviewType,
+            reviewerIds: form.reviewerIds,
           },
         }).unwrap();
       } else {
@@ -419,30 +424,21 @@ const TaskPage = () => {
           taskId: task.id,
           projectId: task.projectId,
           payload: {
-            name: settingsDraft.name.trim(),
-            description: settingsDraft.description.trim(),
-            requirements: settingsDraft.requirements.trim(),
-            evaluationCriteria: settingsDraft.evaluationCriteria.trim(),
-            deadline: settingsDraft.deadline,
-            reviewType: settingsDraft.reviewType,
-            reviewerIds: settingsDraft.reviewerIds,
-            assigneeIds: settingsDraft.assigneeIds,
+            name: form.name.trim(),
+            description: form.description.trim(),
+            requirements: form.requirements.trim(),
+            evaluationCriteria: form.evaluationCriteria.trim(),
+            deadline: form.deadline,
+            reviewType: form.reviewType,
+            reviewerIds: form.reviewerIds,
+            assigneeIds: form.assigneeIds,
           },
         }).unwrap();
       }
 
       const updatedTask = await refetchTask().unwrap();
 
-      resetSettings({
-        name: updatedTask.name,
-        description: updatedTask.description,
-        requirements: updatedTask.requirements,
-        evaluationCriteria: updatedTask.evaluationCriteria,
-        deadline: updatedTask.deadline,
-        reviewType: updatedTask.reviewType,
-        reviewerIds: updatedTask.reviewerIds,
-        assigneeIds: updatedTask.assigneeIds,
-      });
+      resetSettings(getTaskSettingsDefaults(updatedTask));
 
       showSnackbar('Изменения сохранены', 'success');
     } catch {
@@ -463,7 +459,7 @@ const TaskPage = () => {
         projectId: task.projectId,
       }).unwrap();
 
-      navigate(ROUTES.projectById.replace(':projectId', task.projectId), {
+      navigate(ROUTES.projectById.replace(':projectId', String(task.projectId)), {
         replace: true,
         state: {
           snackbarMessage: 'Задача удалена',
@@ -487,7 +483,7 @@ const TaskPage = () => {
     );
   }
 
-  if (!task || !settingsDraft) {
+  if (!task) {
     return null;
   }
 
@@ -529,7 +525,7 @@ const TaskPage = () => {
                 <button
                   className={projectPageStyles.descriptionToggle}
                   type="button"
-                  onClick={() => setShowFullDescription((prev: LegacyValue) => !prev)}
+                  onClick={() => setShowFullDescription((prev) => !prev)}
                 >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
@@ -545,7 +541,7 @@ const TaskPage = () => {
                 <button
                   className={projectPageStyles.descriptionToggle}
                   type="button"
-                  onClick={() => setShowFullRequirements((prev: LegacyValue) => !prev)}
+                  onClick={() => setShowFullRequirements((prev) => !prev)}
                 >
                   {showFullRequirements ? 'Свернуть' : 'Развернуть'}
                 </button>
@@ -561,7 +557,7 @@ const TaskPage = () => {
                 <button
                   className={projectPageStyles.descriptionToggle}
                   type="button"
-                  onClick={() => setShowFullCriteria((prev: LegacyValue) => !prev)}
+                  onClick={() => setShowFullCriteria((prev) => !prev)}
                 >
                   {showFullCriteria ? 'Свернуть' : 'Развернуть'}
                 </button>
@@ -574,7 +570,7 @@ const TaskPage = () => {
             <span
               className={[
                 projectPageStyles.deadline,
-                (DEADLINE_TONE_CLASS as LegacyValue)[getDeadlineToneClass(task.deadline, task.status)],
+                DEADLINE_TONE_CLASS[getDeadlineToneClass(task.deadline, task.status)],
               ]
                 .filter(Boolean)
                 .join(' ')}
@@ -586,7 +582,7 @@ const TaskPage = () => {
           <div className={[taskPageStyles.assigneesWrap, taskPageStyles.offsetSection].join(' ')}>
             <h3 className={projectPageStyles.descriptionLabel}>Исполнители:</h3>
             <div className={taskPageStyles.assigneesList}>
-              {task.assignees.map((assignee: LegacyValue) => (
+              {(task.assignees ?? []).map((assignee) => (
                 <div key={assignee.id} className={taskPageStyles.assigneeItem}>
                   <span className={taskPageStyles.assigneeAvatar}>
                     {assignee.avatar ? <img src={assignee.avatar} alt={assignee.fullName} /> : <AvatarIcon />}
@@ -601,9 +597,19 @@ const TaskPage = () => {
           </div>
         </section>
 
-        {availableTabs.length > 0 && <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />}
+        {availableTabs.length > 0 && (
+          <EntityTabs
+            tabs={availableTabs}
+            activeKey={activeTab}
+            onChange={(nextTab) => {
+              if (nextTab === 'solution' || nextTab === 'settings') {
+                setActiveTab(nextTab);
+              }
+            }}
+          />
+        )}
 
-        {activeTab === 'solution' && shouldShowSolutionTab && (
+        {activeTab === 'solution' && (
           <Suspense
             fallback={
               <div className={projectPageStyles.loader}>
@@ -613,13 +619,12 @@ const TaskPage = () => {
           >
             <SolutionTab
               task={task}
-              currentUser={{
-                id: Number(userId),
-                fullName: 'Мой Пользователь',
-              }}
-              aiReviewEnabled={project?.aiReviewEnabled ?? task.aiReviewEnabled}
+              currentUser={user ?? { id: Number(userId ?? 0), login: '' }}
+              aiReviewEnabled={Boolean(task.aiReviewEnabled)}
               onSnackbar={showSnackbar}
-              projectId={projectId}
+              onTaskUpdated={async () => {
+                await refetchTask().unwrap();
+              }}
               readOnly={isAdminReadOnlyView}
             />
           </Suspense>
@@ -705,7 +710,7 @@ const TaskPage = () => {
                     <Controller
                       control={settingsControl}
                       name="deadline"
-                      render={({ field }: LegacyValue) => (
+                      render={({ field }) => (
                         <DateTimePicker
                           value={field.value}
                           onChange={field.onChange}
@@ -727,7 +732,7 @@ const TaskPage = () => {
               <div className={projectPageStyles.settingsField}>
                 <h3 className={taskPageStyles.reviewTitle}>Тип ревью</h3>
                 <div className={taskPageStyles.reviewList}>
-                  {reviewTypes.map((type: LegacyValue) => (
+                  {reviewTypes.map((type) => (
                     <label key={type} className={taskPageStyles.reviewItem}>
                       <input
                         type="radio"
@@ -747,11 +752,11 @@ const TaskPage = () => {
                     <Controller
                       control={settingsControl}
                       name="reviewerIds"
-                      render={({ field }: LegacyValue) => (
+                      render={({ field }) => (
                         <AssigneesSelector
                           title="Ревьюеры"
                           users={availableReviewers}
-                          selectedUserIds={field.value}
+                          selectedUserIds={field.value ?? []}
                           onChange={field.onChange}
                           disabled={!canManageTask || isSettingsSubmitting}
                         />
@@ -767,7 +772,7 @@ const TaskPage = () => {
                     <Controller
                       control={settingsControl}
                       name="assigneeIds"
-                      render={({ field }: LegacyValue) => (
+                      render={({ field }) => (
                         <AssigneesSelector
                           users={availableAssignees}
                           selectedUserIds={field.value}

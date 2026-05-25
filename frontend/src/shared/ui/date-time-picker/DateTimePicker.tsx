@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode, type FocusEventHandler } from 'react';
 import { createPortal } from 'react-dom';
 import DatePicker from 'react-datepicker';
 import { registerLocale } from 'react-datepicker';
@@ -8,7 +8,21 @@ import dateTimePickerStyles from './DateTimePicker.module.scss';
 
 registerLocale('ru', ru);
 
-const DatePickerPopperContainer = ({ children }: LegacyValue) => {
+interface DatePickerPopperContainerProps {
+  children?: ReactNode;
+}
+
+interface DateTimePickerProps {
+  value?: string;
+  onChange: (value: string) => void;
+  minDateTime?: Date;
+  placeholder?: string;
+  hasError?: boolean;
+  onBlur?: FocusEventHandler<HTMLElement>;
+  disabled?: boolean;
+}
+
+const DatePickerPopperContainer = ({ children }: DatePickerPopperContainerProps) => {
   if (typeof document === 'undefined') {
     return children;
   }
@@ -16,7 +30,7 @@ const DatePickerPopperContainer = ({ children }: LegacyValue) => {
   return createPortal(children, document.body);
 };
 
-const isSameDay = (left: LegacyValue, right: LegacyValue) => {
+const isSameDay = (left: Date, right: Date): boolean => {
   return (
     left.getFullYear() === right.getFullYear() &&
     left.getMonth() === right.getMonth() &&
@@ -24,9 +38,9 @@ const isSameDay = (left: LegacyValue, right: LegacyValue) => {
   );
 };
 
-const toDayMinutes = (date: LegacyValue) => date.getHours() * 60 + date.getMinutes();
+const toDayMinutes = (date: Date): number => date.getHours() * 60 + date.getMinutes();
 
-const roundUpToInterval = (date: LegacyValue, intervalMinutes: LegacyValue) => {
+const roundUpToInterval = (date: Date, intervalMinutes: number): Date => {
   const rounded = new Date(date);
   rounded.setSeconds(0, 0);
   const minutes = rounded.getMinutes();
@@ -47,7 +61,7 @@ const DateTimePicker = ({
   hasError = false,
   onBlur,
   disabled = false,
-}: LegacyValue) => {
+}: DateTimePickerProps) => {
   const intervalMinutes = 5;
 
   const selectedDate = useMemo(() => {
@@ -67,7 +81,7 @@ const DateTimePicker = ({
     return roundUpToInterval(min, intervalMinutes);
   }, [minDateTime]);
 
-  const handleChange = (date: LegacyValue) => {
+  const handleChange = (date: Date | null): void => {
     if (!date) {
       onChange('');
 
@@ -83,7 +97,7 @@ const DateTimePicker = ({
     onChange(roundUpToInterval(date, intervalMinutes).toISOString());
   };
 
-  const filterTime = (timeValue: LegacyValue) => {
+  const filterTime = (timeValue: Date): boolean => {
     if (!minDateTime) {
       return true;
     }
@@ -106,7 +120,7 @@ const DateTimePicker = ({
       timeIntervals={intervalMinutes}
       timeCaption="Время"
       dateFormat="dd.MM.yyyy HH:mm"
-      placeholderText={placeholder}
+      {...(placeholder !== undefined ? { placeholderText: placeholder } : {})}
       minDate={effectiveMinDateTime}
       filterTime={filterTime}
       className={[dateTimePickerStyles.input, hasError ? dateTimePickerStyles.isError : ''].filter(Boolean).join(' ')}
@@ -119,7 +133,7 @@ const DateTimePicker = ({
       popperContainer={DatePickerPopperContainer}
       showPopperArrow={false}
       autoComplete="off"
-      onBlur={onBlur}
+      {...(onBlur !== undefined ? { onBlur } : {})}
       disabled={disabled}
     />
   );

@@ -1,14 +1,19 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  useCreateOrganizationMutation,
   useCreateProjectMutation,
   useGetProjectsDashboardQuery,
   useJoinPublicProjectMutation,
-  useLazySearchOrganizationsQuery,
   useLazySearchProjectsForJoinQuery,
-  useRequestOrganizationAccessMutation,
+  type EntityId,
+  type ProjectCreateFormValues,
 } from '@/entities/project';
+import {
+  useCreateOrganizationMutation,
+  useLazySearchOrganizationsQuery,
+  useRequestOrganizationAccessMutation,
+  type OrganizationCreateFormValues,
+} from '@/entities/organization';
 import OrganizationProjectsCard from '@/widgets/organization-projects-card';
 import OrganizationsSidebar from '@/widgets/organizations-sidebar';
 import { ArrowIcon, SearchIcon } from '@/shared/ui/icons';
@@ -19,17 +24,30 @@ import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { lazyNamed } from '@/shared/lib';
 import projectsPageStyles from './ProjectsPage.module.scss';
 
-const JoinSearchModal = lazyNamed(() => import('@/features/join-project'), 'JoinSearchModal');
-const OrganizationCreateModal = lazyNamed(() => import('@/features/create-organization'), 'OrganizationCreateModal');
-const ProjectCreateModal = lazyNamed(() => import('@/features/create-project'), 'ProjectCreateModal');
+const JoinSearchModal = lazy(() =>
+  import('@/features/join-project').then(({ JoinSearchModal }) => ({ default: JoinSearchModal }))
+);
+
+const OrganizationCreateModal = lazy(() =>
+  import('@/features/create-organization').then(({ OrganizationCreateModal }) => ({ default: OrganizationCreateModal }))
+);
+
+const ProjectCreateModal = lazy(() =>
+  import('@/features/create-project').then(({ ProjectCreateModal }) => ({ default: ProjectCreateModal }))
+);
 
 const VIEW_MODE = {
   WITHOUT_ORGANIZATION: 'WITHOUT_ORGANIZATION',
   WITH_ORGANIZATION: 'WITH_ORGANIZATION',
-};
+} as const;
+
+type ViewMode = (typeof VIEW_MODE)[keyof typeof VIEW_MODE];
+
+interface OrganizationCreatePayload extends OrganizationCreateFormValues {
+  logoPreview: string;
+}
 
 const VIEW_MODE_SEARCH_PARAM = {
   [VIEW_MODE.WITH_ORGANIZATION]: 'with-organization',
@@ -53,7 +71,7 @@ const ProjectsPage = () => {
   const debaouncedSearch = useDebouncedValue(search, 300);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
-  const [createProjectOrganizationId, setCreateProjectOrganizationId] = useState<LegacyValue>(null);
+  const [createProjectOrganizationId, setCreateProjectOrganizationId] = useState<EntityId | null>(null);
   const [isOrganizationCreateOpen, setOrganizationCreateOpen] = useState(false);
   const [isProjectsSearchOpen, setProjectsSearchOpen] = useState(false);
   const [isOrganizationsSearchOpen, setOrganizationsSearchOpen] = useState(false);
@@ -61,7 +79,7 @@ const ProjectsPage = () => {
   const [carouselStart, setCarouselStart] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(2);
   const [carouselViewportWidth, setCarouselViewportWidth] = useState(0);
-  const carouselViewportRef = useRef<LegacyValue>(null);
+  const carouselViewportRef = useRef<HTMLDivElement>(null);
 
   const {
     data: dashboard = {
@@ -88,9 +106,9 @@ const ProjectsPage = () => {
   const [searchOrganizations] = useLazySearchOrganizationsQuery();
 
   const handleViewModeChange = useCallback(
-    (nextViewMode: LegacyValue) => {
+    (nextViewMode: ViewMode) => {
       setSearchParams(
-        (currentParams: LegacyValue) => {
+        (currentParams) => {
           const nextParams = new URLSearchParams(currentParams);
           nextParams.set('view', VIEW_MODE_SEARCH_PARAM[nextViewMode]);
 
@@ -189,14 +207,14 @@ const ProjectsPage = () => {
   const shouldShowArrows = organizationsWithProjects.length > cardsPerView;
 
   const openProject = useCallback(
-    (projectId: LegacyValue) => {
+    (projectId: EntityId) => {
       navigate(`${ROUTES.projects}/${projectId}`);
     },
     [navigate]
   );
 
   const handleCreateProject = useCallback(
-    async (payload: LegacyValue) => {
+    async (payload: ProjectCreateFormValues) => {
       try {
         const result = await createProject({
           ...payload,
@@ -209,12 +227,12 @@ const ProjectsPage = () => {
           setProjectCreateOpen(false);
           setCreateProjectOrganizationId(null);
 
-          navigate(ROUTES.projectById.replace(':projectId', projectId), {
+          navigate(ROUTES.projectById.replace(':projectId', String(projectId)), {
             replace: true,
           });
         }
-      } catch (error: LegacyValue) {
-        if (error?.code === 'PROJECT_NAME_CONFLICT') {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.code === 'PROJECT_NAME_CONFLICT') {
           showSnackbar('Проект с таким названием уже существует', 'error');
 
           return;
@@ -227,7 +245,7 @@ const ProjectsPage = () => {
   );
 
   const handleCreateOrganization = useCallback(
-    async (payload: LegacyValue) => {
+    async (payload: OrganizationCreatePayload) => {
       if (!payload.logoPreview) {
         showSnackbar('Прикрепите лого организации', 'error');
 
@@ -241,12 +259,12 @@ const ProjectsPage = () => {
         if (organizationId) {
           setOrganizationCreateOpen(false);
 
-          navigate(ROUTES.organizationById.replace(':organizationId', organizationId), {
+          navigate(ROUTES.organizationById.replace(':organizationId', String(organizationId)), {
             replace: true,
           });
         }
-      } catch (error: LegacyValue) {
-        if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.code === 'ORGANIZATION_NAME_CONFLICT') {
           showSnackbar('Организация с таким названием существует', 'error');
 
           return;
@@ -259,10 +277,10 @@ const ProjectsPage = () => {
   );
 
   const fetchProjectsForJoin = useCallback(
-    async ({ query }: LegacyValue) => {
+    async ({ query }: { query: string }) => {
       return searchProjectsForJoin(
         {
-          viewerId: Number(userId),
+          viewerId: Number(userId ?? 0),
           params: {
             query,
           },
@@ -274,10 +292,10 @@ const ProjectsPage = () => {
   );
 
   const fetchOrganizationsForJoin = useCallback(
-    async ({ query }: LegacyValue) => {
+    async ({ query }: { query: string }) => {
       return searchOrganizations(
         {
-          viewerId: Number(userId),
+          viewerId: Number(userId ?? 0),
           params: {
             query,
           },
@@ -289,7 +307,7 @@ const ProjectsPage = () => {
   );
 
   const handleJoinProject = useCallback(
-    async (projectId: LegacyValue) => {
+    async (projectId: EntityId) => {
       try {
         await joinPublicProject(projectId).unwrap();
         await refetchDashboard();
@@ -302,7 +320,7 @@ const ProjectsPage = () => {
   );
 
   const handleRequestOrganizationAccess = useCallback(
-    async (organizationId: LegacyValue) => {
+    async (organizationId: EntityId) => {
       try {
         await requestOrganizationAccess(organizationId).unwrap();
         showSnackbar('Запрос на вступление отправлен владельцу организации', 'success');
@@ -313,7 +331,7 @@ const ProjectsPage = () => {
     [requestOrganizationAccess, showSnackbar]
   );
 
-  const handleCreateProjectForOrganization = useCallback((organizationId: LegacyValue) => {
+  const handleCreateProjectForOrganization = useCallback((organizationId: EntityId) => {
     setCreateProjectOrganizationId(organizationId);
     setProjectCreateOpen(true);
   }, []);
@@ -386,7 +404,7 @@ const ProjectsPage = () => {
                 type="search"
                 placeholder="Поиск"
                 value={search}
-                onChange={(event: LegacyValue) => setSearch(event.target.value.slice(0, 120))}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value.slice(0, 120))}
               />
             </div>
           </div>
@@ -406,7 +424,7 @@ const ProjectsPage = () => {
                   <p className={projectsPageStyles.isEmpty}>У вас пока нет проектов</p>
                 ) : (
                   <div className={projectsPageStyles.grid}>
-                    {noOrganizationProjects.map((project: LegacyValue) => (
+                    {noOrganizationProjects.map((project) => (
                       <ProjectCard key={project.id} project={project} onOpen={openProject} />
                     ))}
                   </div>
@@ -475,7 +493,7 @@ const ProjectsPage = () => {
                       transform: `translateX(-${trackOffset}px)`,
                     }}
                   >
-                    {organizationsWithProjects.map((organization: LegacyValue) => (
+                    {organizationsWithProjects.map((organization) => (
                       <div className={projectsPageStyles.organizationsSlide} key={organization.id}>
                         <OrganizationProjectsCard
                           organization={organization}
@@ -548,7 +566,11 @@ const ProjectsPage = () => {
         )}
       </Suspense>
 
-      <OrganizationsSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} viewerId={Number(userId)} />
+      <OrganizationsSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        viewerId={Number(userId ?? 0)}
+      />
 
       {isProjectsSearchOpen && (
         <Suspense fallback={null}>

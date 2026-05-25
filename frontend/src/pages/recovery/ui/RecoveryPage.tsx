@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { type ChangeEvent, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAppDispatch } from '@/app/providers/store';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, requestPasswordReset } from '@/entities/session';
-import { recoveryFormSchema } from '@/entities/session';
+import { recoveryFormSchema, type RecoveryFormValues } from '@/entities/session';
 import authPageStyles from '../../auth/ui/AuthPage.module.scss';
 import recoveryPageStyles from './RecoveryPage.module.scss';
 
@@ -26,7 +26,7 @@ const RecoveryPage = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm({
+  } = useForm<RecoveryFormValues>({
     resolver: zodResolver(recoveryFormSchema),
     defaultValues: {
       email: '',
@@ -59,13 +59,13 @@ const RecoveryPage = () => {
   }, [isCompleted, navigate]);
 
   const emailField = register('email', {
-    onChange: (event: LegacyValue) => {
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
       event.target.value = event.target.value.replace(/\s/g, '');
       dispatch(clearAuthMessages());
     },
   });
 
-  const onSubmit = async ({ email }: LegacyValue) => {
+  const onSubmit = async ({ email }: RecoveryFormValues) => {
     const result = await dispatch(requestPasswordReset(email.trim()));
 
     if (requestPasswordReset.fulfilled.match(result)) {

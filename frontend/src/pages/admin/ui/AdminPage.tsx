@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useAppDispatch } from '@/app/providers/store';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ThemeToggle } from '@/shared/ui/theme-toggle';
@@ -26,7 +25,11 @@ const TABS = [
     key: 'events',
     label: 'Журнал событий',
   },
-];
+] as const;
+
+type AdminTabKey = (typeof TABS)[number]['key'];
+
+const isAdminTabKey = (value: string | null): value is AdminTabKey => TABS.some((tab) => tab.key === value);
 
 const AdminPage = () => {
   const dispatch = useAppDispatch();
@@ -34,17 +37,8 @@ const AdminPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, isLoading } = useAuth();
   const requestedTab = searchParams.get('tab');
-  const activeTab = TABS.some((tab: LegacyValue) => tab.key === requestedTab) ? requestedTab : TABS[0].key;
+  const activeTab = isAdminTabKey(requestedTab) ? requestedTab : TABS[0].key;
   const currentUserId = user?.id ?? null;
-
-  const moderator = useMemo(
-    () => ({
-      id: user?.id ?? null,
-      login: user?.login || 'admin',
-      fullName: user?.fullName || user?.name || user?.login || 'Администратор',
-    }),
-    [user?.fullName, user?.id, user?.login, user?.name]
-  );
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
@@ -70,9 +64,9 @@ const AdminPage = () => {
     });
   };
 
-  const handleTabChange = (tabKey: LegacyValue) => {
+  const handleTabChange = (tabKey: AdminTabKey) => {
     setSearchParams(
-      (currentParams: LegacyValue) => {
+      (currentParams) => {
         const nextParams = new URLSearchParams(currentParams);
         nextParams.set('tab', tabKey);
 
@@ -90,7 +84,7 @@ const AdminPage = () => {
         <div className={adminPageStyles.titleBlock}>
           <h1 className={adminPageStyles.title}>Админ-панель</h1>
           <nav className={adminPageStyles.adminTabs} aria-label="Вкладки админ-панели">
-            {TABS.map((tab: LegacyValue) => (
+            {TABS.map((tab) => (
               <button
                 key={tab.key}
                 type="button"
@@ -127,10 +121,8 @@ const AdminPage = () => {
             onSelfDelete={handleSelfDelete}
           />
         )}
-        {activeTab === 'complaints' && (
-          <AdminComplaintsTab isActive={activeTab === 'complaints'} moderator={moderator} />
-        )}
-        {activeTab === 'settings' && <AdminSystemSettingsTab isActive={activeTab === 'settings'} actor={moderator} />}
+        {activeTab === 'complaints' && <AdminComplaintsTab isActive={activeTab === 'complaints'} />}
+        {activeTab === 'settings' && <AdminSystemSettingsTab isActive={activeTab === 'settings'} />}
         {activeTab === 'events' && <AdminEventsLogTab isActive={activeTab === 'events'} />}
       </main>
     </div>

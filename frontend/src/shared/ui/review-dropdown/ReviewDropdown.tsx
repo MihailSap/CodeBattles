@@ -2,7 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { UnwrapIcon, CheckIcon } from '@/shared/ui/icons';
 import reviewDropdownStyles from './ReviewDropdown.module.scss';
 
-const ReviewDropdown = ({
+export interface ReviewDropdownOption<T extends string | number = string> {
+  value: T;
+  label: string;
+}
+
+interface ReviewDropdownProps<T extends string | number = string> {
+  label: string;
+  placeholder?: string;
+  value: T;
+  options: readonly ReviewDropdownOption<T>[];
+  onChange: (value: T) => void;
+  rootClassName?: string;
+  labelClassName?: string;
+  triggerClassName?: string;
+  menuClassName?: string;
+}
+
+const ReviewDropdown = <T extends string | number>({
   label,
   placeholder = '',
   value,
@@ -12,22 +29,22 @@ const ReviewDropdown = ({
   labelClassName = '',
   triggerClassName = '',
   menuClassName = '',
-}: LegacyValue) => {
+}: ReviewDropdownProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
-  const rootRef = useRef<LegacyValue>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       return;
     }
 
-    const handleClickOutside = (event: LegacyValue) => {
-      if (rootRef.current && !rootRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (rootRef.current && event.target instanceof Node && !rootRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -42,7 +59,7 @@ const ReviewDropdown = ({
     };
   }, [isOpen]);
 
-  const selectedOption = options.find((option: LegacyValue) => option.value === value);
+  const selectedOption = options.find((option) => option.value === value);
 
   return (
     <div className={[reviewDropdownStyles.root, rootClassName].filter(Boolean).join(' ')} ref={rootRef}>
@@ -52,7 +69,7 @@ const ReviewDropdown = ({
           .filter(Boolean)
           .join(' ')}
         type="button"
-        onClick={() => setIsOpen((prevState: LegacyValue) => !prevState)}
+        onClick={() => setIsOpen((prevState) => !prevState)}
         aria-expanded={isOpen}
       >
         <span
@@ -71,7 +88,7 @@ const ReviewDropdown = ({
 
       {isOpen && (
         <div className={[reviewDropdownStyles.menu, menuClassName].filter(Boolean).join(' ')} role="listbox">
-          {options.map((option: LegacyValue) => (
+          {options.map((option) => (
             <button
               className={[reviewDropdownStyles.option, option.value === value ? reviewDropdownStyles.isActive : '']
                 .filter(Boolean)

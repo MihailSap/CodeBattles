@@ -1,6 +1,14 @@
-import { formatNotificationTime, getNotificationRoute } from '@/entities/notification';
+import { formatNotificationTime, getNotificationRoute, type AppNotification } from '@/entities/notification';
 import { DeleteIcon } from '@/shared/ui/icons';
 import headerStyles from './Header.module.scss';
+
+interface NotificationsListProps {
+  notifications: readonly AppNotification[];
+  isLoading: boolean;
+  isError: boolean;
+  onNotificationClick: (notification: AppNotification) => void;
+  onDeleteNotification: (notificationId: AppNotification['id']) => void;
+}
 
 const NotificationsList = ({
   notifications,
@@ -8,7 +16,7 @@ const NotificationsList = ({
   isError,
   onNotificationClick,
   onDeleteNotification,
-}: LegacyValue) => {
+}: NotificationsListProps) => {
   if (isLoading) {
     return <p className={headerStyles.notificationsEmpty}>Загружаем уведомления...</p>;
   }
@@ -23,7 +31,7 @@ const NotificationsList = ({
 
   return (
     <div className={headerStyles.notificationsList}>
-      {notifications.map((notification: LegacyValue) => {
+      {notifications.map((notification) => {
         const route = getNotificationRoute(notification);
 
         return (
