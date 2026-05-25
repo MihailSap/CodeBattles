@@ -54,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentReport> getAllActiveReports() {
-        return commentReportRepository.findAllByActiveTrue();
+        return commentReportRepository.findAllByIsActiveTrue();
     }
 
     @Override

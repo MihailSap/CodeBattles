@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface CommentReportRepository extends JpaRepository<CommentReport, Long> {
 
-    List<CommentReport> findAllByActiveTrue();
+    List<CommentReport> findAllByIsActiveTrue();
 }
