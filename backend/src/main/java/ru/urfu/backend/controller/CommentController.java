@@ -136,6 +136,16 @@ public class CommentController {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
         Task task = comment.getReviewIteration().getReview().getTask();
+
+        ReviewIteration commentReviewIteration = comment.getReviewIteration();
+        ReviewIteration lastReviewIteration = comment.getReviewIteration().getReview().getLastIteration();
+        if(!commentReviewIteration.equals(lastReviewIteration)){
+            throw new RuntimeException("Запрещено менять статус треда исторической итерации");
+        }
+        if(TaskStatus.DONE.equals(task.getStatus())){
+            throw new RuntimeException("Запрещено менять статус треда завершенной задачи");
+        }
+
         if(ThreadAction.CLOSE.equals(request.action())){
             if(!taskService.isUserAssigneeInTask(user, task)){
                 throw new RuntimeException("Закрывать тред может только исполнитель задачи");
