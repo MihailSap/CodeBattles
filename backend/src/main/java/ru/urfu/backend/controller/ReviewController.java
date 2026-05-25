@@ -117,7 +117,7 @@ public class ReviewController {
                 hasRework = true;
             }
         }
-        if(!hasUncompletedReview || hasRework){
+        if(!hasUncompletedReview && hasRework){
             taskService.updateStatusRework(task);
         }
 
