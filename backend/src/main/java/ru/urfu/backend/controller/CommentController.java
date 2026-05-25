@@ -86,11 +86,6 @@ public class CommentController {
         Comment rootComment = commentService.getRootComment(comment);
         Task task = comment.getReviewIteration().getReview().getTask();
 
-        ReviewIteration commentReviewIteration = comment.getReviewIteration();
-        ReviewIteration lastReviewIteration = commentReviewIteration.getReview().getLastIteration();
-        if(!commentReviewIteration.equals(lastReviewIteration)){
-            throw new RuntimeException("Нельзя отвечать на комментарии, которые находятся в history");
-        }
         if(rootComment.getClosedAt() != null){
             throw new RuntimeException("Тред закрыт");
         }
@@ -107,10 +102,20 @@ public class CommentController {
 
         CommentAuthorRole commentAuthorRole;
         boolean revealName;
+        Integer reviewerIndex = null;
         if(taskService.isUserReviewerInTask(user, task)){
+            Review reviewerReview = reviewService.getByUserAndTask(user, task);
+            if (TaskStatus.IN_REVIEW.equals(task.getStatus())
+                    && !comment.getReviewIteration().getReview().getId().equals(reviewerReview.getId())) {
+                throw new RuntimeException("Во время проверки ревьюер может обсуждать только своё ревью");
+            }
             commentAuthorRole = CommentAuthorRole.REVIEWER;
-            revealName = reviewService.getByUserAndTask(user, task).getRevealAuthorAfterReview();
+            revealName = reviewerReview.getRevealAuthorAfterReview();
+            reviewerIndex = reviewerReview.getReviewerIndex();
         } else if(taskService.isUserAssigneeInTask(user, task)){
+            if (TaskStatus.IN_REVIEW.equals(task.getStatus())) {
+                throw new RuntimeException("Исполнитель может отвечать после публикации результатов ревью");
+            }
             commentAuthorRole = CommentAuthorRole.ASSIGNEE;
             revealName = task.getSolution().getRevealAuthorAfterReview();
         } else {
@@ -118,7 +123,14 @@ public class CommentController {
                     "Оставлять комментарии могут только исполнители и ревьюеры данной задачи");
         }
 
-        Comment reply = commentService.createReply(request, user, comment, commentAuthorRole, revealName);
+        Comment reply = commentService.createReply(
+                request,
+                user,
+                comment,
+                commentAuthorRole,
+                revealName,
+                reviewerIndex
+        );
         return ResponseEntity.status(201).body(commentMapper.mapToReviewCommentDto(reply));
     }
 
@@ -144,12 +156,6 @@ public class CommentController {
         Comment comment = commentService.getById(commentId);
         Task task = comment.getReviewIteration().getReview().getTask();
 
-        ReviewIteration commentReviewIteration = comment.getReviewIteration();
-        ReviewIteration lastReviewIteration = comment.getReviewIteration().getReview().getLastIteration();
-        if(!commentReviewIteration.equals(lastReviewIteration)){
-            throw new RuntimeException("Запрещено менять статус треда исторической итерации");
-        }
-
         if(ThreadAction.CLOSE.equals(request.action())){
             if(!TaskStatus.DONE.equals(task.getStatus()) && !TaskStatus.REWORK.equals(task.getStatus())){
                 throw new RuntimeException("Закрывать тред можно только в статусе DONE или REWORK");
@@ -161,6 +167,9 @@ public class CommentController {
                 throw new RuntimeException("Данный тред уже закрыт");
             }
         } else if(ThreadAction.REOPEN.equals(request.action())){
+            if(!TaskStatus.REWORK.equals(task.getStatus())){
+                throw new RuntimeException("Переоткрывать тред можно только в статусе REWORK");
+            }
             if(!user.equals(comment.getUser())){
                 throw new RuntimeException("Переоткрывать тред может только его автор");
             }
@@ -181,6 +190,10 @@ public class CommentController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
+        Comment rootComment = commentService.getRootComment(comment);
+        if(comment.getParentComment() != null && rootComment.getClosedAt() != null){
+            throw new RuntimeException("Запрещено ставить реакцию на ответ в закрытом треде");
+        }
         Optional<CommentReaction> commentReaction = commentService.getCommentReaction(user, comment);
         if(commentReaction.isPresent()){
             commentService.updateReaction(request, commentReaction.get());

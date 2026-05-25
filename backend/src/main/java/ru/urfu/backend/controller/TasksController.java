@@ -13,7 +13,6 @@ import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewStatus;
-import ru.urfu.backend.model.enums.ReviewVerdictType;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.service.*;
@@ -56,7 +55,7 @@ public class TasksController {
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
         }
         Task task = taskService.create(requestDto, project);
-        return ResponseEntity.status(201).body(taskMapper.mapToTaskDetailsResponse(task));
+        return ResponseEntity.status(201).body(taskMapper.mapToTaskDetailsResponse(task, getPermissions(user, task)));
     }
 
     @Operation(description = "Получение задач проекта")
@@ -73,7 +72,8 @@ public class TasksController {
 
         List<TaskListItemResponse> taskListItemResponses = new ArrayList<>();
         for(Task task : project.getTasks()){
-            TaskListItemResponse taskListItemResponse = taskMapper.mapToTaskListItemResponse(task);
+            Task updatedTask = taskService.resolveReviewOutcome(task);
+            TaskListItemResponse taskListItemResponse = taskMapper.mapToTaskListItemResponse(updatedTask);
             taskListItemResponses.add(taskListItemResponse);
         }
         return taskListItemResponses;
@@ -93,7 +93,8 @@ public class TasksController {
                 && !Role.ADMIN.equals(user.getRole())){
             throw new RuntimeException("403 FORBIDDEN_PROJECT");
         }
-        return taskMapper.mapToTaskDetailsResponse(task);
+        task = taskService.resolveReviewOutcome(task);
+        return taskMapper.mapToTaskDetailsResponse(task, getPermissions(user, task));
     }
 
     @Operation(description = "Обновление настроек задачи")
@@ -110,7 +111,7 @@ public class TasksController {
         }
 
         Task updatedTask = taskService.update(task, request);
-        return taskMapper.mapToTaskDetailsResponse(updatedTask);
+        return taskMapper.mapToTaskDetailsResponse(updatedTask, getPermissions(user, updatedTask));
     }
 
     @Operation(description = "Удаление задачи")
@@ -138,20 +139,32 @@ public class TasksController {
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new RuntimeException("Только исполнитель может завершать задачу");
         }
+        task = taskService.resolveReviewOutcome(task);
         if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
             throw new RuntimeException("Запрещено завершать задачи в статусе, отличном от IN_REVIEW");
         }
 
-        List<Long> reviewIds = new ArrayList<>();
-        for(Review review : task.getReviews()){
-            ReviewVerdict reviewVerdict = review.getLastIteration().getReviewVerdict();
-            if(reviewVerdict == null || !ReviewVerdictType.APPROVED.equals(reviewVerdict.getVerdict())){
-                throw new RuntimeException("Задача ещё не прошла все ревью");
-            }
-            reviewIds.add(review.getId());
+        if(!taskService.canFinishReview(task)){
+            throw new RuntimeException("Задача ещё не прошла все ревью");
         }
 
+        List<Long> reviewIds = task.getReviews().stream().map(Review::getId).toList();
         Task updatedTask = taskService.updateStatusDone(task);
         return taskMapper.mapToTaskDoneResponse(updatedTask, reviewIds);
+    }
+
+    private PermissionsResponse getPermissions(User user, Task task) {
+        boolean isAssignee = taskService.isUserAssigneeInTask(user, task);
+        boolean canUploadSolution = isAssignee
+                && (TaskStatus.IN_PROGRESS.equals(task.getStatus())
+                || TaskStatus.REWORK.equals(task.getStatus()));
+
+        return new PermissionsResponse(
+                true,
+                projectService.isUserOwnerInProject(task.getProject(), user),
+                canUploadSolution,
+                isAssignee && taskService.canFinishReview(task),
+                projectService.getProjectMemberRole(user, task.getProject()).name()
+        );
     }
 }

@@ -35,6 +35,10 @@ interface SelectedLineRange {
   endLine: number;
 }
 
+interface DecoratedLineRange extends SelectedLineRange {
+  isAI: boolean;
+}
+
 interface SelectionPayload {
   startLineNumber: number;
   endLineNumber: number;
@@ -50,6 +54,19 @@ interface CodeViewerProps {
   onLineContextMenu?: (range: SelectionPayload) => void;
   canComment?: boolean;
 }
+
+const getMostSpecificRangeAtLine = (ranges: readonly DecoratedLineRange[], lineNumber: number) =>
+  ranges.reduce<DecoratedLineRange | null>((closestRange, range) => {
+    if (lineNumber < range.startLine || lineNumber > range.endLine) {
+      return closestRange;
+    }
+
+    if (!closestRange || range.endLine - range.startLine < closestRange.endLine - closestRange.startLine) {
+      return range;
+    }
+
+    return closestRange;
+  }, null);
 
 const CodeViewer = memo(
   ({
@@ -115,7 +132,7 @@ const CodeViewer = memo(
     }, []);
 
     const getUniqueRanges = useCallback(() => {
-      const rangeMap = new Map<string, SelectedLineRange & { isAI: boolean }>();
+      const rangeMap = new Map<string, DecoratedLineRange>();
 
       latestProps.current.comments.forEach((c) => {
         if (c.startLine === undefined || c.endLine === undefined) {
@@ -147,6 +164,12 @@ const CodeViewer = memo(
         widgetRef.current = null;
       }
     }, []);
+
+    useEffect(() => {
+      if (!canComment && editorRef.current) {
+        removeCommentWidget(editorRef.current);
+      }
+    }, [canComment, removeCommentWidget]);
 
     const showCommentWidget = useCallback(
       (codeEditor: editor.IStandaloneCodeEditor, monaco: Monaco, lineNumber: number) => {
@@ -201,40 +224,37 @@ const CodeViewer = memo(
       [removeCommentWidget]
     );
 
-    const injectRangeStyles = useCallback(
-      (ranges: Array<SelectedLineRange & { isAI: boolean }>, selected: SelectedLineRange | null) => {
-        let styleEl = document.getElementById('code-viewer-range-styles');
+    const injectRangeStyles = useCallback((ranges: DecoratedLineRange[], selected: SelectedLineRange | null) => {
+      let styleEl = document.getElementById('code-viewer-range-styles');
 
-        if (!styleEl) {
-          styleEl = document.createElement('style');
-          styleEl.id = 'code-viewer-range-styles';
-          document.head.appendChild(styleEl);
+      if (!styleEl) {
+        styleEl = document.createElement('style');
+        styleEl.id = 'code-viewer-range-styles';
+        document.head.appendChild(styleEl);
+      }
+
+      let css = '';
+
+      ranges.forEach((range, index) => {
+        const isAI = range.isAI;
+        const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
+        let color;
+
+        if (isAI) {
+          color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
+        } else {
+          const colorIdx = index % RANGE_COLORS.length;
+
+          color = isSelected
+            ? (RANGE_COLORS_SELECTED[colorIdx] ?? AI_RANGE_COLOR_SELECTED)
+            : (RANGE_COLORS[colorIdx] ?? AI_RANGE_COLOR);
         }
 
-        let css = '';
+        css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
+      });
 
-        ranges.forEach((range, index) => {
-          const isAI = range.isAI;
-          const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
-          let color;
-
-          if (isAI) {
-            color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
-          } else {
-            const colorIdx = index % RANGE_COLORS.length;
-
-            color = isSelected
-              ? (RANGE_COLORS_SELECTED[colorIdx] ?? AI_RANGE_COLOR_SELECTED)
-              : (RANGE_COLORS[colorIdx] ?? AI_RANGE_COLOR);
-          }
-
-          css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
-        });
-
-        styleEl.textContent = css;
-      },
-      []
-    );
+      styleEl.textContent = css;
+    }, []);
 
     const updateDecorations = useCallback(() => {
       if (!editorRef.current || !monacoRef.current) return;
@@ -317,7 +337,7 @@ const CodeViewer = memo(
 
         if ((isGutter || isContent) && e.target.position) {
           const lineNum = e.target.position.lineNumber;
-          const range = getUniqueRanges().find((r) => lineNum >= r.startLine && lineNum <= r.endLine);
+          const range = getMostSpecificRangeAtLine(getUniqueRanges(), lineNum);
 
           if (range && latestProps.current.onLineClick) {
             const newRange = {

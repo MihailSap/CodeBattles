@@ -26,9 +26,13 @@ public interface TaskService {
 
     Task updateStatusDone(Task task);
 
+    Task resolveReviewOutcome(Task task);
+
     void delete(Task task);
 
     boolean isUserAssigneeInTask(User user, Task task);
 
     boolean isUserReviewerInTask(User user, Task task);
+
+    boolean canFinishReview(Task task);
 }

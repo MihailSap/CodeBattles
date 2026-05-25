@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 040-add-comment-reviewer-index
+      author: Codex
+      changes:
+        - addColumn:
+            tableName: comment
+            columns:
+              - column:
+                  name: reviewer_index
+                  type: INTEGER
+        - sql:
+            sql: |
+              UPDATE comment c
+              SET reviewer_index = actual_review.reviewer_index
+              FROM review_iteration ri
+              JOIN review thread_review ON thread_review.id = ri.review_id
+              JOIN review actual_review ON actual_review.task_id = thread_review.task_id
+              WHERE c.review_iteration_id = ri.id
+                AND c.comment_author_role = 'REVIEWER'
+                AND actual_review.user_id = c.user_id

@@ -6,6 +6,7 @@ import ru.urfu.backend.dto.project.ProjectTaskDto;
 import ru.urfu.backend.dto.tasks.TaskDetailsResponse;
 import ru.urfu.backend.dto.tasks.TaskDoneResponse;
 import ru.urfu.backend.dto.tasks.TaskListItemResponse;
+import ru.urfu.backend.dto.tasks.PermissionsResponse;
 import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.Task;
 import ru.urfu.backend.model.UserTask;
@@ -48,7 +49,10 @@ public class TaskMapper {
         );
     }
 
-    public TaskDetailsResponse mapToTaskDetailsResponse(Task task) {
+    public TaskDetailsResponse mapToTaskDetailsResponse(
+            Task task,
+            PermissionsResponse permissionsResponse
+    ) {
         Set<UserTask> userTasks = task.getUsers();
         List<Long> assigneeIds = new ArrayList<>();
         List<Long> reviewersIds = new ArrayList<>();
@@ -81,7 +85,7 @@ public class TaskMapper {
                 reviewersIds,
                 List.of(), //TODO: Уточнить, что нужно передавать
                 List.of(), //TODO: Уточнить, что нужно передавать
-                null, //TODO: Уточнить, как заполнять PermissionsResponse
+                permissionsResponse,
                 task.getCreatedAt() == null ? "" : task.getCreatedAt().toString(),
                 task.getUpdatedAt() == null ? "" : task.getUpdatedAt().toString()
         );

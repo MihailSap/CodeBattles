@@ -97,6 +97,7 @@ public class SolutionController {
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new RuntimeException("Пользователь не является исполнителем данной задачи");
         }
+        task = taskService.resolveReviewOutcome(task);
         if(!TaskStatus.REWORK.equals(task.getStatus())){
             throw new RuntimeException("Задача не находится в статусе REWORK");
         }

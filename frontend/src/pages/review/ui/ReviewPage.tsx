@@ -255,8 +255,7 @@ const ReviewPage = () => {
   const isReadOnlyMode = alreadySubmittedReview || isCompleted;
   const canAddNewComments = isReviewer && !isReadOnlyMode;
 
-  const canDiscussThreads =
-    isReviewer && !isTaskCompleted && (isCompleted || (!alreadySubmittedReview && !isCompleted));
+  const canDiscussThreads = isReviewer && (isCompleted || (!alreadySubmittedReview && !isCompleted));
 
   const taskId = review?.taskId;
 
@@ -507,17 +506,14 @@ const ReviewPage = () => {
   );
 
   const isAllResolved = useMemo(
-    () => humanComments.length > 0 && humanComments.every((comment) => comment.isClosed),
+    () => humanComments.filter((comment) => comment.parentId === null).every((comment) => comment.isClosed),
     [humanComments]
   );
 
-  const myHistoryComments = useMemo(() => {
-    if (!review?.history) return [];
-
-    return review.history
-      .flatMap((history) => history.comments)
-      .filter((comment) => Number(comment.authorId) === numericUserId);
-  }, [review?.history, numericUserId]);
+  const historyComments = useMemo(
+    () => review?.history.flatMap((history) => history.comments) ?? [],
+    [review?.history]
+  );
 
   const deadlineInfo = useMemo(() => {
     if (!review?.deadline) return null;
@@ -744,16 +740,16 @@ const ReviewPage = () => {
               onDelete={canAddNewComments ? handleDeleteComment : undefined}
               onReport={canDiscussThreads ? openReportModal : undefined}
               onCloseThread={handleCloseThread}
-              onReopenThread={canDiscussThreads ? handleReopenThread : undefined}
+              onReopenThread={canDiscussThreads && !isTaskCompleted ? handleReopenThread : undefined}
               readOnly={!canDiscussThreads}
               pageContext="review"
               title="Комментарии"
               emptyText="Выберите строку или диапазон строк с комментариями"
             />
 
-            {myHistoryComments.length > 0 && (
+            {historyComments.length > 0 && (
               <CommentsBlock
-                comments={myHistoryComments}
+                comments={historyComments}
                 currentUser={user ?? { id: numericUserId, login: '' }}
                 readOnly
                 isHistory

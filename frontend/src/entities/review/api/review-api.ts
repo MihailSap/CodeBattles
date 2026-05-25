@@ -56,16 +56,8 @@ interface BackendHistoryDto {
   status?: ReviewDetail['status'];
   uploadedAt?: string;
   files?: BackendFileDto[];
-  comments?: BackendHistoryCommentDto[];
+  comments?: BackendCommentDto[];
   finalReview?: BackendFinalReviewDto;
-}
-
-interface BackendHistoryCommentDto {
-  id: EntityId;
-  authorId?: EntityId;
-  authorName?: string;
-  createdAt?: string;
-  text: string;
 }
 
 interface BackendReviewDto {
@@ -87,10 +79,6 @@ interface BackendReviewDto {
   aiReviewEvaluation?: AIReviewEvaluation | null;
   revealAuthorAfterReview?: boolean;
   revealAuthorSolution?: boolean;
-}
-
-interface MapBackendDetailsOptions {
-  useCurrentAssignmentResultOnly?: boolean;
 }
 
 export interface FinalReviewPayload {
@@ -131,6 +119,11 @@ export interface ReportCommentPayload {
 
 export type CommentThreadAction = 'close' | 'reopen';
 
+interface RevealedReviewerNames {
+  byId: Map<number, string>;
+  byIndex: Map<number, string>;
+}
+
 const getAuthorRole = (role: string): string => {
   if (role === 'ASSIGNEE') return AUTHOR_ROLE.ASSIGNEE;
   if (role === 'REVIEWER') return AUTHOR_ROLE.REVIEWER;
@@ -156,19 +149,28 @@ const mapBackendFinalReview = (finalReview: BackendFinalReviewDto): FinalReview 
 const mapBackendComment = (
   comment: BackendCommentDto,
   canRevealReviewerNames: boolean,
-  revealedReviewerIndexes: Set<number>
+  canRevealAssigneeNames: boolean,
+  revealedReviewerNames: RevealedReviewerNames
 ): ReviewComment => {
   const authorRole = getAuthorRole(comment.authorRole);
   const isReplyWithUnknownRole = comment.parentId !== null && !authorRole;
 
+  const revealedReviewerName =
+    canRevealReviewerNames && authorRole === AUTHOR_ROLE.REVIEWER
+      ? ((comment.authorId !== undefined ? revealedReviewerNames.byId.get(Number(comment.authorId)) : undefined) ??
+        (comment.reviewerIndex !== undefined
+          ? revealedReviewerNames.byIndex.get(Number(comment.reviewerIndex))
+          : undefined))
+      : undefined;
+
   return {
     id: comment.id,
     parentId: comment.parentId,
-    authorName: isReplyWithUnknownRole ? 'Участник обсуждения' : (comment.authorName ?? ''),
+    authorName: revealedReviewerName ?? (isReplyWithUnknownRole ? 'Участник обсуждения' : (comment.authorName ?? '')),
     authorRole,
     text: comment.text,
     replies: (comment.replies ?? []).map((reply) =>
-      mapBackendComment(reply, canRevealReviewerNames, revealedReviewerIndexes)
+      mapBackendComment(reply, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
     ),
     ...(comment.authorId !== undefined ? { authorId: comment.authorId } : {}),
     ...(comment.file !== undefined ? { file: comment.file } : {}),
@@ -183,50 +185,55 @@ const mapBackendComment = (
     ...(comment.dislikedBy !== undefined ? { dislikedBy: comment.dislikedBy } : {}),
     revealName:
       authorRole === AUTHOR_ROLE.REVIEWER
-        ? canRevealReviewerNames && revealedReviewerIndexes.has(Number(comment.reviewerIndex))
-        : Boolean(comment.revealName),
+        ? Boolean(revealedReviewerName)
+        : authorRole === AUTHOR_ROLE.ASSIGNEE
+          ? canRevealAssigneeNames
+          : Boolean(comment.revealName),
   };
 };
 
-const mapBackendHistoryComment = (comment: BackendHistoryCommentDto): ReviewComment => ({
-  id: comment.id,
-  parentId: null,
-  authorName: 'Участник обсуждения',
-  authorRole: 'Participant',
-  text: comment.text,
-  replies: [],
-  ...(comment.authorId !== undefined ? { authorId: comment.authorId } : {}),
-  ...(comment.createdAt !== undefined ? { createdAt: comment.createdAt } : {}),
-});
-
-const mapBackendHistory = (iteration: BackendHistoryDto, taskId: EntityId): ReviewHistory => ({
+const mapBackendHistory = (
+  iteration: BackendHistoryDto,
+  taskId: EntityId,
+  canRevealReviewerNames: boolean,
+  canRevealAssigneeNames: boolean,
+  revealedReviewerNames: RevealedReviewerNames
+): ReviewHistory => ({
   id: iteration.id,
   taskId: iteration.taskId ?? taskId,
   status: iteration.status ?? REVIEW_STATUS.NEW,
   uploadedAt: iteration.uploadedAt ?? '',
   files: (iteration.files ?? []).map(mapBackendFile),
-  comments: (iteration.comments ?? []).map(mapBackendHistoryComment),
+  comments: (iteration.comments ?? []).map((comment) =>
+    mapBackendComment(comment, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
+  ),
   finalReviews: iteration.finalReview ? [mapBackendFinalReview(iteration.finalReview)] : [],
   isHistory: true,
 });
 
-const mapBackendDetails = (review: BackendReviewDto, options: MapBackendDetailsOptions = {}): ReviewDetail => {
+const mapBackendDetails = (review: BackendReviewDto): ReviewDetail => {
   const mappedFinalReviews = (review.finalReviews ?? []).map(mapBackendFinalReview);
+  const isTaskCompleted = review.taskStatus === 'DONE';
+  const finalReviews = mappedFinalReviews;
 
-  const finalReviews = options.useCurrentAssignmentResultOnly
-    ? review.status === REVIEW_STATUS.COMPLETED
-      ? [...mappedFinalReviews]
-          .sort((left, right) => new Date(right.createdAt ?? '').getTime() - new Date(left.createdAt ?? '').getTime())
-          .slice(0, 1)
-      : []
-    : mappedFinalReviews;
+  const canRevealReviewerNames = isTaskCompleted;
 
-  const canRevealReviewerNames = review.taskStatus === 'DONE';
+  const canRevealAssigneeNames =
+    isTaskCompleted && Boolean(review.revealAuthorSolution ?? review.revealAuthorAfterReview);
 
-  const revealedReviewerIndexes = new Set<number>(
-    finalReviews
-      .filter((finalReview) => finalReview.revealName)
-      .flatMap((finalReview) => (finalReview.reviewerIndex === undefined ? [] : [finalReview.reviewerIndex]))
+  const revealedReviewerNames = finalReviews.reduce<RevealedReviewerNames>(
+    (names, finalReview) => {
+      if (canRevealReviewerNames && finalReview.revealName && finalReview.reviewerName) {
+        names.byId.set(Number(finalReview.reviewerId), finalReview.reviewerName);
+
+        if (finalReview.reviewerIndex !== undefined) {
+          names.byIndex.set(Number(finalReview.reviewerIndex), finalReview.reviewerName);
+        }
+      }
+
+      return names;
+    },
+    { byId: new Map<number, string>(), byIndex: new Map<number, string>() }
   );
 
   return {
@@ -239,9 +246,11 @@ const mapBackendDetails = (review: BackendReviewDto, options: MapBackendDetailsO
     ...(review.completedAt !== undefined && review.completedAt !== null ? { reviewedAt: review.completedAt } : {}),
     files: (review.files ?? []).map(mapBackendFile),
     comments: (review.comments ?? []).map((comment) =>
-      mapBackendComment(comment, canRevealReviewerNames, revealedReviewerIndexes)
+      mapBackendComment(comment, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
     ),
-    history: (review.history ?? []).map((iteration) => mapBackendHistory(iteration, review.taskId)),
+    history: (review.history ?? []).map((iteration) =>
+      mapBackendHistory(iteration, review.taskId, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
+    ),
     finalReviews,
     aiEvaluation: review.aiEvaluation ?? null,
     aiReviewEvaluation: review.aiReviewEvaluation ?? null,
@@ -261,7 +270,7 @@ export const reviewApi = {
   async getReviewById(reviewId: EntityId): Promise<ReviewDetail> {
     const response = await apiRequest<BackendReviewDto>({ method: 'GET', url: `/api/v1/reviews/${reviewId}` });
 
-    return mapBackendDetails(response, { useCurrentAssignmentResultOnly: true });
+    return mapBackendDetails(response);
   },
 
   async getReviewFileContent(reviewId: EntityId, filePath: string): Promise<ReviewFile> {

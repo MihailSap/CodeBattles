@@ -49,7 +49,7 @@ public class ReviewMapper {
         Set<Comment> currentComments = new HashSet<>();
         for (Review taskReview : task.getReviews()) {
             ReviewIteration currentIteration = taskReview.getLastIteration();
-            if (currentIteration != null) {
+            if (currentIteration != null && isCountedIteration(currentIteration)) {
                 currentIterations.add(currentIteration);
                 currentComments.addAll(currentIteration.getComments());
             }
@@ -88,6 +88,55 @@ public class ReviewMapper {
                 commentMapper.mapToReviewCommentResponses(currentComments),
                 mapToHistoryResponses(historyIterations),
                 mapToFinalReviewResponses(currentIterations),
+                null,
+                null,
+                permissionsResponse
+        );
+    }
+
+    public ReviewDetailsResponse mapToWaitingReviewDetailsResponse(
+            Review review,
+            PermissionsResponse permissionsResponse
+    ) {
+        Task task = review.getTask();
+        Set<ReviewIteration> historyIterations = new HashSet<>();
+        for (Review taskReview : task.getReviews()) {
+            ReviewIteration currentIteration = taskReview.getLastIteration();
+            for (ReviewIteration iteration : taskReview.getReviewIterations()) {
+                if (!iteration.equals(currentIteration)) {
+                    historyIterations.add(iteration);
+                }
+            }
+        }
+        Project project = task.getProject();
+        Organization organization = project.getOrganization();
+        Solution solution = task.getSolution();
+        ReviewIteration currentIteration = review.getLastIteration();
+        return new ReviewDetailsResponse(
+                review.getId(),
+                task.getId(),
+                project.getId(),
+                solution.getId(),
+                mapToReviewProjectResponse(project),
+                mapToReviewOrganizationResponse(organization),
+                task.getTitle(),
+                task.getStatus(),
+                null,
+                task.getReviewType(),
+                solution.getUploadType(),
+                currentIteration.getUploadedAt() == null ? "" : currentIteration.getUploadedAt().toString(),
+                currentIteration.getDeadline() == null ? "" : currentIteration.getDeadline().toString(),
+                "",
+                getVisibleUntil(currentIteration),
+                false,
+                solution.getRevealAuthorAfterReview(),
+                mapToAssignees(task.getUsers()),
+                mapToReviewers(task.getUsers()),
+                null,
+                mapToReviewFileContentResponses(currentIteration),
+                List.of(),
+                mapToHistoryResponses(historyIterations),
+                List.of(),
                 null,
                 null,
                 permissionsResponse
@@ -192,13 +241,18 @@ public class ReviewMapper {
     private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
         List<FinalReviewResponse> responses = new ArrayList<>();
         reviewIterations.stream()
-                .filter(iteration -> iteration.getReviewVerdict() != null)
+                .filter(this::isCountedIteration)
                 .sorted((a, b) -> Integer.compare(
                         a.getReview().getReviewerIndex(),
                         b.getReview().getReviewerIndex()
                 ))
                 .forEach(iteration -> responses.add(mapToFinalReviewResponse(iteration)));
         return responses;
+    }
+
+    private boolean isCountedIteration(ReviewIteration reviewIteration) {
+        return reviewIteration.getReviewVerdict() != null
+                && !Boolean.TRUE.equals(isExpired(reviewIteration));
     }
 
     private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){

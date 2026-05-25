@@ -24,6 +24,8 @@ public class Comment extends BaseEntity {
 
     private Boolean revealName;
 
+    private Integer reviewerIndex;
+
     private LocalDateTime closedAt;
 
     private LocalDateTime updatedAt;
@@ -124,6 +126,14 @@ public class Comment extends BaseEntity {
 
     public void setRevealName(Boolean revealName) {
         this.revealName = revealName;
+    }
+
+    public Integer getReviewerIndex() {
+        return reviewerIndex;
+    }
+
+    public void setReviewerIndex(Integer reviewerIndex) {
+        this.reviewerIndex = reviewerIndex;
     }
 
     public ReviewCommentCategory getCategory() {

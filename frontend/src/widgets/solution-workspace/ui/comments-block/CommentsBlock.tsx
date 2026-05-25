@@ -39,7 +39,13 @@ const getDisplayName = (comment: ReviewComment, currentUserId?: EntityId): strin
   if (comment.authorId === currentUserId) return 'Вы';
 
   if (comment.authorRole === 'Reviewer') {
-    return comment.revealName ? comment.authorName : `Ревьюер ${comment.reviewerIndex || ''}`;
+    const anonymousName = `Ревьюер ${comment.reviewerIndex || ''}`.trim();
+
+    return comment.revealName && comment.authorName ? comment.authorName : anonymousName;
+  }
+
+  if (comment.authorRole === 'Assignee') {
+    return comment.revealName && comment.authorName ? comment.authorName : 'Исполнитель';
   }
 
   return comment.authorName || 'Пользователь';
@@ -92,8 +98,9 @@ const CommentThread = memo(
     const userLiked = currentUser !== null && currentUser !== undefined && likedBy.includes(currentUser.id);
     const userDisliked = currentUser !== null && currentUser !== undefined && dislikedBy.includes(currentUser.id);
     const canReplyHere = !readOnly && !isSystem && !isThreadClosed && !maxDepthReached && allowReply && onReply;
-    const canLike = !isMine && !isSystem && onLike;
-    const canDislike = !isMine && !isSystem && isAI && onDislike;
+    const canReact = !(level > 1 && isThreadClosed);
+    const canLike = canReact && !isMine && !isSystem && onLike;
+    const canDislike = canReact && !isMine && !isSystem && isAI && onDislike;
 
     const canCloseThread =
       !readOnly && level === 1 && !isAI && !isSystem && !comment.isClosed && pageContext === 'task' && onCloseThread;
@@ -134,7 +141,7 @@ const CommentThread = memo(
         <div
           className={[
             commentsBlockStyles.commentContainer,
-            comment.isClosed ? commentsBlockStyles.isClosed : '',
+            isThreadClosed ? commentsBlockStyles.isClosed : '',
             isAI ? commentsBlockStyles.isAi : '',
           ]
             .filter(Boolean)

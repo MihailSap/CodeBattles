@@ -78,9 +78,22 @@ const ReviewResultsSidebar = ({
     };
   });
 
-  const selectedReviewData = review.finalReviews.find((finalReview) => finalReview.reviewerId === selectedReviewerId);
-
   const hasFinalReviews = review.finalReviews && review.finalReviews.length > 0;
+
+  const selectedReviewerExists = review.finalReviews.some(
+    (finalReview) => Number(finalReview.reviewerId) === Number(selectedReviewerId)
+  );
+
+  const effectiveSelectedReviewerId = selectedReviewerExists
+    ? selectedReviewerId
+    : (review.finalReviews[0]?.reviewerId ?? null);
+
+  const selectedReviewData = review.finalReviews.find(
+    (finalReview) => Number(finalReview.reviewerId) === Number(effectiveSelectedReviewerId)
+  );
+
+  const showAiEvaluations =
+    showAiSolutionEvaluation && aiReviewEnabled && (hasFinalReviews || Boolean(review.aiEvaluation));
 
   return (
     <div className={reviewResultsSidebarStyles.root}>
@@ -93,7 +106,7 @@ const ReviewResultsSidebar = ({
         </div>
       )}
 
-      {reviewerOptions.length > 0 && selectedReviewData && selectedReviewerId !== null && (
+      {reviewerOptions.length > 0 && selectedReviewData && effectiveSelectedReviewerId !== null && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Детальная оценка от ревьюеров</h3>
           <div className={reviewResultsSidebarStyles.content}>
@@ -101,7 +114,7 @@ const ReviewResultsSidebar = ({
               <ReviewDropdown
                 label="Ревьюер:"
                 options={reviewerOptions}
-                value={selectedReviewerId}
+                value={effectiveSelectedReviewerId}
                 onChange={setSelectedReviewerId}
               />
             </div>
@@ -145,7 +158,7 @@ const ReviewResultsSidebar = ({
         </div>
       )}
 
-      {showAiSolutionEvaluation && aiReviewEnabled && (hasFinalReviews || review.aiEvaluation) && (
+      {showAiEvaluations && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Оценка решения от AI</h3>
           <div className={reviewResultsSidebarStyles.content}>
@@ -204,30 +217,36 @@ const ReviewResultsSidebar = ({
         </div>
       )}
 
-      {aiReviewEnabled && review.aiReviewEvaluation && (
+      {showAiEvaluations && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Оценка ревью от AI</h3>
           <div className={reviewResultsSidebarStyles.content}>
-            <div className={reviewResultsSidebarStyles.field}>
-              <div className={reviewResultsSidebarStyles.label}>Общая оценка качества:</div>
-              <StarRating value={review.aiReviewEvaluation.qualityScore} />
-            </div>
-            <div className={reviewResultsSidebarStyles.field}>
-              <div className={reviewResultsSidebarStyles.label}>Конкретность:</div>
-              <StarRating value={review.aiReviewEvaluation.specificity} />
-            </div>
-            <div className={reviewResultsSidebarStyles.field}>
-              <div className={reviewResultsSidebarStyles.label}>Техническая глубина:</div>
-              <StarRating value={review.aiReviewEvaluation.techDepth} />
-            </div>
-            <div className={reviewResultsSidebarStyles.field}>
-              <div className={reviewResultsSidebarStyles.label}>Корректность:</div>
-              <StarRating value={review.aiReviewEvaluation.correctness} />
-            </div>
-            <div className={reviewResultsSidebarStyles.field}>
-              <div className={reviewResultsSidebarStyles.label}>Отсутствие токсичности:</div>
-              <StarRating value={review.aiReviewEvaluation.nonToxicity} />
-            </div>
+            {review.aiReviewEvaluation ? (
+              <>
+                <div className={reviewResultsSidebarStyles.field}>
+                  <div className={reviewResultsSidebarStyles.label}>Общая оценка качества:</div>
+                  <StarRating value={review.aiReviewEvaluation.qualityScore} />
+                </div>
+                <div className={reviewResultsSidebarStyles.field}>
+                  <div className={reviewResultsSidebarStyles.label}>Конкретность:</div>
+                  <StarRating value={review.aiReviewEvaluation.specificity} />
+                </div>
+                <div className={reviewResultsSidebarStyles.field}>
+                  <div className={reviewResultsSidebarStyles.label}>Техническая глубина:</div>
+                  <StarRating value={review.aiReviewEvaluation.techDepth} />
+                </div>
+                <div className={reviewResultsSidebarStyles.field}>
+                  <div className={reviewResultsSidebarStyles.label}>Корректность:</div>
+                  <StarRating value={review.aiReviewEvaluation.correctness} />
+                </div>
+                <div className={reviewResultsSidebarStyles.field}>
+                  <div className={reviewResultsSidebarStyles.label}>Отсутствие токсичности:</div>
+                  <StarRating value={review.aiReviewEvaluation.nonToxicity} />
+                </div>
+              </>
+            ) : (
+              <div className={reviewResultsSidebarStyles.text}>Недостаточно данных для оценки</div>
+            )}
           </div>
         </div>
       )}

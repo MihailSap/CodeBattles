@@ -88,6 +88,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setEndLine(request.endLine());
         comment.setUpdatedAt(LocalDateTime.now());
         comment.setRevealName(review.getRevealAuthorAfterReview());
+        comment.setReviewerIndex(review.getReviewerIndex());
         comment.setSeverity(request.severity());
         comment.setText(request.text());
         comment.setCommentAuthorRole(CommentAuthorRole.REVIEWER);
@@ -97,13 +98,21 @@ public class CommentServiceImpl implements CommentService {
 
     @Transactional
     @Override
-    public Comment createReply(CreateReplyRequest request, User user, Comment comment, CommentAuthorRole authorRole, boolean revealName) {
+    public Comment createReply(
+            CreateReplyRequest request,
+            User user,
+            Comment comment,
+            CommentAuthorRole authorRole,
+            boolean revealName,
+            Integer reviewerIndex
+    ) {
         Comment reply = new Comment();
         reply.setUser(user);
         reply.setReviewIteration(comment.getReviewIteration());
         reply.setParentComment(comment);
         reply.setText(request.text());
         reply.setRevealName(revealName);
+        reply.setReviewerIndex(reviewerIndex);
         reply.setCommentAuthorRole(authorRole);
         reply.setUpdatedAt(LocalDateTime.now());
 

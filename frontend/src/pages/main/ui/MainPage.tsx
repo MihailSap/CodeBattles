@@ -290,7 +290,7 @@ const MainPage = () => {
 
           <div className={mainPageStyles.filters}>
             <ReviewDropdown
-              label="Статус"
+              label="Статус:"
               value={statusFilter}
               options={statusOptions}
               onChange={(value) => {
@@ -302,7 +302,7 @@ const MainPage = () => {
               menuClassName={mainPageStyles.dropdownMenu}
             />
             <ReviewDropdown
-              label="Проект"
+              label="Проект:"
               value={projectFilter}
               options={projectOptions}
               onChange={setProjectFilter}

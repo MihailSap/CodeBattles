@@ -8,10 +8,14 @@ import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Project;
+import ru.urfu.backend.model.Review;
+import ru.urfu.backend.model.ReviewIteration;
+import ru.urfu.backend.model.ReviewVerdict;
 import ru.urfu.backend.model.Task;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserTask;
 import ru.urfu.backend.model.enums.ReviewType;
+import ru.urfu.backend.model.enums.ReviewVerdictType;
 import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.model.enums.UserTaskType;
 import ru.urfu.backend.repository.TaskRepository;
@@ -41,7 +45,7 @@ public class TaskServiceImpl implements TaskService {
         this.userService = userService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public List<Task> getDashboardTasks(
             User user, Long projectId, DashboardTaskFilterStatus status) {
@@ -50,6 +54,7 @@ public class TaskServiceImpl implements TaskService {
         LocalDateTime now = LocalDateTime.now();
         return userTasks.stream()
                 .map(UserTask::getTask)
+                .map(this::resolveReviewOutcome)
                 .filter(task -> !TaskStatus.DONE.equals(task.getStatus()))
                 .filter(task -> projectId == null || task.getProject().getId().equals(projectId))
                 .filter(task -> {
@@ -193,6 +198,69 @@ public class TaskServiceImpl implements TaskService {
     public boolean isUserAssigneeInTask(User user, Task task){
         Optional<UserTask> userTask = userTaskRepository.findByUserAndTask(user, task);
         return userTask.isPresent() && UserTaskType.ASSIGNEE.equals(userTask.get().getUserTaskType());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public boolean canFinishReview(Task task) {
+        if (!TaskStatus.IN_REVIEW.equals(task.getStatus()) || task.getReviews().isEmpty()) {
+            return false;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasApproval = false;
+        for (Review review : task.getReviews()) {
+            ReviewIteration reviewIteration = review.getLastIteration();
+            if (reviewIteration == null) {
+                return false;
+            }
+            ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();
+            boolean expiredVerdict = reviewVerdict != null
+                    && reviewIteration.getCompletedAt() != null
+                    && reviewIteration.getCompletedAt().isAfter(reviewIteration.getDeadline());
+            if (reviewVerdict == null || expiredVerdict) {
+                if (reviewVerdict == null && reviewIteration.getDeadline().isAfter(now)) {
+                    return false;
+                }
+                continue;
+            }
+            if (!ReviewVerdictType.APPROVED.equals(reviewVerdict.getVerdict())) {
+                return false;
+            }
+            hasApproval = true;
+        }
+        return hasApproval;
+    }
+
+    @Transactional
+    @Override
+    public Task resolveReviewOutcome(Task task) {
+        if (!TaskStatus.IN_REVIEW.equals(task.getStatus()) || task.getReviews().isEmpty()) {
+            return task;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        boolean hasCountedRework = false;
+        for (Review review : task.getReviews()) {
+            ReviewIteration reviewIteration = review.getLastIteration();
+            if (reviewIteration == null) {
+                return task;
+            }
+            ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();
+            if (reviewVerdict == null) {
+                if (reviewIteration.getDeadline().isAfter(now)) {
+                    return task;
+                }
+                continue;
+            }
+            boolean expiredVerdict = reviewIteration.getCompletedAt() != null
+                    && reviewIteration.getCompletedAt().isAfter(reviewIteration.getDeadline());
+            if (!expiredVerdict && ReviewVerdictType.REWORK.equals(reviewVerdict.getVerdict())) {
+                hasCountedRework = true;
+            }
+        }
+        if (hasCountedRework) {
+            return updateStatusRework(task);
+        }
+        return task;
     }
 
     @Transactional

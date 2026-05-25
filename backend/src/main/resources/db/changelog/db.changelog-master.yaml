@@ -77,3 +77,5 @@ databaseChangeLog:
       file: db/changelog/changeset/038-rename-comment-review-id.yaml
   - include:
       file: db/changelog/changeset/039-update-enabled.yaml
+  - include:
+      file: db/changelog/changeset/040-add-comment-reviewer-index.yaml

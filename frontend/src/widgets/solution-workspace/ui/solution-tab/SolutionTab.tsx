@@ -440,19 +440,15 @@ const SolutionTab = ({
   const isWaiting = task.status === 'IN_REVIEW';
   const isCompleted = task.status === 'DONE';
   const isRework = task.status === 'REWORK';
-  const reviewersCount = task.reviewerIds?.length ?? 0;
-
-  const allReviewersApproved = useMemo(
-    () =>
-      reviewersCount > 0 &&
-      review?.finalReviews.length === reviewersCount &&
-      Boolean(review?.finalReviews.every((finalReview) => finalReview.verdict === 'APPROVED')),
-    [review?.finalReviews, reviewersCount]
-  );
 
   const isExpiredWithoutReview = useMemo(
-    () => isWaiting && review?.deadline && new Date(review.deadline) < new Date() && review.reviewType !== 'AI_ONLY',
-    [isWaiting, review?.deadline, review?.reviewType]
+    () =>
+      isWaiting &&
+      !task.canFinishReview &&
+      review?.deadline &&
+      new Date(review.deadline) < new Date() &&
+      review.reviewType !== 'AI_ONLY',
+    [isWaiting, review?.deadline, review?.reviewType, task.canFinishReview]
   );
 
   const allComments = useMemo(() => review?.comments || [], [review?.comments]);
@@ -465,8 +461,8 @@ const SolutionTab = ({
   const hasReviewResults = isCompleted || isRework;
   const showExpiredAiResults = isExpiredWithoutReview && aiReviewEnabled;
   const showCodeComments = hasReviewResults || showExpiredAiResults;
-  const shouldShowFinishReview = isWaiting && !isExpiredWithoutReview && allReviewersApproved;
-  const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !allReviewersApproved;
+  const shouldShowFinishReview = isWaiting && Boolean(task.canFinishReview);
+  const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !task.canFinishReview;
 
   const fileComments = useMemo(
     () => visibleComments.filter((comment) => hasLineLocation(comment) && comment.file === selectedFile?.path),
@@ -741,12 +737,12 @@ const SolutionTab = ({
                     <CommentsBlock
                       comments={displayedComments}
                       currentUser={currentUser}
-                      onReply={isAssignee && isRework ? handleReply : undefined}
+                      onReply={isAssignee && (isRework || isCompleted) ? handleReply : undefined}
                       onLike={isAssignee ? handleLike : undefined}
                       onDislike={isAssignee ? handleDislike : undefined}
                       onDelete={isAssignee ? handleDeleteComment : undefined}
                       onReport={isAssignee ? openReportModal : undefined}
-                      onCloseThread={isAssignee && isRework ? handleCloseThread : undefined}
+                      onCloseThread={isAssignee && hasReviewResults ? handleCloseThread : undefined}
                       readOnly={!isAssignee}
                       pageContext="task"
                       emptyText="Выберите строку или диапазон строк с комментариями"

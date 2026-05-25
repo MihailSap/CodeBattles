@@ -70,6 +70,7 @@ public class ReviewController {
         if(task.getSolution() == null){
             throw new RuntimeException("Решение отсутствует");
         }
+        task = taskService.resolveReviewOutcome(task);
         PermissionsResponse permissionsResponse = new PermissionsResponse( //FIXME
                 true,
                 true,
@@ -113,25 +114,10 @@ public class ReviewController {
             throw new RuntimeException("Дедлайн данного ревью истёк, отправка невозможна");
         }
 
-        ReviewVerdict reviewVerdict = reviewService.createVerdict(request, review);
+        reviewService.createVerdict(request, review);
         Review updatedReview = reviewService.updateStatusCompleted(review);
         Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
-
-        boolean hasUncompletedReview = false;
-        boolean hasRework = false;
-
-        Task task = review.getTask();
-        for(Review taskReview : task.getReviews()){
-            ReviewVerdict reviewVerdict1 = taskReview.getLastIteration().getReviewVerdict();
-            if(reviewVerdict1 == null){
-                hasUncompletedReview = true;
-            } else if(ReviewVerdictType.REWORK.equals(reviewVerdict1.getVerdict())){
-                hasRework = true;
-            }
-        }
-        if(!hasUncompletedReview && hasRework){
-            taskService.updateStatusRework(task);
-        }
+        taskService.resolveReviewOutcome(review.getTask());
 
         return ResponseEntity.status(201).body(reviewMapper.mapToSubmitFinalReviewResponse(secondUpdatedReview));
     }
@@ -167,6 +153,7 @@ public class ReviewController {
         if (task.getSolution() == null) {
             throw new RuntimeException("Решение отсутствует");
         }
+        task = taskService.resolveReviewOutcome(task);
 
         Set<Review> reviews = task.getReviews();
         if (reviews.isEmpty()) {
@@ -193,7 +180,7 @@ public class ReviewController {
             );
         }
 
-        return reviewMapper.mapToReviewDetailsResponse(
+        return reviewMapper.mapToWaitingReviewDetailsResponse(
                 review,
                 permissionsResponse
         );
