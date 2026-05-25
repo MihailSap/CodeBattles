@@ -149,17 +149,13 @@ public class CommentController {
         if(!commentReviewIteration.equals(lastReviewIteration)){
             throw new RuntimeException("Запрещено менять статус треда исторической итерации");
         }
-        if(TaskStatus.DONE.equals(task.getStatus())){
-            throw new RuntimeException("Запрещено менять статус треда завершенной задачи");
-        }
 
         if(ThreadAction.CLOSE.equals(request.action())){
+            if(!TaskStatus.DONE.equals(task.getStatus()) && !TaskStatus.REWORK.equals(task.getStatus())){
+                throw new RuntimeException("Закрывать тред можно только в статусе DONE или REWORK");
+            }
             if(!taskService.isUserAssigneeInTask(user, task)){
                 throw new RuntimeException("Закрывать тред может только исполнитель задачи");
-            }
-            if(!TaskStatus.REWORK.equals(task.getStatus())){
-                throw new RuntimeException(
-                        "Исполнитель может закрывать треды только на стадии REWORK");
             }
             if(comment.getClosedAt() != null){
                 throw new RuntimeException("Данный тред уже закрыт");
