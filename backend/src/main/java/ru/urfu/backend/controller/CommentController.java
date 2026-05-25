@@ -157,6 +157,10 @@ public class CommentController {
             if(!taskService.isUserAssigneeInTask(user, task)){
                 throw new RuntimeException("Закрывать тред может только исполнитель задачи");
             }
+            if(!TaskStatus.REWORK.equals(task.getStatus())){
+                throw new RuntimeException(
+                        "Исполнитель может закрывать треды только на стадии REWORK");
+            }
             if(comment.getClosedAt() != null){
                 throw new RuntimeException("Данный тред уже закрыт");
             }
