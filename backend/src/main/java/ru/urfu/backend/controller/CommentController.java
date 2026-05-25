@@ -88,7 +88,7 @@ public class CommentController {
 
         ReviewIteration commentReviewIteration = comment.getReviewIteration();
         ReviewIteration lastReviewIteration = commentReviewIteration.getReview().getLastIteration();
-        if(commentReviewIteration.equals(lastReviewIteration)){
+        if(!commentReviewIteration.equals(lastReviewIteration)){
             throw new RuntimeException("Нельзя отвечать на комментарии, которые находятся в history");
         }
         if(rootComment.getClosedAt() != null){
