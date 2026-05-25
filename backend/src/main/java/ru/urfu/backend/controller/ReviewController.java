@@ -78,7 +78,21 @@ public class ReviewController {
                 true,
                 true
         );
-        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
+        boolean canViewAggregated =
+                canViewAggregatedReview(task.getStatus(), true);
+
+        if (canViewAggregated) {
+            return reviewMapper.mapToReviewDetailsResponseByTask(
+                    review,
+                    permissionsResponse
+            );
+        }
+
+        return reviewMapper.mapToReviewDetailsResponse(
+                review,
+                permissionsResponse
+        );
+//        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
     }
 
     @Operation(description = "Отправка итогового ревью")
@@ -168,6 +182,30 @@ public class ReviewController {
                 true,
                 true
         );
-        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
+
+        boolean canViewAggregated =
+                canViewAggregatedReview(task.getStatus(), false);
+
+        if (canViewAggregated) {
+            return reviewMapper.mapToReviewDetailsResponseByTask(
+                    review,
+                    permissionsResponse
+            );
+        }
+
+        return reviewMapper.mapToReviewDetailsResponse(
+                review,
+                permissionsResponse
+        );
+//        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
+    }
+
+    private boolean canViewAggregatedReview(TaskStatus status, boolean reviewerView) {
+        if (reviewerView) {
+            return TaskStatus.DONE.equals(status);
+        }
+
+        return TaskStatus.DONE.equals(status)
+                || TaskStatus.REWORK.equals(status);
     }
 }
