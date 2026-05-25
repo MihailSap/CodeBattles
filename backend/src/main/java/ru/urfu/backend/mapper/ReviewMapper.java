@@ -39,53 +39,6 @@ public class ReviewMapper {
         return reviewListItemDtos;
     }
 
-//    public ReviewDetailsResponse mapToReviewDetailsResponseByTask(Review review, PermissionsResponse permissionsResponse){
-//        Task task = review.getTask();
-//        Set<ReviewIteration> reviewIterations = new HashSet<>();
-//        Set<Comment> comments = new HashSet<>();
-//        for(Review review1 : task.getReviews()){
-//            for(ReviewIteration reviewIteration1 : review1.getReviewIterations()){
-//                reviewIterations.add(reviewIteration1);
-//                comments.addAll(reviewIteration1.getComments());
-//            }
-//        }
-//
-//        Project project = task.getProject();
-//        Organization organization = project.getOrganization();
-//        Solution solution = task.getSolution();
-//        Set<UserTask> userTasks = task.getUsers();
-//        ReviewIteration reviewIteration = review.getLastIteration();
-//        return new ReviewDetailsResponse(
-//                review.getId(),
-//                task.getId(),
-//                project.getId(),
-//                solution.getId(),
-//                mapToReviewProjectResponse(project),
-//                mapToReviewOrganizationResponse(organization),
-//                task.getTitle(),
-//                task.getStatus(),
-//                review.getStatus(),
-//                task.getReviewType(),
-//                solution.getUploadType(),
-//                reviewIteration.getUploadedAt() == null ? "" : reviewIteration.getUploadedAt().toString(),
-//                reviewIteration.getDeadline() == null ? "" : reviewIteration.getDeadline().toString(),
-//                reviewIteration.getCompletedAt() == null ? "" : reviewIteration.getCompletedAt().toString(),
-//                getVisibleUntil(reviewIteration),
-//                review.getRevealAuthorAfterReview(),
-//                solution.getRevealAuthorAfterReview(),
-//                mapToAssignees(userTasks),
-//                mapToReviewers(userTasks),
-//                mapToViewerAssignmentResponse(review),
-//                mapToReviewFileContentResponses(review.getLastIteration()),
-//                commentMapper.mapToReviewCommentResponses(comments),
-//                mapToHistoryEventResponse(review),
-//                mapToFinalReviewResponses(reviewIterations),
-//                null, //TODO: Доработать, когда появится ИИ ревью
-//                null, //TODO: Доработать, когда появится ИИ ревью
-//                permissionsResponse
-//        );
-//    }
-
     public ReviewDetailsResponse mapToReviewDetailsResponseByTask(
             Review review,
             PermissionsResponse permissionsResponse
@@ -190,14 +143,25 @@ public class ReviewMapper {
                 mapToAssignees(userTasks),
                 mapToReviewers(userTasks),
                 mapToViewerAssignmentResponse(review),
-                mapToReviewFileContentResponses(review.getLastIteration()),
+                mapToReviewFileContentResponses(reviewIteration),
                 commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
                 mapToHistoryEventResponse(review),
-                mapToFinalReviewResponses(review.getReviewIterations()),
+                mapToCurrentFinalReviewResponses(review),
+//                mapToFinalReviewResponses(review.getReviewIterations()),
                 null, //TODO: Доработать, когда появится ИИ ревью
                 null, //TODO: Доработать, когда появится ИИ ревью
                 permissionsResponse
         );
+    }
+
+    private List<FinalReviewResponse> mapToCurrentFinalReviewResponses(Review review) {
+        List<FinalReviewResponse> responses = new ArrayList<>();
+        ReviewIteration currentIteration = review.getLastIteration();
+        if (currentIteration != null
+                && currentIteration.getReviewVerdict() != null) {
+            responses.add(mapToFinalReviewResponse(currentIteration));
+        }
+        return responses;
     }
 
     private List<ReviewHistoryResponse> mapToHistoryEventResponse(Review review){
@@ -220,7 +184,7 @@ public class ReviewMapper {
                 reviewIteration.getCompletedAt() == null ? null : reviewIteration.getCompletedAt().toString(),
                 reviewIteration.getTaskStatusAfterIteration(),
                 mapToReviewFileContentResponses(reviewIteration),
-                mapToCommentDtos(reviewIteration.getComments()),
+                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
                 reviewIteration.getReviewVerdict() == null ? null : mapToFinalReviewResponse(reviewIteration)
         );
     }
@@ -236,17 +200,6 @@ public class ReviewMapper {
                 .forEach(iteration -> responses.add(mapToFinalReviewResponse(iteration)));
         return responses;
     }
-
-//    private List<FinalReviewResponse> mapToFinalReviewResponses(Set<ReviewIteration> reviewIterations) {
-//        List<FinalReviewResponse> finalReviewResponses = new ArrayList<>();
-//        for(ReviewIteration reviewIteration : reviewIterations){
-//            if(reviewIteration.getReviewVerdict() == null){
-//                continue;
-//            }
-//            finalReviewResponses.add(mapToFinalReviewResponse(reviewIteration));
-//        }
-//        return finalReviewResponses;
-//    }
 
     private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){
         ReviewVerdict reviewVerdict = reviewIteration.getReviewVerdict();
@@ -352,24 +305,6 @@ public class ReviewMapper {
                 isCheckedInTime(reviewIteration),
                 isExpired(reviewIteration),
                 isAllOwnThreadsResolved(review.getLastIteration().getComments())
-        );
-    }
-
-    private List<CommentResponse> mapToCommentDtos(Set<Comment> comments){
-        List<CommentResponse> commentResponses = new ArrayList<>();
-        for (Comment comment : comments) {
-            commentResponses.add(mapToCommentDto(comment));
-        }
-        return commentResponses;
-    }
-
-    private CommentResponse mapToCommentDto(Comment comment){
-        return new CommentResponse(
-                comment.getId(),
-                comment.getUser().getId(),
-                comment.getUser().getFullName(),
-                comment.getCreatedAt().toString(),
-                comment.getText()
         );
     }
 

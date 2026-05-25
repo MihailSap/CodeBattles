@@ -1,5 +1,6 @@
 package ru.urfu.backend.dto.review;
 
+import ru.urfu.backend.dto.comment.ReviewCommentResponse;
 import ru.urfu.backend.model.enums.TaskStatus;
 
 import java.util.List;
@@ -11,7 +12,7 @@ public record ReviewHistoryResponse(
         String completedAt,
         TaskStatus taskStatusAfterIteration,
         List<ReviewFileContentResponse> files,
-        List<CommentResponse> comments,
+        List<ReviewCommentResponse> comments,
         FinalReviewResponse finalReview
 ) {
 }
