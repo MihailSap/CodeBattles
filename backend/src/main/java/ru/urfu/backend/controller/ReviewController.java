@@ -105,14 +105,19 @@ public class ReviewController {
         Review updatedReview = reviewService.updateStatusCompleted(review);
         Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
 
-        boolean toRework = true;
+        boolean hasUncompletedReview = false;
+        boolean hasRework = false;
+
         Task task = review.getTask();
         for(Review taskReview : task.getReviews()){
-            if(taskReview.getLastIteration().getReviewVerdict() == null){
-                toRework = false;
+            ReviewVerdict reviewVerdict1 = taskReview.getLastIteration().getReviewVerdict();
+            if(reviewVerdict1 == null){
+                hasUncompletedReview = true;
+            } else if(ReviewVerdictType.REWORK.equals(reviewVerdict1.getVerdict())){
+                hasRework = true;
             }
         }
-        if (toRework) {
+        if(!hasUncompletedReview || hasRework){
             taskService.updateStatusRework(task);
         }
 
