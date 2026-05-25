@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch } from '@/app/providers/store';
 import { useParams } from 'react-router-dom';
 import {
@@ -6,9 +6,11 @@ import {
   useGetProfilePageDataQuery,
   useUpdateProfileSectionMutation,
   useUpdateSkillsSectionMutation,
+  type ProfileSkills,
+  type ProfileStatistics,
 } from '@/entities/profile';
 import { SettingsIcon } from '@/shared/ui/icons';
-import { AchievementsSection } from '@/entities/achievement';
+import { AchievementsSection, type Achievement } from '@/entities/achievement';
 import { ProfileSection } from '@/widgets/profile-overview';
 import { SkillsSection } from '@/widgets/profile-overview';
 import Snackbar from '@/shared/ui/snackbar';
@@ -17,15 +19,24 @@ import { StatisticsSection } from '@/widgets/profile-overview';
 import { SKILL_GROUPS } from '@/entities/stack';
 import { useAuth } from '@/entities/session';
 import { useSnackbar } from '@/shared/lib/hooks';
-import { useSkillsPopup } from '@/widgets/profile-overview';
+import { useSkillsPopup, type SkillGroupKey } from '@/widgets/profile-overview';
 import { patchAuthUser } from '@/entities/session';
-import { lazyNamed } from '@/shared/lib';
 import profilePageStyles from './ProfilePage.module.scss';
 import statisticsSectionStyles from '../../../widgets/profile-overview/ui/statistics-section/StatisticsSection.module.scss';
 
-const ProfileSettingsModal = lazyNamed(() => import('@/features/update-profile-settings'), 'ProfileSettingsModal');
+const ProfileSettingsModal = lazy(() =>
+  import('@/features/update-profile-settings').then(({ ProfileSettingsModal }) => ({ default: ProfileSettingsModal }))
+);
 
-const EMPTY_PROFILE = {
+interface ProfileDisplayData {
+  name: string;
+  email: string;
+  login: string;
+  registeredAt: string;
+  avatarPath: string;
+}
+
+const EMPTY_PROFILE: ProfileDisplayData = {
   name: '',
   email: '',
   login: '',
@@ -33,13 +44,13 @@ const EMPTY_PROFILE = {
   avatarPath: '',
 };
 
-const EMPTY_SKILLS = SKILL_GROUPS.reduce((accumulator: LegacyValue, group: LegacyValue) => {
-  accumulator[group.key] = [];
+const EMPTY_SKILLS: ProfileSkills = {
+  languages: [],
+  frameworks: [],
+  tools: [],
+};
 
-  return accumulator;
-}, {});
-
-const DEFAULT_STATISTICS = {
+const DEFAULT_STATISTICS: ProfileStatistics = {
   qualityScore: 0,
   aiQualityScore: 0,
   usefulnessIndex: 0,
@@ -64,32 +75,22 @@ const STAT_CARDS = [
     key: 'reviewDepth',
     title: 'Глубина ревью',
   },
-];
+] satisfies readonly { key: keyof Omit<ProfileStatistics, 'acceptedDecisionsPercent'>; title: string }[];
 
-const sortByAlphabet = (values: LegacyValue = []) =>
-  [...values].sort((a: LegacyValue, b: LegacyValue) =>
+const sortByAlphabet = (values: readonly string[] = []): string[] =>
+  [...values].sort((a, b) =>
     a.localeCompare(b, 'ru', {
       sensitivity: 'base',
     })
   );
 
-const normalizeSkills = (skillsFromServer: LegacyValue) => {
-  const normalized = {
-    ...EMPTY_SKILLS,
-  };
+const normalizeSkills = (skillsFromServer: ProfileSkills | null | undefined): ProfileSkills => ({
+  languages: sortByAlphabet(skillsFromServer?.languages.filter((item) => item.trim()) ?? []),
+  frameworks: sortByAlphabet(skillsFromServer?.frameworks.filter((item) => item.trim()) ?? []),
+  tools: sortByAlphabet(skillsFromServer?.tools.filter((item) => item.trim()) ?? []),
+});
 
-  SKILL_GROUPS.forEach((group: LegacyValue) => {
-    const groupSkills = Array.isArray(skillsFromServer?.[group.key]) ? skillsFromServer[group.key] : [];
-
-    normalized[group.key] = sortByAlphabet(
-      groupSkills.filter((item: LegacyValue) => typeof item === 'string' && item.trim())
-    );
-  });
-
-  return normalized;
-};
-
-const formatRegistrationDate = (value: LegacyValue) => {
+const formatRegistrationDate = (value: string): string => {
   if (!value) {
     return 'Не задано';
   }
@@ -107,7 +108,7 @@ const formatRegistrationDate = (value: LegacyValue) => {
   }).format(date);
 };
 
-const getPercentClass = (percent: LegacyValue) => {
+const getPercentClass = (percent: number): string => {
   if (percent <= 40) {
     return statisticsSectionStyles.isError;
   }
@@ -123,8 +124,8 @@ const ProfilePage = () => {
   const dispatch = useAppDispatch();
   const { user, userId } = useAuth();
   const { userId: routeUserId } = useParams();
-  const fileInputRef = useRef<LegacyValue>(null);
-  const createdAvatarUrlsRef = useRef(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const createdAvatarUrlsRef = useRef(new Set<string>());
 
   const profileFallbackRef = useRef({
     name: '',
@@ -136,27 +137,20 @@ const ProfilePage = () => {
 
   const [isProfileEditMode, setIsProfileEditMode] = useState(false);
   const [isSkillsEditMode, setIsSkillsEditMode] = useState(false);
-  const [profileData, setProfileData] = useState(EMPTY_PROFILE);
-  const [profileDraft, setProfileDraft] = useState(EMPTY_PROFILE);
-  const [skillsData, setSkillsData] = useState(EMPTY_SKILLS);
-  const [skillsDraft, setSkillsDraft] = useState(EMPTY_SKILLS);
-  const [statistics, setStatistics] = useState(DEFAULT_STATISTICS);
-  const [achievements, setAchievements] = useState<LegacyValue[]>([]);
-  const [receivedAchievementIds, setReceivedAchievementIds] = useState<LegacyValue[]>([]);
+  const [profileData, setProfileData] = useState<ProfileDisplayData>(EMPTY_PROFILE);
+  const [profileDraft, setProfileDraft] = useState<ProfileDisplayData>(EMPTY_PROFILE);
+  const [skillsData, setSkillsData] = useState<ProfileSkills>(EMPTY_SKILLS);
+  const [skillsDraft, setSkillsDraft] = useState<ProfileSkills>(EMPTY_SKILLS);
+  const [statistics, setStatistics] = useState<ProfileStatistics>(DEFAULT_STATISTICS);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [receivedAchievementIds, setReceivedAchievementIds] = useState<number[]>([]);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<LegacyValue>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
 
-  const {
-    openedSkillsPopup,
-    popupDirection,
-    popupHorizontalAlign,
-    popupMaxHeight,
-    mobilePopupPosition,
-    closeSkillsPopup,
-    openSkillsPopup,
-  } = useSkillsPopup();
+  const { openedSkillsPopup, popupMaxHeight, mobilePopupPosition, closeSkillsPopup, openSkillsPopup } =
+    useSkillsPopup();
 
   const normalizedRouteUserId = routeUserId ? String(routeUserId) : '';
   const isOwnProfile = !normalizedRouteUserId || normalizedRouteUserId === String(userId ?? '');
@@ -190,7 +184,7 @@ const ProfilePage = () => {
     const createdAvatarUrls = createdAvatarUrlsRef.current;
 
     return () => {
-      createdAvatarUrls.forEach((url: LegacyValue) => URL.revokeObjectURL(String(url)));
+      createdAvatarUrls.forEach((url) => URL.revokeObjectURL(url));
       createdAvatarUrls.clear();
     };
   }, []);
@@ -253,18 +247,18 @@ const ProfilePage = () => {
   const acceptedDecisionsPercent = Math.max(0, Math.min(100, Number(statistics.acceptedDecisionsPercent) || 0));
 
   const skillsByGroup = useMemo(() => {
-    return SKILL_GROUPS.map((group: LegacyValue) => ({
+    return SKILL_GROUPS.map((group) => ({
       ...group,
       selected: sortByAlphabet(skillsData[group.key] || []),
     }));
   }, [skillsData]);
 
   const skillsDraftByGroup = useMemo(() => {
-    return SKILL_GROUPS.map((group: LegacyValue) => {
+    return SKILL_GROUPS.map((group) => {
       const selected = sortByAlphabet(skillsDraft[group.key] || []);
       const selectedSet = new Set(selected);
-      const unselected = sortByAlphabet(group.options.filter((option: LegacyValue) => !selectedSet.has(option)));
-      const selectedSorted = sortByAlphabet(group.options.filter((option: LegacyValue) => selectedSet.has(option)));
+      const unselected = sortByAlphabet(group.options.filter((option) => !selectedSet.has(option)));
+      const selectedSorted = sortByAlphabet(group.options.filter((option) => selectedSet.has(option)));
 
       return {
         ...group,
@@ -277,7 +271,7 @@ const ProfilePage = () => {
   const receivedAchievementIdSet = useMemo(() => new Set(receivedAchievementIds), [receivedAchievementIds]);
 
   const orderedAchievements = useMemo(() => {
-    return [...achievements].sort((left: LegacyValue, right: LegacyValue) => {
+    return [...achievements].sort((left, right) => {
       const leftReceived = receivedAchievementIdSet.has(left.id) ? 0 : 1;
       const rightReceived = receivedAchievementIdSet.has(right.id) ? 0 : 1;
 
@@ -294,15 +288,15 @@ const ProfilePage = () => {
   const visibleAchievements = useMemo(() => {
     if (canEditProfile) {
       return orderedAchievements.filter(
-        (achievement: LegacyValue) => achievement.visible || receivedAchievementIdSet.has(achievement.id)
+        (achievement) => achievement.visible || receivedAchievementIdSet.has(achievement.id)
       );
     }
 
-    return orderedAchievements.filter((achievement: LegacyValue) => receivedAchievementIdSet.has(achievement.id));
+    return orderedAchievements.filter((achievement) => receivedAchievementIdSet.has(achievement.id));
   }, [canEditProfile, orderedAchievements, receivedAchievementIdSet]);
 
-  const removeTemporaryAvatarUrl = (avatarUrl: LegacyValue) => {
-    if (!avatarUrl || typeof avatarUrl !== 'string') {
+  const removeTemporaryAvatarUrl = (avatarUrl: string): void => {
+    if (!avatarUrl) {
       return;
     }
 
@@ -335,8 +329,8 @@ const ProfilePage = () => {
     setIsProfileEditMode(false);
   };
 
-  const handleNameChange = (event: LegacyValue) => {
-    setProfileDraft((previousState: LegacyValue) => ({
+  const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setProfileDraft((previousState) => ({
       ...previousState,
       name: event.target.value.slice(0, 255),
     }));
@@ -351,13 +345,13 @@ const ProfilePage = () => {
     setPendingAvatarFile(null);
     setShouldDeleteAvatar(true);
 
-    setProfileDraft((previousState: LegacyValue) => ({
+    setProfileDraft((previousState) => ({
       ...previousState,
       avatarPath: '',
     }));
   };
 
-  const handleAvatarUpload = async (event: LegacyValue) => {
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!canEditProfile) {
       return;
     }
@@ -374,7 +368,7 @@ const ProfilePage = () => {
     setPendingAvatarFile(file);
     setShouldDeleteAvatar(false);
 
-    setProfileDraft((previousState: LegacyValue) => ({
+    setProfileDraft((previousState) => ({
       ...previousState,
       avatarPath: localPreviewUrl,
     }));
@@ -441,18 +435,16 @@ const ProfilePage = () => {
     setIsSkillsEditMode(false);
   };
 
-  const toggleSkill = (groupKey: LegacyValue, skillName: LegacyValue) => {
+  const toggleSkill = (groupKey: SkillGroupKey, skillName: string) => {
     if (!canEditProfile) {
       return;
     }
 
-    setSkillsDraft((previousState: LegacyValue) => {
+    setSkillsDraft((previousState) => {
       const groupSkills = previousState[groupKey] || [];
       const hasSkill = groupSkills.includes(skillName);
 
-      const nextSkills = hasSkill
-        ? groupSkills.filter((item: LegacyValue) => item !== skillName)
-        : [...groupSkills, skillName];
+      const nextSkills = hasSkill ? groupSkills.filter((item) => item !== skillName) : [...groupSkills, skillName];
 
       return {
         ...previousState,
@@ -461,12 +453,12 @@ const ProfilePage = () => {
     });
   };
 
-  const clearSkillGroup = (groupKey: LegacyValue) => {
+  const clearSkillGroup = (groupKey: SkillGroupKey) => {
     if (!canEditProfile) {
       return;
     }
 
-    setSkillsDraft((previousState: LegacyValue) => ({
+    setSkillsDraft((previousState) => ({
       ...previousState,
       [groupKey]: [],
     }));
@@ -479,7 +471,7 @@ const ProfilePage = () => {
 
     try {
       const savedSkills = await updateSkillsSection({
-        userId: (profileData as LegacyValue).id || userId,
+        userId: userId ?? 'me',
         skills: skillsDraft,
       }).unwrap();
 
@@ -535,8 +527,6 @@ const ProfilePage = () => {
               onSkillsSave={handleSkillsSave}
               onToggleSkill={toggleSkill}
               openedSkillsPopup={openedSkillsPopup}
-              popupDirection={popupDirection}
-              popupHorizontalAlign={popupHorizontalAlign}
               popupMaxHeight={popupMaxHeight}
               skillsByGroup={skillsByGroup}
               skillsDraftByGroup={skillsDraftByGroup}

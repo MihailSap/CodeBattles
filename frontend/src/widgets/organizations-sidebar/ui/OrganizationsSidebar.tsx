@@ -1,26 +1,32 @@
-import { useMemo } from 'react';
+import { type MouseEvent, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CollapseIcon } from '@/shared/ui/icons';
 import { ORGANIZATION_MEMBER_ROLE, ORGANIZATION_MEMBER_ROLE_LABELS } from '@/entities/organization';
+import type { EntityId } from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { useGetMyOrganizationsQuery } from '@/entities/project';
+import { useGetMyOrganizationsQuery } from '@/entities/organization';
 import Spinner from '@/shared/ui/spinner';
 import organizationsSidebarStyles from './OrganizationsSidebar.module.scss';
-import mainPageStyles from '../../../pages/main/ui/MainPage.module.scss';
 
-const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: LegacyValue) => {
-  const { data: items = [], isLoading } = useGetMyOrganizationsQuery(viewerId, {
+interface OrganizationsSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  viewerId: EntityId | null;
+}
+
+const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: OrganizationsSidebarProps) => {
+  const { data: items = [], isLoading } = useGetMyOrganizationsQuery(viewerId ?? '', {
     skip: !isOpen || !viewerId,
     refetchOnMountOrArgChange: 60,
   });
 
-  const headerHeight = document.querySelector(`.${mainPageStyles.header}`)?.getBoundingClientRect().height || 0;
+  const headerHeight = document.querySelector('header')?.getBoundingClientRect().height ?? 0;
   useBodyScrollLock(isOpen);
 
   const sorted = useMemo(
     () =>
-      [...items].sort((left: LegacyValue, right: LegacyValue) => {
+      [...items].sort((left, right) => {
         const leftPriority = left.role === ORGANIZATION_MEMBER_ROLE.OWNER ? 0 : 1;
         const rightPriority = right.role === ORGANIZATION_MEMBER_ROLE.OWNER ? 0 : 1;
 
@@ -58,7 +64,7 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: LegacyValue) => {
         role="dialog"
         aria-modal="true"
         aria-label="Мои организации"
-        onClick={(event: LegacyValue) => event.stopPropagation()}
+        onClick={(event: MouseEvent<HTMLElement>) => event.stopPropagation()}
         style={{
           top: `${headerHeight + 30}px`,
           height: `calc(100vh - ${headerHeight + 60}px)`,
@@ -84,7 +90,7 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: LegacyValue) => {
           ) : sorted.length === 0 ? (
             <li className={organizationsSidebarStyles.isEmpty}>Вы еще не создали ни одну организацию</li>
           ) : (
-            sorted.map((organization: LegacyValue, index: LegacyValue) => (
+            sorted.map((organization, index) => (
               <li
                 key={organization.id}
                 className={[
@@ -96,14 +102,16 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: LegacyValue) => {
               >
                 <Link
                   className={organizationsSidebarStyles.itemLink}
-                  to={ROUTES.organizationById.replace(':organizationId', organization.id)}
+                  to={ROUTES.organizationById.replace(':organizationId', String(organization.id))}
                   onClick={onClose}
                 >
-                  <img
-                    className={organizationsSidebarStyles.logo}
-                    src={organization.logo}
-                    alt={`Логотип ${organization.name}`}
-                  />
+                  {organization.logo && (
+                    <img
+                      className={organizationsSidebarStyles.logo}
+                      src={organization.logo}
+                      alt={`Логотип ${organization.name}`}
+                    />
+                  )}
                   <div className={organizationsSidebarStyles.meta}>
                     <p className={organizationsSidebarStyles.name}>{organization.name}</p>
                     <p
@@ -116,7 +124,7 @@ const OrganizationsSidebar = ({ isOpen, onClose, viewerId }: LegacyValue) => {
                         .filter(Boolean)
                         .join(' ')}
                     >
-                      {ORGANIZATION_MEMBER_ROLE_LABELS[organization.role]}
+                      {organization.role ? ORGANIZATION_MEMBER_ROLE_LABELS[organization.role] : ''}
                     </p>
                     <p className={organizationsSidebarStyles.projects}>Проектов: {organization.projectsCount}</p>
                   </div>

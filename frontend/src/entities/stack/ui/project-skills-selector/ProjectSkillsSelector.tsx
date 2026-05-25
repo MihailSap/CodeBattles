@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { SKILL_GROUPS } from '../../model/profile-skills';
 import projectSkillsSelectorStyles from './ProjectSkillsSelector.module.scss';
-import taskCreatePageStyles from '../../../../pages/task-create/ui/TaskCreatePage.module.scss';
 
-const allSkills: string[] = SKILL_GROUPS.flatMap((group: LegacyValue) => group.options);
+const allSkills: string[] = SKILL_GROUPS.flatMap((group) => [...group.options]);
 
-const uniqueSkills = [...new Set(allSkills)].sort((a: LegacyValue, b: LegacyValue) =>
+const uniqueSkills = [...new Set(allSkills)].sort((a, b) =>
   a.localeCompare(b, 'ru', {
     sensitivity: 'base',
   })
@@ -43,25 +42,24 @@ const ProjectSkillsSelector = ({
   emptyLabel = 'Не указано',
 }: ProjectSkillsSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [popupStyle, setPopupStyle] = useState<LegacyValue>({});
-  const rootRef = useRef<LegacyValue>(null);
-  const popupRef = useRef<LegacyValue>(null);
-  const triggerRef = useRef<LegacyValue>(null);
+  const [popupStyle, setPopupStyle] = useState<CSSProperties>({});
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   const selected = useMemo(
     () =>
-      [...new Set((value || []).filter((item: LegacyValue) => uniqueSkills.includes(item)))].sort(
-        (a: LegacyValue, b: LegacyValue) =>
-          a.localeCompare(b, 'ru', {
-            sensitivity: 'base',
-          })
+      [...new Set((value ?? []).filter((item) => uniqueSkills.includes(item)))].sort((a, b) =>
+        a.localeCompare(b, 'ru', {
+          sensitivity: 'base',
+        })
       ),
     [value]
   );
 
   const orderedOptions = useMemo(() => {
     const selectedSet = new Set(selected);
-    const unselected = uniqueSkills.filter((skill: LegacyValue) => !selectedSet.has(skill));
+    const unselected = uniqueSkills.filter((skill) => !selectedSet.has(skill));
 
     return [...unselected, ...selected];
   }, [selected]);
@@ -72,13 +70,13 @@ const ProjectSkillsSelector = ({
     }
 
     if (selected.includes(skillName)) {
-      onChange(selected.filter((item: LegacyValue) => item !== skillName));
+      onChange(selected.filter((item) => item !== skillName));
 
       return;
     }
 
     onChange(
-      [...selected, skillName].sort((a: LegacyValue, b: LegacyValue) =>
+      [...selected, skillName].sort((a, b) =>
         a.localeCompare(b, 'ru', {
           sensitivity: 'base',
         })
@@ -107,7 +105,6 @@ const ProjectSkillsSelector = ({
     const boundaryElement =
       (boundarySelector ? triggerElement.closest(boundarySelector) : null) ||
       triggerElement.closest(`.${projectSkillsSelectorStyles.createModal}`) ||
-      triggerElement.closest(`.${taskCreatePageStyles.content}`) ||
       triggerElement.closest('form');
 
     const boundaryRect = boundaryElement?.getBoundingClientRect();
@@ -177,10 +174,10 @@ const ProjectSkillsSelector = ({
     });
   }, [boundarySelector, forceOpenUp]);
 
-  const handleOpenPopup = (event: LegacyValue) => {
+  const handleOpenPopup = (event: MouseEvent<HTMLButtonElement>): void => {
     triggerRef.current = event.currentTarget;
 
-    setIsOpen((previousState: LegacyValue) => {
+    setIsOpen((previousState) => {
       const nextState = !previousState;
 
       if (nextState) {
@@ -202,16 +199,17 @@ const ProjectSkillsSelector = ({
       recalculatePopupPosition();
     });
 
-    const handleOutsideClick = (event: LegacyValue) => {
-      const isInsidePopup = popupRef.current?.contains(event.target);
-      const isTrigger = triggerRef.current?.contains(event.target);
+    const handleOutsideClick = (event: globalThis.MouseEvent): void => {
+      const target = event.target instanceof Node ? event.target : null;
+      const isInsidePopup = popupRef.current?.contains(target);
+      const isTrigger = triggerRef.current?.contains(target);
 
       if (!isInsidePopup && !isTrigger) {
         setIsOpen(false);
       }
     };
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -248,7 +246,7 @@ const ProjectSkillsSelector = ({
       <div className={projectSkillsSelectorStyles.list}>
         {selected.length === 0 && <span className={projectSkillsSelectorStyles.isEmpty}>{emptyLabel}</span>}
 
-        {selected.map((skillName: LegacyValue) => (
+        {selected.map((skillName) => (
           <button
             className={projectSkillsSelectorStyles.tag}
             type="button"
@@ -286,7 +284,7 @@ const ProjectSkillsSelector = ({
                 data-skills-popup="true"
                 style={popupStyle}
               >
-                {orderedOptions.map((skillName: LegacyValue) => {
+                {orderedOptions.map((skillName) => {
                   const isChecked = selected.includes(skillName);
 
                   return (

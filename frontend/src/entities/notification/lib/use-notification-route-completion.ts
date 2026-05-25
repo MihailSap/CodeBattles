@@ -6,7 +6,7 @@ import { useCompleteNotificationMutation } from '../api/notification-api-slice';
 export const useNotificationRouteCompletion = () => {
   const location = useLocation();
   const [completeNotification] = useCompleteNotificationMutation();
-  const completedPathRef = useRef<LegacyValue>(null);
+  const completedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (completedPathRef.current === location.pathname) {
@@ -16,7 +16,7 @@ export const useNotificationRouteCompletion = () => {
     completedPathRef.current = location.pathname;
     const payloads = getNotificationCompletionPayloadsForPath(location.pathname);
 
-    payloads.forEach((payload: LegacyValue) => {
+    payloads.forEach((payload) => {
       completeNotification(payload);
     });
   }, [completeNotification, location.pathname]);

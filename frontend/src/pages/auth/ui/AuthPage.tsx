@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAppDispatch } from '@/app/providers/store';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -14,7 +14,7 @@ import { API_BASE_URL } from '@/shared/config/api';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, fetchCurrentUser, loginUser, registerUser } from '@/entities/session';
-import { loginFormSchema, registerFormSchema } from '@/entities/session';
+import { authLoginPageFormSchema, authRegisterPageFormSchema, type AuthPageFormValues } from '@/entities/session';
 import { tokenStorage } from '@/shared/lib';
 import authPageStyles from './AuthPage.module.scss';
 
@@ -34,14 +34,18 @@ const AuthPage = () => {
   const isDark = theme === 'dark';
   const [registrationCompleted, setRegistrationCompleted] = useState(false);
   const isLoginMode = location.pathname === ROUTES.login;
-  const activeSchema = useMemo(() => (isLoginMode ? loginFormSchema : registerFormSchema), [isLoginMode]);
+
+  const activeSchema = useMemo(
+    () => (isLoginMode ? authLoginPageFormSchema : authRegisterPageFormSchema),
+    [isLoginMode]
+  );
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm({
+  } = useForm<AuthPageFormValues>({
     resolver: zodResolver(activeSchema),
     defaultValues: initialForm,
     mode: 'onChange',
@@ -129,7 +133,7 @@ const AuthPage = () => {
     };
   }, [dispatch, location.search, navigate]);
 
-  const changeMode = (mode: LegacyValue) => {
+  const changeMode = (mode: 'login' | 'register') => {
     const nextRoute = mode === 'login' ? ROUTES.login : ROUTES.register;
 
     if (location.pathname !== nextRoute) {
@@ -142,7 +146,7 @@ const AuthPage = () => {
     window.location.href = `${API_BASE_URL}/oauth2/authorization/github`;
   };
 
-  const sanitizeValue = (name: LegacyValue, value: LegacyValue) => {
+  const sanitizeValue = (name: keyof AuthPageFormValues, value: string): string => {
     if (name === 'login' || name === 'email') {
       return value.replace(/\s+/g, '');
     }
@@ -150,12 +154,12 @@ const AuthPage = () => {
     return value;
   };
 
-  const registerField = (name: LegacyValue) => {
+  const registerField = (name: keyof AuthPageFormValues) => {
     const field = register(name);
 
     return {
       ...field,
-      onChange: (event: LegacyValue) => {
+      onChange: (event: ChangeEvent<HTMLInputElement>) => {
         event.target.value = sanitizeValue(name, event.target.value);
         field.onChange(event);
         dispatch(clearAuthMessages());
@@ -163,7 +167,7 @@ const AuthPage = () => {
     };
   };
 
-  const onSubmit = async (form: LegacyValue) => {
+  const onSubmit = async (form: AuthPageFormValues) => {
     dispatch(clearAuthMessages());
 
     if (isLoginMode) {
@@ -194,12 +198,12 @@ const AuthPage = () => {
     }
   };
 
-  const getFieldError = (name: LegacyValue) => {
-    if (!((touchedFields as LegacyValue)[name] || isSubmitted)) {
+  const getFieldError = (name: keyof AuthPageFormValues): string => {
+    if (!(touchedFields[name] || isSubmitted)) {
       return '';
     }
 
-    return String((errors as LegacyValue)[name]?.message || '');
+    return String(errors[name]?.message ?? '');
   };
 
   const isSubmitDisabled = isLoading || !isValid;
@@ -271,7 +275,7 @@ const AuthPage = () => {
                             autoComplete="username"
                             {...registerField('login')}
                           />
-                          {getFieldError('login') && <p className={authPageStyles.isError}>{getFieldError('login')}</p>}
+                          {getFieldError('login') && <p className={authPageStyles.error}>{getFieldError('login')}</p>}
                         </div>
                       )}
 
@@ -287,7 +291,7 @@ const AuthPage = () => {
                           autoComplete="email"
                           {...registerField('email')}
                         />
-                        {getFieldError('email') && <p className={authPageStyles.isError}>{getFieldError('email')}</p>}
+                        {getFieldError('email') && <p className={authPageStyles.error}>{getFieldError('email')}</p>}
                       </div>
 
                       <div className={authPageStyles.group}>
@@ -302,7 +306,7 @@ const AuthPage = () => {
                           {...registerField('password')}
                         />
                         {getFieldError('password') && (
-                          <p className={authPageStyles.isError}>{getFieldError('password')}</p>
+                          <p className={authPageStyles.error}>{getFieldError('password')}</p>
                         )}
                       </div>
 
@@ -322,7 +326,7 @@ const AuthPage = () => {
                             {...registerField('confirmPassword')}
                           />
                           {getFieldError('confirmPassword') && (
-                            <p className={authPageStyles.isError}>{getFieldError('confirmPassword')}</p>
+                            <p className={authPageStyles.error}>{getFieldError('confirmPassword')}</p>
                           )}
                         </div>
                       )}

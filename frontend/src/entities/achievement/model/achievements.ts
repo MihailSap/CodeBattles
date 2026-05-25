@@ -17,6 +17,14 @@ import skolkoSkolkoImage from '@/shared/assets/achievement-skolko-skolko-icon.sv
 import nelovkoVyshloImage from '@/shared/assets/achievement-nelovko-vyshlo-icon.svg';
 import zvukSvobodyImage from '@/shared/assets/achievement-zvuk-svobody-icon.svg';
 
+export interface Achievement {
+  id: number;
+  image: string;
+  name: string;
+  description: string;
+  visible: boolean;
+}
+
 export const ACHIEVEMENTS = [
   {
     id: 1,
@@ -144,5 +152,5 @@ export const ACHIEVEMENTS = [
     description: 'Не сдать задачу вовремя',
     visible: false,
   },
-];
-export const MOCK_RECEIVED_ACHIEVEMENT_IDS = [1, 2, 5, 7, 8];
+] satisfies Achievement[];
+export const MOCK_RECEIVED_ACHIEVEMENT_IDS: number[] = [1, 2, 5, 7, 8];

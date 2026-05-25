@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle';
 import { ROUTES } from '@/shared/config/routes';
 import { useAuth } from '@/entities/session';
 import { clearAuthMessages, resetPasswordByToken } from '@/entities/session';
-import { resetPasswordFormSchema } from '@/entities/session';
+import { resetPasswordFormSchema, type ResetPasswordFormValues } from '@/entities/session';
 import authPageStyles from '../../auth/ui/AuthPage.module.scss';
 import resetPasswordPageStyles from './ResetPasswordPage.module.scss';
 
@@ -28,7 +28,7 @@ const ResetPasswordPage = () => {
     register,
     handleSubmit,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm({
+  } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordFormSchema),
     defaultValues: {
       password: '',
@@ -73,22 +73,22 @@ const ResetPasswordPage = () => {
     };
   }, [navigate, resultMessage]);
 
-  const registerPasswordField = (name: LegacyValue) =>
+  const registerPasswordField = (name: keyof ResetPasswordFormValues) =>
     register(name, {
       onChange: () => {
         dispatch(clearAuthMessages());
       },
     });
 
-  const getPasswordError = (name: LegacyValue) => {
-    if (!((touchedFields as LegacyValue)[name] || isSubmitted)) {
+  const getPasswordError = (name: keyof ResetPasswordFormValues): string => {
+    if (!(touchedFields[name] || isSubmitted)) {
       return '';
     }
 
-    return String((errors as LegacyValue)[name]?.message || '');
+    return String(errors[name]?.message ?? '');
   };
 
-  const onSubmit = async ({ password }: LegacyValue) => {
+  const onSubmit = async ({ password }: ResetPasswordFormValues) => {
     const result = await dispatch(
       resetPasswordByToken({
         token,

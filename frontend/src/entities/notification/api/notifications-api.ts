@@ -2,7 +2,7 @@ import { httpClient } from '@/shared/api';
 import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
 import { isNotificationExpired } from '../lib/notification-utils';
-import { NOTIFICATION_TYPE } from '../model/constants';
+import { NOTIFICATION_COMPLETION_ACTION, NOTIFICATION_TARGET_KIND, NOTIFICATION_TYPE } from '../model/constants';
 import { MOCK_NOTIFICATIONS, MOCK_REALTIME_NOTIFICATIONS } from './mock-notifications';
 import type { AppNotification, NotificationCompletion, NotificationTarget } from '../model/types';
 
@@ -13,11 +13,98 @@ type NotificationEvent =
 
 type NotificationListener = (event: NotificationEvent) => void;
 
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const clone = <T>(value: T): T => structuredClone(value);
 const mockListeners = new Set<NotificationListener>();
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const isIdentifier = (value: unknown): value is number | string =>
+  typeof value === 'number' || typeof value === 'string';
+
+const isNotificationType = (value: unknown): value is AppNotification['type'] =>
+  Object.values(NOTIFICATION_TYPE).some((type) => type === value);
+
+const isTargetKind = (value: unknown): value is NotificationTarget['kind'] =>
+  Object.values(NOTIFICATION_TARGET_KIND).some((kind) => kind === value);
+
+const isCompletionAction = (value: unknown): value is NotificationCompletion['action'] =>
+  Object.values(NOTIFICATION_COMPLETION_ACTION).some((action) => action === value);
+
+const parseTarget = (value: unknown): NotificationTarget | null => {
+  if (!isRecord(value) || !isTargetKind(value['kind'])) {
+    return null;
+  }
+
+  return {
+    kind: value['kind'],
+    ...(isIdentifier(value['organizationId']) ? { organizationId: value['organizationId'] } : {}),
+    ...(isIdentifier(value['projectId']) ? { projectId: value['projectId'] } : {}),
+    ...(isIdentifier(value['taskId']) ? { taskId: value['taskId'] } : {}),
+    ...(typeof value['taskName'] === 'string' ? { taskName: value['taskName'] } : {}),
+    ...(isIdentifier(value['reviewId']) ? { reviewId: value['reviewId'] } : {}),
+    ...(isIdentifier(value['userId']) ? { userId: value['userId'] } : {}),
+  };
+};
+
+const parseCompletion = (value: unknown): NotificationCompletion | null => {
+  if (!isRecord(value) || !isCompletionAction(value['action'])) {
+    return null;
+  }
+
+  const target = parseTarget(value['target']);
+
+  return target ? { action: value['action'], target } : null;
+};
+
+const parseNotification = (value: unknown): AppNotification | null => {
+  if (
+    !isRecord(value) ||
+    !isIdentifier(value['id']) ||
+    !isNotificationType(value['type']) ||
+    typeof value['title'] !== 'string' ||
+    typeof value['text'] !== 'string' ||
+    typeof value['isRead'] !== 'boolean' ||
+    typeof value['createdAt'] !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    id: value['id'],
+    type: value['type'],
+    title: value['title'],
+    text: value['text'],
+    isRead: value['isRead'],
+    createdAt: value['createdAt'],
+    target: parseTarget(value['target']),
+    completion: parseCompletion(value['completion']),
+    ...(typeof value['expiresAt'] === 'string' ? { expiresAt: value['expiresAt'] } : {}),
+    ...(typeof value['deadline'] === 'string' ? { deadline: value['deadline'] } : {}),
+    ...(typeof value['threadReplyCount'] === 'number' ? { threadReplyCount: value['threadReplyCount'] } : {}),
+  };
+};
+
+const parseEvent = (value: unknown): NotificationEvent => {
+  if (!isRecord(value)) {
+    return { type: 'notification.unknown', raw: value };
+  }
+
+  if (value['type'] === 'notification.deleted' && isIdentifier(value['notificationId'])) {
+    return { type: 'notification.deleted', notificationId: value['notificationId'] };
+  }
+
+  if (value['type'] === 'notification.upserted') {
+    const notification = parseNotification(value['notification']);
+
+    if (notification) {
+      return { type: 'notification.upserted', notification };
+    }
+  }
+
+  return { type: 'notification.unknown', raw: value };
+};
 
 const mockStore = new Map<number | string, AppNotification>(
-  MOCK_NOTIFICATIONS.map((notification) => [notification.id, clone(notification as AppNotification)])
+  MOCK_NOTIFICATIONS.map((notification) => [notification.id, clone(notification)])
 );
 
 const MOCK_REALTIME_NOTIFICATIONS_LIMIT = 1;
@@ -33,10 +120,10 @@ const notifyMockListeners = (event: NotificationEvent): void => {
   mockListeners.forEach((listener) => listener(clone(event)));
 };
 
-const getTargetId = (target: NotificationTarget = { kind: '' }): number | string | undefined =>
-  target.reviewId || target.taskId || target.organizationId || target.userId || target.kind;
+const getTargetId = (target: NotificationTarget): number | string =>
+  target.reviewId ?? target.taskId ?? target.organizationId ?? target.userId ?? target.kind;
 
-const isSameTarget = (left: NotificationTarget = { kind: '' }, right: NotificationTarget = { kind: '' }): boolean => {
+const isSameTarget = (left: NotificationTarget | null, right: NotificationTarget | null): boolean => {
   if (!left || !right || left.kind !== right.kind) {
     return false;
   }
@@ -66,7 +153,7 @@ const upsertMockNotification = (incomingNotification: AppNotification): AppNotif
     const groupedNotification = [...mockStore.values()].find(
       (currentNotification) =>
         currentNotification.type === NOTIFICATION_TYPE.THREAD_REPLY &&
-        isSameTarget(currentNotification.target ?? undefined, notification.target ?? undefined)
+        isSameTarget(currentNotification.target, notification.target)
     );
 
     if (groupedNotification) {
@@ -107,7 +194,7 @@ const startMockRealtime = (): void => {
     window.setTimeout(
       () => {
         const storedNotification = upsertMockNotification({
-          ...(clone(notification) as AppNotification),
+          ...clone(notification),
           createdAt: new Date().toISOString(),
         });
 
@@ -122,7 +209,7 @@ const startMockRealtime = (): void => {
 };
 
 const getNotificationsWsUrl = (): string => {
-  const explicitUrl = import.meta.env.VITE_NOTIFICATIONS_WS_URL;
+  const explicitUrl = import.meta.env['VITE_NOTIFICATIONS_WS_URL'];
 
   if (explicitUrl) {
     return explicitUrl;
@@ -131,7 +218,7 @@ const getNotificationsWsUrl = (): string => {
   return API_BASE_URL.replace(/^http/i, 'ws').replace(/\/$/, '') + '/api/v1/notifications/stream';
 };
 
-const isMockMode = (): boolean => !import.meta.env.VITE_NOTIFICATIONS_WS_URL;
+const isMockMode = (): boolean => !import.meta.env['VITE_NOTIFICATIONS_WS_URL'];
 
 const subscribeMockNotifications = (listener: NotificationListener): (() => void) => {
   mockListeners.add(listener);
@@ -150,7 +237,7 @@ const subscribeBackendNotifications = (listener: NotificationListener): (() => v
 
   socket.addEventListener('message', (event: MessageEvent<string>) => {
     try {
-      listener(JSON.parse(event.data) as NotificationEvent);
+      listener(parseEvent(JSON.parse(event.data)));
     } catch {
       listener({
         type: 'notification.unknown',
@@ -170,9 +257,13 @@ export const notificationsApi = {
       return getActiveMockNotifications();
     }
 
-    const response = await httpClient.get('/api/v1/notifications');
+    const response = await httpClient.get<unknown>('/api/v1/notifications');
 
-    return response.data || [];
+    return Array.isArray(response.data)
+      ? response.data
+          .map(parseNotification)
+          .filter((notification): notification is AppNotification => notification !== null)
+      : [];
   },
   async markAllRead(): Promise<{ updatedCount: number }> {
     if (isMockMode()) {
@@ -188,9 +279,13 @@ export const notificationsApi = {
       };
     }
 
-    const response = await httpClient.patch('/api/v1/notifications/read-all');
+    const response = await httpClient.patch<unknown>('/api/v1/notifications/read-all');
 
-    return response.data;
+    if (isRecord(response.data) && typeof response.data['updatedCount'] === 'number') {
+      return { updatedCount: response.data['updatedCount'] };
+    }
+
+    return { updatedCount: 0 };
   },
   async deleteNotification(notificationId: number | string): Promise<{ id: number | string }> {
     if (isMockMode()) {
@@ -223,13 +318,14 @@ export const notificationsApi = {
       };
     }
 
-    const response = await httpClient.post('/api/v1/notifications/complete', payload);
+    const response = await httpClient.post<unknown>('/api/v1/notifications/complete', payload);
 
-    return (
-      response.data || {
-        deletedIds: [],
-      }
-    );
+    const deletedIds =
+      isRecord(response.data) && Array.isArray(response.data['deletedIds'])
+        ? response.data['deletedIds'].filter(isIdentifier)
+        : [];
+
+    return { deletedIds };
   },
   subscribe(listener: NotificationListener): () => void {
     if (isMockMode()) {

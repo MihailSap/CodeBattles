@@ -20,11 +20,13 @@ const getInitialTheme = () => {
   return getSystemTheme();
 };
 
+const initialState: ThemeState = {
+  value: getInitialTheme(),
+};
+
 const themeSlice = createSlice({
   name: 'theme',
-  initialState: {
-    value: getInitialTheme(),
-  } as ThemeState,
+  initialState,
   reducers: {
     setTheme(state, action: PayloadAction<ThemeMode>) {
       state.value = action.payload;

@@ -1,12 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { type ChangeEvent, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import uploadIcon from '@/shared/assets/upload-icon.svg';
 import deleteIcon from '@/shared/assets/delete-icon.svg';
 import { CheckIcon } from '@/shared/ui/icons';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { organizationCreateFormSchema } from '@/entities/organization';
+import {
+  organizationCreateFormSchema,
+  type OrganizationCreateFormInput,
+  type OrganizationCreateFormValues,
+} from '@/entities/organization';
 import organizationCreateModalStyles from './OrganizationCreateModal.module.scss';
 
 const initialForm = {
@@ -14,11 +18,22 @@ const initialForm = {
   link: '',
   description: '',
   logoFile: null,
-};
+} satisfies OrganizationCreateFormInput;
 
-const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue) => {
+interface OrganizationCreatePayload extends OrganizationCreateFormValues {
+  logoPreview: string;
+}
+
+interface OrganizationCreateModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (form: OrganizationCreatePayload) => void | Promise<void>;
+  isSubmitting: boolean;
+}
+
+const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: OrganizationCreateModalProps) => {
   const [logoPreview, setLogoPreview] = useState('');
-  const inputRef = useRef<LegacyValue>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -27,8 +42,8 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Le
     setValue,
     getValues,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm<LegacyValue>({
-    resolver: zodResolver(organizationCreateFormSchema) as LegacyValue,
+  } = useForm<OrganizationCreateFormInput, unknown, OrganizationCreateFormValues>({
+    resolver: zodResolver(organizationCreateFormSchema),
     defaultValues: initialForm,
     mode: 'onChange',
   });
@@ -49,7 +64,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Le
     onClose();
   };
 
-  const submit = async (form: LegacyValue) => {
+  const submit = async (form: OrganizationCreateFormValues) => {
     if (isSubmitting) {
       return;
     }
@@ -63,7 +78,7 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Le
     });
   };
 
-  const handleLogoUpload = (event: LegacyValue) => {
+  const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -99,12 +114,12 @@ const OrganizationCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Le
     }
   };
 
-  const getError = (fieldName: string) => {
+  const getError = (fieldName: keyof OrganizationCreateFormInput): string => {
     if (!(touchedFields[fieldName] || isSubmitted)) {
       return '';
     }
 
-    return String(errors[fieldName]?.message || '');
+    return String(errors[fieldName]?.message ?? '');
   };
 
   const nameError = getError('name');

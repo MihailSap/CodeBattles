@@ -44,5 +44,7 @@ export const getLanguageByFileName = (fileName: string | null | undefined): stri
     return 'plaintext';
   }
 
-  return extensionToLanguage[extension as keyof typeof extensionToLanguage] ?? 'plaintext';
+  const language = Object.entries(extensionToLanguage).find(([knownExtension]) => knownExtension === extension)?.[1];
+
+  return language ?? 'plaintext';
 };

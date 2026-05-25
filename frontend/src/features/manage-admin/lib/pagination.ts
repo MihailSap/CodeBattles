@@ -1,10 +1,12 @@
-export const getPaginationItems = (page: LegacyValue, totalPages: LegacyValue) => {
+export type PaginationItem = number | 'ellipsis';
+
+export const getPaginationItems = (page: number, totalPages: number): PaginationItem[] => {
   if (totalPages <= 7) {
     return Array.from(
       {
         length: totalPages,
       },
-      (_: LegacyValue, index: LegacyValue) => index
+      (_, index) => index
     );
   }
 
@@ -23,10 +25,12 @@ export const getPaginationItems = (page: LegacyValue, totalPages: LegacyValue) =
   }
 
   return [...items]
-    .filter((item: LegacyValue) => item >= 0 && item < totalPages)
-    .sort((a: LegacyValue, b: LegacyValue) => a - b)
-    .reduce((accumulator: LegacyValue, item: LegacyValue, index: LegacyValue, array: LegacyValue) => {
-      if (index > 0 && item - array[index - 1] > 1) {
+    .filter((item) => item >= 0 && item < totalPages)
+    .sort((a, b) => a - b)
+    .reduce<PaginationItem[]>((accumulator, item, index, array) => {
+      const previousItem = array[index - 1];
+
+      if (previousItem !== undefined && item - previousItem > 1) {
         accumulator.push('ellipsis');
       }
 
@@ -36,9 +40,9 @@ export const getPaginationItems = (page: LegacyValue, totalPages: LegacyValue) =
     }, []);
 };
 
-export const formatAdminDateTime = (value: LegacyValue) => {
+export const formatAdminDateTime = (value: string | null | undefined): string => {
   if (!value) {
-    return '—';
+    return '-';
   }
 
   return new Date(value).toLocaleString('ru-RU', {

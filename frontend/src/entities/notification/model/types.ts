@@ -1,5 +1,7 @@
+import type { NotificationCompletionAction, NotificationTargetKind, NotificationType } from './constants';
+
 export interface NotificationTarget {
-  kind: string;
+  kind: NotificationTargetKind;
   organizationId?: number | string;
   projectId?: number | string;
   taskId?: number | string;
@@ -9,13 +11,13 @@ export interface NotificationTarget {
 }
 
 export interface NotificationCompletion {
-  action: string;
+  action: NotificationCompletionAction;
   target: NotificationTarget;
 }
 
 export interface AppNotification {
   id: number | string;
-  type: string;
+  type: NotificationType;
   title: string;
   text: string;
   isRead: boolean;

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { EntityId, ProjectParticipant } from '@/entities/project';
 import { AvatarIcon } from '@/shared/ui/icons';
 import { useVisibleItems } from '@/shared/lib/hooks';
 import assigneesSelectorStyles from './AssigneesSelector.module.scss';
@@ -8,29 +9,37 @@ const POPUP_WIDTH = 420;
 const POPUP_MAX_HEIGHT = 320;
 const VIEWPORT_PADDING = 12;
 
+interface AssigneesSelectorProps {
+  users: readonly ProjectParticipant[];
+  selectedUserIds: readonly EntityId[];
+  onChange: (userIds: EntityId[]) => void;
+  disabled?: boolean;
+  title?: string;
+}
+
 const AssigneesSelector = ({
   users,
   selectedUserIds,
   onChange,
   disabled = false,
   title = 'Исполнители',
-}: LegacyValue) => {
-  const rootRef = useRef<LegacyValue>(null);
-  const popupRef = useRef<LegacyValue>(null);
-  const triggerRef = useRef<LegacyValue>(null);
+}: AssigneesSelectorProps) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [popupStyle, setPopupStyle] = useState<LegacyValue>({});
+  const [popupStyle, setPopupStyle] = useState<CSSProperties>({});
   const [isPopupOpenUp, setIsPopupOpenUp] = useState(false);
-  const safeUsers = useMemo(() => (Array.isArray(users) ? users : []), [users]);
-  const safeSelectedUserIds = useMemo(() => (Array.isArray(selectedUserIds) ? selectedUserIds : []), [selectedUserIds]);
+  const safeUsers = useMemo(() => [...users], [users]);
+  const safeSelectedUserIds = useMemo(() => [...selectedUserIds], [selectedUserIds]);
 
   const selectedUsers = useMemo(
     () =>
       safeUsers
-        .filter((user: LegacyValue) => safeSelectedUserIds.includes(user.id))
-        .sort((left: LegacyValue, right: LegacyValue) =>
-          left.fullName.localeCompare(right.fullName, 'ru', {
+        .filter((user) => safeSelectedUserIds.includes(user.id))
+        .sort((left, right) =>
+          (left.fullName ?? left.login).localeCompare(right.fullName ?? right.login, 'ru', {
             sensitivity: 'base',
           })
         ),
@@ -41,18 +50,19 @@ const AssigneesSelector = ({
     const normalizedSearch = search.trim().toLowerCase();
 
     return safeUsers
-      .filter((user: LegacyValue) => !safeSelectedUserIds.includes(user.id))
-      .filter((user: LegacyValue) => {
+      .filter((user) => !safeSelectedUserIds.includes(user.id))
+      .filter((user) => {
         if (!normalizedSearch) {
           return true;
         }
 
         return (
-          user.fullName.toLowerCase().includes(normalizedSearch) || user.login.toLowerCase().includes(normalizedSearch)
+          (user.fullName ?? '').toLowerCase().includes(normalizedSearch) ||
+          user.login.toLowerCase().includes(normalizedSearch)
         );
       })
-      .sort((left: LegacyValue, right: LegacyValue) =>
-        left.fullName.localeCompare(right.fullName, 'ru', {
+      .sort((left, right) =>
+        (left.fullName ?? left.login).localeCompare(right.fullName ?? right.login, 'ru', {
           sensitivity: 'base',
         })
       );
@@ -109,8 +119,13 @@ const AssigneesSelector = ({
       return undefined;
     }
 
-    const handleOutsideClick = (event: LegacyValue) => {
+    const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target;
+
+      if (!(target instanceof Node)) {
+        return;
+      }
+
       const isInsidePopup = popupRef.current?.contains(target);
       const isTrigger = triggerRef.current?.contains(target);
 
@@ -119,7 +134,7 @@ const AssigneesSelector = ({
       }
     };
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsOpen(false);
       }
@@ -161,13 +176,13 @@ const AssigneesSelector = ({
     };
   }, [isOpen, selectedUserIds, search, recalculatePopupPosition]);
 
-  const toggleUser = (userId: LegacyValue) => {
+  const toggleUser = (userId: EntityId) => {
     if (disabled) {
       return;
     }
 
     if (safeSelectedUserIds.includes(userId)) {
-      onChange(safeSelectedUserIds.filter((id: LegacyValue) => id !== userId));
+      onChange(safeSelectedUserIds.filter((id) => id !== userId));
 
       return;
     }
@@ -198,7 +213,7 @@ const AssigneesSelector = ({
       </div>
 
       <div className={assigneesSelectorStyles.selectedList}>
-        {selectedUsers.map((user: LegacyValue) => (
+        {selectedUsers.map((user) => (
           <button
             key={user.id}
             className={assigneesSelectorStyles.selectedItem}
@@ -206,8 +221,8 @@ const AssigneesSelector = ({
             onClick={() => toggleUser(user.id)}
             disabled={disabled}
           >
-            {user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}
-            <span>{user.fullName}</span>
+            {user.avatar ? <img src={user.avatar} alt={user.fullName ?? user.login} /> : <AvatarIcon />}
+            <span>{user.fullName ?? user.login}</span>
           </button>
         ))}
 
@@ -216,7 +231,7 @@ const AssigneesSelector = ({
           ref={triggerRef}
           className={assigneesSelectorStyles.isOpen}
           type="button"
-          onClick={() => setIsOpen((prev: LegacyValue) => !prev)}
+          onClick={() => setIsOpen((prev) => !prev)}
           disabled={disabled}
         >
           +
@@ -238,11 +253,11 @@ const AssigneesSelector = ({
             type="text"
             placeholder="Поиск по имени или логину"
             value={search}
-            onChange={(event: LegacyValue) => setSearch(event.target.value.slice(0, 100))}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value.slice(0, 100))}
           />
 
           <div className={assigneesSelectorStyles.users}>
-            {visibleItems.map((user: LegacyValue) => (
+            {visibleItems.map((user) => (
               <button
                 className={assigneesSelectorStyles.user}
                 key={user.id}
@@ -250,10 +265,10 @@ const AssigneesSelector = ({
                 onClick={() => toggleUser(user.id)}
               >
                 <span className={assigneesSelectorStyles.avatar}>
-                  {user.avatar ? <img src={user.avatar} alt={user.fullName} /> : <AvatarIcon />}
+                  {user.avatar ? <img src={user.avatar} alt={user.fullName ?? user.login} /> : <AvatarIcon />}
                 </span>
                 <span className={assigneesSelectorStyles.meta}>
-                  <span className={assigneesSelectorStyles.name}>{user.fullName}</span>
+                  <span className={assigneesSelectorStyles.name}>{user.fullName ?? user.login}</span>
                   <span className={assigneesSelectorStyles.login}>@{user.login}</span>
                 </span>
               </button>

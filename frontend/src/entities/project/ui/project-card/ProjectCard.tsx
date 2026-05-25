@@ -1,15 +1,23 @@
 import { memo, useCallback } from 'react';
-import { PROJECT_MEMBER_ROLE_LABELS, PROJECT_PRIVACY } from '../../model';
 import privateIcon from '@/shared/assets/private-icon.svg';
+import { PROJECT_MEMBER_ROLE, PROJECT_MEMBER_ROLE_LABELS, PROJECT_PRIVACY } from '../../model';
+import type { EntityId, Project } from '../../model/types';
 import projectCardStyles from './ProjectCard.module.scss';
 
-const roleClassMap = {
-  OWNER: projectCardStyles.isOwner,
-  MEMBER: projectCardStyles.isMember,
-  GUEST: projectCardStyles.isGuest,
+interface ProjectCardProps {
+  project: Project;
+  onClick?: () => void;
+  onOpen?: (projectId: EntityId) => void;
+}
+
+const getRoleClassName = (role: Project['role']): string => {
+  if (role === PROJECT_MEMBER_ROLE.OWNER) return projectCardStyles.isOwner;
+  if (role === PROJECT_MEMBER_ROLE.MEMBER) return projectCardStyles.isMember;
+
+  return projectCardStyles.isGuest;
 };
 
-const ProjectCard = ({ project, onClick, onOpen }: LegacyValue) => {
+const ProjectCard = ({ project, onClick, onOpen }: ProjectCardProps) => {
   const handleClick = useCallback(() => {
     if (onOpen) {
       onOpen(project.id);
@@ -28,12 +36,8 @@ const ProjectCard = ({ project, onClick, onOpen }: LegacyValue) => {
           <img className={projectCardStyles.privacy} src={privateIcon} alt="Приватный проект" />
         )}
       </div>
-      <p
-        className={[projectCardStyles.role, (roleClassMap as LegacyValue)[project.role] || roleClassMap.GUEST]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        {(PROJECT_MEMBER_ROLE_LABELS as LegacyValue)[project.role] || PROJECT_MEMBER_ROLE_LABELS.GUEST}
+      <p className={[projectCardStyles.role, getRoleClassName(project.role)].filter(Boolean).join(' ')}>
+        {project.role ? PROJECT_MEMBER_ROLE_LABELS[project.role] : PROJECT_MEMBER_ROLE_LABELS.GUEST}
       </p>
       <p className={projectCardStyles.tasks}>Открытых задач: {project.openTasksCount}</p>
     </button>

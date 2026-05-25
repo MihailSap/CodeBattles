@@ -1,8 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MOCK_ASSIGNED_REVIEWS, TASK_STATUS, TASK_STATUS_LABELS, getDeadlineToneClass } from '@/entities/project';
-import { MOCK_TASKS } from '@/entities/project/api/mocks/tasks';
-import { MOCK_PROJECTS } from '@/entities/project/api/mocks/projects';
+import {
+  useGetDashboardProjectsQuery,
+  useGetDashboardReviewsQuery,
+  useGetDashboardTasksQuery,
+} from '@/entities/dashboard';
+import {
+  TASK_STATUS,
+  TASK_STATUS_LABELS,
+  getDeadlineToneClass,
+  type DeadlineTone,
+  type TaskStatus,
+} from '@/entities/project';
+import { REVIEW_STATUS, type ReviewStatus } from '@/entities/review';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import { ROUTES } from '@/shared/config/routes';
@@ -17,7 +27,7 @@ interface DashboardTaskItem {
   taskName: string;
   projectName: string;
   deadline: string | null;
-  status: string;
+  status: TaskStatus;
   isOverdue: boolean;
 }
 
@@ -29,9 +39,14 @@ interface DashboardReviewItem {
   projectName: string;
   uploadedAt: string;
   deadline: string;
-  status: string;
+  status: ReviewStatus;
   isOverdue: boolean;
   remainingMs: number;
+}
+
+interface DashboardProjectOption {
+  id: number;
+  name: string;
 }
 
 const dashboardTabs = [
@@ -91,9 +106,24 @@ const formatRemainingTime = (milliseconds: number) => {
 };
 
 const DEADLINE_TONE_CLASS = {
+  '': '',
   success: mainPageStyles.isSuccess,
   warning: mainPageStyles.isWarning,
   error: mainPageStyles.isError,
+} satisfies Record<DeadlineTone, string>;
+
+const parseTimestamp = (value: unknown) => {
+  if (!value || typeof value !== 'string') {
+    return Number.NaN;
+  }
+
+  return new Date(value).getTime();
+};
+
+const toNumberOrFallback = (value: unknown, fallback: number) => {
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : fallback;
 };
 
 const MainPage = () => {
@@ -102,10 +132,24 @@ const MainPage = () => {
   const [mode, setMode] = useState<DashboardMode>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const { data: dashboardTasks = [] } = useGetDashboardTasksQuery(undefined);
+  const { data: dashboardReviews = [] } = useGetDashboardReviewsQuery(undefined);
+  const { data: dashboardProjects = [] } = useGetDashboardProjectsQuery(undefined);
+
+  const normalizedProjects = useMemo<DashboardProjectOption[]>(() => {
+    return dashboardProjects
+      .map((project, index) => {
+        const id = toNumberOrFallback(project.id, index + 1);
+        const name = typeof project.name === 'string' && project.name.trim() ? project.name : `Проект #${id}`;
+
+        return { id, name };
+      })
+      .sort((left: DashboardProjectOption, right: DashboardProjectOption) => left.name.localeCompare(right.name, 'ru'));
+  }, [dashboardProjects]);
 
   const projectsMap = useMemo(() => {
-    return new Map(MOCK_PROJECTS.map((project) => [Number(project.id), project.name]));
-  }, []);
+    return new Map(normalizedProjects.map((project) => [project.id, project.name]));
+  }, [normalizedProjects]);
 
   const projectOptions = useMemo(
     () => [
@@ -113,34 +157,40 @@ const MainPage = () => {
         value: 'all',
         label: 'Все',
       },
-      ...MOCK_PROJECTS.map((project) => ({
+      ...normalizedProjects.map((project) => ({
         value: String(project.id),
         label: truncateProjectOptionLabel(project.name),
       })),
     ],
-    []
+    [normalizedProjects]
   );
 
   const allTasks = useMemo<DashboardTaskItem[]>(() => {
-    return MOCK_TASKS.filter((task) => task.status !== TASK_STATUS.DONE)
+    return dashboardTasks
+      .filter((task) => task.status !== TASK_STATUS.DONE)
       .map((task) => {
-        const deadlineDate = task.deadline ? new Date(task.deadline) : null;
+        const taskId = toNumberOrFallback(task.id, 0);
+        const projectId = toNumberOrFallback(task.projectId, 0);
+        const deadlineDate = task.deadline ? new Date(String(task.deadline)) : null;
 
         const isOverdue = Boolean(
           deadlineDate && !Number.isNaN(deadlineDate.getTime()) && deadlineDate.getTime() < nowTimestamp
         );
 
         return {
-          id: Number(task.id),
-          projectId: Number(task.projectId),
-          taskName: task.name,
-          projectName: projectsMap.get(Number(task.projectId)) || `Проект #${task.projectId}`,
-          deadline: task.deadline || null,
+          id: taskId,
+          projectId,
+          taskName: typeof task.taskName === 'string' && task.taskName.trim() ? task.taskName : '—',
+          projectName:
+            (typeof task.projectName === 'string' && task.projectName) ||
+            projectsMap.get(projectId) ||
+            `Проект #${projectId}`,
+          deadline: typeof task.deadline === 'string' ? task.deadline : null,
           status: task.status,
           isOverdue,
         };
       })
-      .sort((left, right) => {
+      .sort((left: DashboardTaskItem, right: DashboardTaskItem) => {
         const leftDeadline = left.deadline ? new Date(left.deadline).getTime() : Number.POSITIVE_INFINITY;
         const rightDeadline = right.deadline ? new Date(right.deadline).getTime() : Number.POSITIVE_INFINITY;
 
@@ -150,30 +200,45 @@ const MainPage = () => {
 
         return left.taskName.localeCompare(right.taskName, 'ru');
       });
-  }, [nowTimestamp, projectsMap]);
+  }, [dashboardTasks, nowTimestamp, projectsMap]);
 
   const allReviews = useMemo<DashboardReviewItem[]>(() => {
-    return MOCK_ASSIGNED_REVIEWS.filter((review) => review.status === 'NEW' || review.status === 'IN_PROGRESS')
+    return dashboardReviews
+      .filter((review) => review.status === REVIEW_STATUS.NEW || review.status === REVIEW_STATUS.IN_PROGRESS)
       .map((review) => {
-        const deadlineDate = new Date(review.responseDeadline);
-        const deadlineMs = Number.isNaN(deadlineDate.getTime()) ? Number.POSITIVE_INFINITY : deadlineDate.getTime();
+        const reviewId = toNumberOrFallback(review.id ?? review.reviewId, 0);
+        const taskId = toNumberOrFallback(review.taskId, 0);
+        const projectId = toNumberOrFallback(review.project?.id ?? review.projectId, 0);
+
+        const deadlineRaw =
+          typeof review.responseDeadline === 'string'
+            ? review.responseDeadline
+            : typeof review.deadline === 'string'
+              ? review.deadline
+              : null;
+
+        const deadlineMs = deadlineRaw ? parseTimestamp(deadlineRaw) : Number.NaN;
         const remainingMs = deadlineMs - nowTimestamp;
 
         return {
-          reviewId: Number(review.id),
-          taskName: review.taskName,
-          taskId: Number(review.taskId),
-          projectId: Number(review.project.id),
-          projectName: review.project.name,
-          uploadedAt: review.uploadedAt,
-          deadline: review.responseDeadline,
+          reviewId,
+          taskName: typeof review.taskName === 'string' && review.taskName.trim() ? review.taskName : '—',
+          taskId,
+          projectId,
+          projectName:
+            (typeof review.project?.name === 'string' && review.project.name) ||
+            (typeof review.projectName === 'string' && review.projectName) ||
+            projectsMap.get(projectId) ||
+            `Проект #${projectId}`,
+          uploadedAt: typeof review.uploadedAt === 'string' ? review.uploadedAt : '',
+          deadline: deadlineRaw || '',
           status: review.status,
-          isOverdue: remainingMs < 0,
-          remainingMs,
+          isOverdue: Number.isFinite(remainingMs) && remainingMs < 0,
+          remainingMs: Number.isFinite(remainingMs) ? remainingMs : Number.POSITIVE_INFINITY,
         };
       })
-      .sort((left, right) => left.remainingMs - right.remainingMs);
-  }, [nowTimestamp]);
+      .sort((left: DashboardReviewItem, right: DashboardReviewItem) => left.remainingMs - right.remainingMs);
+  }, [dashboardReviews, nowTimestamp, projectsMap]);
 
   const visibleTasks = useMemo(
     () =>
@@ -214,7 +279,11 @@ const MainPage = () => {
           <EntityTabs
             tabs={dashboardTabs}
             activeKey={mode}
-            onChange={(nextMode) => setMode(nextMode as DashboardMode)}
+            onChange={(nextMode) => {
+              if (nextMode === 'all' || nextMode === 'tasks' || nextMode === 'reviews') {
+                setMode(nextMode);
+              }
+            }}
             wrapClassName={mainPageStyles.tabsWrap}
             tabClassName={mainPageStyles.tabsTab}
           />
@@ -224,7 +293,11 @@ const MainPage = () => {
               label="Статус"
               value={statusFilter}
               options={statusOptions}
-              onChange={(value: string) => setStatusFilter(value as StatusFilter)}
+              onChange={(value) => {
+                if (value === 'all' || value === 'active' || value === 'overdue') {
+                  setStatusFilter(value);
+                }
+              }}
               triggerClassName={mainPageStyles.dropdownTrigger}
               menuClassName={mainPageStyles.dropdownMenu}
             />
@@ -293,16 +366,14 @@ const MainPage = () => {
                           <td
                             className={[
                               mainPageStyles.deadline,
-                              (DEADLINE_TONE_CLASS as Record<string, string | undefined>)[
-                                getDeadlineToneClass(task.deadline, task.status)
-                              ],
+                              DEADLINE_TONE_CLASS[getDeadlineToneClass(task.deadline, task.status)],
                             ]
                               .filter(Boolean)
                               .join(' ')}
                           >
                             {formatDate(task.deadline)}
                           </td>
-                          <td>{TASK_STATUS_LABELS[task.status as keyof typeof TASK_STATUS_LABELS] || task.status}</td>
+                          <td>{TASK_STATUS_LABELS[task.status]}</td>
                         </tr>
                       ))}
                     </tbody>

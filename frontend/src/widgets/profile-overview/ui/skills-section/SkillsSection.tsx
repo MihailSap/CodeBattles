@@ -1,7 +1,33 @@
+import type { MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckIcon, CrossIcon, PencilIcon } from '@/shared/ui/icons';
+import type { SkillGroupKey, SkillsPopupPosition } from '../../lib/use-skills-popup';
 import skillsSectionStyles from './SkillsSection.module.scss';
-import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
+import profileOverviewLayoutStyles from '../ProfileOverviewLayout.module.scss';
+
+interface SkillsGroup {
+  key: SkillGroupKey;
+  title: string;
+  selected: readonly string[];
+  orderedOptions?: readonly string[];
+}
+
+interface SkillsSectionProps {
+  canEditProfile: boolean;
+  isActionBlocked: boolean;
+  isSkillsEditMode: boolean;
+  mobilePopupPosition: SkillsPopupPosition | null;
+  onClearGroup: (groupKey: SkillGroupKey) => void;
+  onOpenSkillsPopup: (groupKey: SkillGroupKey, event: MouseEvent<HTMLButtonElement>) => void;
+  onSkillsEditCancel: () => void;
+  onSkillsEditStart: () => void;
+  onSkillsSave: () => void | Promise<void>;
+  onToggleSkill: (groupKey: SkillGroupKey, skillName: string) => void;
+  openedSkillsPopup: SkillGroupKey | null;
+  popupMaxHeight: number;
+  skillsByGroup: readonly SkillsGroup[];
+  skillsDraftByGroup: readonly SkillsGroup[];
+}
 
 const SkillsSection = ({
   canEditProfile,
@@ -18,15 +44,15 @@ const SkillsSection = ({
   popupMaxHeight,
   skillsByGroup,
   skillsDraftByGroup,
-}: LegacyValue) => {
+}: SkillsSectionProps) => {
   return (
-    <section className={[profilePageStyles.section, skillsSectionStyles.isSkills].join(' ')}>
-      <div className={profilePageStyles.sectionHead}>
-        <div className={profilePageStyles.sectionTitleWrap}>
-          <h2 className={profilePageStyles.sectionTitle}>Стек</h2>
+    <section className={[profileOverviewLayoutStyles.section, skillsSectionStyles.isSkills].join(' ')}>
+      <div className={profileOverviewLayoutStyles.sectionHead}>
+        <div className={profileOverviewLayoutStyles.sectionTitleWrap}>
+          <h2 className={profileOverviewLayoutStyles.sectionTitle}>Стек</h2>
           {canEditProfile && !isSkillsEditMode && (
             <button
-              className={profilePageStyles.editButton}
+              className={profileOverviewLayoutStyles.editButton}
               type="button"
               onClick={onSkillsEditStart}
               disabled={isActionBlocked}
@@ -38,8 +64,8 @@ const SkillsSection = ({
         </div>
       </div>
 
-      <div className={[profilePageStyles.sectionBody, skillsSectionStyles.body].join(' ')}>
-        {(isSkillsEditMode ? skillsDraftByGroup : skillsByGroup).map((group: LegacyValue) => {
+      <div className={[profileOverviewLayoutStyles.sectionBody, skillsSectionStyles.body].join(' ')}>
+        {(isSkillsEditMode ? skillsDraftByGroup : skillsByGroup).map((group) => {
           const popupId = `profile-skills-popup-${group.key}`;
           const isPopupOpen = openedSkillsPopup === group.key;
 
@@ -63,7 +89,7 @@ const SkillsSection = ({
                 {group.selected.length === 0 && !(canEditProfile && isSkillsEditMode) ? (
                   <span className={skillsSectionStyles.isEmpty}>Не указано</span>
                 ) : (
-                  group.selected.map((skillName: LegacyValue) => (
+                  group.selected.map((skillName) => (
                     <button
                       className={[
                         skillsSectionStyles.skillTag,
@@ -89,7 +115,7 @@ const SkillsSection = ({
                       className={skillsSectionStyles.addSkillButton}
                       type="button"
                       data-skills-add="true"
-                      onClick={(event: LegacyValue) => onOpenSkillsPopup(group.key, event)}
+                      onClick={(event) => onOpenSkillsPopup(group.key, event)}
                       disabled={isActionBlocked}
                       aria-label={`Добавить навык в ${group.title}`}
                       aria-haspopup="dialog"
@@ -115,7 +141,7 @@ const SkillsSection = ({
                             maxHeight: `${popupMaxHeight}px`,
                           }}
                         >
-                          {group.orderedOptions.map((skillName: LegacyValue) => {
+                          {(group.orderedOptions ?? []).map((skillName) => {
                             const isChecked = group.selected.includes(skillName);
 
                             return (
@@ -142,9 +168,9 @@ const SkillsSection = ({
       </div>
 
       {canEditProfile && isSkillsEditMode && (
-        <div className={profilePageStyles.actions}>
+        <div className={profileOverviewLayoutStyles.actions}>
           <button
-            className={[profilePageStyles.action, profilePageStyles.isSave].join(' ')}
+            className={[profileOverviewLayoutStyles.action, profileOverviewLayoutStyles.isSave].join(' ')}
             type="button"
             onClick={onSkillsSave}
             disabled={isActionBlocked}
@@ -153,7 +179,7 @@ const SkillsSection = ({
             <CheckIcon />
           </button>
           <button
-            className={[profilePageStyles.action, profilePageStyles.isCancel].join(' ')}
+            className={[profileOverviewLayoutStyles.action, profileOverviewLayoutStyles.isCancel].join(' ')}
             type="button"
             onClick={onSkillsEditCancel}
             disabled={isActionBlocked}

@@ -5,7 +5,7 @@ import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import inviteLinkModalStyles from './InviteLinkModal.module.scss';
 
-const isInvalidOrPastDateTime = (value: LegacyValue) => {
+const isInvalidOrPastDateTime = (value: string): boolean => {
   if (!value) {
     return true;
   }
@@ -19,7 +19,24 @@ const isInvalidOrPastDateTime = (value: LegacyValue) => {
   return parsed <= Date.now();
 };
 
-const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitting }: LegacyValue) => {
+interface InviteLinkPayload {
+  expiresAt: string;
+  reusable: boolean;
+}
+
+interface InviteLinkResult {
+  link: string;
+}
+
+interface InviteLinkModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onGenerate: (payload: InviteLinkPayload) => InviteLinkResult | null | Promise<InviteLinkResult | null>;
+  onCopySuccess?: () => void;
+  isSubmitting: boolean;
+}
+
+const InviteLinkModal = ({ isOpen, onClose, onGenerate, onCopySuccess, isSubmitting }: InviteLinkModalProps) => {
   const [expiresAt, setExpiresAt] = useState('');
   const [reusable, setReusable] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');

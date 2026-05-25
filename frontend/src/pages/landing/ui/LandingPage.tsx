@@ -130,7 +130,7 @@ const LandingPage = () => {
           </div>
 
           <div className={landingPageStyles.grid}>
-            {FEATURES.map((feature: LegacyValue) => {
+            {FEATURES.map((feature) => {
               const Icon = feature.icon;
 
               return (
@@ -158,7 +158,7 @@ const LandingPage = () => {
           </div>
 
           <ol className={landingPageStyles.landingSteps}>
-            {STEPS.map((step: LegacyValue, index: LegacyValue) => (
+            {STEPS.map((step, index) => (
               <li className={landingPageStyles.item} key={step}>
                 <span className={landingPageStyles.number}>{String(index + 1).padStart(2, '0')}</span>
                 <span className={landingPageStyles.text3}>{step}</span>
@@ -180,7 +180,7 @@ const LandingPage = () => {
               Растите быстрее, чем в одиночку
             </h2>
             <ul className={landingPageStyles.landingBenefits}>
-              {BENEFITS.map((benefit: LegacyValue) => (
+              {BENEFITS.map((benefit) => (
                 <li className={landingPageStyles.item2} key={benefit}>
                   <CheckIcon />
                   <span>{benefit}</span>

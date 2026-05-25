@@ -1,9 +1,15 @@
 import { memo, useCallback, useMemo } from 'react';
 import { ORGANIZATION_MEMBER_ROLE } from '@/entities/organization';
-import { ProjectCard } from '@/entities/project';
+import { ProjectCard, type EntityId, type ProjectDashboardOrganization } from '@/entities/project';
 import organizationProjectsCardStyles from './OrganizationProjectsCard.module.scss';
 
-const OrganizationProjectsCard = ({ organization, onProjectOpen, onCreateProject }: LegacyValue) => {
+interface OrganizationProjectsCardProps {
+  organization: ProjectDashboardOrganization;
+  onProjectOpen: (projectId: EntityId) => void;
+  onCreateProject: (organizationId: EntityId) => void;
+}
+
+const OrganizationProjectsCard = ({ organization, onProjectOpen, onCreateProject }: OrganizationProjectsCardProps) => {
   const canCreateProject = organization.role === ORGANIZATION_MEMBER_ROLE.OWNER;
   const visibleProjects = useMemo(() => organization.projects.slice(0, 12), [organization.projects]);
   const hiddenProjectsCount = Math.max(0, organization.projects.length - visibleProjects.length);
@@ -21,7 +27,7 @@ const OrganizationProjectsCard = ({ organization, onProjectOpen, onCreateProject
       ) : (
         <>
           <div className={organizationProjectsCardStyles.projects}>
-            {visibleProjects.map((project: LegacyValue) => (
+            {visibleProjects.map((project) => (
               <ProjectCard key={project.id} project={project} onOpen={onProjectOpen} />
             ))}
           </div>

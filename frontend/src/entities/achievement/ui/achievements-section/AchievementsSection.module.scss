@@ -1,7 +1,41 @@
 .section {
+  border-radius: 10px;
+  box-shadow: var(--shadow-section);
+  background: var(--color-surface-panel);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
   &.isAchievements {
     grid-area: achievements;
   }
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sectionTitleWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3125rem;
+}
+
+.sectionTitle {
+  text-align: center;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.sectionBody {
+  margin-top: 1.25rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .body {

@@ -18,6 +18,7 @@ import {
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
   useNotificationRouteCompletion,
+  type AppNotification,
 } from '@/entities/notification';
 import { BellIcon, AvatarIcon, AdminIcon, ExitIcon } from '@/shared/ui/icons';
 import NotificationsList from './NotificationsList';
@@ -42,7 +43,13 @@ const NAV_LINKS = [
   },
 ];
 
-const toToastNotification = (notification: LegacyValue) => ({
+interface ToastNotification {
+  title: string;
+  text: string;
+  time: string;
+}
+
+const toToastNotification = (notification: AppNotification): ToastNotification => ({
   title: notification.title,
   text: notification.text,
   time: formatNotificationTime(notification.createdAt),
@@ -55,13 +62,13 @@ const Header = () => {
   const { user, isLoading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notificationToDeleteId, setNotificationToDeleteId] = useState<LegacyValue>(null);
-  const [toastNotification, setToastNotification] = useState<LegacyValue>(null);
+  const [notificationToDeleteId, setNotificationToDeleteId] = useState<AppNotification['id'] | null>(null);
+  const [toastNotification, setToastNotification] = useState<ToastNotification | null>(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-  const menuRef = useRef<LegacyValue>(null);
-  const notificationsRef = useRef<LegacyValue>(null);
-  const toastTimersRef = useRef<LegacyValue[]>([]);
-  const knownNotificationsRef = useRef<LegacyValue>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const toastTimersRef = useRef<number[]>([]);
+  const knownNotificationsRef = useRef<Map<AppNotification['id'], string> | null>(null);
   const wasNotificationsOpenRef = useRef(false);
 
   const {
@@ -78,26 +85,24 @@ const Header = () => {
   const isAdmin = user?.role === 'ADMIN';
 
   const unreadNotificationsCount = useMemo(
-    () => notifications.filter((notification: LegacyValue) => !notification.isRead).length,
+    () => notifications.filter((notification) => !notification.isRead).length,
     [notifications]
   );
 
   const hasUnreadNotifications = unreadNotificationsCount > 0;
   const displayLogin = user?.login || 'Пользователь';
 
-  const notificationToDelete = notifications.find(
-    (notification: LegacyValue) => notification.id === notificationToDeleteId
-  );
+  const notificationToDelete = notifications.find((notification) => notification.id === notificationToDeleteId);
 
   useBodyScrollLock(isMenuOpen || isNotificationsOpen);
 
   const clearToastTimers = useCallback(() => {
-    toastTimersRef.current.forEach((timerId: LegacyValue) => window.clearTimeout(timerId));
+    toastTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
     toastTimersRef.current = [];
   }, []);
 
   const showNotificationToast = useCallback(
-    (notification: LegacyValue) => {
+    (notification: ToastNotification) => {
       clearToastTimers();
       setToastNotification(notification);
       setIsToastVisible(false);
@@ -135,7 +140,11 @@ const Header = () => {
       return;
     }
 
-    const handleClickOutside = (event: LegacyValue) => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!(event.target instanceof Node)) {
+        return;
+      }
+
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
       }
@@ -149,7 +158,7 @@ const Header = () => {
       }
     };
 
-    const handleEscape = (event: LegacyValue) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsMenuOpen(false);
 
@@ -180,7 +189,7 @@ const Header = () => {
     }
 
     const nextKnownNotifications = new Map(
-      notifications.map((notification: LegacyValue) => [notification.id, notification.createdAt])
+      notifications.map((notification) => [notification.id, notification.createdAt])
     );
 
     if (!knownNotificationsRef.current) {
@@ -190,14 +199,18 @@ const Header = () => {
     }
 
     const newNotifications = notifications.filter(
-      (notification: LegacyValue) =>
-        !notification.isRead && knownNotificationsRef.current.get(notification.id) !== notification.createdAt
+      (notification) =>
+        !notification.isRead && knownNotificationsRef.current?.get(notification.id) !== notification.createdAt
     );
 
     knownNotificationsRef.current = nextKnownNotifications;
 
     if (!isNotificationsOpen && newNotifications.length > 0) {
-      showNotificationToast(toToastNotification(newNotifications[0]));
+      const newestNotification = newNotifications[0];
+
+      if (newestNotification) {
+        showNotificationToast(toToastNotification(newestNotification));
+      }
     }
   }, [isNotificationsLoading, isNotificationsOpen, notifications, showNotificationToast, user]);
 
@@ -238,11 +251,11 @@ const Header = () => {
   };
 
   const handleToggleMenu = () => {
-    setIsMenuOpen((prevState: LegacyValue) => !prevState);
+    setIsMenuOpen((prevState) => !prevState);
     setIsNotificationsOpen(false);
   };
 
-  const handleNotificationClick = (notification: LegacyValue) => {
+  const handleNotificationClick = (notification: AppNotification) => {
     const route = getNotificationRoute(notification);
 
     if (!route) {
@@ -273,12 +286,12 @@ const Header = () => {
           </div>
 
           <nav className={headerStyles.center} aria-label="Навигация по сайту">
-            {NAV_LINKS.map((item: LegacyValue) => (
+            {NAV_LINKS.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === ROUTES.dashboard}
-                className={({ isActive }: LegacyValue) =>
+                className={({ isActive }) =>
                   [headerStyles.navLink, isActive ? headerStyles.isActive : ''].filter(Boolean).join(' ')
                 }
                 onClick={() => {

@@ -3,7 +3,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { CheckIcon } from '@/shared/ui/icons';
 import { ProjectSkillsSelector } from '@/entities/stack';
 import ModalShell from '@/shared/ui/modal-shell';
-import { PROJECT_PRIVACY, PROJECT_PRIVACY_LABELS, projectCreateFormSchema } from '@/entities/project';
+import {
+  PROJECT_PRIVACY,
+  PROJECT_PRIVACY_LABELS,
+  projectCreateFormSchema,
+  type ProjectCreateFormInput,
+  type ProjectCreateFormValues,
+} from '@/entities/project';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import projectCreateModalStyles from './ProjectCreateModal.module.scss';
 
@@ -13,16 +19,23 @@ const initialState = {
   repositoryUrl: '',
   stack: [],
   privacy: PROJECT_PRIVACY.PUBLIC,
-};
+} satisfies ProjectCreateFormValues;
 
-const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyValue) => {
+interface ProjectCreateModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (form: ProjectCreateFormValues) => void | Promise<void>;
+  isSubmitting: boolean;
+}
+
+const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: ProjectCreateModalProps) => {
   const {
     control,
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm({
+  } = useForm<ProjectCreateFormInput, unknown, ProjectCreateFormValues>({
     resolver: zodResolver(projectCreateFormSchema),
     defaultValues: initialState,
     mode: 'onChange',
@@ -30,7 +43,7 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyV
 
   useBodyScrollLock(isOpen);
 
-  const submit = async (form: LegacyValue) => {
+  const submit = async (form: ProjectCreateFormValues) => {
     if (isSubmitting) {
       return;
     }
@@ -44,12 +57,12 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyV
     });
   };
 
-  const getError = (fieldName: LegacyValue) => {
-    if (!((touchedFields as LegacyValue)[fieldName] || isSubmitted)) {
+  const getError = (fieldName: keyof ProjectCreateFormInput): string => {
+    if (!(touchedFields[fieldName] || isSubmitted)) {
       return '';
     }
 
-    return String((errors as LegacyValue)[fieldName]?.message || '');
+    return String(errors[fieldName]?.message ?? '');
   };
 
   if (!isOpen) {
@@ -119,9 +132,9 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyV
           <Controller
             control={control}
             name="stack"
-            render={({ field }: LegacyValue) => (
+            render={({ field }) => (
               <ProjectSkillsSelector
-                value={field.value}
+                value={field.value ?? []}
                 onChange={field.onChange}
                 title="Технологический стек:"
                 forceOpenUp
@@ -134,7 +147,7 @@ const ProjectCreateModal = ({ isOpen, onClose, onSubmit, isSubmitting }: LegacyV
         <div className={projectCreateModalStyles.section}>
           <h3 className={projectCreateModalStyles.sectionTitle}>Приватность:</h3>
           <div className={projectCreateModalStyles.radioRow}>
-            {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue: LegacyValue) => (
+            {[PROJECT_PRIVACY.PUBLIC, PROJECT_PRIVACY.PRIVATE].map((privacyValue) => (
               <label className={projectCreateModalStyles.radioItem} key={privacyValue}>
                 <input
                   className={projectCreateModalStyles.radio}

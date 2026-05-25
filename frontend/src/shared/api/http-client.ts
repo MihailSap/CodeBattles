@@ -1,7 +1,7 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { API_BASE_URL } from '@/shared/config/api';
 import { tokenStorage } from '@/shared/lib';
-import type { CustomInternalAxiosRequestConfig } from './types';
+import type { TokensResponse } from './types';
 
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -12,6 +12,7 @@ const refreshClient = axios.create({
 });
 
 let refreshRequestPromise: Promise<string> | null = null;
+const retriedRequests = new WeakSet<object>();
 
 const requestNewAccessToken = async (): Promise<string> => {
   const refreshToken = tokenStorage.getRefreshToken();
@@ -20,18 +21,18 @@ const requestNewAccessToken = async (): Promise<string> => {
     throw new Error('Refresh token is missing');
   }
 
-  const accessResponse = await refreshClient.post('/api/v1/auth/token', {
+  const accessResponse = await refreshClient.post<TokensResponse>('/api/v1/auth/token', {
     refreshToken,
   });
 
-  const nextAccessToken = accessResponse.data?.accessToken;
+  const nextAccessToken = accessResponse.data.accessToken;
 
   if (!nextAccessToken) {
     throw new Error('Access token was not returned by backend');
   }
 
   try {
-    const refreshResponse = await refreshClient.post(
+    const refreshResponse = await refreshClient.post<Partial<TokensResponse>>(
       '/api/v1/auth/refresh',
       {
         refreshToken,
@@ -44,8 +45,8 @@ const requestNewAccessToken = async (): Promise<string> => {
     );
 
     tokenStorage.setTokens({
-      accessToken: refreshResponse.data?.accessToken || nextAccessToken,
-      refreshToken: refreshResponse.data?.refreshToken || refreshToken,
+      accessToken: refreshResponse.data.accessToken ?? nextAccessToken,
+      refreshToken: refreshResponse.data.refreshToken ?? refreshToken,
     });
   } catch {
     tokenStorage.setTokens({
@@ -80,21 +81,24 @@ httpClient.interceptors.request.use((config) => {
 httpClient.interceptors.response.use(
   (response) => response,
   async (error: unknown) => {
-    const axiosError = error as AxiosError;
-    const originalRequest = axiosError.config as CustomInternalAxiosRequestConfig | undefined;
-
-    if (!originalRequest || originalRequest._retry) {
+    if (!axios.isAxiosError(error)) {
       return Promise.reject(error);
     }
 
-    const status = axiosError.response?.status;
+    const originalRequest = error.config;
+
+    if (!originalRequest || retriedRequests.has(originalRequest)) {
+      return Promise.reject(error);
+    }
+
+    const status = error.response?.status;
     const shouldRefreshByStatus = status === 401;
 
     if (!shouldRefreshByStatus) {
       return Promise.reject(error);
     }
 
-    originalRequest._retry = true;
+    retriedRequests.add(originalRequest);
 
     try {
       const freshAccessToken = await getFreshAccessToken();

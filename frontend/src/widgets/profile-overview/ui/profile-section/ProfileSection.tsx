@@ -1,9 +1,34 @@
+import type { ChangeEvent, RefObject } from 'react';
 import { AvatarIcon } from '@/shared/ui/icons';
 import DeleteIcon from '@/shared/assets/delete-icon.svg';
 import UploadIcon from '@/shared/assets/upload-icon.svg';
 import { CheckIcon, CrossIcon, PencilIcon } from '@/shared/ui/icons';
 import profileSectionStyles from './ProfileSection.module.scss';
-import profilePageStyles from '../../../../pages/profile/ui/ProfilePage.module.scss';
+import profileOverviewLayoutStyles from '../ProfileOverviewLayout.module.scss';
+
+interface ProfileDisplayData {
+  name: string;
+  email: string;
+  login: string;
+  registeredAt: string;
+  avatarPath: string;
+}
+
+interface ProfileSectionProps {
+  canEditProfile: boolean;
+  fileInputRef: RefObject<HTMLInputElement | null>;
+  isActionBlocked: boolean;
+  isProfileEditMode: boolean;
+  onAvatarDelete: () => void;
+  onAvatarUpload: (event: ChangeEvent<HTMLInputElement>) => void | Promise<void>;
+  onNameChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onProfileEditCancel: () => void;
+  onProfileEditStart: () => void;
+  onProfileSave: () => void | Promise<void>;
+  profileData: ProfileDisplayData;
+  profileDraft: ProfileDisplayData;
+  formatRegistrationDate: (value: string) => string;
+}
 
 const ProfileSection = ({
   canEditProfile,
@@ -19,15 +44,15 @@ const ProfileSection = ({
   profileData,
   profileDraft,
   formatRegistrationDate,
-}: LegacyValue) => {
+}: ProfileSectionProps) => {
   return (
-    <section className={[profilePageStyles.section, profileSectionStyles.isProfile].join(' ')}>
-      <div className={profilePageStyles.sectionHead}>
-        <div className={profilePageStyles.sectionTitleWrap}>
-          <h2 className={profilePageStyles.sectionTitle}>Профиль</h2>
+    <section className={[profileOverviewLayoutStyles.section, profileSectionStyles.isProfile].join(' ')}>
+      <div className={profileOverviewLayoutStyles.sectionHead}>
+        <div className={profileOverviewLayoutStyles.sectionTitleWrap}>
+          <h2 className={profileOverviewLayoutStyles.sectionTitle}>Профиль</h2>
           {canEditProfile && !isProfileEditMode && (
             <button
-              className={profilePageStyles.editButton}
+              className={profileOverviewLayoutStyles.editButton}
               type="button"
               onClick={onProfileEditStart}
               disabled={isActionBlocked}
@@ -39,7 +64,7 @@ const ProfileSection = ({
         </div>
       </div>
 
-      <div className={[profilePageStyles.sectionBody, profileSectionStyles.body].join(' ')}>
+      <div className={[profileOverviewLayoutStyles.sectionBody, profileSectionStyles.body].join(' ')}>
         <div className={profileSectionStyles.avatarWrap}>
           {canEditProfile && isProfileEditMode && (
             <div className={profileSectionStyles.avatarActions}>
@@ -119,9 +144,9 @@ const ProfileSection = ({
       </div>
 
       {canEditProfile && isProfileEditMode && (
-        <div className={profilePageStyles.actions}>
+        <div className={profileOverviewLayoutStyles.actions}>
           <button
-            className={[profilePageStyles.action, profilePageStyles.isSave].join(' ')}
+            className={[profileOverviewLayoutStyles.action, profileOverviewLayoutStyles.isSave].join(' ')}
             type="button"
             onClick={onProfileSave}
             disabled={isActionBlocked}
@@ -130,7 +155,7 @@ const ProfileSection = ({
             <CheckIcon />
           </button>
           <button
-            className={[profilePageStyles.action, profilePageStyles.isCancel].join(' ')}
+            className={[profileOverviewLayoutStyles.action, profileOverviewLayoutStyles.isCancel].join(' ')}
             type="button"
             onClick={onProfileEditCancel}
             disabled={isActionBlocked}

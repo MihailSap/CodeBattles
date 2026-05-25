@@ -2,22 +2,22 @@ export const REVIEW_STATUS = {
   NEW: 'NEW',
   IN_PROGRESS: 'IN_PROGRESS',
   COMPLETED: 'COMPLETED',
-};
+} as const;
+export type ReviewStatus = (typeof REVIEW_STATUS)[keyof typeof REVIEW_STATUS];
 export const REVIEW_STATUS_LABEL = {
   [REVIEW_STATUS.NEW]: 'Новое',
   [REVIEW_STATUS.IN_PROGRESS]: 'В работе',
   [REVIEW_STATUS.COMPLETED]: 'Завершено',
-};
+} as const satisfies Record<ReviewStatus, string>;
 export const REVIEW_SORT = {
   NEAREST_FIRST: 'NEAREST_FIRST',
   FARTHEST_FIRST: 'FARTHEST_FIRST',
-};
+} as const;
+export type ReviewSort = (typeof REVIEW_SORT)[keyof typeof REVIEW_SORT];
 export const REVIEW_SORT_LABEL = {
   [REVIEW_SORT.NEAREST_FIRST]: 'Сначала ближайшие',
   [REVIEW_SORT.FARTHEST_FIRST]: 'Сначала дальнейшие',
-};
-export const REVIEWS_NETWORK_DELAY_MS = 600;
-export const REVIEWS_PAGE_SIZE_DEFAULT = 15;
+} as const satisfies Record<ReviewSort, string>;
 export const COMMENT_CATEGORY = {
   BUG: 'BUG',
   PERFORMANCE: 'PERFORMANCE',
@@ -27,7 +27,8 @@ export const COMMENT_CATEGORY = {
   BEST_PRACTICES: 'BEST_PRACTICES',
   REFACTORING: 'REFACTORING',
   OTHER: 'OTHER',
-};
+} as const;
+export type CommentCategory = (typeof COMMENT_CATEGORY)[keyof typeof COMMENT_CATEGORY];
 export const COMMENT_CATEGORY_LABEL = {
   [COMMENT_CATEGORY.BUG]: 'Баг',
   [COMMENT_CATEGORY.PERFORMANCE]: 'Производительность',
@@ -37,7 +38,7 @@ export const COMMENT_CATEGORY_LABEL = {
   [COMMENT_CATEGORY.BEST_PRACTICES]: 'Лучшие практики',
   [COMMENT_CATEGORY.REFACTORING]: 'Предложение по рефакторингу',
   [COMMENT_CATEGORY.OTHER]: 'Другое',
-};
+} as const satisfies Record<CommentCategory, string>;
 export const COMMENT_CATEGORY_COLOR = {
   [COMMENT_CATEGORY.BUG]: '#f85149',
   [COMMENT_CATEGORY.PERFORMANCE]: '#f0883e',
@@ -47,38 +48,55 @@ export const COMMENT_CATEGORY_COLOR = {
   [COMMENT_CATEGORY.BEST_PRACTICES]: '#1565c0',
   [COMMENT_CATEGORY.REFACTORING]: '#15c059',
   [COMMENT_CATEGORY.OTHER]: '#ffcc00',
-};
+} as const satisfies Record<CommentCategory, string>;
 export const COMMENT_SEVERITY = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
-};
+} as const;
+export type CommentSeverity = (typeof COMMENT_SEVERITY)[keyof typeof COMMENT_SEVERITY];
 export const COMMENT_SEVERITY_LABEL = {
   [COMMENT_SEVERITY.LOW]: 'Низкий',
   [COMMENT_SEVERITY.MEDIUM]: 'Средний',
   [COMMENT_SEVERITY.HIGH]: 'Высокий',
-};
+} as const satisfies Record<CommentSeverity, string>;
 export const REPORT_REASON = {
   OFFENSIVE: 'OFFENSIVE',
   SPAM: 'SPAM',
-  PLAGIARISM: 'PLAGIARISM',
-  INCORRECT_LOGIC: 'INCORRECT_LOGIC',
+  IRRELEVANT: 'IRRELEVANT',
+  INCORRECT: 'INCORRECT',
+  DISCLOSES_IDENTITY: 'DISCLOSES_IDENTITY',
   OTHER: 'OTHER',
-};
+} as const;
+export type ReportReason = (typeof REPORT_REASON)[keyof typeof REPORT_REASON];
 export const REPORT_REASON_LABEL = {
   [REPORT_REASON.OFFENSIVE]: 'Оскорбительное поведение',
   [REPORT_REASON.SPAM]: 'Спам',
-  [REPORT_REASON.PLAGIARISM]: 'Плагиат',
-  [REPORT_REASON.INCORRECT_LOGIC]: 'Некорректная логика/ошибка',
+  [REPORT_REASON.IRRELEVANT]: 'Не относится к ревью',
+  [REPORT_REASON.INCORRECT]: 'Некорректное техническое утверждение',
+  [REPORT_REASON.DISCLOSES_IDENTITY]: 'Раскрывает личность участника',
   [REPORT_REASON.OTHER]: 'Другое',
-};
+} as const satisfies Record<ReportReason, string>;
 export const REPORT_REASONS = Object.values(REPORT_REASON);
 
-export const getDeadlineInfo = (deadline: LegacyValue, status: LegacyValue, reviewedAt: LegacyValue) => {
-  if (!deadline) return null;
+export interface DeadlineInfo {
+  label: string;
+  date: string;
+  isOverdue: boolean;
+}
+
+export const getDeadlineInfo = (
+  deadline: string | null | undefined,
+  status: ReviewStatus,
+  reviewedAt?: string | null
+): DeadlineInfo | null => {
+  if (!deadline) {
+    return null;
+  }
+
   const now = new Date();
   const dDate = new Date(deadline);
-  const isCompleted = status === 'COMPLETED';
+  const isCompleted = status === REVIEW_STATUS.COMPLETED;
 
   const dateStr = dDate.toLocaleDateString('ru-RU', {
     day: '2-digit',

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGetAssignedReviewsQuery } from '@/entities/review';
+import { useGetAssignedReviewsQuery, type AssignedReview, type ReviewSort, type ReviewStatus } from '@/entities/review';
+import type { EntityId } from '@/entities/project';
 import { ReviewCard } from '@/entities/review';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import { ReviewSection } from '@/entities/review';
@@ -40,11 +41,34 @@ const SORT_OPTIONS = [
   },
 ];
 
-const groupReviews = (reviews: LegacyValue) => {
-  const groupsMap = new Map();
+const isStatusFilter = (value: string): value is '' | ReviewStatus =>
+  value === '' ||
+  value === REVIEW_STATUS.NEW ||
+  value === REVIEW_STATUS.IN_PROGRESS ||
+  value === REVIEW_STATUS.COMPLETED;
 
-  reviews.forEach((review: LegacyValue) => {
-    const organizationId = review.organization?.id || 'without-organization';
+interface ProjectReviewGroup {
+  id: EntityId;
+  title: string;
+  reviews: AssignedReview[];
+}
+
+interface OrganizationReviewGroup {
+  id: EntityId | 'without-organization';
+  title: string;
+  projectsMap: Map<EntityId, ProjectReviewGroup>;
+  reviewsCount: number;
+}
+
+interface DisplayOrganizationReviewGroup extends Omit<OrganizationReviewGroup, 'projectsMap'> {
+  projects: ProjectReviewGroup[];
+}
+
+const groupReviews = (reviews: readonly AssignedReview[]): DisplayOrganizationReviewGroup[] => {
+  const groupsMap = new Map<EntityId | 'without-organization', OrganizationReviewGroup>();
+
+  reviews.forEach((review) => {
+    const organizationId = review.organization?.id ?? 'without-organization';
 
     if (!groupsMap.has(organizationId)) {
       groupsMap.set(organizationId, {
@@ -56,6 +80,11 @@ const groupReviews = (reviews: LegacyValue) => {
     }
 
     const organizationGroup = groupsMap.get(organizationId);
+
+    if (!organizationGroup) {
+      return;
+    }
+
     const projectId = review.project.id;
 
     if (!organizationGroup.projectsMap.has(projectId)) {
@@ -66,20 +95,22 @@ const groupReviews = (reviews: LegacyValue) => {
       });
     }
 
-    organizationGroup.projectsMap.get(projectId).reviews.push(review);
+    organizationGroup.projectsMap.get(projectId)?.reviews.push(review);
     organizationGroup.reviewsCount += 1;
   });
 
   return [...groupsMap.values()]
-    .map((group: LegacyValue) => ({
-      ...group,
-      projects: [...group.projectsMap.values()].sort((left: LegacyValue, right: LegacyValue) =>
+    .map((group) => ({
+      id: group.id,
+      title: group.title,
+      reviewsCount: group.reviewsCount,
+      projects: [...group.projectsMap.values()].sort((left, right) =>
         left.title.localeCompare(right.title, 'ru', {
           sensitivity: 'base',
         })
       ),
     }))
-    .sort((left: LegacyValue, right: LegacyValue) => {
+    .sort((left, right) => {
       if (left.id === 'without-organization') {
         return 1;
       }
@@ -97,16 +128,10 @@ const groupReviews = (reviews: LegacyValue) => {
 const ReviewsPage = () => {
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const [statusFilter, setStatusFilter] = useState('');
-  const [sortDirection, setSortDirection] = useState(REVIEW_SORT.NEAREST_FIRST);
+  const [statusFilter, setStatusFilter] = useState<ReviewStatus | ''>('');
+  const [sortDirection, setSortDirection] = useState<ReviewSort>(REVIEW_SORT.NEAREST_FIRST);
 
-  const {
-    data: pageData = {
-      items: [],
-      totalItems: 0,
-    },
-    isLoading,
-  } = useGetAssignedReviewsQuery(
+  const { data: reviews = [], isLoading } = useGetAssignedReviewsQuery(
     {
       viewerId: Number(userId),
       params: {
@@ -121,13 +146,13 @@ const ReviewsPage = () => {
   );
 
   const openReview = useCallback(
-    (reviewId: LegacyValue) => {
-      navigate(ROUTES.reviewById.replace(':reviewId', reviewId));
+    (reviewId: EntityId) => {
+      navigate(ROUTES.reviewById.replace(':reviewId', String(reviewId)));
     },
     [navigate]
   );
 
-  const groupedReviews = useMemo(() => groupReviews(pageData.items), [pageData.items]);
+  const groupedReviews = useMemo(() => groupReviews(reviews), [reviews]);
 
   return (
     <div className={reviewsPageStyles.root}>
@@ -142,7 +167,11 @@ const ReviewsPage = () => {
                 placeholder="Все"
                 value={statusFilter}
                 options={STATUS_FILTER_OPTIONS}
-                onChange={setStatusFilter}
+                onChange={(status) => {
+                  if (isStatusFilter(status)) {
+                    setStatusFilter(status);
+                  }
+                }}
               />
               <ReviewDropdown
                 label="Сортировка:"
@@ -152,7 +181,7 @@ const ReviewsPage = () => {
               />
             </div>
 
-            <p className={reviewsPageStyles.total}>Всего {pageData.totalItems} ревью</p>
+            <p className={reviewsPageStyles.total}>Всего {reviews.length} ревью</p>
           </div>
         </section>
 
@@ -164,13 +193,13 @@ const ReviewsPage = () => {
           ) : groupedReviews.length === 0 ? (
             <p className={reviewsPageStyles.isEmpty}>Нет назначенных ревью</p>
           ) : (
-            groupedReviews.map((organization: LegacyValue) => (
+            groupedReviews.map((organization) => (
               <ReviewSection key={organization.id} title={organization.title} reviewsCount={organization.reviewsCount}>
                 <div className={reviewsPageStyles.projectsList}>
-                  {organization.projects.map((project: LegacyValue) => (
+                  {organization.projects.map((project) => (
                     <ReviewSection key={project.id} title={project.title} reviewsCount={project.reviews.length} nested>
                       <div className={reviewsPageStyles.list}>
-                        {project.reviews.map((review: LegacyValue) => (
+                        {project.reviews.map((review) => (
                           <ReviewCard key={review.id} review={review} onOpen={openReview} />
                         ))}
                       </div>

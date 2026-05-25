@@ -59,4 +59,4 @@ export const SKILL_GROUPS = [
       'Elastic Stack (ELK)',
     ],
   },
-];
+] as const;

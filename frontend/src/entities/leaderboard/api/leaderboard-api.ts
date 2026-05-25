@@ -1,90 +1,144 @@
-import { LEADERBOARD_PERIOD, LEADERBOARD_SCOPE, LEADERBOARD_SORT_METRIC } from '../model';
-import { MOCK_LEADERBOARD_ORGANIZATIONS, MOCK_LEADERBOARD_PROJECTS, MOCK_LEADERBOARD_USERS } from '@/entities/project';
+import {
+  LEADERBOARD_CATEGORY,
+  LEADERBOARD_PERIOD,
+  LEADERBOARD_SCOPE,
+  LEADERBOARD_SORT_METRIC,
+  type LeaderboardCategory,
+  type LeaderboardMetricKey,
+  type LeaderboardPeriod,
+  type LeaderboardScope,
+} from '../model';
+import {
+  MOCK_LEADERBOARD_ORGANIZATIONS,
+  MOCK_LEADERBOARD_PROJECTS,
+  MOCK_LEADERBOARD_USERS,
+  type LeaderboardEntity,
+  type LeaderboardMetrics,
+  type LeaderboardMockUser,
+} from './mocks/leaderboard';
+export type { LeaderboardEntity } from './mocks/leaderboard';
 
 const DEFAULT_CURRENT_USER_ID = 57;
-const resetRatingUserIds = new Set();
-const clone = (value: LegacyValue) => JSON.parse(JSON.stringify(value));
+const resetRatingUserIds = new Set<number>();
 
-const wait = (data: LegacyValue, delay: LegacyValue = 350) =>
-  new Promise((resolve: LegacyValue) => {
+export interface LeaderboardEntry {
+  id: number;
+  rank: number;
+  name: string;
+  login: string;
+  avatar?: string;
+  metrics: LeaderboardMetrics;
+}
+
+export interface LeaderboardParams {
+  scope?: LeaderboardScope;
+  entityId?: number | null;
+  period?: LeaderboardPeriod;
+  category: LeaderboardCategory;
+  query?: string;
+  viewerId?: number | string;
+  page?: number;
+  size?: number;
+}
+
+export interface LeaderboardResult {
+  content: LeaderboardEntry[];
+  currentUserEntry: LeaderboardEntry | null;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface EntitySearchParams {
+  viewerId?: number | string;
+  query?: string;
+  limit?: number;
+  isAdmin?: boolean;
+}
+
+export interface ResetRatingResult {
+  userId: number;
+  ratingReset: boolean;
+}
+
+const clone = <T>(value: T): T => structuredClone(value);
+
+const wait = <T>(data: T, delay = 350): Promise<T> =>
+  new Promise((resolve) => {
     window.setTimeout(() => resolve(clone(data)), delay);
   });
 
-const normalizeQuery = (value: LegacyValue = '') => value.trim().toLowerCase();
-const getViewerId = (viewerId: LegacyValue) => Number(viewerId || DEFAULT_CURRENT_USER_ID);
+const normalizeQuery = (value = ''): string => value.trim().toLowerCase();
+const getViewerId = (viewerId?: number | string): number => Number(viewerId ?? DEFAULT_CURRENT_USER_ID);
 
-const getPeriodStats = (user: LegacyValue, period: LegacyValue) => {
-  const stats = user.stats?.[period] || user.stats?.[LEADERBOARD_PERIOD.ALL_TIME];
+const emptyMetrics = (): LeaderboardMetrics => ({
+  totalRating: 0,
+  codeQuality: 0,
+  aiCodeQuality: 0,
+  fixedCommentsPercent: 0,
+  aiReviewQuality: 0,
+  likesCount: 0,
+  reviewDepthPercent: 0,
+  completedReviewsCount: 0,
+  completedTasksCount: 0,
+});
 
-  if (!resetRatingUserIds.has(user.id)) {
-    return stats;
-  }
+const getPeriodStats = (user: LeaderboardMockUser, period: LeaderboardPeriod): LeaderboardMetrics =>
+  resetRatingUserIds.has(user.id) ? emptyMetrics() : user.stats[period];
 
-  return Object.keys(stats).reduce((accumulator: LegacyValue, key: LegacyValue) => {
-    accumulator[key] = 0;
-
-    return accumulator;
-  }, {});
-};
-
-const mapLeaderboardEntry = (user: LegacyValue, rank: LegacyValue, period: LegacyValue) => ({
+const mapLeaderboardEntry = (user: LeaderboardMockUser, rank: number, period: LeaderboardPeriod): LeaderboardEntry => ({
   id: user.id,
   rank,
   name: user.name,
   login: user.login,
-  avatar: user.avatar,
+  ...(user.avatar !== undefined ? { avatar: user.avatar } : {}),
   metrics: getPeriodStats(user, period),
 });
 
-const filterUsersByScope = ({ scope, entityId }: LegacyValue) => {
+const filterUsersByScope = (scope: LeaderboardScope, entityId: number | null): LeaderboardMockUser[] => {
   if (scope === LEADERBOARD_SCOPE.ORGANIZATIONS) {
-    return MOCK_LEADERBOARD_USERS.filter((user: LegacyValue) => user.organizationIds.includes(Number(entityId)));
+    return MOCK_LEADERBOARD_USERS.filter((user) => user.organizationIds.includes(Number(entityId)));
   }
 
   if (scope === LEADERBOARD_SCOPE.PROJECTS) {
-    return MOCK_LEADERBOARD_USERS.filter((user: LegacyValue) => user.projectIds.includes(Number(entityId)));
+    return MOCK_LEADERBOARD_USERS.filter((user) => user.projectIds.includes(Number(entityId)));
   }
 
   return MOCK_LEADERBOARD_USERS;
 };
 
-const makeLeaderboard = ({ scope, entityId, period, category, query, viewerId, page, size }: LegacyValue) => {
+const makeLeaderboard = ({
+  scope = LEADERBOARD_SCOPE.GLOBAL,
+  entityId = null,
+  period = LEADERBOARD_PERIOD.ALL_TIME,
+  category = LEADERBOARD_CATEGORY.OVERALL,
+  query = '',
+  viewerId,
+  page = 0,
+  size = 100,
+}: LeaderboardParams): LeaderboardResult => {
   const normalizedQuery = normalizeQuery(query);
-  const sortMetric = LEADERBOARD_SORT_METRIC[category] ?? 'totalRating';
+  const sortMetric: LeaderboardMetricKey = LEADERBOARD_SORT_METRIC[category];
 
-  const scopedUsers = filterUsersByScope({
-    scope,
-    entityId,
+  const sortedUsers = [...filterUsersByScope(scope, entityId)].sort((left, right) => {
+    const rightValue = getPeriodStats(right, period)[sortMetric];
+    const leftValue = getPeriodStats(left, period)[sortMetric];
+
+    return rightValue === leftValue ? left.id - right.id : rightValue - leftValue;
   });
 
-  const sortedUsers = [...scopedUsers].sort((left: LegacyValue, right: LegacyValue) => {
-    const rightValue = getPeriodStats(right, period)?.[sortMetric] ?? 0;
-    const leftValue = getPeriodStats(left, period)?.[sortMetric] ?? 0;
+  const rankedEntries = sortedUsers.map((user, index) => mapLeaderboardEntry(user, index + 1, period));
 
-    if (rightValue === leftValue) {
-      return left.id - right.id;
-    }
-
-    return rightValue - leftValue;
-  });
-
-  const rankedEntries = sortedUsers.map((user: LegacyValue, index: LegacyValue) =>
-    mapLeaderboardEntry(user, index + 1, period)
+  const filteredEntries = rankedEntries.filter(
+    (entry) => !normalizedQuery || `${entry.name} ${entry.login}`.toLowerCase().includes(normalizedQuery)
   );
-
-  const filteredEntries = rankedEntries.filter((entry: LegacyValue) => {
-    if (!normalizedQuery) {
-      return true;
-    }
-
-    return `${entry.name} ${entry.login}`.toLowerCase().includes(normalizedQuery);
-  });
 
   const start = page * size;
   const content = filteredEntries.slice(start, start + size);
   const currentUserId = getViewerId(viewerId);
-  const currentEntry = rankedEntries.find((entry: LegacyValue) => entry.id === currentUserId) || null;
-  const currentUserInContent = content.some((entry: LegacyValue) => entry.id === currentUserId);
+  const currentEntry = rankedEntries.find((entry) => entry.id === currentUserId) ?? null;
+  const currentUserInContent = content.some((entry) => entry.id === currentUserId);
 
   return {
     content,
@@ -96,9 +150,11 @@ const makeLeaderboard = ({ scope, entityId, period, category, query, viewerId, p
   };
 };
 
-const getAvailableEntities = ({ type, viewerId, query, limit, isAdmin }: LegacyValue) => {
-  const currentUserId = getViewerId(viewerId);
-  const currentUser = MOCK_LEADERBOARD_USERS.find((user: LegacyValue) => user.id === currentUserId);
+const getAvailableEntities = (
+  type: typeof LEADERBOARD_SCOPE.ORGANIZATIONS | typeof LEADERBOARD_SCOPE.PROJECTS,
+  { viewerId, query = '', limit = 5, isAdmin = false }: EntitySearchParams
+): LeaderboardEntity[] => {
+  const currentUser = MOCK_LEADERBOARD_USERS.find((user) => user.id === getViewerId(viewerId));
   const entityIds = type === LEADERBOARD_SCOPE.ORGANIZATIONS ? currentUser?.organizationIds : currentUser?.projectIds;
 
   const entities =
@@ -110,75 +166,31 @@ const getAvailableEntities = ({ type, viewerId, query, limit, isAdmin }: LegacyV
     return [];
   }
 
-  const allowedEntityIds = entityIds || [];
+  const allowedEntityIds = entityIds ?? [];
 
   return entities
-    .filter((entity: LegacyValue) => isAdmin || allowedEntityIds.includes(entity.id))
-    .filter((entity: LegacyValue) => !normalizedQuery || entity.name.toLowerCase().includes(normalizedQuery))
-    .sort(
-      (left: LegacyValue, right: LegacyValue) =>
-        new Date(right.lastActivityAt).getTime() - new Date(left.lastActivityAt).getTime()
-    )
+    .filter((entity) => isAdmin || allowedEntityIds.includes(entity.id))
+    .filter((entity) => !normalizedQuery || entity.name.toLowerCase().includes(normalizedQuery))
+    .sort((left, right) => new Date(right.lastActivityAt).getTime() - new Date(left.lastActivityAt).getTime())
     .slice(0, limit);
 };
 
-export const leaderboardApi: LegacyValue = {
-  async getLeaderboard({
-    scope = LEADERBOARD_SCOPE.GLOBAL,
-    entityId = null,
-    period = LEADERBOARD_PERIOD.ALL_TIME,
-    category,
-    query = '',
-    viewerId,
-    page = 0,
-    size = 100,
-  }: LegacyValue) {
-    return wait(
-      makeLeaderboard({
-        scope,
-        entityId,
-        period,
-        category,
-        query,
-        viewerId,
-        page,
-        size,
-      })
-    );
+export const leaderboardApi = {
+  async getLeaderboard(params: LeaderboardParams): Promise<LeaderboardResult> {
+    return wait(makeLeaderboard(params));
   },
-  async searchOrganizations({ viewerId, query = '', limit = 5, isAdmin = false }: LegacyValue = {}) {
-    return wait(
-      getAvailableEntities({
-        type: LEADERBOARD_SCOPE.ORGANIZATIONS,
-        viewerId,
-        query,
-        limit,
-        isAdmin,
-      }),
-      250
-    );
+
+  async searchOrganizations(params: EntitySearchParams = {}): Promise<LeaderboardEntity[]> {
+    return wait(getAvailableEntities(LEADERBOARD_SCOPE.ORGANIZATIONS, params), 250);
   },
-  async searchProjects({ viewerId, query = '', limit = 5, isAdmin = false }: LegacyValue = {}) {
-    return wait(
-      getAvailableEntities({
-        type: LEADERBOARD_SCOPE.PROJECTS,
-        viewerId,
-        query,
-        limit,
-        isAdmin,
-      }),
-      250
-    );
+
+  async searchProjects(params: EntitySearchParams = {}): Promise<LeaderboardEntity[]> {
+    return wait(getAvailableEntities(LEADERBOARD_SCOPE.PROJECTS, params), 250);
   },
-  async resetUserRating(userId: LegacyValue) {
+
+  async resetUserRating(userId: number | string): Promise<ResetRatingResult> {
     resetRatingUserIds.add(Number(userId));
 
-    return wait(
-      {
-        userId: Number(userId),
-        ratingReset: true,
-      },
-      250
-    );
+    return wait({ userId: Number(userId), ratingReset: true }, 250);
   },
 };

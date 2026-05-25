@@ -1,11 +1,19 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode, type TransitionEvent } from 'react';
 import { UnwrapIcon } from '@/shared/ui/icons';
 import reviewSectionStyles from './ReviewSection.module.scss';
 
-const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nested = false }: LegacyValue) => {
+interface ReviewSectionProps {
+  title: string;
+  reviewsCount: number;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  nested?: boolean;
+}
+
+const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nested = false }: ReviewSectionProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [maxHeight, setMaxHeight] = useState(defaultOpen ? 'none' : '0px');
-  const contentRef = useRef<LegacyValue>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   const sectionClassName = useMemo(
     () => [reviewSectionStyles.root, nested ? reviewSectionStyles.isNested : ''].filter(Boolean).join(' '),
@@ -16,7 +24,7 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
     const contentNode = contentRef.current;
 
     if (!contentNode) {
-      setIsOpen((prevState: LegacyValue) => !prevState);
+      setIsOpen((prevState) => !prevState);
 
       return;
     }
@@ -59,7 +67,7 @@ const ReviewSection = ({ title, reviewsCount, children, defaultOpen = true, nest
         style={{
           maxHeight,
         }}
-        onTransitionEnd={(event: LegacyValue) => {
+        onTransitionEnd={(event: TransitionEvent<HTMLDivElement>) => {
           if (event.propertyName !== 'max-height') {
             return;
           }

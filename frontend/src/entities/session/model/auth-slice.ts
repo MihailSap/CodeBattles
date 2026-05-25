@@ -23,7 +23,7 @@ interface AuthThunkConfig {
   rejectValue: string;
 }
 
-const createLegacyAsyncThunk = createAsyncThunk.withTypes<AuthThunkConfig>();
+const createAppAsyncThunk = createAsyncThunk.withTypes<AuthThunkConfig>();
 
 const EMPTY_USER: User = {
   id: 0,
@@ -49,7 +49,7 @@ const normalizeUser = (user: User | Partial<User> | null = null): User => {
   };
 };
 
-export const fetchCurrentUser = createLegacyAsyncThunk<User | null, void>(
+export const fetchCurrentUser = createAppAsyncThunk<User | null, void>(
   'auth/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
@@ -62,7 +62,7 @@ export const fetchCurrentUser = createLegacyAsyncThunk<User | null, void>(
   }
 );
 
-export const initializeAuth = createLegacyAsyncThunk<InitializeAuthPayload, void>(
+export const initializeAuth = createAppAsyncThunk<InitializeAuthPayload, void>(
   'auth/initialize',
   async (_, { dispatch, rejectWithValue }) => {
     const accessToken = tokenStorage.getAccessToken();
@@ -92,7 +92,7 @@ export const initializeAuth = createLegacyAsyncThunk<InitializeAuthPayload, void
   }
 );
 
-export const loginUser = createLegacyAsyncThunk<AuthResultPayload, LoginPayload>(
+export const loginUser = createAppAsyncThunk<AuthResultPayload, LoginPayload>(
   'auth/loginUser',
   async (payload, { dispatch, rejectWithValue }) => {
     try {
@@ -112,7 +112,7 @@ export const loginUser = createLegacyAsyncThunk<AuthResultPayload, LoginPayload>
   }
 );
 
-export const registerUser = createLegacyAsyncThunk<null, RegisterPayload>(
+export const registerUser = createAppAsyncThunk<null, RegisterPayload>(
   'auth/registerUser',
   async (payload, { rejectWithValue }) => {
     try {
@@ -128,7 +128,7 @@ export const registerUser = createLegacyAsyncThunk<null, RegisterPayload>(
   }
 );
 
-export const verifyEmailUser = createLegacyAsyncThunk<AuthResultPayload, string>(
+export const verifyEmailUser = createAppAsyncThunk<AuthResultPayload, string>(
   'auth/verifyEmailUser',
   async (token, { dispatch, rejectWithValue }) => {
     try {
@@ -148,7 +148,7 @@ export const verifyEmailUser = createLegacyAsyncThunk<AuthResultPayload, string>
   }
 );
 
-export const requestPasswordReset = createLegacyAsyncThunk<string, string>(
+export const requestPasswordReset = createAppAsyncThunk<string, string>(
   'auth/requestPasswordReset',
   async (email, { rejectWithValue }) => {
     try {
@@ -163,7 +163,7 @@ export const requestPasswordReset = createLegacyAsyncThunk<string, string>(
   }
 );
 
-export const resetPasswordByToken = createLegacyAsyncThunk<string, ResetPasswordPayload>(
+export const resetPasswordByToken = createAppAsyncThunk<string, ResetPasswordPayload>(
   'auth/resetPasswordByToken',
   async (payload, { rejectWithValue }) => {
     try {
@@ -176,7 +176,7 @@ export const resetPasswordByToken = createLegacyAsyncThunk<string, ResetPassword
   }
 );
 
-export const logoutUser = createLegacyAsyncThunk<null, void>('auth/logoutUser', async () => {
+export const logoutUser = createAppAsyncThunk<null, void>('auth/logoutUser', async () => {
   const refreshToken = tokenStorage.getRefreshToken();
   const accessToken = tokenStorage.getAccessToken();
 
@@ -191,7 +191,7 @@ export const logoutUser = createLegacyAsyncThunk<null, void>('auth/logoutUser', 
   return null;
 });
 
-export const updateUserLogin = createLegacyAsyncThunk<User | null, string>(
+export const updateUserLogin = createAppAsyncThunk<User | null, string>(
   'auth/updateUserLogin',
   async (newLogin, { getState, rejectWithValue }) => {
     const state = getState();
@@ -202,16 +202,14 @@ export const updateUserLogin = createLegacyAsyncThunk<User | null, string>(
     }
 
     try {
-      const response = await userApi.updateLogin(userId, newLogin);
-
-      return response.data as User | null;
+      return await userApi.updateLogin(userId, newLogin);
     } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить логин', 'updateLogin'));
     }
   }
 );
 
-export const updateUserPassword = createLegacyAsyncThunk<string, string>(
+export const updateUserPassword = createAppAsyncThunk<string, string>(
   'auth/updateUserPassword',
   async (newPassword, { getState, rejectWithValue }) => {
     const state = getState();
@@ -222,9 +220,7 @@ export const updateUserPassword = createLegacyAsyncThunk<string, string>(
     }
 
     try {
-      const response = await userApi.updatePassword(userId, newPassword);
-
-      return typeof response.data === 'string' ? response.data : 'Пароль обновлен';
+      return await userApi.updatePassword(userId, newPassword);
     } catch (error: unknown) {
       return rejectWithValue(getApiErrorMessage(error, 'Не удалось обновить пароль', 'updatePassword'));
     }

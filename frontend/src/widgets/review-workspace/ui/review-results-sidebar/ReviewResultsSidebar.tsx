@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { ReviewDetail } from '@/entities/review';
+import type { EntityId } from '@/entities/project';
 import { StarIcon } from '@/shared/ui/icons';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import reviewResultsSidebarStyles from './ReviewResultsSidebar.module.scss';
 
-const StarRating = ({ value, max = 5 }: LegacyValue) => {
+interface StarRatingProps {
+  value: number;
+  max?: number;
+}
+
+const StarRating = ({ value, max = 5 }: StarRatingProps) => {
   const roundedValue = Math.round(value);
 
   return (
     <div className={reviewResultsSidebarStyles.starRating}>
       {Array.from({
         length: max,
-      }).map((_: LegacyValue, index: LegacyValue) => {
+      }).map((_, index) => {
         const ratingValue = index + 1;
 
         return (
@@ -23,36 +30,61 @@ const StarRating = ({ value, max = 5 }: LegacyValue) => {
   );
 };
 
-const ReviewResultsSidebar = ({ review, aiReviewEnabled }: LegacyValue) => {
-  const [selectedReviewerId, setSelectedReviewerId] = useState(
-    review.finalReviews && review.finalReviews.length > 0 ? review.finalReviews[0].reviewerId : null
-  );
+interface ReviewResultsSidebarProps {
+  review: ReviewDetail;
+  aiReviewEnabled: boolean;
+  canRevealReviewerNames?: boolean;
+  currentReviewerId?: EntityId | null;
+  showReviewerSummary?: boolean;
+  showAiSolutionEvaluation?: boolean;
+}
 
-  if (!review) return null;
+const ReviewResultsSidebar = ({
+  review,
+  aiReviewEnabled,
+  canRevealReviewerNames = true,
+  currentReviewerId = null,
+  showReviewerSummary = true,
+  showAiSolutionEvaluation = true,
+}: ReviewResultsSidebarProps) => {
+  const [selectedReviewerId, setSelectedReviewerId] = useState<EntityId | null>(
+    review.finalReviews[0]?.reviewerId ?? null
+  );
 
   const averageScore =
     review.finalReviews && review.finalReviews.length > 0
       ? review.finalReviews.reduce(
-          (acc: LegacyValue, fr: LegacyValue) =>
-            acc + (fr.architecture + fr.readability + fr.testability + fr.scalability) / 4,
+          (total, finalReview) =>
+            total +
+            (finalReview.architecture + finalReview.readability + finalReview.testability + finalReview.scalability) /
+              4,
           0
         ) / review.finalReviews.length
       : 0;
 
-  const reviewerOptions = (review.finalReviews || []).map((fr: LegacyValue, idx: LegacyValue) => ({
-    value: fr.reviewerId,
-    label: fr.revealName ? fr.reviewerName : `Ревьюер ${idx + 1}`,
-  }));
+  const reviewerOptions = review.finalReviews.map((finalReview, index) => {
+    const isCurrentReviewer =
+      currentReviewerId !== null &&
+      currentReviewerId !== undefined &&
+      Number(finalReview.reviewerId) === Number(currentReviewerId);
 
-  const selectedReviewData = (review.finalReviews || []).find(
-    (fr: LegacyValue) => fr.reviewerId === selectedReviewerId
-  );
+    return {
+      value: finalReview.reviewerId,
+      label: isCurrentReviewer
+        ? 'Вы'
+        : canRevealReviewerNames && finalReview.revealName
+          ? finalReview.reviewerName
+          : `Ревьюер ${index + 1}`,
+    };
+  });
+
+  const selectedReviewData = review.finalReviews.find((finalReview) => finalReview.reviewerId === selectedReviewerId);
 
   const hasFinalReviews = review.finalReviews && review.finalReviews.length > 0;
 
   return (
     <div className={reviewResultsSidebarStyles.root}>
-      {hasFinalReviews && (
+      {showReviewerSummary && hasFinalReviews && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Итоговая оценка от ревьюеров</h3>
           <div className={[reviewResultsSidebarStyles.content, reviewResultsSidebarStyles.isCenter].join(' ')}>
@@ -61,7 +93,7 @@ const ReviewResultsSidebar = ({ review, aiReviewEnabled }: LegacyValue) => {
         </div>
       )}
 
-      {reviewerOptions.length > 0 && selectedReviewData && (
+      {reviewerOptions.length > 0 && selectedReviewData && selectedReviewerId !== null && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Детальная оценка от ревьюеров</h3>
           <div className={reviewResultsSidebarStyles.content}>
@@ -113,7 +145,7 @@ const ReviewResultsSidebar = ({ review, aiReviewEnabled }: LegacyValue) => {
         </div>
       )}
 
-      {aiReviewEnabled && (hasFinalReviews || review.aiEvaluation) && (
+      {showAiSolutionEvaluation && aiReviewEnabled && (hasFinalReviews || review.aiEvaluation) && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Оценка решения от AI</h3>
           <div className={reviewResultsSidebarStyles.content}>

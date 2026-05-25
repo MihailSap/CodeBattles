@@ -1,14 +1,24 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Controller, type FieldErrors, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCreateTaskMutation, useGetOrganizationByIdQuery, useGetProjectByIdQuery } from '@/entities/project';
+import { useGetProjectByIdQuery } from '@/entities/project';
+import { useCreateTaskMutation } from '@/entities/task';
+import { useGetOrganizationByIdQuery } from '@/entities/organization';
 import { AssigneesSelector } from '@/features/manage-task';
 import DateTimePicker from '@/shared/ui/date-time-picker';
 import { CheckIcon } from '@/shared/ui/icons';
 import Snackbar from '@/shared/ui/snackbar';
 import Spinner from '@/shared/ui/spinner';
-import { PROJECT_PRIVACY, TASK_REVIEW_TYPE, TASK_REVIEW_TYPE_LABELS, taskCreateFormSchema } from '@/entities/project';
+import {
+  PROJECT_PRIVACY,
+  TASK_REVIEW_TYPE,
+  TASK_REVIEW_TYPE_LABELS,
+  taskCreateFormSchema,
+  type TaskCreateFormInput,
+  type TaskCreateFormValues,
+  type EntityId,
+} from '@/entities/project';
 import { ROUTES } from '@/shared/config/routes';
 import { useSnackbar } from '@/shared/lib/hooks';
 import taskCreatePageStyles from './TaskCreatePage.module.scss';
@@ -22,7 +32,7 @@ const initialState = {
   reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
   assigneeIds: [],
   reviewerIds: [],
-};
+} satisfies TaskCreateFormInput;
 
 const TaskCreatePage = () => {
   const { projectId } = useParams();
@@ -35,29 +45,34 @@ const TaskCreatePage = () => {
     handleSubmit,
     setValue,
     formState: { errors, isSubmitted, isValid, touchedFields },
-  } = useForm<LegacyValue>({
+  } = useForm<TaskCreateFormInput, unknown, TaskCreateFormValues>({
     resolver: zodResolver(taskCreateFormSchema),
     defaultValues: initialState,
     mode: 'onChange',
   });
 
-  const [reviewType = TASK_REVIEW_TYPE.MANUAL_ASSIGNEES, assigneeIds = [], reviewerIds = []] = useWatch({
+  const [watchedReviewType, watchedAssigneeIds, watchedReviewerIds] = useWatch({
     control,
     name: ['reviewType', 'assigneeIds', 'reviewerIds'],
   });
+
+  const reviewType = watchedReviewType ?? TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+  const assigneeIds = useMemo(() => watchedAssigneeIds ?? [], [watchedAssigneeIds]);
+  const reviewerIds = useMemo(() => watchedReviewerIds ?? [], [watchedReviewerIds]);
 
   const {
     data: project,
     error: projectError,
     isLoading: isProjectLoading,
-  } = useGetProjectByIdQuery(projectId, {
+  } = useGetProjectByIdQuery(projectId ?? '', {
+    skip: !projectId,
     refetchOnMountOrArgChange: 30,
   });
 
   const shouldLoadOrganization = Boolean(project?.organizationId && project.privacy === PROJECT_PRIVACY.PUBLIC);
 
   const { data: organization, isLoading: isOrganizationLoading } = useGetOrganizationByIdQuery(
-    project?.organizationId,
+    project?.organizationId ?? '',
     {
       skip: !shouldLoadOrganization,
       refetchOnMountOrArgChange: 60,
@@ -93,30 +108,30 @@ const TaskCreatePage = () => {
     }
 
     if (!project.organizationId) {
-      return project.participants;
+      return project.participants ?? [];
     }
 
     if (project.privacy === PROJECT_PRIVACY.PUBLIC) {
       return organizationParticipants;
     }
 
-    return project.participants;
+    return project.participants ?? [];
   }, [organizationParticipants, project]);
 
   const availableAssignees = useMemo(
-    () => project?.participants.filter((participant: LegacyValue) => !reviewerIds.includes(participant.id)) || [],
+    () => (project?.participants ?? []).filter((participant) => !reviewerIds.includes(participant.id)),
     [reviewerIds, project]
   );
 
   const availableReviewers = useMemo(
-    () => reviewersSource.filter((participant: LegacyValue) => !assigneeIds.includes(participant.id)),
+    () => reviewersSource.filter((participant) => !assigneeIds.includes(participant.id)),
     [assigneeIds, reviewersSource]
   );
 
   const reviewTypes = useMemo(() => {
     const types = Object.values(TASK_REVIEW_TYPE);
 
-    return project?.aiReviewEnabled ? types : types.filter((type: LegacyValue) => type !== TASK_REVIEW_TYPE.AI_ONLY);
+    return project?.aiReviewEnabled ? types : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
   }, [project?.aiReviewEnabled]);
 
   useEffect(() => {
@@ -133,8 +148,8 @@ const TaskCreatePage = () => {
       return;
     }
 
-    const availableReviewerIds = new Set(availableReviewers.map((participant: LegacyValue) => participant.id));
-    const nextReviewerIds = reviewerIds.filter((id: LegacyValue) => availableReviewerIds.has(id));
+    const availableReviewerIds = new Set<EntityId>(availableReviewers.map((participant) => participant.id));
+    const nextReviewerIds = reviewerIds.filter((id) => availableReviewerIds.has(id));
 
     if (nextReviewerIds.length !== reviewerIds.length) {
       queueMicrotask(() =>
@@ -146,7 +161,11 @@ const TaskCreatePage = () => {
     }
   }, [availableReviewers, isManualReviewers, reviewerIds, setValue]);
 
-  const submit = async (form: LegacyValue) => {
+  const submit = async (form: TaskCreateFormValues) => {
+    if (!project) {
+      return;
+    }
+
     try {
       const result = await createTask({
         projectId: project.id,
@@ -169,7 +188,7 @@ const TaskCreatePage = () => {
     }
   };
 
-  const onInvalid = (formErrors: LegacyValue) => {
+  const onInvalid = (formErrors: FieldErrors<TaskCreateFormInput>) => {
     const firstError = formErrors.deadline || formErrors.assigneeIds || formErrors.reviewerIds || formErrors.name;
 
     if (firstError?.message) {
@@ -177,7 +196,7 @@ const TaskCreatePage = () => {
     }
   };
 
-  const getError = (fieldName: string) => {
+  const getError = (fieldName: keyof TaskCreateFormInput): string => {
     if (!(touchedFields[fieldName] || isSubmitted)) {
       return '';
     }
@@ -268,7 +287,7 @@ const TaskCreatePage = () => {
             <Controller
               control={control}
               name="deadline"
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <DateTimePicker
                   value={field.value}
                   onChange={field.onChange}
@@ -285,7 +304,7 @@ const TaskCreatePage = () => {
           <div className={taskCreatePageStyles.block}>
             <h3 className={taskCreatePageStyles.blockTitle}>Тип ревью</h3>
             <div className={taskCreatePageStyles.radioList}>
-              {reviewTypes.map((type: LegacyValue) => (
+              {reviewTypes.map((type) => (
                 <label key={type} className={taskCreatePageStyles.radioItem}>
                   <input className={taskCreatePageStyles.radio} type="radio" value={type} {...register('reviewType')} />
                   <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
@@ -299,11 +318,11 @@ const TaskCreatePage = () => {
               <Controller
                 control={control}
                 name="reviewerIds"
-                render={({ field }: LegacyValue) => (
+                render={({ field }) => (
                   <AssigneesSelector
                     title="Ревьюеры"
                     users={availableReviewers}
-                    selectedUserIds={field.value}
+                    selectedUserIds={field.value ?? []}
                     onChange={field.onChange}
                     disabled={isSubmitting}
                   />
@@ -316,10 +335,10 @@ const TaskCreatePage = () => {
             <Controller
               control={control}
               name="assigneeIds"
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <AssigneesSelector
                   users={availableAssignees}
-                  selectedUserIds={field.value}
+                  selectedUserIds={field.value ?? []}
                   onChange={field.onChange}
                   disabled={isSubmitting}
                 />

@@ -1,20 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import participantsCountIcon from '@/shared/assets/participants-count-icon.svg';
 import projectsCountIcon from '@/shared/assets/projects-count-icon.svg';
 import uploadIcon from '@/shared/assets/upload-icon.svg';
+import { useCreateProjectMutation, type EntityId, type ProjectCreateFormValues } from '@/entities/project';
 import {
-  projectsApi,
+  organizationApi,
   useApproveOrganizationJoinRequestMutation,
-  useCreateProjectMutation,
   useDeleteOrganizationMutation,
   useGetOrganizationByIdQuery,
   useLeaveOrganizationMutation,
   useRejectOrganizationJoinRequestMutation,
   useUpdateOrganizationMutation,
-} from '@/entities/project';
+  type InvitePayload,
+  type OrganizationDetails,
+  type OrganizationJoinRequest,
+  type OrganizationSettingsFormInput,
+  type OrganizationSettingsFormValues,
+} from '@/entities/organization';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import { AvatarIcon, CheckIcon, CrossIcon, SearchIcon } from '@/shared/ui/icons';
@@ -34,7 +39,7 @@ import { organizationSettingsFormSchema } from '@/entities/organization';
 import { useDebouncedValue } from '@/shared/lib/hooks';
 import { useSnackbar } from '@/shared/lib/hooks';
 import organizationPageStyles from './OrganizationPage.module.scss';
-import projectPageStyles from '../../project/ui/ProjectPage.module.scss';
+import { detailLayoutStyles as projectPageStyles } from '@/widgets/detail-layout';
 type AccessErrorShape = {
   status?: number;
   code?: string;
@@ -48,13 +53,16 @@ const tabs = {
   projects: 'Проекты',
   participants: 'Участники',
   settings: 'Настройки',
-};
+} as const;
 
-const getOrganizationSettingsDefaults = (organization: LegacyValue = null) => ({
-  name: organization?.name || '',
-  description: organization?.description || '',
-  link: organization?.link || '',
-  logoUrl: organization?.logoUrl || '',
+type OrganizationTab = keyof typeof tabs;
+type ParticipantsMode = 'members' | 'requests';
+
+const getOrganizationSettingsDefaults = (organization?: OrganizationDetails): OrganizationSettingsFormInput => ({
+  name: organization?.name ?? '',
+  description: organization?.description ?? '',
+  link: organization?.link ?? '',
+  logoUrl: organization?.logoUrl ?? '',
   logoFile: null,
 });
 
@@ -62,9 +70,9 @@ const OrganizationPage = () => {
   const { organizationId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const logoInputRef = useRef<LegacyValue>(null);
-  const [activeTab, setActiveTab] = useState('projects');
-  const [participantsMode, setParticipantsMode] = useState('members');
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<OrganizationTab>('projects');
+  const [participantsMode, setParticipantsMode] = useState<ParticipantsMode>('members');
   const [projectSearch, setProjectSearch] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
@@ -72,7 +80,7 @@ const OrganizationPage = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isLeaveModalOpen, setLeaveModalOpen] = useState(false);
   const [isCreateProjectOpen, setCreateProjectOpen] = useState(false);
-  const [requestActionUserId, setRequestActionUserId] = useState<LegacyValue>(null);
+  const [requestActionUserId, setRequestActionUserId] = useState<EntityId | null>(null);
 
   const {
     register: registerSettings,
@@ -86,26 +94,43 @@ const OrganizationPage = () => {
       touchedFields: settingsTouchedFields,
     },
     control: settingsControl,
-  } = useForm<LegacyValue>({
+  } = useForm<OrganizationSettingsFormInput, unknown, OrganizationSettingsFormValues>({
     resolver: zodResolver(organizationSettingsFormSchema),
     defaultValues: getOrganizationSettingsDefaults(),
     mode: 'onChange',
   });
 
-  const settingsDraft = useWatch({
+  const watchedSettings = useWatch({
     control: settingsControl,
   });
 
+  const settingsDraft = useMemo<OrganizationSettingsFormValues>(
+    () => ({
+      name: watchedSettings.name ?? '',
+      description: watchedSettings.description ?? '',
+      link: watchedSettings.link ?? '',
+      logoUrl: watchedSettings.logoUrl ?? '',
+      logoFile: watchedSettings.logoFile ?? null,
+    }),
+    [
+      watchedSettings.description,
+      watchedSettings.link,
+      watchedSettings.logoFile,
+      watchedSettings.logoUrl,
+      watchedSettings.name,
+    ]
+  );
+
   const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
   const debouncedProjectSearch = useDebouncedValue(projectSearch, 300);
-  const numericOrganizationId = Number(organizationId);
 
   const {
     data: organization,
     error: organizationError,
     isLoading,
     refetch: refetchOrganization,
-  } = useGetOrganizationByIdQuery(numericOrganizationId, {
+  } = useGetOrganizationByIdQuery(organizationId ?? '', {
+    skip: !organizationId,
     refetchOnMountOrArgChange: 30,
   });
 
@@ -153,7 +178,7 @@ const OrganizationPage = () => {
   const projectsList = useMemo(() => {
     const normalizedSearch = debouncedProjectSearch.trim().toLowerCase();
 
-    return (organization?.projects || []).filter((project: LegacyValue) => {
+    return (organization?.projects ?? []).filter((project) => {
       if (!normalizedSearch) {
         return true;
       }
@@ -189,7 +214,7 @@ const OrganizationPage = () => {
   const isOwner = organization?.viewerRole === PROJECT_MEMBER_ROLE.OWNER;
 
   const availableTabs = useMemo(() => {
-    const baseTabs = [
+    const baseTabs: { key: OrganizationTab; label: string }[] = [
       {
         key: 'projects',
         label: tabs.projects,
@@ -217,7 +242,7 @@ const OrganizationPage = () => {
 
   const requestsSource = useMemo(
     () =>
-      [...(organization?.joinRequests || [])].sort((left: LegacyValue, right: LegacyValue) =>
+      [...(organization?.joinRequests ?? [])].sort((left, right) =>
         String(left.fullName ?? '').localeCompare(String(right.fullName ?? ''), 'ru', {
           sensitivity: 'base',
         })
@@ -225,7 +250,7 @@ const OrganizationPage = () => {
     [organization?.joinRequests]
   );
 
-  const getSettingsError = (fieldName: string) => {
+  const getSettingsError = (fieldName: keyof OrganizationSettingsFormInput): string => {
     if (!(settingsTouchedFields[fieldName] || isSettingsSubmitted)) {
       return '';
     }
@@ -237,7 +262,7 @@ const OrganizationPage = () => {
   const settingsLinkError = getSettingsError('link');
 
   const hasSettingsChanges = useMemo(() => {
-    if (!organization || !settingsDraft) {
+    if (!organization) {
       return false;
     }
 
@@ -249,7 +274,7 @@ const OrganizationPage = () => {
     );
   }, [organization, settingsDraft]);
 
-  const handleInviteGenerate = async (payload: LegacyValue) => {
+  const handleInviteGenerate = async (payload: InvitePayload) => {
     if (!organization) {
       return null;
     }
@@ -257,7 +282,7 @@ const OrganizationPage = () => {
     setInviteSubmitting(true);
 
     try {
-      return await projectsApi.generateOrganizationInvite(organization.id, payload);
+      return await organizationApi.generateOrganizationInvite(organization.id, payload);
     } catch {
       showSnackbar('Не удалось сформировать ссылку. Попробуйте позже', 'error');
 
@@ -267,7 +292,7 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleCreateProject = async (payload: LegacyValue) => {
+  const handleCreateProject = async (payload: ProjectCreateFormValues) => {
     if (!organization) {
       return;
     }
@@ -283,12 +308,12 @@ const OrganizationPage = () => {
       if (projectId) {
         setCreateProjectOpen(false);
 
-        navigate(ROUTES.projectById.replace(':projectId', projectId), {
+        navigate(ROUTES.projectById.replace(':projectId', String(projectId)), {
           replace: true,
         });
       }
-    } catch (error: LegacyValue) {
-      if (error?.code === 'PROJECT_NAME_CONFLICT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.code === 'PROJECT_NAME_CONFLICT') {
         showSnackbar('Проект с таким названием уже существует', 'error');
       } else {
         showSnackbar('Не удалось создать проект. Попробуйте позже', 'error');
@@ -340,17 +365,17 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleRejectRequest = async (request: LegacyValue) => {
+  const handleRejectRequest = async (request: OrganizationJoinRequest) => {
     if (!organization) {
       return;
     }
 
-    setRequestActionUserId(request.userId);
+    setRequestActionUserId(request.id);
 
     try {
       await rejectOrganizationJoinRequest({
         organizationId: organization.id,
-        userId: request.userId,
+        userId: request.id,
       }).unwrap();
 
       completeNotification({
@@ -358,7 +383,7 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.userId,
+          userId: request.id,
         },
       });
 
@@ -371,17 +396,17 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleApproveRequest = async (request: LegacyValue) => {
+  const handleApproveRequest = async (request: OrganizationJoinRequest) => {
     if (!organization) {
       return;
     }
 
-    setRequestActionUserId(request.userId);
+    setRequestActionUserId(request.id);
 
     try {
       await approveOrganizationJoinRequest({
         organizationId: organization.id,
-        userId: request.userId,
+        userId: request.id,
       }).unwrap();
 
       completeNotification({
@@ -389,7 +414,7 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.userId,
+          userId: request.id,
         },
       });
 
@@ -402,7 +427,7 @@ const OrganizationPage = () => {
     }
   };
 
-  const handleLogoUpload = (event: LegacyValue) => {
+  const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const nextUrl = URL.createObjectURL(file);
@@ -425,39 +450,25 @@ const OrganizationPage = () => {
     resetSettings(getOrganizationSettingsDefaults(organization));
   };
 
-  const saveSettings = async (settingsDraft: LegacyValue) => {
-    if (!organization || !settingsDraft) return;
+  const saveSettings = async (form: OrganizationSettingsFormValues) => {
+    if (!organization) return;
     if (!hasSettingsChanges) return;
 
     try {
-      const payload: LegacyValue = {};
-
-      if (settingsDraft.name.trim() !== organization.name) {
-        payload.name = settingsDraft.name.trim();
-      }
-
-      if (settingsDraft.description !== organization.description) {
-        payload.description = settingsDraft.description;
-      }
-
-      if (settingsDraft.link.trim() !== organization.link) {
-        payload.link = settingsDraft.link.trim();
-      }
-
-      if (settingsDraft.logoFile) {
-        payload.logoFile = settingsDraft.logoFile;
-      }
-
       await updateOrganization({
         organizationId: organization.id,
-        payload,
+        payload: {
+          ...form,
+          name: form.name.trim(),
+          link: form.link.trim(),
+        },
       }).unwrap();
 
       const fullOrganization = await refetchOrganization().unwrap();
       resetSettings(getOrganizationSettingsDefaults(fullOrganization));
       showSnackbar('Изменения сохранены', 'success');
-    } catch (error: LegacyValue) {
-      if (error?.code === 'ORGANIZATION_NAME_CONFLICT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.code === 'ORGANIZATION_NAME_CONFLICT') {
         showSnackbar('Организация с таким названием существует', 'error');
       } else {
         showSnackbar('Возникла непредвиденная ошибка. Попробуйте позже', 'error');
@@ -477,7 +488,7 @@ const OrganizationPage = () => {
     );
   }
 
-  if (!organization || !settingsDraft) {
+  if (!organization) {
     return null;
   }
 
@@ -512,7 +523,7 @@ const OrganizationPage = () => {
                 <button
                   className={projectPageStyles.descriptionToggle}
                   type="button"
-                  onClick={() => setShowFullDescription((prev: LegacyValue) => !prev)}
+                  onClick={() => setShowFullDescription((prev) => !prev)}
                 >
                   {showFullDescription ? 'Свернуть' : 'Развернуть'}
                 </button>
@@ -538,7 +549,15 @@ const OrganizationPage = () => {
           </div>
         </section>
 
-        <EntityTabs tabs={availableTabs} activeKey={activeTab} onChange={setActiveTab} />
+        <EntityTabs
+          tabs={availableTabs}
+          activeKey={activeTab}
+          onChange={(nextTab) => {
+            if (nextTab === 'projects' || nextTab === 'participants' || nextTab === 'settings') {
+              setActiveTab(nextTab);
+            }
+          }}
+        />
 
         {activeTab === 'projects' && (
           <>
@@ -554,7 +573,9 @@ const OrganizationPage = () => {
                     type="search"
                     placeholder="Поиск"
                     value={projectSearch}
-                    onChange={(event: LegacyValue) => setProjectSearch(event.target.value.slice(0, 120))}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                      setProjectSearch(event.target.value.slice(0, 120))
+                    }
                   />
                 </label>
 
@@ -578,11 +599,11 @@ const OrganizationPage = () => {
                 <span>Роль</span>
               </div>
 
-              {projectsList.map((project: LegacyValue) => (
+              {projectsList.map((project) => (
                 <div
                   key={project.id}
                   className={projectPageStyles.tableRow}
-                  onClick={() => navigate(ROUTES.projectById.replace(':projectId', project.id))}
+                  onClick={() => navigate(ROUTES.projectById.replace(':projectId', String(project.id)))}
                   role="presentation"
                 >
                   <span className={projectPageStyles.taskName} title={project.name}>
@@ -590,7 +611,7 @@ const OrganizationPage = () => {
                   </span>
                   <span className={organizationPageStyles.projectTasks}>{project.activeTasksCount}</span>
                   <span className={projectPageStyles.assignees}>
-                    {project.participants.slice(0, 6).map((participant: LegacyValue) => (
+                    {project.participants.slice(0, 6).map((participant) => (
                       <span
                         key={participant.id}
                         className={projectPageStyles.assigneeAvatar}
@@ -687,7 +708,7 @@ const OrganizationPage = () => {
 
             <section className={[projectPageStyles.sectionCard, projectPageStyles.participantsList].join(' ')}>
               {isOwner && participantsMode === 'requests'
-                ? requestsSource.map((request: LegacyValue) => (
+                ? requestsSource.map((request) => (
                     <div key={request.id} className={projectPageStyles.participantRow}>
                       <div className={projectPageStyles.participantMain}>
                         <span className={projectPageStyles.participantAvatar}>
@@ -704,7 +725,7 @@ const OrganizationPage = () => {
                           className={[organizationPageStyles.requestButton, organizationPageStyles.isReject].join(' ')}
                           type="button"
                           onClick={() => handleRejectRequest(request)}
-                          disabled={requestActionUserId === request.userId}
+                          disabled={requestActionUserId === request.id}
                           aria-label={`Отклонить заявку @${request.login}`}
                         >
                           <CrossIcon />
@@ -713,7 +734,7 @@ const OrganizationPage = () => {
                           className={[organizationPageStyles.requestButton, organizationPageStyles.isAccept].join(' ')}
                           type="button"
                           onClick={() => handleApproveRequest(request)}
-                          disabled={requestActionUserId === request.userId}
+                          disabled={requestActionUserId === request.id}
                           aria-label={`Принять заявку @${request.login}`}
                         >
                           <CheckIcon />
@@ -721,7 +742,7 @@ const OrganizationPage = () => {
                       </div>
                     </div>
                   ))
-                : participantsSource.map((participant: LegacyValue) => (
+                : participantsSource.map((participant) => (
                     <Link
                       key={participant.id}
                       className={projectPageStyles.participantRow}

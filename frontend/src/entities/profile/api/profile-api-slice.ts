@@ -1,58 +1,45 @@
 import { baseApi, toQueryResult } from '@/shared/api';
+
+import type {
+  AvatarResult,
+  ProfileIdentifier,
+  ProfilePageData,
+  ProfileSectionPayload,
+  ProfileSkills,
+  UpdateSkillsArg,
+} from '../model/types';
 import { profileApi } from './profile-api';
 
 export const profileApiSlice = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getProfilePageData: build.query<LegacyValue, LegacyValue>({
-      queryFn: (userId: LegacyValue = 'me') => toQueryResult(() => profileApi.getProfilePageData(userId)),
-      providesTags: (_result: LegacyValue, _error: LegacyValue, userId: LegacyValue = 'me') => [
-        {
-          type: 'Profile',
-          id: userId,
-        },
-      ],
+    getProfilePageData: build.query<ProfilePageData, ProfileIdentifier | void>({
+      queryFn: (userId) => toQueryResult(() => profileApi.getProfilePageData(userId ?? 'me')),
+      providesTags: (_result, _error, userId) => [{ type: 'Profile', id: userId ?? 'me' }],
     }),
-    updateProfileSection: build.mutation<LegacyValue, LegacyValue>({
-      queryFn: (payload: LegacyValue) => toQueryResult(() => profileApi.updateProfileSection(payload)),
+    updateProfileSection: build.mutation<ProfilePageData['user'], ProfileSectionPayload>({
+      queryFn: (payload) => toQueryResult(() => profileApi.updateProfileSection(payload)),
       invalidatesTags: [
-        {
-          type: 'Profile',
-          id: 'me',
-        },
-        {
-          type: 'CurrentUser',
-          id: 'ME',
-        },
+        { type: 'Profile', id: 'me' },
+        { type: 'CurrentUser', id: 'ME' },
       ],
     }),
-    updateSkillsSection: build.mutation<LegacyValue, LegacyValue>({
-      queryFn: ({ userId, skills }: LegacyValue) => toQueryResult(() => profileApi.updateSkillsSection(userId, skills)),
-      invalidatesTags: (_result: LegacyValue, _error: LegacyValue, { userId }: LegacyValue) => [
-        {
-          type: 'Profile',
-          id: userId,
-        },
-        {
-          type: 'Profile',
-          id: 'me',
-        },
+    updateSkillsSection: build.mutation<ProfileSkills, UpdateSkillsArg>({
+      queryFn: ({ userId, skills }) => toQueryResult(() => profileApi.updateSkillsSection(userId, skills)),
+      invalidatesTags: (_result, _error, { userId }) => [
+        { type: 'Profile', id: userId },
+        { type: 'Profile', id: 'me' },
       ],
     }),
-    deleteAvatar: build.mutation<LegacyValue, LegacyValue>({
+    deleteAvatar: build.mutation<AvatarResult, void>({
       queryFn: () => toQueryResult(() => profileApi.deleteAvatar()),
       invalidatesTags: [
-        {
-          type: 'Profile',
-          id: 'me',
-        },
-        {
-          type: 'CurrentUser',
-          id: 'ME',
-        },
+        { type: 'Profile', id: 'me' },
+        { type: 'CurrentUser', id: 'ME' },
       ],
     }),
   }),
 });
+
 export const {
   useDeleteAvatarMutation,
   useGetProfilePageDataQuery,

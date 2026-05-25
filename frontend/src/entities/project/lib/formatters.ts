@@ -1,4 +1,6 @@
 import { PROJECT_MEMBER_ROLE, TASK_STATUS, TASK_STATUS_ORDER } from '../model';
+import type { ProjectParticipant, Task } from '../model/types';
+import type { TaskStatus } from '../model';
 
 const monthFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: 'numeric',
@@ -24,12 +26,12 @@ const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
   minute: '2-digit',
 });
 
-const compareText = (left: LegacyValue, right: LegacyValue) =>
-  String(left ?? '').localeCompare(String(right ?? ''), 'ru', {
+const compareText = (left: string | null | undefined, right: string | null | undefined): number =>
+  (left ?? '').localeCompare(right ?? '', 'ru', {
     sensitivity: 'base',
   });
 
-export const formatDeadline = (value: LegacyValue) => {
+export const formatDeadline = (value: string | null | undefined): string => {
   if (!value) {
     return '—';
   }
@@ -43,7 +45,7 @@ export const formatDeadline = (value: LegacyValue) => {
   return dateTimeFormatter.format(date).replace(',', '');
 };
 
-export const formatLastActivity = (value: LegacyValue) => {
+export const formatLastActivity = (value: string | null | undefined): string => {
   if (!value) {
     return '—';
   }
@@ -78,7 +80,9 @@ export const formatLastActivity = (value: LegacyValue) => {
   return fullDateFormatter.format(date);
 };
 
-export const getDeadlineToneClass = (deadline: LegacyValue, status: LegacyValue) => {
+export type DeadlineTone = '' | 'success' | 'error' | 'warning';
+
+export const getDeadlineToneClass = (deadline: string | null | undefined, status: TaskStatus): DeadlineTone => {
   if (!deadline) {
     return '';
   }
@@ -110,8 +114,8 @@ export const getDeadlineToneClass = (deadline: LegacyValue, status: LegacyValue)
   return 'success';
 };
 
-export const sortTasks = (tasks: LegacyValue = []) => {
-  return [...tasks].sort((left: LegacyValue, right: LegacyValue) => {
+export const sortTasks = (tasks: readonly Task[] = []): Task[] => {
+  return [...tasks].sort((left, right) => {
     const leftStatusOrder = TASK_STATUS_ORDER.indexOf(left.status);
     const rightStatusOrder = TASK_STATUS_ORDER.indexOf(right.status);
 
@@ -130,14 +134,16 @@ export const sortTasks = (tasks: LegacyValue = []) => {
   });
 };
 
-const roleOrder = {
-  [PROJECT_MEMBER_ROLE.OWNER]: 0,
-  [PROJECT_MEMBER_ROLE.MEMBER]: 1,
+const getRoleOrder = (role: ProjectParticipant['role']): number => {
+  if (role === PROJECT_MEMBER_ROLE.OWNER) return 0;
+  if (role === PROJECT_MEMBER_ROLE.MEMBER) return 1;
+
+  return 10;
 };
 
-export const sortParticipants = (participants: LegacyValue = []) => {
-  return [...participants].sort((left: LegacyValue, right: LegacyValue) => {
-    const roleDelta = (roleOrder[left.role] ?? 10) - (roleOrder[right.role] ?? 10);
+export const sortParticipants = (participants: readonly ProjectParticipant[] = []): ProjectParticipant[] => {
+  return [...participants].sort((left, right) => {
+    const roleDelta = getRoleOrder(left.role) - getRoleOrder(right.role);
 
     if (roleDelta !== 0) {
       return roleDelta;
@@ -147,7 +153,7 @@ export const sortParticipants = (participants: LegacyValue = []) => {
   });
 };
 
-export const truncateText = (value: LegacyValue, maxLength: LegacyValue) => {
+export const truncateText = (value: string | null | undefined, maxLength: number): string | null | undefined => {
   if (!value || value.length <= maxLength) {
     return value;
   }

@@ -2,20 +2,33 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StarIcon, CheckIcon } from '@/shared/ui/icons';
-import { finalReviewFormSchema } from '../../model/final-review-schema';
+import type { FinalReview } from '@/entities/review';
+import type { EntityId } from '@/entities/project';
+import {
+  finalReviewFormSchema,
+  type FinalReviewFormInput,
+  type FinalReviewFormValues,
+  type FinalReviewSubmitPayload,
+} from '../../model/final-review-schema';
 import finalReviewFormStyles from './FinalReviewForm.module.scss';
 import reviewResultsSidebarStyles from '../../../../widgets/review-workspace/ui/review-results-sidebar/ReviewResultsSidebar.module.scss';
 
 const STORAGE_KEY_PREFIX = 'codebattles_final_review_';
 
-const StarSelector = ({ value, onChange, disabled = false }: LegacyValue) => {
+interface StarSelectorProps {
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}
+
+const StarSelector = ({ value, onChange, disabled = false }: StarSelectorProps) => {
   const [hoverValue, setHoverValue] = useState(0);
 
   return (
     <div className={finalReviewFormStyles.starSelector} onMouseLeave={() => setHoverValue(0)}>
       {Array.from({
         length: 5,
-      }).map((_: LegacyValue, i: LegacyValue) => {
+      }).map((_, i) => {
         const ratingValue = i + 1;
         const isFilled = ratingValue <= (hoverValue || value);
 
@@ -35,7 +48,7 @@ const StarSelector = ({ value, onChange, disabled = false }: LegacyValue) => {
             onMouseEnter={() => !disabled && setHoverValue(ratingValue)}
             disabled={disabled}
           >
-            <StarIcon filled={isFilled} color={starColor} />
+            <StarIcon filled={isFilled} {...(starColor ? { color: starColor } : {})} />
           </button>
         );
       })}
@@ -43,14 +56,14 @@ const StarSelector = ({ value, onChange, disabled = false }: LegacyValue) => {
   );
 };
 
-const StarDisplay = ({ value }: LegacyValue) => {
+const StarDisplay = ({ value }: { value: number }) => {
   const rounded = Math.round(value);
 
   return (
     <div className={[finalReviewFormStyles.starSelector, finalReviewFormStyles.isReadonly].join(' ')}>
       {Array.from({
         length: 5,
-      }).map((_: LegacyValue, i: LegacyValue) => (
+      }).map((_, i) => (
         <span key={i + 1} className={[finalReviewFormStyles.btn, finalReviewFormStyles.btnReadonly].join(' ')}>
           <StarIcon filled={i < rounded} />
         </span>
@@ -59,21 +72,50 @@ const StarDisplay = ({ value }: LegacyValue) => {
   );
 };
 
-const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, initialData = null }: LegacyValue) => {
+interface FinalReviewFormProps {
+  onSubmit?: (payload: FinalReviewSubmitPayload) => void | Promise<void>;
+  isSubmitting: boolean;
+  isReadOnly?: boolean;
+  taskId: EntityId;
+  initialData?: FinalReview | null;
+}
+
+const EMPTY_FORM: FinalReviewFormValues = {
+  architecture: 0,
+  readability: 0,
+  testability: 0,
+  scalability: 0,
+  comment: '',
+  verdict: 'APPROVED',
+  revealName: false,
+};
+
+const FinalReviewForm = ({
+  onSubmit,
+  isSubmitting,
+  isReadOnly = false,
+  taskId,
+  initialData = null,
+}: FinalReviewFormProps) => {
   const storageKey = `${STORAGE_KEY_PREFIX}${taskId || 'default'}`;
 
-  const loadSavedForm = useCallback(() => {
+  const loadSavedForm = useCallback((): FinalReviewFormValues | null => {
     try {
       const saved = localStorage.getItem(storageKey);
-      if (saved) return JSON.parse(saved);
-    } catch (error: LegacyValue) {
+
+      if (saved) {
+        const parsed = finalReviewFormSchema.safeParse(JSON.parse(saved));
+
+        return parsed.success ? parsed.data : null;
+      }
+    } catch (error: unknown) {
       console.warn('Failed to parse saved final review form:', error);
     }
 
     return null;
   }, [storageKey]);
 
-  const getInitialForm = useCallback(() => {
+  const getInitialForm = useCallback((): FinalReviewFormValues => {
     if (initialData) {
       return {
         architecture: initialData.architecture || 0,
@@ -81,36 +123,32 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
         testability: initialData.testability || 0,
         scalability: initialData.scalability || 0,
         comment: initialData.comment || '',
-        verdict: initialData.verdict || '',
+        verdict: initialData.verdict === 'REWORK' ? 'REWORK' : 'APPROVED',
         revealName: Boolean(initialData.revealName),
       };
     }
 
     const saved = loadSavedForm();
 
-    return (
-      saved || {
-        architecture: 0,
-        readability: 0,
-        testability: 0,
-        scalability: 0,
-        comment: '',
-        verdict: '',
-        revealName: false,
-      }
-    );
+    return saved ?? EMPTY_FORM;
   }, [initialData, loadSavedForm]);
 
-  const { control, register, handleSubmit, reset } = useForm({
+  const { control, register, handleSubmit, reset } = useForm<FinalReviewFormInput, unknown, FinalReviewFormValues>({
     resolver: zodResolver(finalReviewFormSchema),
     defaultValues: getInitialForm(),
     mode: 'onChange',
   });
 
-  const form =
-    useWatch({
-      control,
-    }) || getInitialForm();
+  const watchedForm = useWatch({ control });
+
+  const form = useMemo<FinalReviewFormValues>(
+    () => ({
+      ...getInitialForm(),
+      ...watchedForm,
+      revealName: watchedForm.revealName ?? getInitialForm().revealName,
+    }),
+    [getInitialForm, watchedForm]
+  );
 
   useEffect(() => {
     reset(getInitialForm());
@@ -120,7 +158,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
     if (!isReadOnly && taskId) {
       try {
         localStorage.setItem(storageKey, JSON.stringify(form));
-      } catch (error: LegacyValue) {
+      } catch (error: unknown) {
         console.warn('Failed to persist final review form:', error);
       }
     }
@@ -128,10 +166,10 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
 
   const overallScore = useMemo(() => {
     const scores = [form.architecture, form.readability, form.testability, form.scalability];
-    const filled = scores.filter((s: LegacyValue) => s > 0);
+    const filled = scores.filter((score) => score > 0);
     if (filled.length === 0) return 0;
 
-    return Math.round(filled.reduce((a: LegacyValue, b: LegacyValue) => a + b, 0) / filled.length);
+    return Math.round(filled.reduce((total, score) => total + score, 0) / filled.length);
   }, [form.architecture, form.readability, form.testability, form.scalability]);
 
   const isFormValid = finalReviewFormSchema.safeParse(form).success;
@@ -139,14 +177,14 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
   const submit = async () => {
     if (isSubmitting) return;
 
-    await onSubmit({
+    await onSubmit?.({
       ...form,
       overallScore,
     });
 
     try {
       localStorage.removeItem(storageKey);
-    } catch (error: LegacyValue) {
+    } catch (error: unknown) {
       console.warn('Failed to clear saved final review form:', error);
     }
   };
@@ -161,7 +199,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <Controller
               name="architecture"
               control={control}
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
               )}
             />
@@ -171,7 +209,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <Controller
               name="readability"
               control={control}
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
               )}
             />
@@ -181,7 +219,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <Controller
               name="testability"
               control={control}
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
               )}
             />
@@ -191,7 +229,7 @@ const FinalReviewForm = ({ onSubmit, isSubmitting, isReadOnly = false, taskId, i
             <Controller
               name="scalability"
               control={control}
-              render={({ field }: LegacyValue) => (
+              render={({ field }) => (
                 <StarSelector value={field.value} onChange={field.onChange} disabled={isReadOnly} />
               )}
             />

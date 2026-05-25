@@ -12,3 +12,10 @@ export const finalReviewFormSchema = z.object({
   }),
   revealName: z.boolean().default(false),
 });
+
+export type FinalReviewFormValues = z.infer<typeof finalReviewFormSchema>;
+export type FinalReviewFormInput = z.input<typeof finalReviewFormSchema>;
+
+export interface FinalReviewSubmitPayload extends FinalReviewFormValues {
+  overallScore: number;
+}

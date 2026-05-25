@@ -1,3 +1,5 @@
+import type { User } from '@/entities/user';
+
 const avatarPool = [
   'https://img.freepik.com/premium-photo/young-stylish-guy-with-short-red-hair-dressed-blue-pullover-white-background_88135-55317.jpg',
   'https://img.freepik.com/premium-photo/young-blonde-caucasian-man_1368-502087.jpg',
@@ -9,7 +11,7 @@ const avatarPool = [
   'https://img.freepik.com/free-photo/beautiful-woman-portrait-garden_1328-1859.jpg',
   'https://img.freepik.com/free-photo/beautiful-portrait-teenager-woman_23-2149453399.jpg',
   'https://img.freepik.com/free-photo/portrait-young-girl-wearing-sunglasses-looking-cool_23-2149238391.jpg',
-];
+] as const;
 
 export const MOCK_USERS = [
   {
@@ -145,5 +147,5 @@ export const MOCK_USERS = [
     fullName: 'Дорофеева Нина Валерьевна',
     avatar: avatarPool[9],
   },
-];
-export const mockUsersById = new Map(MOCK_USERS.map((user: LegacyValue) => [user.id, user]));
+] satisfies User[];
+export const mockUsersById = new Map<number, User>(MOCK_USERS.map((user) => [user.id, user]));

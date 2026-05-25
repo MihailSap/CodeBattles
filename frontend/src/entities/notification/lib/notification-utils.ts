@@ -5,14 +5,19 @@ import {
   NOTIFICATION_TTL_DAYS,
   NOTIFICATION_TYPE,
 } from '../model/constants';
+import type { AppNotification, NotificationCompletion } from '../model/types';
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
-export const addDays = (date: LegacyValue, days: LegacyValue) => new Date(date.getTime() + days * MS_IN_DAY);
+export const addDays = (date: Date, days: number): Date => new Date(date.getTime() + days * MS_IN_DAY);
 
-export const getNotificationExpiresAt = ({ type, createdAt, deadline }: LegacyValue) => {
+export const getNotificationExpiresAt = ({
+  type,
+  createdAt,
+  deadline,
+}: Pick<AppNotification, 'type' | 'createdAt' | 'deadline'>): string => {
   const createdDate = new Date(createdAt);
-  const defaultExpiresAt = addDays(createdDate, NOTIFICATION_TTL_DAYS[type] || 3);
+  const defaultExpiresAt = addDays(createdDate, NOTIFICATION_TTL_DAYS[type]);
 
-  if (![NOTIFICATION_TYPE.TASK_ASSIGNED, NOTIFICATION_TYPE.REVIEW_AVAILABLE].includes(type) || !deadline) {
+  if ((type !== NOTIFICATION_TYPE.TASK_ASSIGNED && type !== NOTIFICATION_TYPE.REVIEW_AVAILABLE) || !deadline) {
     return defaultExpiresAt.toISOString();
   }
 
@@ -25,13 +30,13 @@ export const getNotificationExpiresAt = ({ type, createdAt, deadline }: LegacyVa
   return new Date(Math.min(defaultExpiresAt.getTime(), deadlineDate.getTime())).toISOString();
 };
 
-export const isNotificationExpired = (notification: LegacyValue, now: LegacyValue = Date.now()) => {
-  const expiresAt = new Date(notification.expiresAt).getTime();
+export const isNotificationExpired = (notification: AppNotification, now = Date.now()): boolean => {
+  const expiresAt = new Date(notification.expiresAt ?? notification.createdAt).getTime();
 
   return Number.isFinite(expiresAt) && expiresAt <= now;
 };
 
-export const formatNotificationTime = (value: LegacyValue) => {
+export const formatNotificationTime = (value: string): string => {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -62,7 +67,7 @@ export const formatNotificationTime = (value: LegacyValue) => {
   });
 };
 
-export const formatNotificationDeadline = (value: LegacyValue) => {
+export const formatNotificationDeadline = (value: string): string => {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -76,7 +81,7 @@ export const formatNotificationDeadline = (value: LegacyValue) => {
   });
 };
 
-export const getNotificationRoute = (notification: LegacyValue) => {
+export const getNotificationRoute = (notification: AppNotification): string | null => {
   const target = notification.target;
 
   if (!target) {
@@ -84,15 +89,17 @@ export const getNotificationRoute = (notification: LegacyValue) => {
   }
 
   if (target.kind === NOTIFICATION_TARGET_KIND.ORGANIZATION && target.organizationId) {
-    return ROUTES.organizationById.replace(':organizationId', target.organizationId);
+    return ROUTES.organizationById.replace(':organizationId', String(target.organizationId));
   }
 
   if (target.kind === NOTIFICATION_TARGET_KIND.TASK && target.projectId && target.taskId) {
-    return ROUTES.projectTaskById.replace(':projectId', target.projectId).replace(':taskId', target.taskId);
+    return ROUTES.projectTaskById
+      .replace(':projectId', String(target.projectId))
+      .replace(':taskId', String(target.taskId));
   }
 
   if (target.kind === NOTIFICATION_TARGET_KIND.REVIEW && target.reviewId) {
-    return ROUTES.reviewById.replace(':reviewId', target.reviewId);
+    return ROUTES.reviewById.replace(':reviewId', String(target.reviewId));
   }
 
   if (target.kind === NOTIFICATION_TARGET_KIND.LEADERBOARD) {
@@ -106,8 +113,8 @@ export const getNotificationRoute = (notification: LegacyValue) => {
   return null;
 };
 
-export const getNotificationCompletionPayloadsForPath = (pathname: LegacyValue) => {
-  const payloads: LegacyValue[] = [];
+export const getNotificationCompletionPayloadsForPath = (pathname: string): NotificationCompletion[] => {
+  const payloads: NotificationCompletion[] = [];
   const organizationMatch = pathname.match(/^\/organizations\/([^/]+)$/);
   const taskMatch = pathname.match(/^\/projects\/([^/]+)\/tasks\/([^/]+)$/);
   const reviewMatch = pathname.match(/^\/reviews\/([^/]+)$/);
