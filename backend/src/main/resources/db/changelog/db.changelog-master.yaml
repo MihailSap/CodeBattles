@@ -79,3 +79,7 @@ databaseChangeLog:
       file: db/changelog/changeset/039-update-enabled.yaml
   - include:
       file: db/changelog/changeset/040-add-comment-reviewer-index.yaml
+  - include:
+      file: db/changelog/changeset/041-fix-comment-report-fk.yaml
+  - include:
+      file: db/changelog/changeset/042-create-comment-report-data.yaml

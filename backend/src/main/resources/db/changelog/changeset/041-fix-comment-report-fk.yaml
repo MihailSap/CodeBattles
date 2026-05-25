@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: fix-comment-report-fk
+      author: SapeginMihail
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: comment_report
+            constraintName: fk_comment_report_comment
+        - addForeignKeyConstraint:
+            baseTableName: comment_report
+            baseColumnNames: comment_id
+            referencedTableName: comment
+            referencedColumnNames: id
+            constraintName: fk_comment_report_comment
+            onDelete: SET NULL

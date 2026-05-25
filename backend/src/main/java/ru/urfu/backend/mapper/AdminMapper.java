@@ -31,13 +31,13 @@ public class AdminMapper {
     }
 
     private AdminCommentComplaintDto mapToAdminCommentComplaintDto(CommentReport commentReport){
-        Comment comment = commentReport.getComment();
+        CommentReportData commentReportData = commentReport.getCommentReportData();
         return new AdminCommentComplaintDto(
                 commentReport.getId(),
-                comment.getId(),
-                comment.getText(),
-                mapToAdminUserBriefDto(commentReport.getComment().getUser()),
-                mapToAdminComplaintTargetDto(comment),
+                commentReportData.getCommentId(),
+                commentReportData.getCommentText(),
+                mapToAdminUserBriefDto(commentReportData.getUser()),
+                mapToAdminComplaintTargetDto(commentReportData.getReview()),
                 commentReport.getReason(),
                 mapToAdminUserBriefDto(commentReport.getUser()),
                 commentReport.getCreatedAt()
@@ -52,11 +52,10 @@ public class AdminMapper {
         );
     }
 
-    private AdminComplaintTargetDto mapToAdminComplaintTargetDto(Comment comment){
-        Review review = comment.getReviewIteration().getReview();
+    private AdminComplaintTargetDto mapToAdminComplaintTargetDto(Review review){
         return new AdminComplaintTargetDto(
                 "review",
-                comment.getReviewIteration().getReview().getTask().getTitle(),
+                review.getTask().getTitle(),
                 review.getTask().getProject().getId(),
                 review.getTask().getId(),
                 review.getId()

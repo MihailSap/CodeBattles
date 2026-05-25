@@ -33,6 +33,9 @@ public class Review extends BaseEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReviewIteration> reviewIterations = new HashSet<>();
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReportData> commentReportsData = new HashSet<>();
+
     public Task getTask() {
         return task;
     }
@@ -95,4 +98,11 @@ public class Review extends BaseEntity {
                 .orElse(null);
     }
 
+    public Set<CommentReportData> getCommentReportsData() {
+        return commentReportsData;
+    }
+
+    public void setCommentReportsData(Set<CommentReportData> commentReportsData) {
+        this.commentReportsData = commentReportsData;
+    }
 }

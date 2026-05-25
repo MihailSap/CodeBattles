@@ -8,6 +8,7 @@ import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.ThreadAction;
 import ru.urfu.backend.repository.CommentReactionRepository;
+import ru.urfu.backend.repository.CommentReportDataRepository;
 import ru.urfu.backend.repository.CommentReportRepository;
 import ru.urfu.backend.repository.CommentRepository;
 import ru.urfu.backend.service.CommentService;
@@ -22,16 +23,19 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final CommentReportRepository commentReportRepository;
     private final CommentReactionRepository commentReactionRepository;
+    private final CommentReportDataRepository commentReportDataRepository;
 
     @Autowired
     public CommentServiceImpl(
             CommentRepository commentRepository,
             CommentReportRepository commentReportRepository,
-            CommentReactionRepository commentReactionRepository
+            CommentReactionRepository commentReactionRepository,
+            CommentReportDataRepository commentReportDataRepository
     ) {
         this.commentRepository = commentRepository;
         this.commentReportRepository = commentReportRepository;
         this.commentReactionRepository = commentReactionRepository;
+        this.commentReportDataRepository = commentReportDataRepository;
     }
 
     @Transactional(readOnly = true)
@@ -122,12 +126,23 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     @Override
     public CommentReport createReport(ReportCommentRequestDto request, User user, Comment comment) {
-        CommentReport report = new CommentReport();
-        report.setUser(user);
-        report.setComment(comment);
-        report.setMessage(request.message());
-        report.setReason(request.reason());
-        return commentReportRepository.save(report);
+        CommentReport commentReport = new CommentReport();
+        commentReport.setUser(user);
+        commentReport.setMessage(request.message());
+        commentReport.setReason(request.reason());
+        commentReportRepository.save(commentReport);
+
+        CommentReportData commentReportData = new CommentReportData();
+        commentReportData.setCommentText(comment.getText());
+        commentReportData.setCommentReport(commentReport);
+        commentReportData.setUser(comment.getUser());
+        commentReportData.setCommentId(comment.getId());
+        commentReportData.setReview(comment.getReviewIteration().getReview());
+        commentReportDataRepository.save(commentReportData);
+
+        commentReport.setCommentReportData(commentReportData);
+
+        return commentReport;
     }
 
     @Transactional(readOnly = true)
@@ -175,11 +190,15 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     @Override
     public void delete(Comment comment) {
+        for (CommentReport report : comment.getReports()) {
+            if(report.getComment() != null){
+                report.setComment(null);
+            }
+        }
         Comment parent = comment.getParentComment();
         if (parent != null) {
             parent.removeReply(comment);
-        } else {
-            commentRepository.delete(comment);
         }
+        commentRepository.delete(comment);
     }
 }

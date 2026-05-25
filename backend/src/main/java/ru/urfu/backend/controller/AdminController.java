@@ -65,8 +65,8 @@ public class AdminController {
                     null
             );
         } else {
-            Comment comment = commentReport.getComment();
-            Long removedCommentId = comment.getId();
+            Long removedCommentId = commentReport.getCommentReportData().getCommentId();
+            Comment comment = commentService.getById(removedCommentId);
             commentService.delete(comment);
             commentService.deactivateCommentReport(commentReport);
             //TODO: Снятие баллов автора комментария

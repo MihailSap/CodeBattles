@@ -20,12 +20,31 @@ public class CommentReport extends BaseEntity {
     private ReportReason reason;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id")
+    @JoinColumn(name = "comment_id", nullable = true)
     private Comment comment;
+
+    @OneToOne(mappedBy = "commentReport", cascade = CascadeType.ALL, orphanRemoval = true)
+    private CommentReportData commentReportData;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public Comment getComment() {
+        return comment;
+    }
+
+    public void setComment(Comment comment) {
+        this.comment = comment;
+    }
+
+    public CommentReportData getCommentReportData() {
+        return commentReportData;
+    }
+
+    public void setCommentReportData(CommentReportData commentReportData) {
+        this.commentReportData = commentReportData;
+    }
 
     public ReportReason getReason() {
         return reason;
@@ -41,14 +60,6 @@ public class CommentReport extends BaseEntity {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public Comment getComment() {
-        return comment;
-    }
-
-    public void setComment(Comment comment) {
-        this.comment = comment;
     }
 
     public User getUser() {

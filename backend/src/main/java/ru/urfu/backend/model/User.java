@@ -50,6 +50,9 @@ public class User extends BaseEntity {
     private Set<CommentReport> commentReports = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReportData> commentReportsData = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CommentReaction> commentReactions = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -248,5 +251,13 @@ public class User extends BaseEntity {
 
     public void setCommentReactions(Set<CommentReaction> commentReactions) {
         this.commentReactions = commentReactions;
+    }
+
+    public Set<CommentReportData> getCommentReportsData() {
+        return commentReportsData;
+    }
+
+    public void setCommentReportsData(Set<CommentReportData> commentReportsData) {
+        this.commentReportsData = commentReportsData;
     }
 }

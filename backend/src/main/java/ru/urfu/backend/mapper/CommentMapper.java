@@ -115,7 +115,7 @@ public class CommentMapper {
     public ReportCommentResponse mapToReportCommentResponse(CommentReport commentReport){
         return new ReportCommentResponse(
                 commentReport.getId(),
-                commentReport.getComment().getId(),
+                commentReport.getCommentReportData().getCommentId(),
                 "CREATED"
         );
     }
