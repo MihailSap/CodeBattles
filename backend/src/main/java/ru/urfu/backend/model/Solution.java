@@ -25,6 +25,9 @@ public class Solution extends BaseEntity {
     @OneToOne(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private SolutionManualText solutionManualText;
 
+    @OneToOne(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SolutionGitPullRequest solutionGitPullRequest;
+
     @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
@@ -74,5 +77,13 @@ public class Solution extends BaseEntity {
 
     public void setSolutionManualText(SolutionManualText solutionManualText) {
         this.solutionManualText = solutionManualText;
+    }
+
+    public SolutionGitPullRequest getSolutionGitPullRequest() {
+        return solutionGitPullRequest;
+    }
+
+    public void setSolutionGitPullRequest(SolutionGitPullRequest solutionGitPullRequest) {
+        this.solutionGitPullRequest = solutionGitPullRequest;
     }
 }

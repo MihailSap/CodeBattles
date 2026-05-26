@@ -5,14 +5,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewStatus;
+import ru.urfu.backend.model.enums.SolutionUploadType;
 import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.repository.ReviewFileContentRepository;
 import ru.urfu.backend.repository.ReviewIterationRepository;
 import ru.urfu.backend.repository.ReviewRepository;
 import ru.urfu.backend.repository.ReviewVerdictRepository;
+import ru.urfu.backend.service.PullRequestFileService;
 import ru.urfu.backend.service.ReviewService;
 
 import java.time.LocalDateTime;
@@ -26,18 +27,20 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewVerdictRepository reviewVerdictRepository;
     private final ReviewIterationRepository reviewIterationRepository;
     private final ReviewFileContentRepository reviewFileContentRepository;
+    private final PullRequestFileService pullRequestFileService;
 
     @Autowired
     public ReviewServiceImpl(
             ReviewVerdictRepository reviewVerdictRepository,
             ReviewRepository reviewRepository,
             ReviewIterationRepository reviewIterationRepository,
-            ReviewFileContentRepository reviewFileContentRepository
+            ReviewFileContentRepository reviewFileContentRepository, PullRequestFileService pullRequestFileService
     ) {
         this.reviewVerdictRepository = reviewVerdictRepository;
         this.reviewRepository = reviewRepository;
         this.reviewIterationRepository = reviewIterationRepository;
         this.reviewFileContentRepository = reviewFileContentRepository;
+        this.pullRequestFileService = pullRequestFileService;
     }
 
     @Transactional(readOnly = true)
@@ -154,7 +157,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
-    public List<Review> create(List<User> reviewers, Solution solution) throws UserNotFoundException {
+    public List<Review> create(List<User> reviewers, Solution solution) throws Exception {
         List<Review> reviews = new ArrayList<>();
         int reviewerIndex = 1;
         for (User reviewer : reviewers) {
@@ -167,7 +170,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
-    public Review create(User user, Solution solution, Integer reviewerIndex) {
+    public Review create(User user, Solution solution, Integer reviewerIndex) throws Exception {
         Review review = new Review();
         review.setUser(user);
         review.setTask(solution.getTask());
@@ -177,36 +180,22 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.save(review);
 
         ReviewIteration reviewIteration = createReviewIteration(review);
-        createReviewFileContent(reviewIteration, solution.getSolutionManualText());
+
+        SolutionUploadType solutionUploadType = solution.getUploadType();
+        if(SolutionUploadType.MANUAL_TEXT.equals(solutionUploadType)){
+            createReviewFileContent(reviewIteration, solution.getSolutionManualText());
+        } else if(SolutionUploadType.GIT_PULL_REQUEST.equals(solutionUploadType)){
+            createReviewFileContent(reviewIteration, solution.getSolutionGitPullRequest());
+        }
 
         return review;
     }
 
     @Transactional
     @Override
-    public ReviewIteration createReviewIteration(Review review){
-        LocalDateTime now = LocalDateTime.now();
-        ReviewIteration reviewIteration = new ReviewIteration();
-        reviewIteration.setReview(review);
-        reviewIteration.setUploadedAt(now);
-        reviewIteration.setDeadline(now.plusDays(14));
-        reviewIteration.setTaskStatusAfterIteration(TaskStatus.IN_REVIEW);
-
-        ReviewIteration lastReviewIteration = review.getLastIteration();
-        if(lastReviewIteration == null){
-            reviewIteration.setIterationNumber(1);
-        } else {
-            reviewIteration.setIterationNumber(lastReviewIteration.getIterationNumber() + 1);
-        }
-        return reviewIterationRepository.save(reviewIteration);
-    }
-
-    @Transactional
-    @Override
     public ReviewFileContent createReviewFileContent(
-            ReviewIteration reviewIteration,
-            SolutionManualText solutionManualText){
-
+            ReviewIteration reviewIteration, SolutionManualText solutionManualText
+    ){
         ReviewFileContent reviewFileContent = new ReviewFileContent();
         reviewFileContent.setLanguage(solutionManualText.getLanguage());
         reviewFileContent.setContent(solutionManualText.getContent());
@@ -215,13 +204,35 @@ public class ReviewServiceImpl implements ReviewService {
         reviewFileContent.setUnsupportedPreview(false);
         reviewFileContent.setDiff(false);
         reviewFileContent.setOldContent(null);
-
         return reviewFileContentRepository.save(reviewFileContent);
     }
 
     @Transactional
     @Override
-    public ReviewFileContent createReviewFileContent(
+    public void createReviewFileContent(
+            ReviewIteration reviewIteration, SolutionGitPullRequest solutionGitPullRequest
+    ) throws Exception {
+        List<PullRequestFileData> pullRequestFileDataList = pullRequestFileService.getFiles(
+                solutionGitPullRequest.getRepositoryName(),
+                solutionGitPullRequest.getSourceBranch(),
+                solutionGitPullRequest.getTargetBranch()
+        );
+        for(PullRequestFileData pullRequestFileData : pullRequestFileDataList){
+            ReviewFileContent reviewFileContent = new ReviewFileContent();
+            reviewFileContent.setLanguage(extractLanguage(pullRequestFileData.path()));
+            reviewFileContent.setContent(pullRequestFileData.content());
+            reviewFileContent.setOldContent(pullRequestFileData.oldContent());
+            reviewFileContent.setPath(pullRequestFileData.path());
+            reviewFileContent.setReviewIteration(reviewIteration);
+            reviewFileContent.setUnsupportedPreview(false);
+            reviewFileContent.setDiff(true);
+            reviewFileContentRepository.save(reviewFileContent);
+        }
+    }
+
+    @Transactional
+    @Override
+    public ReviewFileContent updateReviewFileContent(
             ReviewIteration previousIteration, ReviewIteration currentIteration, SolutionManualText solutionManualText){
         ReviewFileContent reviewFileContent = new ReviewFileContent();
         reviewFileContent.setLanguage(solutionManualText.getLanguage());
@@ -246,6 +257,55 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         return reviewFileContentRepository.save(reviewFileContent);
+    }
+
+//    @Transactional
+//    @Override
+//    public ReviewFileContent updateReviewFileContent(
+//            ReviewIteration currentIteration, SolutionManualText solutionManualText){
+//
+//        ReviewFileContent reviewFileContent = new ReviewFileContent();
+//        reviewFileContent.setLanguage(solutionManualText.getLanguage());
+//        reviewFileContent.setContent(solutionManualText.getContent());
+//        reviewFileContent.setPath(solutionManualText.getFileName());
+//        reviewFileContent.setReviewIteration(currentIteration);
+//        reviewFileContent.setUnsupportedPreview(false);
+//
+//        ReviewFileContent previousFileContent = previousIteration
+//                .getReviewFileContents()
+//                .stream()
+//                .filter(file -> solutionManualText.getFileName().equals(file.getPath()))
+//                .findFirst()
+//                .orElse(null);
+//
+//        if(previousFileContent == null){
+//            reviewFileContent.setDiff(false);
+//            reviewFileContent.setOldContent(null);
+//        } else {
+//            reviewFileContent.setDiff(true);
+//            reviewFileContent.setOldContent(previousFileContent.getContent());
+//        }
+//
+//        return reviewFileContentRepository.save(reviewFileContent);
+//    }
+
+    @Transactional
+    @Override
+    public ReviewIteration createReviewIteration(Review review){
+        LocalDateTime now = LocalDateTime.now();
+        ReviewIteration reviewIteration = new ReviewIteration();
+        reviewIteration.setReview(review);
+        reviewIteration.setUploadedAt(now);
+        reviewIteration.setDeadline(now.plusDays(14));
+        reviewIteration.setTaskStatusAfterIteration(TaskStatus.IN_REVIEW);
+
+        ReviewIteration lastReviewIteration = review.getLastIteration();
+        if(lastReviewIteration == null){
+            reviewIteration.setIterationNumber(1);
+        } else {
+            reviewIteration.setIterationNumber(lastReviewIteration.getIterationNumber() + 1);
+        }
+        return reviewIterationRepository.save(reviewIteration);
     }
 
     @Transactional
@@ -298,5 +358,18 @@ public class ReviewServiceImpl implements ReviewService {
     public Review updateRevealName(Boolean revealName, Review review) {
         review.setRevealAuthorAfterReview(revealName);
         return reviewRepository.save(review);
+    }
+
+    private String extractLanguage(String path) {
+        String fileName = path;
+        int slashIndex = path.lastIndexOf('/');
+        if (slashIndex >= 0) {
+            fileName = path.substring(slashIndex + 1);
+        }
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex < 0) {
+            return fileName;
+        }
+        return fileName.substring(dotIndex + 1);
     }
 }

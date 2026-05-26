@@ -1,7 +1,9 @@
 package ru.urfu.backend.dto.solution;
 
-public record SolutionGitPullRequest(
-        String provider,
+import ru.urfu.backend.model.enums.GitProvider;
+
+public record SolutionGitPullRequestDto(
+        GitProvider provider,
         String repositoryId,
         String repositoryName,
         String pullRequestId,

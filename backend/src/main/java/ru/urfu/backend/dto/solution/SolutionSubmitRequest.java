@@ -11,7 +11,7 @@ public record SolutionSubmitRequest(
         SolutionManualCodeRequest manualCode,
         List<SolutionFileRequest> files,
         SolutionArchiveRequest archive,
-        SolutionGitPullRequest git
+        SolutionGitPullRequestDto git
 ) {
 }
 

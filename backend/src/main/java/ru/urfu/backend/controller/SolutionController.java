@@ -58,7 +58,7 @@ public class SolutionController {
     @PostMapping
     public ResponseEntity<SolutionSubmitResponse> submitSolution(
             @ModelAttribute SolutionSubmitRequest request
-    ) throws UserNotFoundException {
+    ) throws Exception {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
         if(!taskService.isUserAssigneeInTask(user, task)){
@@ -83,7 +83,21 @@ public class SolutionController {
             return ResponseEntity.status(201).body(
                     solutionMapper.mapToSolutionSubmitResponse(
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
-        } else {
+        } else if(SolutionUploadType.GIT_PULL_REQUEST.equals(request.uploadType())){
+            Solution solution = solutionService.createSolutionForGitPullRequest(request, task);
+            int reviewerIndex = 1;
+            for(UserTask userTask : task.getUsers()){
+                if(UserTaskType.REVIEWER.equals(userTask.getUserTaskType())){
+                    reviewService.create(userTask.getUser(), solution, reviewerIndex);
+                    reviewerIndex++;
+                }
+            }
+            taskService.updateStatusInReview(task);
+            return ResponseEntity.status(201).body(
+                    solutionMapper.mapToSolutionSubmitResponse(
+                            solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
+        }
+        else {
             //TODO: Реализовать работу с другими solution
             throw new ForbiddenException("Этот тип данных ещё не поддерживается");
         }
@@ -115,8 +129,24 @@ public class SolutionController {
                 ReviewIteration previousIteration = updatedReview.getLastIteration();
                 ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
 
-                reviewService.createReviewFileContent(
+                reviewService.updateReviewFileContent(
                         previousIteration,
+                        currentIteration,
+                        updatedSolution.getSolutionManualText());
+            }
+            return solutionMapper.mapToSolutionSubmitResponse(
+                    updatedSolution, ReviewStatus.IN_PROGRESS,
+                    updatedSolution.getUploadedAt().plusDays(14).toString());
+        } else if (SolutionUploadType.GIT_PULL_REQUEST.equals(request.uploadType())){
+            Solution updatedSolution = solutionService.updateSolutionGitPullRequest(request, solution);
+            if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
+                taskService.updateStatusInReview(task);
+            }
+            for(Review review : updatedSolution.getReviews()){
+                Review updatedReview = reviewService.updateStatusInProgress(review);
+                ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
+
+                reviewService.createReviewFileContent(
                         currentIteration,
                         updatedSolution.getSolutionManualText());
             }
@@ -152,7 +182,7 @@ public class SolutionController {
     @PostMapping("/resend")
     public ResponseEntity<SolutionSubmitResponse> resend(
             @RequestBody ReviewResendRequest request
-    ) throws UserNotFoundException {
+    ) throws Exception {
         Long taskId = request.taskId();
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);

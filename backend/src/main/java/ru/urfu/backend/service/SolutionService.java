@@ -4,7 +4,6 @@ import ru.urfu.backend.dto.solution.RevealAuthorAfterReviewRequest;
 import ru.urfu.backend.dto.solution.SolutionSubmitRequest;
 import ru.urfu.backend.model.Solution;
 import ru.urfu.backend.model.Task;
-import ru.urfu.backend.model.User;
 
 public interface SolutionService {
 
@@ -16,5 +15,9 @@ public interface SolutionService {
 
     Solution createManualTextSolution(SolutionSubmitRequest request, Task task);
 
+    Solution createSolutionForGitPullRequest(SolutionSubmitRequest request, Task task);
+
     Solution updateManualTextSolution(SolutionSubmitRequest request, Solution solution);
+
+    Solution updateSolutionGitPullRequest(SolutionSubmitRequest request, Solution solution);
 }

@@ -2,7 +2,6 @@ package ru.urfu.backend.service;
 
 import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.*;
 
 import java.util.List;
@@ -17,9 +16,9 @@ public interface ReviewService {
 
     List<Review> getReviewsByUser(User user);
 
-    Review create(User user, Solution solution, Integer reviewerIndex);
+    Review create(User user, Solution solution, Integer reviewerIndex) throws Exception;
 
-    List<Review> create(List<User> users, Solution solution) throws UserNotFoundException;
+    List<Review> create(List<User> users, Solution solution) throws Exception;
 
     ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review);
 
@@ -28,7 +27,11 @@ public interface ReviewService {
     ReviewFileContent createReviewFileContent(
             ReviewIteration reviewIteration, SolutionManualText solutionManualText);
 
-    ReviewFileContent createReviewFileContent(
+    void createReviewFileContent(
+            ReviewIteration reviewIteration, SolutionGitPullRequest solutionGitPullRequest
+    ) throws Exception;
+
+    ReviewFileContent updateReviewFileContent(
             ReviewIteration previousIteration, ReviewIteration currentIteration, SolutionManualText solutionManualText);
 
     void completeExpiredReviews(List<Review> reviews);
