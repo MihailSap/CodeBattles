@@ -232,10 +232,17 @@ public class TaskServiceImpl implements TaskService {
             addUsersToTask(task, assigneeIds, UserTaskType.ASSIGNEE);
         }
         List<Long> reviewerIds = request.reviewerIds();
+
         boolean reviewersChanged = reviewTypeChanged || assigneesChanged || reviewerIds != null;
         if(reviewersChanged){
             ReviewType effectiveReviewType =
                     reviewTypeChanged ? newReviewType : currentReviewType;
+            if(reviewerIds != null
+                    && !ReviewType.MANUAL_ASSIGNEES.equals(effectiveReviewType)) {
+                throw new RuntimeException(
+                        "reviewerIds поддерживается только для MANUAL_ASSIGNEES"
+                );
+            }
 
             List<Long> effectiveAssigneeIds;
             if(assigneeIds != null){
