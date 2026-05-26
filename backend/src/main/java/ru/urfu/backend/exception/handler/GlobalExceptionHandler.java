@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.urfu.backend.dto.ErrorResponse;
 import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
+import ru.urfu.backend.exception.customEx.NotEnoughReviewersException;
 import ru.urfu.backend.exception.globalEx.AlreadyExistsException;
 import ru.urfu.backend.exception.globalEx.InvalidException;
 import ru.urfu.backend.exception.globalEx.NotFoundException;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
         logger.error("AccountNotEnabledException: {}", ex.getMessage(), ex);
         ErrorResponse response = ExceptionUtils.create("status", 1, "message", "path");
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(NotEnoughReviewersException.class)
+    public ResponseEntity<ErrorResponse> handleConflictEx(NotEnoughReviewersException ex) {
+        logger.error("NotEnoughReviewersException: {}", ex.getMessage(), ex);
+        ErrorResponse response = ExceptionUtils.create("CONFLICT", 409, ex.getMessage(), "path");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(Exception.class)

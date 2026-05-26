@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
+import ru.urfu.backend.exception.customEx.NotEnoughReviewersException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewType;
@@ -107,7 +108,7 @@ public class TaskServiceImpl implements TaskService {
         ReviewType reviewType = request.reviewType();
         addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
-            List<Long> reviewerIds = request.assigneeIds();
+            List<Long> reviewerIds = request.reviewerIds();
             if(reviewerIds == null || reviewerIds.isEmpty()){
                 throw new RuntimeException("При ReviewType.MANUAL_ASSIGNEES необходимо указывать id пользователей");
             }
@@ -141,8 +142,8 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void addReviewersToTaskByProject(Task task, List<Long> assigneesIds, Project project) {
         List<User> potentialReviewers = getPotentialReviewers(assigneesIds, project);
-        if (potentialReviewers.size() < 2) {
-            throw new RuntimeException("Невозможно сделать автораспределение: мало доступных пользователей");
+        if (potentialReviewers.isEmpty()) {
+            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS`");
         }
 
         List<User> reviewers = potentialReviewers.size() <= 3
@@ -162,8 +163,8 @@ public class TaskServiceImpl implements TaskService {
             throw new RuntimeException("Невозможно сделать автораспределение: организация отсутствует");
         }
         List<User> potentialReviewers = getPotentialReviewers(assigneesIds, organization);
-        if (potentialReviewers.size() < 2) {
-            throw new RuntimeException("Невозможно сделать автораспределение: мало доступных пользователей");
+        if (potentialReviewers.isEmpty()) {
+            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS`");
         }
 
         List<User> reviewers = potentialReviewers.size() <= 3
@@ -370,7 +371,7 @@ public class TaskServiceImpl implements TaskService {
         List<User> potentialReviewers = new ArrayList<>();
         for(UserOrganization userOrganization : organization.getMembers()){
             User user = userOrganization.getUser();
-            if(!assigneesIds.contains(user.getId())){
+            if(!assigneesIds.contains(user.getId()) && userOrganization.getEnabled()){
                 potentialReviewers.add(user);
             }
         }
