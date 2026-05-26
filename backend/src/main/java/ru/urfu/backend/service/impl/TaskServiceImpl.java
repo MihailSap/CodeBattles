@@ -107,6 +107,10 @@ public class TaskServiceImpl implements TaskService {
         ReviewType reviewType = request.reviewType();
         addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
+            List<Long> reviewerIds = request.assigneeIds();
+            if(reviewerIds == null || reviewerIds.isEmpty()){
+                throw new RuntimeException("При ReviewType.MANUAL_ASSIGNEES необходимо указывать id пользователей");
+            }
             addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
         } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
             addReviewersToTaskByProject(task, request.assigneeIds(), project);
@@ -224,7 +228,12 @@ public class TaskServiceImpl implements TaskService {
             addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         }
         List<Long> reviewerIds = request.reviewerIds();
-        if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType) && reviewerIds != null && !reviewerIds.isEmpty()){
+        if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
+            if(reviewerIds == null || reviewerIds.isEmpty()){
+                throw new RuntimeException(
+                        "При ReviewType.MANUAL_ASSIGNEES необходимо указывать id пользователей"
+                );
+            }
             userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
             task.getUsers().removeIf(ut -> ut.getUserTaskType() == UserTaskType.REVIEWER);
             addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
