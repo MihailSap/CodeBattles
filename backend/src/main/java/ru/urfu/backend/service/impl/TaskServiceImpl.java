@@ -228,14 +228,14 @@ public class TaskServiceImpl implements TaskService {
             addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         }
         List<Long> reviewerIds = request.reviewerIds();
+        userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
+        task.getUsers().removeIf(ut -> ut.getUserTaskType() == UserTaskType.REVIEWER);
         if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
             if(reviewerIds == null || reviewerIds.isEmpty()){
                 throw new RuntimeException(
                         "При ReviewType.MANUAL_ASSIGNEES необходимо указывать id пользователей"
                 );
             }
-            userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
-            task.getUsers().removeIf(ut -> ut.getUserTaskType() == UserTaskType.REVIEWER);
             addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
         } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
             Project project = task.getProject();
