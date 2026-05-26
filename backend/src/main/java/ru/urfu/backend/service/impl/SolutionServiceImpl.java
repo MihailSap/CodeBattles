@@ -53,15 +53,39 @@ public class SolutionServiceImpl implements SolutionService {
 
     @Transactional
     @Override
-    public Solution updateSolutionGitPullRequest(SolutionSubmitRequest request, Solution solution) {
-        solution.setRevealAuthorAfterReview(request.revealAuthorAfterReview());
+    public Solution updateSolutionGitPullRequest(
+            SolutionSubmitRequest request,
+            Solution solution
+    ) {
+        solution.setRevealAuthorAfterReview(
+                request.revealAuthorAfterReview()
+        );
         solution.setUploadType(request.uploadType());
         solution.setUploadedAt(LocalDateTime.now());
-        solutionRepository.save(solution);
 
-        solutionGitPullRequestRepository.delete(solution.getSolutionGitPullRequest());
-        createSolutionGitPullRequest(request, solution);
-        return solution;
+        SolutionGitPullRequestDto dto = request.git();
+
+        SolutionGitPullRequest pr =
+                solution.getSolutionGitPullRequest();
+
+        if (pr == null) {
+            pr = new SolutionGitPullRequest();
+            pr.setSolution(solution);
+            solution.setSolutionGitPullRequest(pr);
+        }
+
+        pr.setProvider(dto.provider());
+        pr.setRepositoryId(dto.repositoryId());
+        pr.setRepositoryName(dto.repositoryName());
+        pr.setPullRequestId(dto.pullRequestId());
+        pr.setPullRequestNumber(dto.pullRequestNumber());
+        pr.setSourceBranch(dto.sourceBranch());
+        pr.setTargetBranch(dto.targetBranch());
+        pr.setUrl(dto.url());
+
+        solutionGitPullRequestRepository.save(pr);
+
+        return solutionRepository.save(solution);
     }
 
     @Transactional
