@@ -122,6 +122,9 @@ public class TaskServiceImpl implements TaskService {
             throws UserNotFoundException {
         for(Long assigneeId : userIds){
             User user = userService.getById(assigneeId);
+            if(!user.getEnabled()){
+                throw new RuntimeException("Указанный пользователь не подтвержден");
+            }
             UserTask userTask = new UserTask();
             userTask.setUser(user);
             userTask.setTask(task);
@@ -221,18 +224,16 @@ public class TaskServiceImpl implements TaskService {
             addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         }
         List<Long> reviewerIds = request.reviewerIds();
-        if(reviewerIds != null && !reviewerIds.isEmpty()){
+        if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType) && reviewerIds != null && !reviewerIds.isEmpty()){
             userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
             task.getUsers().removeIf(ut -> ut.getUserTaskType() == UserTaskType.REVIEWER);
-
+            addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
+        } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
             Project project = task.getProject();
-            if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
-                addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
-            } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
-                addReviewersToTaskByProject(task, request.assigneeIds(), project);
-            } else if(ReviewType.AUTO_ORGANIZATION.equals(reviewType)){
-                addReviewersToTaskByOrganization(task, request.assigneeIds(), project);
-            }
+            addReviewersToTaskByProject(task, request.assigneeIds(), project);
+        } else if(ReviewType.AUTO_ORGANIZATION.equals(reviewType)){
+            Project project = task.getProject();
+            addReviewersToTaskByOrganization(task, request.assigneeIds(), project);
         }
         return taskRepository.save(task);
     }
