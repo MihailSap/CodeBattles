@@ -143,7 +143,7 @@ public class TaskServiceImpl implements TaskService {
     public void addReviewersToTaskByProject(Task task, List<Long> assigneesIds, Project project) {
         List<User> potentialReviewers = getPotentialReviewers(assigneesIds, project);
         if (potentialReviewers.isEmpty()) {
-            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS`");
+            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS");
         }
 
         List<User> reviewers = potentialReviewers.size() <= 3
@@ -164,7 +164,7 @@ public class TaskServiceImpl implements TaskService {
         }
         List<User> potentialReviewers = getPotentialReviewers(assigneesIds, organization);
         if (potentialReviewers.isEmpty()) {
-            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS`");
+            throw new NotEnoughReviewersException("INSUFFICIENT_AUTO_REVIEWERS");
         }
 
         List<User> reviewers = potentialReviewers.size() <= 3
