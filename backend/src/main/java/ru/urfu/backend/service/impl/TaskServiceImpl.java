@@ -247,22 +247,30 @@ public class TaskServiceImpl implements TaskService {
                         .toList();
             }
 
-            userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
 
-            task.getUsers().removeIf(
-                    ut -> ut.getUserTaskType() == UserTaskType.REVIEWER
-            );
             if(ReviewType.MANUAL_ASSIGNEES.equals(effectiveReviewType)){
                 if(reviewerIds == null || reviewerIds.isEmpty()){
                     throw new RuntimeException(
                             "При ReviewType.MANUAL_ASSIGNEES необходимо указывать id пользователей"
                     );
                 }
+                userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
+                task.getUsers().removeIf(
+                        ut -> ut.getUserTaskType() == UserTaskType.REVIEWER
+                );
                 addUsersToTask(task, reviewerIds, UserTaskType.REVIEWER);
             } else if(ReviewType.AUTO_PROJECT.equals(effectiveReviewType)){
+                userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
+                task.getUsers().removeIf(
+                        ut -> ut.getUserTaskType() == UserTaskType.REVIEWER
+                );
                 Project project = task.getProject();
                 addReviewersToTaskByProject(task, effectiveAssigneeIds, project);
             } else if(ReviewType.AUTO_ORGANIZATION.equals(effectiveReviewType)){
+                userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
+                task.getUsers().removeIf(
+                        ut -> ut.getUserTaskType() == UserTaskType.REVIEWER
+                );
                 Project project = task.getProject();
                 addReviewersToTaskByOrganization(task, effectiveAssigneeIds, project);
             }
