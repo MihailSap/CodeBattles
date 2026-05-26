@@ -7,13 +7,7 @@ import ru.urfu.backend.dto.dashboard.DashboardTaskFilterStatus;
 import ru.urfu.backend.dto.tasks.CreateTaskRequest;
 import ru.urfu.backend.dto.tasks.UpdateTaskSettingsRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
-import ru.urfu.backend.model.Project;
-import ru.urfu.backend.model.Review;
-import ru.urfu.backend.model.ReviewIteration;
-import ru.urfu.backend.model.ReviewVerdict;
-import ru.urfu.backend.model.Task;
-import ru.urfu.backend.model.User;
-import ru.urfu.backend.model.UserTask;
+import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewType;
 import ru.urfu.backend.model.enums.ReviewVerdictType;
 import ru.urfu.backend.model.enums.TaskStatus;
@@ -24,8 +18,7 @@ import ru.urfu.backend.service.TaskService;
 import ru.urfu.backend.service.UserService;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -110,10 +103,79 @@ public class TaskServiceImpl implements TaskService {
         task.setUpdatedAt(LocalDateTime.now());
         taskRepository.save(task);
 
+        ReviewType reviewType = request.reviewType();
         addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
-        addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
+        if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
+            addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
+        } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
+            addReviewersToTaskByProject(task, request.assigneeIds(), project);
+        } else if(ReviewType.AUTO_ORGANIZATION.equals(reviewType)){
+            addReviewersToTaskByOrganization(task, request.assigneeIds(), project);
+        }
 
         return taskRepository.save(task);
+    }
+
+    @Transactional
+    public void addUsersToTask(Task task, List<Long> userIds, UserTaskType userTaskType)
+            throws UserNotFoundException {
+        for(Long assigneeId : userIds){
+            User user = userService.getById(assigneeId);
+            UserTask userTask = new UserTask();
+            userTask.setUser(user);
+            userTask.setTask(task);
+            userTask.setUserTaskType(userTaskType);
+            userTaskRepository.save(userTask);
+            task.getUsers().add(userTask);
+        }
+    }
+
+    @Transactional
+    public void addReviewersToTaskByProject(Task task, List<Long> assigneesIds, Project project) {
+        List<User> potentialReviewers = getPotentialReviewers(assigneesIds, project);
+        if (potentialReviewers.size() < 2) {
+            throw new RuntimeException("Невозможно сделать автораспределение: мало доступных пользователей");
+        }
+
+        List<User> reviewers = potentialReviewers.size() <= 3
+                ? potentialReviewers
+                : potentialReviewers.stream()
+                .sorted(Comparator.comparingInt(user -> user.getReviews().size()))
+                .limit(3)
+                .toList();
+
+        reviewers.forEach(user -> addReviewerToTask(task, user));
+    }
+
+    @Transactional
+    public void addReviewersToTaskByOrganization(Task task, List<Long> assigneesIds, Project project) {
+        Organization organization = project.getOrganization();
+        if(organization == null){
+            throw new RuntimeException("Невозможно сделать автораспределение: организация отсутствует");
+        }
+        List<User> potentialReviewers = getPotentialReviewers(assigneesIds, organization);
+        if (potentialReviewers.size() < 2) {
+            throw new RuntimeException("Невозможно сделать автораспределение: мало доступных пользователей");
+        }
+
+        List<User> reviewers = potentialReviewers.size() <= 3
+                ? potentialReviewers
+                : potentialReviewers.stream()
+                .sorted(Comparator.comparingInt(user -> user.getReviews().size()))
+                .limit(3)
+                .toList();
+
+        reviewers.forEach(user -> addReviewerToTask(task, user));
+    }
+
+    @Transactional
+    public void addReviewerToTask(Task task, User user) {
+        UserTask userTask = new UserTask();
+        userTask.setUser(user);
+        userTask.setTask(task);
+        userTask.setUserTaskType(UserTaskType.REVIEWER);
+        userTaskRepository.save(userTask);
+        task.getUsers().add(userTask);
     }
 
     @Transactional
@@ -161,7 +223,15 @@ public class TaskServiceImpl implements TaskService {
         if(reviewerIds != null && !reviewerIds.isEmpty()){
             userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
             task.getUsers().removeIf(ut -> ut.getUserTaskType() == UserTaskType.REVIEWER);
-            addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
+
+            Project project = task.getProject();
+            if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
+                addUsersToTask(task, request.reviewerIds(), UserTaskType.REVIEWER);
+            } else if(ReviewType.AUTO_PROJECT.equals(reviewType)){
+                addReviewersToTaskByProject(task, request.assigneeIds(), project);
+            } else if(ReviewType.AUTO_ORGANIZATION.equals(reviewType)){
+                addReviewersToTaskByOrganization(task, request.assigneeIds(), project);
+            }
         }
         return taskRepository.save(task);
     }
@@ -170,20 +240,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void delete(Task task){
         taskRepository.delete(task);
-    }
-
-    @Transactional
-    public void addUsersToTask(Task task, List<Long> userIds, UserTaskType userTaskType)
-            throws UserNotFoundException {
-        for(Long assigneeId : userIds){
-            User user = userService.getById(assigneeId);
-            UserTask userTask = new UserTask();
-            userTask.setUser(user);
-            userTask.setTask(task);
-            userTask.setUserTaskType(userTaskType);
-            userTaskRepository.save(userTask);
-            task.getUsers().add(userTask);
-        }
     }
 
     @Transactional(readOnly = true)
@@ -286,5 +342,27 @@ public class TaskServiceImpl implements TaskService {
         task.setCompletedAt(now);
         task.setStatus(TaskStatus.DONE);
         return taskRepository.save(task);
+    }
+
+    private List<User> getPotentialReviewers(List<Long> assigneesIds, Project project){
+        List<User> potentialReviewers = new ArrayList<>();
+        for(UserProject userProject : project.getUsers()){
+            User user = userProject.getUser();
+            if(!assigneesIds.contains(user.getId())){
+                potentialReviewers.add(user);
+            }
+        }
+        return potentialReviewers;
+    }
+
+    private List<User> getPotentialReviewers(List<Long> assigneesIds, Organization organization){
+        List<User> potentialReviewers = new ArrayList<>();
+        for(UserOrganization userOrganization : organization.getMembers()){
+            User user = userOrganization.getUser();
+            if(!assigneesIds.contains(user.getId())){
+                potentialReviewers.add(user);
+            }
+        }
+        return potentialReviewers;
     }
 }
