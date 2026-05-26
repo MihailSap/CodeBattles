@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.comment.*;
+import ru.urfu.backend.exception.customEx.CommentNotFoundException;
+import ru.urfu.backend.exception.customEx.ReportNotFoundException;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.ThreadAction;
@@ -42,7 +44,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public Comment getById(Long id) {
         return commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Комментарий с id=%s не найден".formatted(id)));
+                .orElseThrow(() -> new CommentNotFoundException("Комментарий с id=%s не найден".formatted(id)));
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +66,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentReport getReportById(Long id) {
         return commentReportRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Жалоба на комментарий с id=%s не найдена".formatted(id)));
+                .orElseThrow(() -> new ReportNotFoundException("Жалоба на комментарий с id=%s не найдена".formatted(id)));
     }
 
     @Transactional(readOnly = true)

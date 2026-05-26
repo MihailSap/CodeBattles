@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.invite.ProjectInviteResponse;
 import ru.urfu.backend.dto.project.ProjectJoinedResponse;
+import ru.urfu.backend.exception.customEx.AlreadyMemberException;
+import ru.urfu.backend.exception.customEx.InvalidInviteException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.ProjectInviteMapper;
 import ru.urfu.backend.model.Organization;
@@ -48,7 +50,7 @@ public class ProjectInvitesController {
     public ProjectInviteResponse getInviteByToken(@PathVariable("token") String token){
         ProjectInvite projectInvite = projectInviteService.getByToken(token);
         if(projectInvite.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("400 INVALID_INVITE");
+            throw new InvalidInviteException("400 INVALID_INVITE");
         }
         return projectInviteMapper.mapToProjectInviteResponse(projectInvite);
     }
@@ -60,10 +62,10 @@ public class ProjectInvitesController {
         Project project = projectInvite.getProject();
         User user = authService.getAuthenticatedUser();
         if(projectService.isUserProjectExists(project, user)){
-            throw new RuntimeException("409 ALREADY_MEMBER");
+            throw new AlreadyMemberException("409 ALREADY_MEMBER");
         }
         if(projectInvite.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("400 INVALID_INVITE");
+            throw new InvalidInviteException("400 INVALID_INVITE");
         }
 
         Organization organization = project.getOrganization();

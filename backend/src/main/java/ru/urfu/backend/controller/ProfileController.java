@@ -11,6 +11,7 @@ import ru.urfu.backend.dto.MessageResponse;
 import ru.urfu.backend.dto.NotificationSettingsDto;
 import ru.urfu.backend.dto.user.profile.*;
 import ru.urfu.backend.dto.user.UserResponse;
+import ru.urfu.backend.exception.customEx.InvalidCurrentPasswordException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.NotificationSettingsMapper;
 import ru.urfu.backend.mapper.UserMapper;
@@ -74,14 +75,6 @@ public class ProfileController {
                 updatedUser.getFullName(), updatedUser.getAvatarFileTitle());
     }
 
-//    @Operation(description = "Обновление навыков текущего пользователя")
-//    @PatchMapping("/me/skills")
-//    public ProfileSkillsUpdateDto updateCurrentUserSkills(@ModelAttribute ProfileSkillsUpdateDto request) throws UserNotFoundException {
-//        User user = authService.getAuthenticatedUser();
-//        User updatedUser = userService.updateSkills(user, request);
-//        return userMapper.mapToProfileSkillsUpdateDto(updatedUser);
-//    }
-
     @Operation(description = "Получение связанных аккаунтов")
     @GetMapping("/me/linked-accounts")
     public LinkedAccountsResponse getLinkedAccounts() throws UserNotFoundException {
@@ -119,7 +112,7 @@ public class ProfileController {
             @RequestBody ProfilePassportUpdateRequest request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         if(!userService.isCorrectPassword(request.currentPassword(), user.getPassword())){
-            throw new RuntimeException("409 INVALID_CURRENT_PASSWORD");
+            throw new InvalidCurrentPasswordException("409 INVALID_CURRENT_PASSWORD");
         }
         userService.updatePassword(user, request.newPassword());
         return new MessageResponse("Пароль успешно обновлён");

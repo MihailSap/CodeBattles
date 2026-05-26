@@ -13,7 +13,8 @@ import ru.urfu.backend.dto.LeftResponse;
 import ru.urfu.backend.dto.invite.ProjectInviteRequest;
 import ru.urfu.backend.dto.invite.ProjectInviteResponse;
 import ru.urfu.backend.dto.project.*;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.customEx.*;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.ProjectInviteMapper;
 import ru.urfu.backend.mapper.ProjectMapper;
 import ru.urfu.backend.mapper.TaskMapper;
@@ -87,7 +88,7 @@ public class ProjectController {
         User user = authService.getAuthenticatedUser();
         if(projectCreateRequest.organizationId() == null){
             if(projectService.isProjectExist(projectCreateRequest.name(), user)){
-                throw new RuntimeException("409 PROJECT_NAME_CONFLICT");
+                throw new ProjectNameConflictException("409 PROJECT_NAME_CONFLICT");
             }
             Project project = projectService.create(projectCreateRequest, user);
             return ResponseEntity.status(201).body(new CreatedResponse(project.getId()));
@@ -95,10 +96,10 @@ public class ProjectController {
 
         Organization organization = organizationService.getById(projectCreateRequest.organizationId());
         if(projectService.isProjectExist(projectCreateRequest.name(), organization)){
-            throw new RuntimeException("409 PROJECT_NAME_CONFLICT");
+            throw new ProjectNameConflictException("409 PROJECT_NAME_CONFLICT");
         }
         if(!organizationService.isUserAdminInOrganization(user, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         Project project = projectService.create(projectCreateRequest, user, organization);
         return ResponseEntity.status(201).body(new CreatedResponse(project.getId()));
@@ -113,12 +114,12 @@ public class ProjectController {
         if(project.getIsPrivate()
                 && !projectService.isUserOwnerInProject(project, user)
                 && !projectService.isUserMemberInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         Organization organization = project.getOrganization();
         if(organization != null && !organizationService.isUserExistsInOrganization(organization, user)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
 
         if(!project.getIsPrivate()
@@ -138,7 +139,7 @@ public class ProjectController {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         Project updatedProject = projectService.update(request, project);
@@ -154,7 +155,7 @@ public class ProjectController {
         Project project = projectService.getById(projectId);
 
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         projectService.delete(projectId);
@@ -167,10 +168,10 @@ public class ProjectController {
         User user = authService.getAuthenticatedUser();
         Project project = projectService.getById(projectId);
         if(projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("400 OWNER CAN'T LEAVE PROJECT");
+            throw new OwnerCannotLeaveProjectException("400 OWNER CAN'T LEAVE PROJECT");
         }
         if(!projectService.isUserProjectExists(project, user)){
-            throw new RuntimeException("Пользователь не состоит в проекте");
+            throw new ForbiddenException("Пользователь не состоит в проекте");
         }
         projectService.removeUserFromProject(user, project);
         return new LeftResponse(true);
@@ -183,7 +184,7 @@ public class ProjectController {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         ProjectInvite projectInvite = projectInviteService.create(request, project);
@@ -196,10 +197,10 @@ public class ProjectController {
         Project project = projectService.getById(projectId);
         User user = authService.getAuthenticatedUser();
         if(Boolean.TRUE.equals(project.getIsPrivate())){
-            throw new RuntimeException("403 PROJECT_NOT_PUBLIC");
+            throw new ProjectNotPublicException("403 PROJECT_NOT_PUBLIC");
         }
         if(projectService.isUserProjectExists(project, user)){
-            throw new RuntimeException("409 ALREADY_MEMBER");
+            throw new AlreadyMemberException("409 ALREADY_MEMBER");
         }
         projectService.addUserToProject(user, project, ProjectMemberRole.MEMBER);
         return new ProjectJoinedResponse(true, project.getId());

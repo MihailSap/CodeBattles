@@ -12,7 +12,9 @@ import ru.urfu.backend.dto.solution.RevealAuthorAfterReviewRequest;
 import ru.urfu.backend.dto.solution.RevealAuthorAfterReviewResponse;
 import ru.urfu.backend.dto.solution.SolutionSubmitRequest;
 import ru.urfu.backend.dto.solution.SolutionSubmitResponse;
+import ru.urfu.backend.exception.customEx.ForbiddenTaskException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.SolutionMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.*;
@@ -60,13 +62,13 @@ public class SolutionController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
         if(!taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException("Пользователь не является исполнителем данной задачи");
+            throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
         if(!TaskStatus.IN_PROGRESS.equals(task.getStatus())){
-            throw new RuntimeException("Задача не находится в статусе IN_PROGRESS");
+            throw new ForbiddenException("Задача не находится в статусе IN_PROGRESS");
         }
         if(task.getSolution() != null){
-            throw new RuntimeException("Для данной задачи уже создано решение");
+            throw new ForbiddenException("Для данной задачи уже создано решение");
         }
         if(SolutionUploadType.MANUAL_TEXT.equals(request.uploadType())){
             Solution solution = solutionService.createManualTextSolution(request, task);
@@ -83,7 +85,7 @@ public class SolutionController {
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
         } else {
             //TODO: Реализовать работу с другими solution
-            throw new RuntimeException("Этот тип данных ещё не поддерживается");
+            throw new ForbiddenException("Этот тип данных ещё не поддерживается");
         }
     }
 
@@ -95,11 +97,11 @@ public class SolutionController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
         if(!taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException("Пользователь не является исполнителем данной задачи");
+            throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
         task = taskService.resolveReviewOutcome(task);
         if(!TaskStatus.REWORK.equals(task.getStatus())){
-            throw new RuntimeException("Задача не находится в статусе REWORK");
+            throw new ForbiddenException("Задача не находится в статусе REWORK");
         }
 
         Solution solution = task.getSolution();
@@ -123,7 +125,7 @@ public class SolutionController {
                     updatedSolution.getUploadedAt().plusDays(14).toString());
         } else {
             //TODO: Реализовать работу с другими solution
-            throw new RuntimeException("Такой тип данных ещё не поддерживается");
+            throw new ForbiddenException("Такой тип данных ещё не поддерживается");
         }
     }
 
@@ -136,11 +138,11 @@ public class SolutionController {
         Solution solution = solutionService.getById(request.solutionId());
         Task task = solution.getTask();
         if(!taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException("Пользователь не является исполнителем данной задачи");
+            throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
         if(!TaskStatus.IN_REVIEW.equals(task.getStatus())
                 && !TaskStatus.REWORK.equals(task.getStatus())){
-            throw new RuntimeException("Задача должна находиться в статусе IN_REVIEW или REWORK");
+            throw new ForbiddenException("Задача должна находиться в статусе IN_REVIEW или REWORK");
         }
         Solution updatedSolution = solutionService.revealAuthor(solution, request);
         return solutionMapper.mapToRevealAuthorAfterReviewResponse(updatedSolution);
@@ -156,28 +158,28 @@ public class SolutionController {
         Task task = taskService.getById(taskId);
         Solution solution = task.getSolution();
         if(!taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException("403 FORBIDDEN_TASK");
+            throw new ForbiddenTaskException("403 FORBIDDEN_TASK");
         }
         if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
-            throw new RuntimeException("Задача должна находиться в статусе IN_REVIEW");
+            throw new ForbiddenException("Задача должна находиться в статусе IN_REVIEW");
         }
         if(!ReviewType.MANUAL_ASSIGNEES.equals(task.getReviewType())){
-            throw new RuntimeException("Задача должна иметь тип ревью MANUAL_ASSIGNEES");
+            throw new ForbiddenException("Задача должна иметь тип ревью MANUAL_ASSIGNEES");
         }
         if(request.reviewerIds().isEmpty()){
-            throw new RuntimeException("Список ревьюеров пуст");
+            throw new ForbiddenException("Список ревьюеров пуст");
         }
 
         for(Review review : task.getReviews()){
             ReviewIteration reviewIteration = review.getLastIteration();
             if(reviewIteration == null || reviewIteration.getDeadline() == null){
-                throw new RuntimeException("Некорректные данные ревью");
+                throw new ForbiddenException("Некорректные данные ревью");
             }
             if(reviewIteration.getReviewVerdict() != null){
-                throw new RuntimeException("Найдено итоговое ревью на задачу, ручная отправка невозможна");
+                throw new ForbiddenException("Найдено итоговое ревью на задачу, ручная отправка невозможна");
             }
             if(!reviewIteration.getDeadline().isBefore(LocalDateTime.now())){
-                throw new RuntimeException("Дедлайн по ревью ещё не истёк");
+                throw new ForbiddenException("Дедлайн по ревью ещё не истёк");
             }
         }
 

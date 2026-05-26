@@ -8,7 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.review.*;
+import ru.urfu.backend.exception.customEx.ForbiddenProjectException;
+import ru.urfu.backend.exception.customEx.ForbiddenReviewException;
+import ru.urfu.backend.exception.customEx.ForbiddenTaskException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.ReviewMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.*;
@@ -65,10 +69,10 @@ public class ReviewController {
         Review review = reviewService.getById(reviewId);
         Task task = review.getTask();
         if(!user.equals(review.getUser()) && !Role.ADMIN.equals(user.getRole())) {
-            throw new RuntimeException("403 FORBIDDEN_REVIEW");
+            throw new ForbiddenProjectException("403 FORBIDDEN_REVIEW");
         }
         if(task.getSolution() == null){
-            throw new RuntimeException("Решение отсутствует");
+            throw new ForbiddenException("Решение отсутствует");
         }
         task = taskService.resolveReviewOutcome(task);
         PermissionsResponse permissionsResponse = new PermissionsResponse( //FIXME
@@ -89,11 +93,7 @@ public class ReviewController {
             );
         }
 
-        return reviewMapper.mapToReviewDetailsResponse(
-                review,
-                permissionsResponse
-        );
-//        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
+        return reviewMapper.mapToReviewDetailsResponse(review, permissionsResponse);
     }
 
     @Operation(description = "Отправка итогового ревью")
@@ -105,13 +105,13 @@ public class ReviewController {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
         if(!user.equals(review.getUser())){
-            throw new RuntimeException("Запрещено завершать чужие ревью");
+            throw new ForbiddenException("Запрещено завершать чужие ревью");
         }
         if(ReviewStatus.COMPLETED.equals(review.getStatus())){
-            throw new RuntimeException("Запрещено отправить вердикт на завершенное ревью");
+            throw new ForbiddenException("Запрещено отправить вердикт на завершенное ревью");
         }
         if(review.getLastIteration().getDeadline().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Дедлайн данного ревью истёк, отправка невозможна");
+            throw new ForbiddenException("Дедлайн данного ревью истёк, отправка невозможна");
         }
 
         reviewService.createVerdict(request, review);
@@ -132,7 +132,7 @@ public class ReviewController {
         if(!user.equals(review.getUser())
                 && !Role.ADMIN.equals(user.getRole())
                 && !projectService.isUserOwnerInProject(project, user)) {
-            throw new RuntimeException("403 FORBIDDEN_REVIEW");
+            throw new ForbiddenReviewException("403 FORBIDDEN_REVIEW");
         }
         return reviewMapper.mapToReviewFileContentResponses(review.getLastIteration());
     }
@@ -148,16 +148,16 @@ public class ReviewController {
 
         if (!projectService.isUserOwnerInProject(project, user)
                 && !taskService.isUserAssigneeInTask(user, task)) {
-            throw new RuntimeException("403_FORBIDDEN_TASK");
+            throw new ForbiddenTaskException("403_FORBIDDEN_TASK");
         }
         if (task.getSolution() == null) {
-            throw new RuntimeException("Решение отсутствует");
+            throw new ForbiddenException("Решение отсутствует");
         }
         task = taskService.resolveReviewOutcome(task);
 
         Set<Review> reviews = task.getReviews();
         if (reviews.isEmpty()) {
-            throw new RuntimeException("Ревью в данной задаче отсутствует");
+            throw new ForbiddenException("Ревью в данной задаче отсутствует");
         }
         Review review = reviews.iterator().next();
 
@@ -174,17 +174,10 @@ public class ReviewController {
                 canViewAggregatedReview(task.getStatus(), false);
 
         if (canViewAggregated) {
-            return reviewMapper.mapToReviewDetailsResponseByTask(
-                    review,
-                    permissionsResponse
-            );
+            return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
         }
 
-        return reviewMapper.mapToWaitingReviewDetailsResponse(
-                review,
-                permissionsResponse
-        );
-//        return reviewMapper.mapToReviewDetailsResponseByTask(review, permissionsResponse);
+        return reviewMapper.mapToWaitingReviewDetailsResponse(review, permissionsResponse);
     }
 
     private boolean canViewAggregatedReview(TaskStatus status, boolean reviewerView) {

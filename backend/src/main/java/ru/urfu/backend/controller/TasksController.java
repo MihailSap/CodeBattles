@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.DeletedResponse;
 import ru.urfu.backend.dto.tasks.*;
+import ru.urfu.backend.exception.customEx.ForbiddenProjectException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ReviewStatus;
@@ -52,7 +54,7 @@ public class TasksController {
         User user = authService.getAuthenticatedUser();
         Project project = projectService.getById(requestDto.projectId());
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
         Task task = taskService.create(requestDto, project);
         return ResponseEntity.status(201).body(taskMapper.mapToTaskDetailsResponse(task, getPermissions(user, task)));
@@ -67,7 +69,7 @@ public class TasksController {
         Project project = projectService.getById(projectId);
         if(!projectService.isUserOwnerInProject(project, user)
                 && !projectService.isUserMemberInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         List<TaskListItemResponse> taskListItemResponses = new ArrayList<>();
@@ -91,7 +93,7 @@ public class TasksController {
                 && !taskService.isUserReviewerInTask(user, task)
                 && !taskService.isUserAssigneeInTask(user, task)
                 && !Role.ADMIN.equals(user.getRole())){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
         task = taskService.resolveReviewOutcome(task);
         return taskMapper.mapToTaskDetailsResponse(task, getPermissions(user, task));
@@ -107,7 +109,7 @@ public class TasksController {
         Task task = taskService.getById(taskId);
         Project project = task.getProject();
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         Task updatedTask = taskService.update(task, request);
@@ -123,7 +125,7 @@ public class TasksController {
         Task task = taskService.getById(taskId);
         Project project = task.getProject();
         if(!projectService.isUserOwnerInProject(project, user)){
-            throw new RuntimeException("403 FORBIDDEN_PROJECT");
+            throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
         taskService.delete(task);
         return new DeletedResponse(true);
@@ -137,15 +139,15 @@ public class TasksController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);
         if(!taskService.isUserAssigneeInTask(user, task)){
-            throw new RuntimeException("Только исполнитель может завершать задачу");
+            throw new ForbiddenException("Только исполнитель может завершать задачу");
         }
         task = taskService.resolveReviewOutcome(task);
         if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
-            throw new RuntimeException("Запрещено завершать задачи в статусе, отличном от IN_REVIEW");
+            throw new ForbiddenException("Запрещено завершать задачи в статусе, отличном от IN_REVIEW");
         }
 
         if(!taskService.canFinishReview(task)){
-            throw new RuntimeException("Задача ещё не прошла все ревью");
+            throw new ForbiddenException("Задача ещё не прошла все ревью");
         }
 
         List<Long> reviewIds = task.getReviews().stream().map(Review::getId).toList();

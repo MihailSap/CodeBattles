@@ -18,7 +18,8 @@ import ru.urfu.backend.dto.organization.*;
 import ru.urfu.backend.dto.organization.join.OrganizationJoinApprovedResponse;
 import ru.urfu.backend.dto.organization.join.OrganizationJoinRejectedResponse;
 import ru.urfu.backend.dto.organization.join.OrganizationJoinResponse;
-import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.customEx.*;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.OrganizationInviteMapper;
 import ru.urfu.backend.mapper.OrganizationMapper;
 import ru.urfu.backend.model.Organization;
@@ -71,7 +72,7 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserExistsInOrganization(organization, user)) {
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         String viewerRole = "GUEST";
         if(organizationService.isUserExistsInOrganization(organization, user)) {
@@ -134,7 +135,7 @@ public class OrganizationController {
     public ResponseEntity<CreatedResponse> create(@ModelAttribute OrganizationCreateRequest request) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         if(organizationService.isOrganizationExistsByTitle(request.name())){
-            throw new RuntimeException("409 ORGANIZATION_NAME_CONFLICT");
+            throw new OrganizationNameConflictException("409 ORGANIZATION_NAME_CONFLICT");
         }
         Organization organization = organizationService.create(request, user);
         return ResponseEntity.status(201).body(new CreatedResponse(organization.getId()));
@@ -147,7 +148,7 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserAdminInOrganization(user, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         Organization updatedOrganization = organizationService.update(request, organization);
         String viewerRole = "GUEST";
@@ -164,7 +165,7 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserAdminInOrganization(user, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         organizationService.delete(organization);
         return new DeletedResponse(true);
@@ -176,10 +177,10 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(organizationService.isUserExistsInOrganization(organization, user)){
-            throw new RuntimeException("409 ALREADY_MEMBER");
+            throw new AlreadyMemberException("409 ALREADY_MEMBER");
         }
         if(organizationService.isOrganizationContainsPendingJoinRequest(organization, user)){
-            throw new RuntimeException("409 ORGANIZATION_ACCESS_REQUEST_ALREADY_EXISTS");
+            throw new AccessRequestAlreadyExists("409 ORGANIZATION_ACCESS_REQUEST_ALREADY_EXISTS");
         }
 
         UserOrganization userOrganization = organizationService.createOrganizationJoinRequest(organization, user);
@@ -193,10 +194,10 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(organizationService.isUserAdminInOrganization(user, organization)){
-            throw new RuntimeException("400 ADMIN_CANNOT_LEAVE");
+            throw new AdminCannotLeaveException("400 ADMIN_CANNOT_LEAVE");
         }
         if(!organizationService.isUserExistsInOrganization(organization, user)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         organizationService.removeUserOrganization(organization, user);
         return new LeftResponse(true);
@@ -211,10 +212,10 @@ public class OrganizationController {
         Organization organization = organizationService.getById(organizationId);
 
         if(!organizationService.isUserAdminInOrganization(currentUser, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         if(!organizationService.isOrganizationContainsPendingJoinRequest(organization, user)){
-            throw new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
+            throw new OrganizationRequestNotFoundException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
         }
 
         organizationService.approveJoinRequest(organization, user);
@@ -230,10 +231,10 @@ public class OrganizationController {
         Organization organization = organizationService.getById(organizationId);
 
         if(!organizationService.isUserAdminInOrganization(currentUser, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         if(!organizationService.isOrganizationContainsPendingJoinRequest(organization, user)){
-            throw new RuntimeException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
+            throw new OrganizationRequestNotFoundException("404 ORGANIZATION_JOIN_REQUEST_NOT_FOUND");
         }
 
         organizationService.removeUserOrganization(organization, user);
@@ -248,7 +249,7 @@ public class OrganizationController {
         User user = authService.getAuthenticatedUser();
         Organization organization = organizationService.getById(organizationId);
         if(!organizationService.isUserAdminInOrganization(user, organization)){
-            throw new RuntimeException("403 FORBIDDEN_ORGANIZATION");
+            throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
 
         OrganizationInvite organizationInvite = organizationInviteService.create(requestDto, organization);
@@ -260,7 +261,7 @@ public class OrganizationController {
     public OrganizationInviteShortResponse checkInviteResponse(@PathVariable("token") String token) {
         OrganizationInvite organizationInvite = organizationInviteService.getOrganizationInviteByToken(token);
         if(organizationInvite.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("400 INVALID_INVITE");
+            throw new InvalidInviteException("400 INVALID_INVITE");
         }
         return organizationInviteMapper.mapToOrganizationInviteShortResponse(organizationInvite);
     }
@@ -272,10 +273,10 @@ public class OrganizationController {
         Organization organization = organizationInvite.getOrganization();
         User user = authService.getAuthenticatedUser();
         if(organizationService.isUserExistsInOrganization(organization, user)){
-            throw new RuntimeException("409 ALREADY_MEMBER");
+            throw new AlreadyMemberException("409 ALREADY_MEMBER");
         }
         if(organizationInvite.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("400 INVALID_INVITE");
+            throw new InvalidInviteException("400 INVALID_INVITE");
         }
         organizationService.createOrganizationJoinRequest(organization, user);
         organizationService.approveJoinRequest(organization, user);

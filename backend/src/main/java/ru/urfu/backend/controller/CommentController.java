@@ -10,6 +10,8 @@ import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.DeletedResponse;
 import ru.urfu.backend.dto.comment.*;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
+import ru.urfu.backend.exception.globalEx.MaxDepthExceedException;
 import ru.urfu.backend.mapper.CommentMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
@@ -60,13 +62,13 @@ public class CommentController {
         Review review = reviewService.getById(request.reviewId());
         Task task = review.getTask();
         if(!user.equals(review.getUser())){
-            throw new RuntimeException("Комментировать могут только назначенные ревьюеры");
+            throw new ForbiddenException("Комментировать могут только назначенные ревьюеры");
         }
         if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
-            throw new RuntimeException("Задача не находится в статусе IN_REVIEW");
+            throw new ForbiddenException("Задача не находится в статусе IN_REVIEW");
         }
         if(ReviewStatus.COMPLETED.equals(review.getStatus())){
-            throw new RuntimeException("Ревью завершено");
+            throw new ForbiddenException("Ревью завершено");
         }
         Comment comment = commentService.createComment(request, user, review);
         if(ReviewStatus.NEW.equals(review.getStatus())){
@@ -87,17 +89,17 @@ public class CommentController {
         Task task = comment.getReviewIteration().getReview().getTask();
 
         if(rootComment.getClosedAt() != null){
-            throw new RuntimeException("Тред закрыт");
+            throw new ForbiddenException("Тред закрыт");
         }
 
         int replyDepth = commentService.getReplyDepth(comment);
         if(replyDepth + 1 > 5){
-            throw new RuntimeException("Превышена максимальная вложенность комментариев");
+            throw new MaxDepthExceedException("Превышена максимальная вложенность комментариев");
         }
         if(TaskStatus.DONE.equals(task.getStatus())
                 && task.getCompletedAt() != null
                 && task.getCompletedAt().plusDays(7).isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Запрещено оставлять комментарии к завершенной задаче");
+            throw new ForbiddenException("Запрещено оставлять комментарии к завершенной задаче");
         }
 
         CommentAuthorRole commentAuthorRole;
@@ -107,19 +109,19 @@ public class CommentController {
             Review reviewerReview = reviewService.getByUserAndTask(user, task);
             if (TaskStatus.IN_REVIEW.equals(task.getStatus())
                     && !comment.getReviewIteration().getReview().getId().equals(reviewerReview.getId())) {
-                throw new RuntimeException("Во время проверки ревьюер может обсуждать только своё ревью");
+                throw new ForbiddenException("Во время проверки ревьюер может обсуждать только своё ревью");
             }
             commentAuthorRole = CommentAuthorRole.REVIEWER;
             revealName = reviewerReview.getRevealAuthorAfterReview();
             reviewerIndex = reviewerReview.getReviewerIndex();
         } else if(taskService.isUserAssigneeInTask(user, task)){
             if (TaskStatus.IN_REVIEW.equals(task.getStatus())) {
-                throw new RuntimeException("Исполнитель может отвечать после публикации результатов ревью");
+                throw new ForbiddenException("Исполнитель может отвечать после публикации результатов ревью");
             }
             commentAuthorRole = CommentAuthorRole.ASSIGNEE;
             revealName = task.getSolution().getRevealAuthorAfterReview();
         } else {
-            throw new RuntimeException(
+            throw new ForbiddenException(
                     "Оставлять комментарии могут только исполнители и ревьюеры данной задачи");
         }
 
@@ -158,23 +160,23 @@ public class CommentController {
 
         if(ThreadAction.CLOSE.equals(request.action())){
             if(!TaskStatus.DONE.equals(task.getStatus()) && !TaskStatus.REWORK.equals(task.getStatus())){
-                throw new RuntimeException("Закрывать тред можно только в статусе DONE или REWORK");
+                throw new ForbiddenException("Закрывать тред можно только в статусе DONE или REWORK");
             }
             if(!taskService.isUserAssigneeInTask(user, task)){
-                throw new RuntimeException("Закрывать тред может только исполнитель задачи");
+                throw new ForbiddenException("Закрывать тред может только исполнитель задачи");
             }
             if(comment.getClosedAt() != null){
-                throw new RuntimeException("Данный тред уже закрыт");
+                throw new ForbiddenException("Данный тред уже закрыт");
             }
         } else if(ThreadAction.REOPEN.equals(request.action())){
             if(!TaskStatus.REWORK.equals(task.getStatus())){
-                throw new RuntimeException("Переоткрывать тред можно только в статусе REWORK");
+                throw new ForbiddenException("Переоткрывать тред можно только в статусе REWORK");
             }
             if(!user.equals(comment.getUser())){
-                throw new RuntimeException("Переоткрывать тред может только его автор");
+                throw new ForbiddenException("Переоткрывать тред может только его автор");
             }
             if(comment.getClosedAt() == null){
-                throw new RuntimeException("Данный тред уже открыт");
+                throw new ForbiddenException("Данный тред уже открыт");
             }
         }
 
@@ -192,7 +194,7 @@ public class CommentController {
         Comment comment = commentService.getById(commentId);
         Comment rootComment = commentService.getRootComment(comment);
         if(comment.getParentComment() != null && rootComment.getClosedAt() != null){
-            throw new RuntimeException("Запрещено ставить реакцию на ответ в закрытом треде");
+            throw new ForbiddenException("Запрещено ставить реакцию на ответ в закрытом треде");
         }
         Optional<CommentReaction> commentReaction = commentService.getCommentReaction(user, comment);
         if(commentReaction.isPresent()){
@@ -211,10 +213,10 @@ public class CommentController {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
         if(!user.equals(comment.getUser())){
-            throw new RuntimeException("Запрещено удалять чужие комментарии");
+            throw new ForbiddenException("Запрещено удалять чужие комментарии");
         }
         if (!comment.getReplies().isEmpty()){
-            throw new RuntimeException("Запрещено удалять комментарии с ответами");
+            throw new ForbiddenException("Запрещено удалять комментарии с ответами");
         }
 
         commentService.delete(comment);
