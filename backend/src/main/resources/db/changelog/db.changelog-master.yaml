@@ -83,3 +83,7 @@ databaseChangeLog:
       file: db/changelog/changeset/041-fix-comment-report-fk.yaml
   - include:
       file: db/changelog/changeset/042-create-comment-report-data.yaml
+  - include:
+      file: db/changelog/changeset/043-add-task-ai-review-enabled-at-creation.yaml
+  - include:
+      file: db/changelog/changeset/044-add-auth-token-expirations.yaml

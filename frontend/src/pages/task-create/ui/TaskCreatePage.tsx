@@ -129,10 +129,12 @@ const TaskCreatePage = () => {
   );
 
   const reviewTypes = useMemo(() => {
-    const types = Object.values(TASK_REVIEW_TYPE);
-
-    return project?.aiReviewEnabled ? types : types.filter((type) => type !== TASK_REVIEW_TYPE.AI_ONLY);
-  }, [project?.aiReviewEnabled]);
+    return Object.values(TASK_REVIEW_TYPE).filter(
+      (type) =>
+        (project?.aiReviewEnabled || type !== TASK_REVIEW_TYPE.AI_ONLY) &&
+        (project?.organizationId || type !== TASK_REVIEW_TYPE.AUTO_ORGANIZATION)
+    );
+  }, [project?.aiReviewEnabled, project?.organizationId]);
 
   useEffect(() => {
     if (!isManualReviewers) {

@@ -15,6 +15,7 @@ export interface Task {
   projectName?: string;
   projectPrivacy?: ProjectPrivacy;
   aiReviewEnabled?: boolean;
+  aiReviewEnabledAtCreation?: boolean;
   name: string;
   description?: string;
   requirements?: string;

@@ -13,6 +13,7 @@ public record TaskDetailsResponse(
         String projectName,
         Boolean isProjectPrivate,
         Boolean aiReviewEnabled,
+        Boolean aiReviewEnabledAtCreation,
         String name,
         String description,
         String requirements,

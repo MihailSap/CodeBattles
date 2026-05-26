@@ -1,11 +1,10 @@
-import { getProjectTaskSummaries, mapProjectTaskSummaries } from '@/entities/task/@x/project';
+import { mapProjectTaskSummaries } from '@/entities/task/@x/project';
 import { apiRequest, toBackendLocalDateTime } from '@/shared/api';
 import { getImageUrl } from '@/shared/lib';
 
 import { sortOrganizations, sortParticipants, sortProjects, sortProjectsByName, sortTasks } from '../lib/sorting';
 import { PROJECT_MEMBER_ROLE, PROJECT_PRIVACY } from '../model';
 import type { EntityId, Project, ProjectParticipant } from '../model/types';
-import { MOCK_PROJECTS } from './mocks';
 
 interface BackendParticipantDto {
   id: number;
@@ -168,20 +167,6 @@ export const projectsApi = {
   },
 
   async getProjectById(projectId: EntityId): Promise<Project> {
-    const mockProject = MOCK_PROJECTS.find((project) => project.id === Number(projectId));
-
-    if (mockProject) {
-      const viewerRole = mockProject.viewerRole ?? PROJECT_MEMBER_ROLE.OWNER;
-      const sortedParticipants = sortParticipants(mockProject.participants.map(mapParticipant));
-
-      return {
-        ...mockProject,
-        viewerRole,
-        participants: sortedParticipants,
-        tasks: sortTasks(getProjectTaskSummaries(Number(projectId), sortedParticipants, viewerRole, mockProject)),
-      };
-    }
-
     const project = await apiRequest<BackendProjectDto>({
       method: 'GET',
       url: `/api/v1/projects/${projectId}`,
@@ -233,17 +218,7 @@ export const projectsApi = {
       .filter((project) => !project.organizationId)
       .map(mapProjectListItem);
 
-    const mockProjectsWithoutOrganization: Project[] = MOCK_PROJECTS.filter((project) => !project.organizationId).map(
-      (project) => ({
-        ...project,
-        role: project.viewerRole ?? PROJECT_MEMBER_ROLE.GUEST,
-      })
-    );
-
-    const withoutOrganizationProjects = sortProjects([
-      ...apiProjectsWithoutOrganization,
-      ...mockProjectsWithoutOrganization,
-    ]).filter(
+    const withoutOrganizationProjects = sortProjects(apiProjectsWithoutOrganization).filter(
       (project) =>
         !normalizedSearch ||
         project.name.toLowerCase().includes(normalizedSearch) ||
@@ -261,50 +236,8 @@ export const projectsApi = {
       hiddenProjectsCount: 0,
     }));
 
-    const mockOrganizations = new Map<EntityId, ProjectDashboardOrganization>();
-
-    MOCK_PROJECTS.forEach((project) => {
-      if (project.organizationId && !mockOrganizations.has(project.organizationId)) {
-        mockOrganizations.set(project.organizationId, {
-          id: project.organizationId,
-          name: project.organizationName ?? `Org ${project.organizationId}`,
-          logo: '',
-          link: '',
-          description: 'Моковая организация для демонстрации',
-          role: 'MEMBER',
-          projects: [],
-          hiddenProjectsCount: 0,
-        });
-      }
-    });
-
-    const organizations = [...apiOrganizations];
-    const apiOrganizationIds = new Set(apiOrganizations.map((organization) => organization.id));
-
-    mockOrganizations.forEach((organization, id) => {
-      if (!apiOrganizationIds.has(id)) {
-        organizations.push(organization);
-      }
-    });
-
-    organizations.forEach((organization) => {
-      const mockProjects: Project[] = MOCK_PROJECTS.filter((project) => project.organizationId === organization.id).map(
-        (project) => ({
-          ...project,
-          role: project.viewerRole ?? PROJECT_MEMBER_ROLE.GUEST,
-        })
-      );
-
-      const existingIds = new Set(organization.projects.map((project) => project.id));
-
-      organization.projects = sortProjects([
-        ...organization.projects,
-        ...mockProjects.filter((project) => !existingIds.has(project.id)),
-      ]);
-    });
-
     const organizationsWithProjects = sortOrganizations(
-      organizations.filter(
+      apiOrganizations.filter(
         (organization) =>
           !normalizedSearch ||
           organization.name.toLowerCase().includes(normalizedSearch) ||

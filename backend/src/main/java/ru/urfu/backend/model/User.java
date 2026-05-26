@@ -26,7 +26,11 @@ public class User extends BaseEntity {
 
     private String verificationToken;
 
+    private LocalDateTime verificationTokenExpiresAt;
+
     private String passwordResetToken;
+
+    private LocalDateTime passwordResetTokenExpiresAt;
 
     private String githubId;
 
@@ -133,12 +137,28 @@ public class User extends BaseEntity {
         this.verificationToken = verificationToken;
     }
 
+    public LocalDateTime getVerificationTokenExpiresAt() {
+        return verificationTokenExpiresAt;
+    }
+
+    public void setVerificationTokenExpiresAt(LocalDateTime verificationTokenExpiresAt) {
+        this.verificationTokenExpiresAt = verificationTokenExpiresAt;
+    }
+
     public String getPasswordResetToken() {
         return passwordResetToken;
     }
 
     public void setPasswordResetToken(String passwordResetToken) {
         this.passwordResetToken = passwordResetToken;
+    }
+
+    public LocalDateTime getPasswordResetTokenExpiresAt() {
+        return passwordResetTokenExpiresAt;
+    }
+
+    public void setPasswordResetTokenExpiresAt(LocalDateTime passwordResetTokenExpiresAt) {
+        this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt;
     }
 
     public String getGithubId() {

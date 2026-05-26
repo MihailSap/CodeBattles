@@ -76,6 +76,8 @@ const AuthPage = () => {
     }
 
     const timeoutId = setTimeout(() => {
+      setRegistrationCompleted(false);
+
       navigate(ROUTES.login, {
         replace: true,
       });
@@ -228,7 +230,7 @@ const AuthPage = () => {
         <section className={authPageStyles.right}>
           <div className={authPageStyles.wrap}>
             <div className={authPageStyles.card}>
-              {registrationCompleted ? (
+              {registrationCompleted && !isLoginMode ? (
                 <p className={authPageStyles.registerSuccess}>
                   Для завершения регистрации необходимо перейти по ссылке из письма, которое было отправлено на
                   указанный E-Mail.

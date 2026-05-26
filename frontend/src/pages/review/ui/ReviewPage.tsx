@@ -466,8 +466,9 @@ const ReviewPage = () => {
   const allComments = useMemo(() => review?.comments ?? [], [review?.comments]);
 
   const visibleComments = useMemo(
-    () => (task?.aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
-    [allComments, task?.aiReviewEnabled]
+    () =>
+      task?.aiReviewEnabledAtCreation ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI'),
+    [allComments, task?.aiReviewEnabledAtCreation]
   );
 
   const fileComments = visibleComments.filter((comment) => comment.file === selectedFile?.path);
@@ -721,7 +722,7 @@ const ReviewPage = () => {
             {isCompleted && (
               <ReviewResultsSidebar
                 review={review}
-                aiReviewEnabled={Boolean(task?.aiReviewEnabled)}
+                aiReviewEnabled={Boolean(task?.aiReviewEnabledAtCreation)}
                 canRevealReviewerNames={isTaskCompleted}
                 currentReviewerId={numericUserId}
                 showReviewerSummary={isTaskCompleted}

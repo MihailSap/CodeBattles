@@ -14,7 +14,6 @@ import ru.urfu.backend.exception.customEx.*;
 import ru.urfu.backend.mapper.UserMapper;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
-import ru.urfu.backend.service.EmailService;
 import ru.urfu.backend.service.UserService;
 
 @Tag(name = "Управление аутентификацией")
@@ -25,19 +24,16 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final UserMapper userMapper;
-    private final EmailService emailService;
 
     @Autowired
     public AuthController(
             AuthService authService,
             UserService userService,
-            UserMapper userMapper,
-            EmailService emailService
+            UserMapper userMapper
     ) {
         this.authService = authService;
         this.userService = userService;
         this.userMapper = userMapper;
-        this.emailService = emailService;
     }
 
     @Operation(description = "Регистрация нового пользователя по электронной почте")
@@ -45,12 +41,7 @@ public class AuthController {
     @PostMapping("/register")
     public UserResponse register(@RequestBody RegisterRequest request)
             throws UserAlreadyExistsException {
-        if(userService.isExistsByEmail(request.email())){
-            throw new UserAlreadyExistsException(
-                    "Невозможно зарегистрировать пользователя под данным email");
-        }
-        User user = userService.create(request);
-        emailService.sendEmailConfirmEmail(user.getEmail(), user.getVerificationToken());
+        User user = authService.register(request);
         return userMapper.mapToUserResponse(user);
     }
 
@@ -101,18 +92,14 @@ public class AuthController {
     @PostMapping("/verify-email")
     public JwtResponse verifyEmail(@RequestParam("token") String token)
             throws UserNotFoundException, AuthException {
-        User user = userService.getByVerificationToken(token);
-        User enabledUser = userService.enableUser(user);
-        return authService.login(enabledUser);
+        return authService.verifyEmail(token);
     }
 
     @Operation(description = "Восстановление аккаунта с забытым паролем")
     @PostMapping("/forgot-password")
     public String requestForResetPassword(@RequestParam("email") String email)
             throws UserNotFoundException {
-        User user = userService.getByEmail(email);
-        String token = userService.setPasswordResetToken(user);
-        emailService.sendPasswordResetEmail(email, token);
+        authService.requestPasswordReset(email);
         return "Запрос на обновление пароля отправлен на указанный email";
     }
 
@@ -120,9 +107,7 @@ public class AuthController {
     @PatchMapping("/reset-password")
     public String resetPassword(@RequestBody PasswordResetRequest resetPasswordDTO)
             throws UserNotFoundException {
-        User user = userService.getByPasswordResetToken(resetPasswordDTO.token());
-        userService.setNullPasswordResetToken(user);
-        userService.updatePassword(user, resetPasswordDTO.password());
+        authService.resetPassword(resetPasswordDTO);
         return "Пароль успешно обновлен";
     }
 }

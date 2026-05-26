@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 044-add-auth-token-expirations
+      author: Codex
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: verification_token_expires_at
+                  type: TIMESTAMP
+              - column:
+                  name: password_reset_token_expires_at
+                  type: TIMESTAMP
+        - sql:
+            sql: >
+              UPDATE users
+              SET verification_token_expires_at = CURRENT_TIMESTAMP + INTERVAL '24 hours'
+              WHERE verification_token IS NOT NULL AND verification_token_expires_at IS NULL
+        - sql:
+            sql: >
+              UPDATE users
+              SET password_reset_token_expires_at = CURRENT_TIMESTAMP + INTERVAL '1 hour'
+              WHERE password_reset_token IS NOT NULL AND password_reset_token_expires_at IS NULL
+      rollback:
+        - dropColumn:
+            tableName: users
+            columnName: password_reset_token_expires_at
+        - dropColumn:
+            tableName: users
+            columnName: verification_token_expires_at

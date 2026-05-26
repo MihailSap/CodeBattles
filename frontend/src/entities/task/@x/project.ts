@@ -1,1 +1,1 @@
-export { getProjectTaskSummaries, mapProjectTaskSummaries } from '../api/task-api';
+export { mapProjectTaskSummaries } from '../api/task-api';
