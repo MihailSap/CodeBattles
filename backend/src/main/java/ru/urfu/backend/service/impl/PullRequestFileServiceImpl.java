@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import ru.urfu.backend.service.PullRequestFileService;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 public class PullRequestFileServiceImpl implements PullRequestFileService {
@@ -57,6 +59,8 @@ public class PullRequestFileServiceImpl implements PullRequestFileService {
             }
 
             return result;
+        } finally {
+            deleteDirectory(tempDir.toPath());
         }
     }
 
@@ -84,6 +88,23 @@ public class PullRequestFileServiceImpl implements PullRequestFileService {
             ObjectId objectId = treeWalk.getObjectId(0);
             ObjectLoader loader = repository.open(objectId);
             return new String(loader.getBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private void deleteDirectory(java.nio.file.Path path) {
+        if (path == null || !Files.exists(path)) {
+            return;
+        }
+        try (Stream<java.nio.file.Path> paths = Files.walk(path)) {
+            paths.sorted(Comparator.reverseOrder())
+                    .forEach(p -> {
+                        try {
+                            Files.deleteIfExists(p);
+                        } catch (IOException ignored) {
+                        }
+                    });
+
+        } catch (IOException ignored) {
         }
     }
 }
