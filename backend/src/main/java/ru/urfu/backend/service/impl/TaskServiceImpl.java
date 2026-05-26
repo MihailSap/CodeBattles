@@ -237,7 +237,7 @@ public class TaskServiceImpl implements TaskService {
         if(reviewersChanged){
             ReviewType effectiveReviewType =
                     reviewTypeChanged ? newReviewType : currentReviewType;
-            if(reviewerIds != null
+            if(reviewerIds != null && !reviewerIds.isEmpty()
                     && !ReviewType.MANUAL_ASSIGNEES.equals(effectiveReviewType)) {
                 throw new RuntimeException(
                         "reviewerIds поддерживается только для MANUAL_ASSIGNEES"
