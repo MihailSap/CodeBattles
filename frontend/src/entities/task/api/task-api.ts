@@ -1,20 +1,15 @@
 import {
-  MOCK_PROJECTS,
-  mockUsersById,
   PROJECT_MEMBER_ROLE,
   PROJECT_PRIVACY,
   TASK_REVIEW_TYPE,
   TASK_STATUS,
   type EntityId,
-  type Project,
   type ProjectMemberRole,
   type ProjectParticipant,
   type Task,
 } from '@/entities/project/@x/task';
 import { apiRequest, toBackendLocalDateTime } from '@/shared/api';
 import { getImageUrl } from '@/shared/lib';
-
-import { MOCK_TASKS } from './mocks';
 
 interface BackendParticipantDto {
   id: number;
@@ -41,6 +36,7 @@ interface BackendTaskDto {
   projectName?: string;
   isProjectPrivate?: boolean;
   aiReviewEnabled?: boolean;
+  aiReviewEnabledAtCreation?: boolean;
   name?: string;
   description?: string;
   requirements?: string;
@@ -69,6 +65,8 @@ export type TaskPayload = Omit<
   | 'solutionId'
   | 'projectName'
   | 'projectPrivacy'
+  | 'aiReviewEnabled'
+  | 'aiReviewEnabledAtCreation'
   | 'assignees'
   | 'reviewers'
   | 'availableAssignees'
@@ -114,15 +112,6 @@ interface StatusDto {
 }
 
 const clone = <T>(value: T): T => structuredClone(value);
-const taskMockStore = new Map<string, Task[]>();
-const getMockTaskKey = (projectId: EntityId): string => String(projectId);
-
-const tasksByProject = MOCK_TASKS.reduce<Map<string, Task[]>>((store, task) => {
-  const key = getMockTaskKey(task.projectId);
-  store.set(key, [...(store.get(key) ?? []), task]);
-
-  return store;
-}, new Map<string, Task[]>());
 
 const normalizeParticipantRole = (role?: string | null): ProjectMemberRole => {
   if (role === PROJECT_MEMBER_ROLE.OWNER) return PROJECT_MEMBER_ROLE.OWNER;
@@ -213,6 +202,7 @@ const mapTaskDetailsFromBackend = (
     projectName: task.projectName ?? '',
     projectPrivacy: task.isProjectPrivate ? PROJECT_PRIVACY.PRIVATE : PROJECT_PRIVACY.PUBLIC,
     aiReviewEnabled: Boolean(task.aiReviewEnabled),
+    aiReviewEnabledAtCreation: Boolean(task.aiReviewEnabledAtCreation),
     name: task.name ?? '',
     description: task.description ?? '',
     requirements: task.requirements ?? '',
@@ -237,101 +227,11 @@ const mapTaskDetailsFromBackend = (
   };
 };
 
-const createFallbackParticipant = (id: EntityId): ProjectParticipant => {
-  const mockUser = mockUsersById.get(Number(id));
-
-  return {
-    id: Number(id),
-    login: mockUser?.login ?? '',
-    email: mockUser?.email ?? '',
-    fullName: mockUser?.fullName ?? '',
-    avatar: getImageUrl(mockUser?.avatar),
-    role: PROJECT_MEMBER_ROLE.MEMBER,
-  };
-};
-
-const normalizeTaskRecord = (task: Task): Task => ({
-  ...clone(task),
-  assigneeIds: [...(task.assigneeIds ?? [])],
-  reviewerIds: [...(task.reviewerIds ?? [])],
-  assignees: (task.assignees ?? []).map(mapParticipant),
-  reviewers: (task.reviewers ?? []).map(mapParticipant),
-  availableAssignees: (task.availableAssignees ?? []).map(mapParticipant),
-  availableReviewers: (task.availableReviewers ?? []).map(mapParticipant),
-});
-
-const hydrateMockTask = (task: Task, project: Project): Task => {
-  const participants = project.participants ?? [];
-  const participantsById = new Map(participants.map((participant) => [Number(participant.id), participant]));
-
-  const resolveParticipant = (id: EntityId): ProjectParticipant =>
-    mapParticipant(participantsById.get(Number(id)) ?? mockUsersById.get(Number(id)) ?? createFallbackParticipant(id));
-
-  return {
-    ...normalizeTaskRecord(task),
-    projectName: project.name,
-    projectPrivacy: project.privacy,
-    aiReviewEnabled: Boolean(project.aiReviewEnabled),
-    assignees: (task.assigneeIds ?? []).map(resolveParticipant),
-    reviewers: (task.reviewerIds ?? []).map(resolveParticipant),
-    viewerRole: project.viewerRole ?? PROJECT_MEMBER_ROLE.GUEST,
-    canManageSettings: isEditableTaskStatus(task.status),
-    isMock: true,
-    availableAssignees: clone(participants),
-    availableReviewers: clone(participants),
-  };
-};
-
-export const getProjectTaskSummaries = (
-  projectId: EntityId,
-  participants: readonly ProjectParticipant[] = [],
-  viewerRole: ProjectMemberRole = PROJECT_MEMBER_ROLE.GUEST,
-  project?: Project
-): Task[] => {
-  const key = getMockTaskKey(projectId);
-
-  if (!taskMockStore.has(key)) {
-    const initialTasks = tasksByProject.get(key) ?? [];
-
-    const context: Project =
-      project ??
-      ({
-        id: projectId,
-        name: '',
-        privacy: PROJECT_PRIVACY.PUBLIC,
-        participants: [...participants],
-        viewerRole,
-      } satisfies Project);
-
-    taskMockStore.set(
-      key,
-      initialTasks.map((task) => hydrateMockTask(task, context))
-    );
-  }
-
-  return (taskMockStore.get(key) ?? []).map(normalizeTaskRecord);
-};
-
 export const mapProjectTaskSummaries = (
   tasks: BackendTaskDto[],
   projectViewerRole: ProjectMemberRole,
   participants: readonly ProjectParticipant[]
 ): Task[] => tasks.map((task) => mapTaskFromBackend(task, projectViewerRole, participants));
-
-const isMockProjectId = (projectId: EntityId): boolean =>
-  MOCK_PROJECTS.some((project) => Number(project.id) === Number(projectId));
-
-const getMockProject = (projectId: EntityId): Project | null => {
-  const project = MOCK_PROJECTS.find((item) => Number(item.id) === Number(projectId));
-
-  return project
-    ? {
-        ...project,
-        participants: project.participants.map(mapParticipant),
-        viewerRole: project.viewerRole ?? PROJECT_MEMBER_ROLE.OWNER,
-      }
-    : null;
-};
 
 const getProjectUsers = async (projectId: EntityId): Promise<ProjectParticipant[]> => {
   const users = await apiRequest<BackendParticipantDto[]>({
@@ -356,27 +256,6 @@ const toManualSolutionFormData = (taskId: EntityId, payload: SubmitSolutionPaylo
 
 export const taskApi = {
   async getTaskById(projectId: EntityId, taskId: EntityId): Promise<Task> {
-    if (isMockProjectId(projectId)) {
-      const project = getMockProject(projectId);
-
-      if (!project) {
-        const error = new Error('Задача не найдена');
-        error.status = 404;
-        throw error;
-      }
-
-      const tasks = getProjectTaskSummaries(projectId, project.participants, project.viewerRole, project);
-      const task = tasks.find((item) => Number(item.id) === Number(taskId));
-
-      if (!task) {
-        const error = new Error('Задача не найдена');
-        error.status = 404;
-        throw error;
-      }
-
-      return hydrateMockTask(task, project);
-    }
-
     const task = await apiRequest<BackendTaskDto>({ method: 'GET', url: `/api/v1/tasks/${taskId}` });
     const actualProjectId = task.projectId ?? projectId;
     const participants = await getProjectUsers(actualProjectId).catch(() => []);
@@ -394,28 +273,6 @@ export const taskApi = {
   },
 
   async createTask(projectId: EntityId, payload: TaskPayload): Promise<TaskMutationResult> {
-    if (isMockProjectId(projectId)) {
-      const project = getMockProject(projectId);
-
-      if (!project) {
-        throw new Error('Проект не найден');
-      }
-
-      const tasks = getProjectTaskSummaries(projectId, project.participants, project.viewerRole, project);
-
-      const taskId =
-        Math.max(0, ...MOCK_TASKS.map((task) => Number(task.id)), ...tasks.map((task) => Number(task.id))) + 1;
-
-      const nextTask = hydrateMockTask(
-        { id: taskId, projectId: Number(projectId), ...payload, status: payload.status ?? TASK_STATUS.IN_PROGRESS },
-        project
-      );
-
-      taskMockStore.set(getMockTaskKey(projectId), [...tasks, nextTask]);
-
-      return { accepted: true, taskId };
-    }
-
     const data = await apiRequest<{ id?: EntityId }>({
       method: 'POST',
       url: '/api/v1/tasks',
@@ -430,25 +287,6 @@ export const taskApi = {
   },
 
   async updateTask(taskId: EntityId, payload: Partial<TaskPayload>): Promise<Task> {
-    for (const [key, tasks] of taskMockStore.entries()) {
-      const index = tasks.findIndex((task) => Number(task.id) === Number(taskId));
-
-      if (index >= 0) {
-        const task = tasks[index];
-
-        if (!task) {
-          throw new Error('Задача не найдена');
-        }
-
-        const updatedTask: Task = { ...task, ...payload };
-        const nextTasks = [...tasks];
-        nextTasks[index] = updatedTask;
-        taskMockStore.set(key, nextTasks);
-
-        return clone(updatedTask);
-      }
-    }
-
     return apiRequest<Task>({
       method: 'PATCH',
       url: `/api/v1/tasks/${taskId}`,
@@ -460,16 +298,6 @@ export const taskApi = {
   },
 
   async deleteTask(taskId: EntityId): Promise<DeletedTaskResult> {
-    for (const [key, tasks] of taskMockStore.entries()) {
-      const nextTasks = tasks.filter((task) => Number(task.id) !== Number(taskId));
-
-      if (nextTasks.length !== tasks.length) {
-        taskMockStore.set(key, nextTasks);
-
-        return { deleted: true };
-      }
-    }
-
     const result = await apiRequest<StatusDto>({ method: 'DELETE', url: `/api/v1/tasks/${taskId}` });
 
     return { deleted: Boolean(result.isDeleted ?? result.deleted ?? true) };

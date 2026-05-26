@@ -30,6 +30,7 @@ import ru.urfu.backend.service.StackService;
 import ru.urfu.backend.service.UserService;
 import ru.urfu.backend.specification.UserSpecification;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -101,15 +102,25 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @Override
     public User getByVerificationToken(String verificationToken) throws UserNotFoundException {
-        return userRepository.findByVerificationToken(verificationToken)
+        User user = userRepository.findByVerificationToken(verificationToken)
                 .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+        if (user.getVerificationTokenExpiresAt() == null
+                || user.getVerificationTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new UserNotFoundException("Срок действия ссылки подтверждения истек");
+        }
+        return user;
     }
 
     @Transactional(readOnly = true)
     @Override
     public User getByPasswordResetToken(String token) throws UserNotFoundException {
-        return userRepository.findByPasswordResetToken(token)
+        User user = userRepository.findByPasswordResetToken(token)
                 .orElseThrow(() -> new UserNotFoundException("Ошибка поиска пользователя"));
+        if (user.getPasswordResetTokenExpiresAt() == null
+                || user.getPasswordResetTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new UserNotFoundException("Срок действия ссылки сброса пароля истек");
+        }
+        return user;
     }
 
     @Transactional
@@ -124,6 +135,7 @@ public class UserServiceImpl implements UserService {
 
         String token = UUID.randomUUID().toString();
         user.setVerificationToken(token);
+        user.setVerificationTokenExpiresAt(LocalDateTime.now().plusHours(24));
         return userRepository.save(user);
     }
 
@@ -237,6 +249,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public User enableUser(User user) {
         user.setEnabled(true);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiresAt(null);
         return userRepository.save(user);
     }
 
@@ -244,6 +258,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void setNullPasswordResetToken(User user){
         user.setPasswordResetToken(null);
+        user.setPasswordResetTokenExpiresAt(null);
         userRepository.save(user);
     }
 
@@ -252,6 +267,7 @@ public class UserServiceImpl implements UserService {
     public String setPasswordResetToken(User user) {
         String token = UUID.randomUUID().toString();
         user.setPasswordResetToken(token);
+        user.setPasswordResetTokenExpiresAt(LocalDateTime.now().plusHours(1));
         userRepository.save(user);
         return token;
     }

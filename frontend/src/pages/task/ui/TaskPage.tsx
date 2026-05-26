@@ -620,7 +620,7 @@ const TaskPage = () => {
             <SolutionTab
               task={task}
               currentUser={user ?? { id: Number(userId ?? 0), login: '' }}
-              aiReviewEnabled={Boolean(task.aiReviewEnabled)}
+              aiReviewEnabled={Boolean(task.aiReviewEnabledAtCreation)}
               onSnackbar={showSnackbar}
               onTaskUpdated={async () => {
                 await refetchTask().unwrap();

@@ -28,6 +28,8 @@ public class Task extends BaseEntity {
 
     private String requirements;
 
+    private Boolean aiReviewEnabledAtCreation = false;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt;
@@ -127,6 +129,14 @@ public class Task extends BaseEntity {
 
     public void setRequirements(String requirements) {
         this.requirements = requirements;
+    }
+
+    public Boolean getAiReviewEnabledAtCreation() {
+        return aiReviewEnabledAtCreation;
+    }
+
+    public void setAiReviewEnabledAtCreation(Boolean aiReviewEnabledAtCreation) {
+        this.aiReviewEnabledAtCreation = aiReviewEnabledAtCreation;
     }
 
     public LocalDateTime getCreatedAt() {

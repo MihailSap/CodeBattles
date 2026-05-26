@@ -7,15 +7,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.urfu.backend.dto.auth.PasswordResetRequest;
+import ru.urfu.backend.dto.auth.RegisterRequest;
 import ru.urfu.backend.dto.auth.LoginRequest;
 import ru.urfu.backend.dto.auth.JwtResponse;
 import ru.urfu.backend.exception.customEx.AccountNotEnabledException;
 import ru.urfu.backend.exception.customEx.InvalidRefreshTokenException;
 import ru.urfu.backend.exception.customEx.RefreshTokenNotFoundException;
+import ru.urfu.backend.exception.customEx.UserAlreadyExistsException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.RefreshToken;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AuthService;
+import ru.urfu.backend.service.EmailService;
 import ru.urfu.backend.service.RefreshTokenService;
 import ru.urfu.backend.service.UserService;
 
@@ -27,17 +31,32 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenService refreshTokenService;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Autowired
     public AuthServiceImpl(
             UserService userService,
             JwtProvider jwtProvider,
             RefreshTokenService refreshTokenService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            EmailService emailService) {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
         this.refreshTokenService = refreshTokenService;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
+    }
+
+    @Transactional
+    @Override
+    public User register(RegisterRequest request) throws UserAlreadyExistsException {
+        if (userService.isExistsByEmail(request.email())) {
+            throw new UserAlreadyExistsException(
+                    "Невозможно зарегистрировать пользователя под данным email");
+        }
+        User user = userService.create(request);
+        emailService.sendEmailConfirmEmail(user.getEmail(), user.getVerificationToken());
+        return user;
     }
 
     @Override
@@ -46,6 +65,14 @@ public class AuthServiceImpl implements AuthService {
             throw new AccountNotEnabledException("Аккаунт не подтвержден");
         }
         return passwordEncoder.matches(authRequest.password(), user.getPassword());
+    }
+
+    @Transactional(rollbackFor = AuthException.class)
+    @Override
+    public JwtResponse verifyEmail(String token) throws UserNotFoundException, AuthException {
+        User user = userService.getByVerificationToken(token);
+        User enabledUser = userService.enableUser(user);
+        return login(enabledUser);
     }
 
     @Transactional
@@ -113,5 +140,21 @@ public class AuthServiceImpl implements AuthService {
     public User getAuthenticatedUser() throws UserNotFoundException {
         String email = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
         return userService.getByEmail(email);
+    }
+
+    @Transactional
+    @Override
+    public void requestPasswordReset(String email) throws UserNotFoundException {
+        User user = userService.getByEmail(email);
+        String token = userService.setPasswordResetToken(user);
+        emailService.sendPasswordResetEmail(email, token);
+    }
+
+    @Transactional
+    @Override
+    public void resetPassword(PasswordResetRequest request) throws UserNotFoundException {
+        User user = userService.getByPasswordResetToken(request.token());
+        userService.updatePassword(user, request.password());
+        userService.setNullPasswordResetToken(user);
     }
 }

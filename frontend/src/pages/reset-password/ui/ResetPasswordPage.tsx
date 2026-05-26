@@ -58,7 +58,7 @@ const ResetPasswordPage = () => {
   }, [dispatch, navigate, token]);
 
   useEffect(() => {
-    if (!resultMessage) {
+    if (!resultMessage || resultType !== 'success') {
       return undefined;
     }
 
@@ -71,11 +71,13 @@ const ResetPasswordPage = () => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [navigate, resultMessage]);
+  }, [navigate, resultMessage, resultType]);
 
   const registerPasswordField = (name: keyof ResetPasswordFormValues) =>
     register(name, {
       onChange: () => {
+        setResultMessage('');
+        setResultType('');
         dispatch(clearAuthMessages());
       },
     });
@@ -130,15 +132,8 @@ const ResetPasswordPage = () => {
         <section className={authPageStyles.right}>
           <div className={authPageStyles.wrap}>
             <div className={[authPageStyles.card, resetPasswordPageStyles.root].join(' ')}>
-              {resultMessage ? (
-                <p
-                  className={[
-                    resetPasswordPageStyles.result,
-                    resultType === 'success' ? resetPasswordPageStyles.isSuccess : resetPasswordPageStyles.isError,
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
+              {resultType === 'success' ? (
+                <p className={[resetPasswordPageStyles.result, resetPasswordPageStyles.isSuccess].join(' ')}>
                   {resultMessage}
                 </p>
               ) : (
@@ -180,6 +175,12 @@ const ResetPasswordPage = () => {
                   <button className={authPageStyles.submit} type="submit" disabled={isLoading || !isValid}>
                     {isLoading ? 'Отправка...' : 'Отправить'}
                   </button>
+
+                  {resultType === 'error' && resultMessage && (
+                    <p className={[resetPasswordPageStyles.result, resetPasswordPageStyles.isError].join(' ')}>
+                      {resultMessage}
+                    </p>
+                  )}
                 </form>
               )}
             </div>

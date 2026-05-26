@@ -74,6 +74,7 @@ public class TaskMapper {
                 project.getTitle(),
                 project.getIsPrivate(),
                 project.getAiReviewEnabled(),
+                task.getAiReviewEnabledAtCreation(),
                 task.getTitle(),
                 task.getDescription(),
                 task.getRequirements(),

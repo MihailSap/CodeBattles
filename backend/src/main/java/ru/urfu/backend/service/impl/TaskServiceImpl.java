@@ -99,6 +99,7 @@ public class TaskServiceImpl implements TaskService {
         task.setEvaluationCriteria(request.evaluationCriteria());
         task.setReviewType(request.reviewType());
         task.setProject(project);
+        task.setAiReviewEnabledAtCreation(Boolean.TRUE.equals(project.getAiReviewEnabled()));
         task.setStatus(TaskStatus.IN_PROGRESS);
         task.setUpdatedAt(LocalDateTime.now());
         taskRepository.save(task);
