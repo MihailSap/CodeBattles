@@ -107,7 +107,7 @@ public class SolutionController {
     @PostMapping("/resubmit")
     public SolutionSubmitResponse resubmit(
             @ModelAttribute SolutionSubmitRequest request
-    ) throws UserNotFoundException {
+    ) throws Exception {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
         if(!taskService.isUserAssigneeInTask(user, task)){
@@ -148,7 +148,7 @@ public class SolutionController {
 
                 reviewService.createReviewFileContent(
                         currentIteration,
-                        updatedSolution.getSolutionManualText());
+                        updatedSolution.getSolutionGitPullRequest());
             }
             return solutionMapper.mapToSolutionSubmitResponse(
                     updatedSolution, ReviewStatus.IN_PROGRESS,

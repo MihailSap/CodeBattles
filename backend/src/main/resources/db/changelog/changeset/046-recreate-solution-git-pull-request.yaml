@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 046-recreate-solution-git-pull-request-table
+      author: SapeginMihail
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: solution_git_pull_request
+            constraintName: fk_solution_git_pull_request_solution
+        - dropTable:
+            tableName: solution_git_pull_request
+            cascadeConstraints: true
+        - createTable:
+            tableName: solution_git_pull_request
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_solution_git_pull_request
+                    nullable: false
+              - column:
+                  name: provider
+                  type: VARCHAR(50)
+              - column:
+                  name: repository_id
+                  type: VARCHAR(500)
+              - column:
+                  name: repository_name
+                  type: VARCHAR(500)
+              - column:
+                  name: pull_request_id
+                  type: VARCHAR(500)
+              - column:
+                  name: pull_request_number
+                  type: INT
+              - column:
+                  name: source_branch
+                  type: VARCHAR(500)
+              - column:
+                  name: target_branch
+                  type: VARCHAR(500)
+              - column:
+                  name: url
+                  type: VARCHAR(1000)
+              - column:
+                  name: solution_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+        - addForeignKeyConstraint:
+            baseTableName: solution_git_pull_request
+            baseColumnNames: solution_id
+            constraintName: fk_solution_git_pull_request_solution
+            referencedTableName: solution
+            referencedColumnNames: id
+            onDelete: CASCADE

@@ -89,3 +89,5 @@ databaseChangeLog:
       file: db/changelog/changeset/044-add-auth-token-expirations.yaml
   - include:
       file: db/changelog/changeset/045-create-solution-git-pull-request.yaml
+  - include:
+      file: db/changelog/changeset/046-recreate-solution-git-pull-request.yaml
