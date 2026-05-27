@@ -67,6 +67,7 @@ const isErrorContext = (context: string): context is ErrorContext =>
 
 interface ApiErrorLike {
   code?: string;
+  status?: number;
   response?: {
     status?: number;
   };
@@ -79,6 +80,7 @@ const toApiErrorLike = (value: unknown): ApiErrorLike => {
 
   const record = Object.entries(value);
   const code = record.find(([key]) => key === 'code')?.[1];
+  const status = record.find(([key]) => key === 'status')?.[1];
   const rawResponse = record.find(([key]) => key === 'response')?.[1];
 
   const responseStatus =
@@ -88,7 +90,10 @@ const toApiErrorLike = (value: unknown): ApiErrorLike => {
 
   return {
     ...(typeof code === 'string' ? { code } : {}),
-    ...(typeof responseStatus === 'number' ? { response: { status: responseStatus } } : {}),
+    ...(typeof status === 'number' && Number.isFinite(status) ? { status } : {}),
+    ...(typeof responseStatus === 'number' && Number.isFinite(responseStatus)
+      ? { response: { status: responseStatus } }
+      : {}),
   };
 };
 
@@ -99,11 +104,11 @@ export const getApiErrorMessage = (error: unknown, fallback: string, context: st
     return TIMEOUT_ERROR_MESSAGE;
   }
 
-  if (!errorLike.response) {
+  const status = errorLike.response?.status ?? errorLike.status;
+
+  if (status === undefined) {
     return NETWORK_ERROR_MESSAGE;
   }
-
-  const status = errorLike.response.status;
 
   const contextStatusMap: Partial<StatusMessageMap> | undefined = isErrorContext(context)
     ? CONTEXT_STATUS_MESSAGES[context]

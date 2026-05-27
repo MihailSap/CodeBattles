@@ -2,7 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useDeleteTaskMutation, useGetTaskByIdQuery, useUpdateTaskMutation, type Task } from '@/entities/task';
+import {
+  isInsufficientAutoReviewersError,
+  useDeleteTaskMutation,
+  useGetTaskByIdQuery,
+  useUpdateTaskMutation,
+  type Task,
+  type TaskPayload,
+} from '@/entities/task';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import { AvatarIcon, CheckIcon, CrossIcon } from '@/shared/ui/icons';
@@ -30,13 +37,19 @@ import {
   taskDetailLayoutStyles as taskPageStyles,
 } from '@/widgets/detail-layout';
 type AccessErrorShape = {
-  status?: number;
-  code?: string;
+  status: number;
+  code: string;
   projectId?: string;
   projectPrivacy?: string;
 };
 
-const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' &&
+  value !== null &&
+  'status' in value &&
+  typeof value.status === 'number' &&
+  'code' in value &&
+  typeof value.code === 'string';
 
 const AssigneesSelector = lazy(() =>
   import('@/features/manage-task').then(({ AssigneesSelector }) => ({ default: AssigneesSelector }))
@@ -359,7 +372,7 @@ const TaskPage = () => {
   }, [task?.aiReviewEnabled]);
 
   useEffect(() => {
-    if (!isManualReviewers && draftReviewerIds.length > 0) {
+    if (!isManualReviewers && draftReviewerIds.length > 0 && settingsDraft.reviewType !== task?.reviewType) {
       queueMicrotask(() =>
         setSettingsValue('reviewerIds', [], {
           shouldDirty: true,
@@ -386,7 +399,14 @@ const TaskPage = () => {
         })
       );
     }
-  }, [availableReviewers, draftReviewerIds, isManualReviewers, setSettingsValue]);
+  }, [
+    availableReviewers,
+    draftReviewerIds,
+    isManualReviewers,
+    setSettingsValue,
+    settingsDraft.reviewType,
+    task?.reviewType,
+  ]);
 
   const handleCancel = () => {
     if (!task) {
@@ -408,41 +428,78 @@ const TaskPage = () => {
     }
 
     try {
+      const payload: Partial<TaskPayload> = {};
+
       if (canEditRequirementsOnly) {
-        await updateTask({
-          taskId: task.id,
-          projectId: task.projectId,
-          payload: {
-            requirements: form.requirements,
-            evaluationCriteria: form.evaluationCriteria,
-            reviewType: form.reviewType,
-            reviewerIds: form.reviewerIds,
-          },
-        }).unwrap();
+        if (form.requirements !== task.requirements) {
+          payload.requirements = form.requirements;
+        }
+
+        if (form.evaluationCriteria !== task.evaluationCriteria) {
+          payload.evaluationCriteria = form.evaluationCriteria;
+        }
       } else {
-        await updateTask({
-          taskId: task.id,
-          projectId: task.projectId,
-          payload: {
-            name: form.name.trim(),
-            description: form.description.trim(),
-            requirements: form.requirements.trim(),
-            evaluationCriteria: form.evaluationCriteria.trim(),
-            deadline: form.deadline,
-            reviewType: form.reviewType,
-            reviewerIds: form.reviewerIds,
-            assigneeIds: form.assigneeIds,
-          },
-        }).unwrap();
+        const name = form.name.trim();
+        const description = form.description.trim();
+        const requirements = form.requirements.trim();
+        const evaluationCriteria = form.evaluationCriteria.trim();
+
+        if (name !== task.name) {
+          payload.name = name;
+        }
+
+        if (description !== task.description) {
+          payload.description = description;
+        }
+
+        if (requirements !== task.requirements) {
+          payload.requirements = requirements;
+        }
+
+        if (evaluationCriteria !== task.evaluationCriteria) {
+          payload.evaluationCriteria = evaluationCriteria;
+        }
+
+        if (form.deadline !== task.deadline) {
+          payload.deadline = form.deadline;
+        }
+
+        if (form.reviewType !== task.reviewType) {
+          payload.reviewType = form.reviewType;
+        }
+
+        if (JSON.stringify(form.reviewerIds) !== JSON.stringify(task.reviewerIds)) {
+          payload.reviewerIds = form.reviewerIds;
+        }
+
+        if (JSON.stringify(form.assigneeIds) !== JSON.stringify(task.assigneeIds)) {
+          payload.assigneeIds = form.assigneeIds;
+        }
       }
+
+      if (Object.keys(payload).length === 0) {
+        resetSettings(getTaskSettingsDefaults(task));
+
+        return;
+      }
+
+      await updateTask({
+        taskId: task.id,
+        projectId: task.projectId,
+        payload,
+      }).unwrap();
 
       const updatedTask = await refetchTask().unwrap();
 
       resetSettings(getTaskSettingsDefaults(updatedTask));
 
       showSnackbar('Изменения сохранены', 'success');
-    } catch {
-      showSnackbar('Не удалось сохранить изменения', 'error');
+    } catch (error: unknown) {
+      if (isInsufficientAutoReviewersError(error)) {
+        showSnackbar('Для автоматического распределения нужны минимум два свободных ревьюера', 'error');
+      } else {
+        showSnackbar('Не удалось сохранить изменения', 'error');
+      }
     }
   };
 
@@ -737,7 +794,7 @@ const TaskPage = () => {
                       <input
                         type="radio"
                         value={type}
-                        disabled={!canManageTask || isSettingsSubmitting}
+                        disabled={!canManageTask || !canEditAllFields || isSettingsSubmitting}
                         {...registerSettings('reviewType')}
                       />
                       <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>

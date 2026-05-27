@@ -21,7 +21,9 @@ const AUTHOR_ROLE = {
 
 interface BackendFileDto {
   path: string;
-  content?: string;
+  content?: string | null;
+  originalContent?: string | null;
+  isDiff?: boolean | null;
 }
 
 interface BackendFinalReviewDto extends Omit<FinalReview, 'revealName'> {
@@ -138,8 +140,59 @@ const mapBackendFile = (file: BackendFileDto): ReviewFile => ({
   path: file.path,
   name: file.path.split('/').pop() ?? file.path,
   isDirectory: false,
-  ...(file.content !== undefined ? { content: file.content } : {}),
+  ...(file.content !== undefined && file.content !== null ? { content: file.content } : {}),
+  ...(file.originalContent !== undefined && file.originalContent !== null
+    ? { originalContent: file.originalContent }
+    : {}),
+  isDiff: file.isDiff === true,
 });
+
+const getOrCreateDirectoryChildren = (
+  siblings: ReviewFile[],
+  directoryPath: string,
+  directoryName: string
+): ReviewFile[] => {
+  const existingDirectory = siblings.find((node) => node.isDirectory && node.path === directoryPath);
+
+  if (existingDirectory) {
+    if (!existingDirectory.children) {
+      existingDirectory.children = [];
+    }
+
+    return existingDirectory.children;
+  }
+
+  const children: ReviewFile[] = [];
+
+  siblings.push({
+    id: `directory:${directoryPath}`,
+    path: directoryPath,
+    name: directoryName,
+    isDirectory: true,
+    children,
+  });
+
+  return children;
+};
+
+const buildReviewFileTree = (files: readonly BackendFileDto[]): ReviewFile[] => {
+  const rootNodes: ReviewFile[] = [];
+
+  for (const file of files) {
+    const pathSegments = file.path.split('/').filter(Boolean);
+    let siblings = rootNodes;
+    let directoryPath = '';
+
+    for (const directoryName of pathSegments.slice(0, -1)) {
+      directoryPath = directoryPath ? `${directoryPath}/${directoryName}` : directoryName;
+      siblings = getOrCreateDirectoryChildren(siblings, directoryPath, directoryName);
+    }
+
+    siblings.push(mapBackendFile(file));
+  }
+
+  return rootNodes;
+};
 
 const mapBackendFinalReview = (finalReview: BackendFinalReviewDto): FinalReview => ({
   ...finalReview,
@@ -203,7 +256,7 @@ const mapBackendHistory = (
   taskId: iteration.taskId ?? taskId,
   status: iteration.status ?? REVIEW_STATUS.NEW,
   uploadedAt: iteration.uploadedAt ?? '',
-  files: (iteration.files ?? []).map(mapBackendFile),
+  files: buildReviewFileTree(iteration.files ?? []),
   comments: (iteration.comments ?? []).map((comment) =>
     mapBackendComment(comment, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
   ),
@@ -244,7 +297,7 @@ const mapBackendDetails = (review: BackendReviewDto): ReviewDetail => {
     uploadedAt: review.uploadedAt ?? '',
     deadline: review.deadline ?? '',
     ...(review.completedAt !== undefined && review.completedAt !== null ? { reviewedAt: review.completedAt } : {}),
-    files: (review.files ?? []).map(mapBackendFile),
+    files: buildReviewFileTree(review.files ?? []),
     comments: (review.comments ?? []).map((comment) =>
       mapBackendComment(comment, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
     ),

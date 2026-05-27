@@ -2,14 +2,13 @@ export type Styles = {
   backdrop: string;
   close: string;
   content: string;
+  error: string;
   field: string;
-  fieldLabel: string;
-  fieldMenu: string;
-  fieldMenuUp: string;
-  fieldTrigger: string;
   footer: string;
   formFields: string;
   head: string;
+  input: string;
+  isError: string;
   root: string;
   submitBtn: string;
   submitIcon: string;

@@ -88,7 +88,11 @@ export const profileApi = {
 
   async updateProfileSection(payload: ProfileSectionPayload): Promise<ProfilePageData['user']> {
     const formData = new FormData();
-    formData.append('name', payload.name);
+
+    if (payload.name !== undefined) {
+      formData.append('name', payload.name);
+    }
+
     const avatarFile = payload.avatar instanceof File ? payload.avatar : payload.avatarFile;
 
     if (avatarFile) {

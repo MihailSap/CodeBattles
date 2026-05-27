@@ -5,12 +5,38 @@ import type { DomainError } from './types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-const getBackendMessage = (error: unknown): string | undefined => {
+const getResponseData = (error: unknown): Record<string, unknown> | undefined => {
   if (!isRecord(error) || !isRecord(error['response']) || !isRecord(error['response']['data'])) {
     return undefined;
   }
 
-  return typeof error['response']['data']['message'] === 'string' ? error['response']['data']['message'] : undefined;
+  return error['response']['data'];
+};
+
+const getBackendMessage = (error: unknown): string | undefined => {
+  const responseData = getResponseData(error);
+
+  if (!responseData) {
+    return undefined;
+  }
+
+  const message = responseData['message'];
+
+  if (typeof message === 'string') {
+    return message;
+  }
+
+  if (Array.isArray(message) && message.every((item): item is string => typeof item === 'string')) {
+    return message.join(', ');
+  }
+
+  return undefined;
+};
+
+const getBackendCode = (error: unknown): string | undefined => {
+  const responseData = getResponseData(error);
+
+  return responseData && typeof responseData['code'] === 'string' ? responseData['code'] : undefined;
 };
 
 const getResponseStatus = (error: unknown): number | undefined => {
@@ -18,7 +44,9 @@ const getResponseStatus = (error: unknown): number | undefined => {
     return undefined;
   }
 
-  return typeof error['response']['status'] === 'number' ? error['response']['status'] : undefined;
+  const status = error['response']['status'];
+
+  return typeof status === 'number' && Number.isFinite(status) ? status : undefined;
 };
 
 const parseBackendMessage = (message: string | undefined): { status: number; code: string } | undefined => {
@@ -37,11 +65,15 @@ const parseBackendMessage = (message: string | undefined): { status: number; cod
 export const toDomainError = (error: unknown): DomainError => {
   const backendMessage = getBackendMessage(error);
   const parsed = parseBackendMessage(backendMessage);
-  const message = backendMessage ?? (error instanceof Error ? error.message : 'Request failed');
+
+  const message =
+    backendMessage ?? (error instanceof Error ? error.message : typeof error === 'string' ? error : 'Request failed');
+
   const nextError: DomainError = new Error(message);
 
   nextError.status = parsed?.status ?? getResponseStatus(error) ?? 500;
-  const code = parsed?.code ?? backendMessage;
+
+  const code = getBackendCode(error) ?? parsed?.code ?? backendMessage;
 
   if (code) {
     nextError.code = code;

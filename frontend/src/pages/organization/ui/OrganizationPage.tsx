@@ -19,6 +19,7 @@ import {
   type OrganizationJoinRequest,
   type OrganizationSettingsFormInput,
   type OrganizationSettingsFormValues,
+  type UpdateOrganizationPayload,
 } from '@/entities/organization';
 import ConfirmActionModal from '@/shared/ui/confirm-action-modal';
 import EntityTabs from '@/shared/ui/entity-tabs';
@@ -41,13 +42,19 @@ import { useSnackbar } from '@/shared/lib/hooks';
 import organizationPageStyles from './OrganizationPage.module.scss';
 import { detailLayoutStyles as projectPageStyles } from '@/widgets/detail-layout';
 type AccessErrorShape = {
-  status?: number;
-  code?: string;
+  status: number;
+  code: string;
   projectId?: string;
   projectPrivacy?: string;
 };
 
-const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' &&
+  value !== null &&
+  'status' in value &&
+  typeof value.status === 'number' &&
+  'code' in value &&
+  typeof value.code === 'string';
 
 const tabs = {
   projects: 'Проекты',
@@ -455,13 +462,35 @@ const OrganizationPage = () => {
     if (!hasSettingsChanges) return;
 
     try {
+      const payload: UpdateOrganizationPayload = {};
+      const name = form.name.trim();
+      const link = form.link.trim();
+
+      if (name !== organization.name) {
+        payload.name = name;
+      }
+
+      if (link !== organization.link) {
+        payload.link = link;
+      }
+
+      if (form.description !== organization.description) {
+        payload.description = form.description;
+      }
+
+      if (form.logoFile) {
+        payload.logoFile = form.logoFile;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        resetSettings(getOrganizationSettingsDefaults(organization));
+
+        return;
+      }
+
       await updateOrganization({
         organizationId: organization.id,
-        payload: {
-          ...form,
-          name: form.name.trim(),
-          link: form.link.trim(),
-        },
+        payload,
       }).unwrap();
 
       const fullOrganization = await refetchOrganization().unwrap();

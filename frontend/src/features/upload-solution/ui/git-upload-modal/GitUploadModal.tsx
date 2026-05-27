@@ -1,9 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { CheckIcon } from '@/shared/ui/icons';
 import EntityTabs from '@/shared/ui/entity-tabs';
-import ReviewDropdown from '@/shared/ui/review-dropdown';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
 import {
@@ -24,94 +23,7 @@ const TABS = [
   },
 ];
 
-const MOCK_REPOSITORIES = {
-  github: [
-    {
-      value: 'gh_repo_1',
-      label: 'org/codebattles-frontend',
-    },
-    {
-      value: 'gh_repo_2',
-      label: 'org/codebattles-backend',
-    },
-  ],
-  gitlab: [
-    {
-      value: 'gl_repo_1',
-      label: 'team/codebattles-frontend',
-    },
-    {
-      value: 'gl_repo_2',
-      label: 'team/codebattles-backend',
-    },
-  ],
-};
-
-const MOCK_BRANCHES = [
-  {
-    value: 'main',
-    label: 'main',
-  },
-  {
-    value: 'develop',
-    label: 'develop',
-  },
-];
-
-const MOCK_PRS = {
-  gh_repo_1: [
-    {
-      value: 'gh_pr_1',
-      label: 'PR #124: Improve review comments styling',
-    },
-    {
-      value: 'gh_pr_2',
-      label: 'PR #128: Fix mobile file tree behavior',
-    },
-    {
-      value: 'gh_pr_3',
-      label: 'PR #131: Refactor solution tab layout',
-    },
-  ],
-  gh_repo_2: [
-    {
-      value: 'gh_pr_4',
-      label: 'PR #205: Add review status endpoint',
-    },
-    {
-      value: 'gh_pr_5',
-      label: 'PR #213: Optimize auth middleware',
-    },
-  ],
-  gl_repo_1: [
-    {
-      value: 'gl_pr_1',
-      label: '!34 Update comments sidebar visuals',
-    },
-    {
-      value: 'gl_pr_2',
-      label: '!39 Add responsive modal spacing',
-    },
-  ],
-  gl_repo_2: [
-    {
-      value: 'gl_pr_3',
-      label: '!51 Improve CI quality checks',
-    },
-    {
-      value: 'gl_pr_4',
-      label: '!58 Introduce review pipeline cache',
-    },
-  ],
-};
-
-const PR_REPOS_BY_PLATFORM = {
-  github: ['gh_repo_1', 'gh_repo_2'],
-  gitlab: ['gl_repo_1', 'gl_repo_2'],
-} as const;
-
-type GitPlatform = keyof typeof MOCK_REPOSITORIES;
-type RepositoryKey = keyof typeof MOCK_PRS;
+type GitPlatform = 'github' | 'gitlab';
 
 interface GitUploadModalProps {
   isOpen: boolean;
@@ -121,30 +33,23 @@ interface GitUploadModalProps {
 }
 
 const isGitPlatform = (value: string): value is GitPlatform => value === 'github' || value === 'gitlab';
-const isRepositoryKey = (value: string): value is RepositoryKey => value in MOCK_PRS;
 
 const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: GitUploadModalProps) => {
   const [activeTab, setActiveTab] = useState<GitPlatform>('github');
 
   const {
-    control,
+    register,
     handleSubmit,
     reset,
-    setValue,
-    formState: { isValid },
+    formState: { errors, isValid },
   } = useForm<GitUploadFormValues>({
     resolver: zodResolver(gitUploadFormSchema),
     defaultValues: {
-      repository: '',
+      sourceBranch: '',
       targetBranch: '',
-      pullRequest: '',
+      repositoryName: '',
     },
     mode: 'onChange',
-  });
-
-  const selectedRepo = useWatch({
-    control,
-    name: 'repository',
   });
 
   useBodyScrollLock(isOpen);
@@ -159,13 +64,6 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: GitUploadMo
     return isSubmitting || !isValid;
   };
 
-  const currentRepositories = MOCK_REPOSITORIES[activeTab];
-
-  const currentPrOptions =
-    selectedRepo && isRepositoryKey(selectedRepo)
-      ? MOCK_PRS[selectedRepo]
-      : PR_REPOS_BY_PLATFORM[activeTab].flatMap((repoKey) => MOCK_PRS[repoKey]);
-
   const handleTabChange = (tabKey: string) => {
     if (!isGitPlatform(tabKey)) {
       return;
@@ -175,27 +73,18 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: GitUploadMo
     reset();
   };
 
-  const submit = async ({ repository, targetBranch, pullRequest }: GitUploadFormValues) => {
+  const submit = async ({ sourceBranch, targetBranch, repositoryName }: GitUploadFormValues) => {
     if (isSubmitDisabled()) return;
 
     await onSubmit({
       type: 'git',
-      platform: activeTab,
-      repository,
-      targetBranch,
-      pullRequest,
-      files: [
-        {
-          name: 'src/App.jsx',
-          isDiff: true,
-          content: '+const isReviewFlowReady = true;',
-        },
-        {
-          name: 'src/main.jsx',
-          isDiff: true,
-          content: ' const rootElement = document.getElementById("root");\n-const legacyRoot = null;',
-        },
-      ],
+      uploadType: 'GIT_PULL_REQUEST',
+      git: {
+        provider: activeTab === 'github' ? 'GITHUB' : 'GITLAB',
+        sourceBranch,
+        targetBranch,
+        repositoryName,
+      },
     });
   };
 
@@ -218,64 +107,42 @@ const GitUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: GitUploadMo
       <form className={gitUploadModalStyles.content} onSubmit={handleSubmit(submit)}>
         <div className={gitUploadModalStyles.tabContent}>
           <div className={gitUploadModalStyles.formFields}>
-            <Controller
-              control={control}
-              name="repository"
-              render={({ field }) => (
-                <ReviewDropdown
-                  label="Репозиторий:"
-                  options={currentRepositories}
-                  value={field.value}
-                  rootClassName={gitUploadModalStyles.field}
-                  labelClassName={gitUploadModalStyles.fieldLabel}
-                  triggerClassName={gitUploadModalStyles.fieldTrigger}
-                  menuClassName={gitUploadModalStyles.fieldMenu}
-                  onChange={(value) => {
-                    field.onChange(value);
-
-                    setValue('pullRequest', '', {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                  }}
-                  placeholder="Выберите репозиторий"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="targetBranch"
-              render={({ field }) => (
-                <ReviewDropdown
-                  label="Целевая ветка:"
-                  options={MOCK_BRANCHES}
-                  value={field.value}
-                  rootClassName={gitUploadModalStyles.field}
-                  labelClassName={gitUploadModalStyles.fieldLabel}
-                  triggerClassName={gitUploadModalStyles.fieldTrigger}
-                  menuClassName={gitUploadModalStyles.fieldMenu}
-                  onChange={field.onChange}
-                  placeholder="Выберите ветку"
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="pullRequest"
-              render={({ field }) => (
-                <ReviewDropdown
-                  label="Pull Request:"
-                  options={currentPrOptions}
-                  value={field.value}
-                  rootClassName={gitUploadModalStyles.field}
-                  labelClassName={gitUploadModalStyles.fieldLabel}
-                  triggerClassName={gitUploadModalStyles.fieldTrigger}
-                  menuClassName={gitUploadModalStyles.fieldMenuUp}
-                  onChange={field.onChange}
-                  placeholder="Выберите Pull Request"
-                />
-              )}
-            />
+            <div className={gitUploadModalStyles.field}>
+              <input
+                className={[gitUploadModalStyles.input, errors.repositoryName ? gitUploadModalStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                type="url"
+                placeholder="Ссылка на репозиторий*"
+                aria-label="Ссылка на репозиторий"
+                {...register('repositoryName')}
+              />
+              {errors.repositoryName && <p className={gitUploadModalStyles.error}>{errors.repositoryName.message}</p>}
+            </div>
+            <div className={gitUploadModalStyles.field}>
+              <input
+                className={[gitUploadModalStyles.input, errors.sourceBranch ? gitUploadModalStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                type="text"
+                placeholder="Исходная ветка*"
+                aria-label="Исходная ветка"
+                {...register('sourceBranch')}
+              />
+              {errors.sourceBranch && <p className={gitUploadModalStyles.error}>{errors.sourceBranch.message}</p>}
+            </div>
+            <div className={gitUploadModalStyles.field}>
+              <input
+                className={[gitUploadModalStyles.input, errors.targetBranch ? gitUploadModalStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                type="text"
+                placeholder="Целевая ветка*"
+                aria-label="Целевая ветка"
+                {...register('targetBranch')}
+              />
+              {errors.targetBranch && <p className={gitUploadModalStyles.error}>{errors.targetBranch.message}</p>}
+            </div>
           </div>
         </div>
 

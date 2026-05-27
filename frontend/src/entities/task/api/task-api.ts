@@ -95,11 +95,26 @@ export interface ManualCodePayload {
   content: string;
 }
 
-export interface SubmitSolutionPayload {
+export interface ManualSubmitSolutionPayload {
   uploadType: 'MANUAL_TEXT';
   manualCode: ManualCodePayload;
   revealAuthorAfterReview?: boolean;
 }
+
+export interface GitPullRequestPayload {
+  provider: 'GITHUB' | 'GITLAB';
+  sourceBranch: string;
+  targetBranch: string;
+  repositoryName: string;
+}
+
+export interface GitSubmitSolutionPayload {
+  uploadType: 'GIT_PULL_REQUEST';
+  git: GitPullRequestPayload;
+  revealAuthorAfterReview?: boolean;
+}
+
+export type SubmitSolutionPayload = ManualSubmitSolutionPayload | GitSubmitSolutionPayload;
 
 export interface SolutionMutationResult {
   id?: EntityId;
@@ -110,6 +125,19 @@ interface StatusDto {
   isDeleted?: boolean;
   deleted?: boolean;
 }
+
+const INSUFFICIENT_AUTO_REVIEWERS_CODE = 'INSUFFICIENT_AUTO_REVIEWERS';
+const UNUSED_GIT_TEXT_FIELD_PLACEHOLDER = '-';
+const UNUSED_GIT_NUMBER_FIELD_PLACEHOLDER = '0';
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const hasErrorCode = (error: unknown, property: 'code' | 'message', value: string): boolean =>
+  isRecord(error) && error[property] === value;
+
+export const isInsufficientAutoReviewersError = (error: unknown): boolean =>
+  hasErrorCode(error, 'code', INSUFFICIENT_AUTO_REVIEWERS_CODE) ||
+  hasErrorCode(error, 'message', INSUFFICIENT_AUTO_REVIEWERS_CODE);
 
 const clone = <T>(value: T): T => structuredClone(value);
 
@@ -242,7 +270,7 @@ const getProjectUsers = async (projectId: EntityId): Promise<ProjectParticipant[
   return users.map(mapParticipant);
 };
 
-const toManualSolutionFormData = (taskId: EntityId, payload: SubmitSolutionPayload): FormData => {
+const toManualSolutionFormData = (taskId: EntityId, payload: ManualSubmitSolutionPayload): FormData => {
   const formData = new FormData();
   formData.append('taskId', String(taskId));
   formData.append('uploadType', payload.uploadType);
@@ -252,6 +280,31 @@ const toManualSolutionFormData = (taskId: EntityId, payload: SubmitSolutionPaylo
   formData.append('manualCode.content', payload.manualCode.content);
 
   return formData;
+};
+
+const toGitSolutionFormData = (taskId: EntityId, payload: GitSubmitSolutionPayload): FormData => {
+  const formData = new FormData();
+  formData.append('taskId', String(taskId));
+  formData.append('uploadType', payload.uploadType);
+  formData.append('revealAuthorAfterReview', String(Boolean(payload.revealAuthorAfterReview)));
+  formData.append('git.provider', payload.git.provider);
+  formData.append('git.repositoryId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+  formData.append('git.repositoryName', payload.git.repositoryName);
+  formData.append('git.pullRequestId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+  formData.append('git.pullRequestNumber', UNUSED_GIT_NUMBER_FIELD_PLACEHOLDER);
+  formData.append('git.sourceBranch', payload.git.sourceBranch);
+  formData.append('git.targetBranch', payload.git.targetBranch);
+  formData.append('git.url', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+
+  return formData;
+};
+
+const toSolutionFormData = (taskId: EntityId, payload: SubmitSolutionPayload): FormData => {
+  if (payload.uploadType === 'MANUAL_TEXT') {
+    return toManualSolutionFormData(taskId, payload);
+  }
+
+  return toGitSolutionFormData(taskId, payload);
 };
 
 export const taskApi = {
@@ -307,7 +360,7 @@ export const taskApi = {
     return apiRequest<SolutionMutationResult>({
       method: 'POST',
       url: '/api/v1/solutions',
-      data: toManualSolutionFormData(taskId, payload),
+      data: toSolutionFormData(taskId, payload),
     });
   },
 
@@ -315,7 +368,7 @@ export const taskApi = {
     return apiRequest<SolutionMutationResult>({
       method: 'POST',
       url: '/api/v1/solutions/resubmit',
-      data: toManualSolutionFormData(taskId, payload),
+      data: toSolutionFormData(taskId, payload),
     });
   },
 

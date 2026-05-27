@@ -688,10 +688,10 @@ const ReviewPage = () => {
             ) : (
               <CodeViewer
                 key={selectedFile?.path}
-                value={currentFileContent?.content || (selectedFile?.isDirectory ? '' : '')}
+                value={currentFileContent?.content ?? ''}
                 language={getLanguageByFileName(selectedFile?.name)}
-                isDiff={Boolean(selectedFile?.isDiff || currentFileContent?.isDiff)}
-                originalValue={currentFileContent?.originalContent || ''}
+                isDiff={currentFileContent?.isDiff === true}
+                originalValue={currentFileContent?.originalContent ?? ''}
                 comments={fileComments}
                 onLineClick={handleLineClick}
                 {...(canAddNewComments ? { onLineContextMenu: handleLineContextMenu } : {})}

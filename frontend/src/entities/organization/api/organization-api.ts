@@ -6,6 +6,10 @@ import type { OrganizationCreateFormValues, OrganizationSettingsFormValues } fro
 import { ORGANIZATION_MEMBER_ROLE, type OrganizationMemberRole } from '../model';
 import type { Organization, OrganizationDetails, OrganizationJoinRequest, OrganizationProject } from '../model/types';
 
+export type UpdateOrganizationPayload = Partial<
+  Pick<OrganizationSettingsFormValues, 'name' | 'link' | 'description' | 'logoFile'>
+>;
+
 const PROJECT_MEMBER_ROLE = {
   OWNER: 'OWNER',
   MEMBER: 'MEMBER',
@@ -263,14 +267,12 @@ export const organizationApi = {
     return data.id === undefined ? { accepted: true } : { accepted: true, organizationId: data.id };
   },
 
-  async updateOrganization(
-    organizationId: EntityId,
-    payload: OrganizationSettingsFormValues
-  ): Promise<OrganizationDetails> {
+  async updateOrganization(organizationId: EntityId, payload: UpdateOrganizationPayload): Promise<OrganizationDetails> {
     const formData = new FormData();
-    formData.append('name', payload.name);
-    formData.append('link', payload.link);
-    formData.append('description', payload.description);
+
+    if (payload.name !== undefined) formData.append('name', payload.name);
+    if (payload.link !== undefined) formData.append('link', payload.link);
+    if (payload.description !== undefined) formData.append('description', payload.description);
     if (payload.logoFile) formData.append('avatar', payload.logoFile);
 
     return apiRequest<OrganizationDetails>({

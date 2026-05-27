@@ -3,7 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { Controller, type FieldErrors, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useGetProjectByIdQuery } from '@/entities/project';
-import { useCreateTaskMutation } from '@/entities/task';
+import { isInsufficientAutoReviewersError, useCreateTaskMutation } from '@/entities/task';
 import { useGetOrganizationByIdQuery } from '@/entities/organization';
 import { AssigneesSelector } from '@/features/manage-task';
 import DateTimePicker from '@/shared/ui/date-time-picker';
@@ -185,8 +185,12 @@ const TaskCreatePage = () => {
           replace: true,
         });
       }
-    } catch {
-      showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
+    } catch (error: unknown) {
+      if (isInsufficientAutoReviewersError(error)) {
+        showSnackbar('Для автоматического распределения нужны минимум два свободных ревьюера', 'error');
+      } else {
+        showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
+      }
     }
   };
 

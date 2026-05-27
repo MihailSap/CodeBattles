@@ -93,7 +93,7 @@ const FileTreeNode = memo(({ node, level, selectedPath, onSelectFile, commentedF
         <div className={fileTreeStyles.children}>
           {sortedChildren.map((child) => (
             <FileTreeNode
-              key={child.path}
+              key={`${child.isDirectory ? 'directory' : 'file'}:${child.path}`}
               node={child}
               level={level + 1}
               selectedPath={selectedPath}
@@ -118,7 +118,7 @@ const FileTree = ({ files, selectedFile, onSelectFile, commentedFiles = [] }: Fi
     <div className={fileTreeStyles.root}>
       {sortedFiles.map((node) => (
         <FileTreeNode
-          key={node.path}
+          key={`${node.isDirectory ? 'directory' : 'file'}:${node.path}`}
           node={node}
           level={0}
           selectedPath={selectedPath}

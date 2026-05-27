@@ -1,6 +1,6 @@
 import { type ChangeEvent, lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { taskApi, type Task } from '@/entities/task';
+import { taskApi, type SubmitSolutionPayload, type Task } from '@/entities/task';
 import {
   reviewApi,
   useGetAssignedReviewsQuery,
@@ -59,6 +59,29 @@ interface SolutionTabProps {
   onTaskUpdated?: () => void | Promise<void>;
   readOnly?: boolean;
 }
+
+const toSubmitSolutionPayload = (
+  payload: SolutionUploadPayload,
+  revealAuthorAfterReview: boolean
+): SubmitSolutionPayload | null => {
+  if (payload.type === 'manual') {
+    return {
+      uploadType: payload.uploadType,
+      manualCode: payload.manualCode,
+      revealAuthorAfterReview,
+    };
+  }
+
+  if (payload.type === 'git') {
+    return {
+      uploadType: payload.uploadType,
+      git: payload.git,
+      revealAuthorAfterReview,
+    };
+  }
+
+  return null;
+};
 
 const hasLineLocation = (
   comment: ReviewComment
@@ -207,7 +230,9 @@ const SolutionTab = ({
   }, [selectedFile, fileContentMap, fetchFileContent]);
 
   const handleUploadSubmit = async (payload: SolutionUploadPayload) => {
-    if (payload.type !== 'manual') {
+    const requestPayload = toSubmitSolutionPayload(payload, revealName);
+
+    if (requestPayload === null) {
       showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
 
       return;
@@ -216,10 +241,7 @@ const SolutionTab = ({
     setIsSubmitting(true);
 
     try {
-      await taskApi.submitSolution(task.id, {
-        ...payload,
-        revealAuthorAfterReview: revealName,
-      });
+      await taskApi.submitSolution(task.id, requestPayload);
 
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
@@ -243,7 +265,9 @@ const SolutionTab = ({
   };
 
   const handleResubmit = async (payload: SolutionUploadPayload) => {
-    if (payload.type !== 'manual') {
+    const requestPayload = toSubmitSolutionPayload(payload, revealName);
+
+    if (requestPayload === null) {
       showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
 
       return;
@@ -252,10 +276,7 @@ const SolutionTab = ({
     setIsSubmitting(true);
 
     try {
-      await taskApi.resubmitSolution(task.id, {
-        ...payload,
-        revealAuthorAfterReview: revealName,
-      });
+      await taskApi.resubmitSolution(task.id, requestPayload);
 
       completeNotification({
         action: NOTIFICATION_COMPLETION_ACTION.SUBMIT_TASK_SOLUTION,
@@ -485,6 +506,11 @@ const SolutionTab = ({
     [visibleComments]
   );
 
+  const historyComments = useMemo(
+    () => review?.history?.flatMap((historyItem) => historyItem.comments) ?? [],
+    [review?.history]
+  );
+
   if (loading) {
     return (
       <div className={solutionTabStyles.loading}>
@@ -495,9 +521,9 @@ const SolutionTab = ({
 
   const fileTreeData = review?.files || [];
   const currentFileContent = selectedFile ? fileContentMap[selectedFile.path] : undefined;
-  const codeContent = currentFileContent?.content || '';
-  const originalCodeContent = currentFileContent?.originalContent || (currentFileContent?.isDiff ? 'Старый код' : '');
-  const hasHistory = review?.history && review.history.length > 0;
+  const codeContent = currentFileContent?.content ?? '';
+  const originalCodeContent = currentFileContent?.originalContent ?? '';
+  const hasHistoryComments = historyComments.length > 0;
   const aiFileComments = fileComments.filter((comment) => comment.authorRole === 'AI');
 
   const revealedReviewers = isCompleted
@@ -605,9 +631,9 @@ const SolutionTab = ({
               ) : (
                 <CodeViewer
                   key={selectedFile?.path}
-                  value={codeContent || (selectedFile?.isDirectory ? '' : '')}
+                  value={codeContent}
                   language={getLanguageByFileName(selectedFile?.name)}
-                  isDiff={Boolean(selectedFile?.isDiff || currentFileContent?.isDiff)}
+                  isDiff={currentFileContent?.isDiff === true}
                   originalValue={originalCodeContent}
                   comments={showCodeComments ? fileComments : []}
                   onLineClick={handleLineClick}
@@ -750,9 +776,9 @@ const SolutionTab = ({
                   </>
                 )}
 
-                {(isWaiting || isRework || isCompleted) && hasHistory && (
+                {(isWaiting || isRework || isCompleted) && hasHistoryComments && (
                   <CommentsBlock
-                    comments={review.history.flatMap((historyItem) => historyItem.comments)}
+                    comments={historyComments}
                     currentUser={currentUser}
                     readOnly
                     isHistory

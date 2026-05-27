@@ -1,7 +1,7 @@
 import type { EntityId } from '@/entities/project/@x/organization';
 import { baseApi, toQueryResult } from '@/shared/api';
 
-import type { OrganizationCreateFormValues, OrganizationSettingsFormValues } from '../lib/validation';
+import type { OrganizationCreateFormValues } from '../lib/validation';
 import type { Organization, OrganizationDetails } from '../model/types';
 import {
   organizationApi,
@@ -9,6 +9,7 @@ import {
   type OrganizationProjectsResult,
   type OrganizationsResult,
   type SearchParams,
+  type UpdateOrganizationPayload,
 } from './organization-api';
 
 const dashboardTag = { type: 'Dashboard' as const, id: 'PROJECTS' };
@@ -26,7 +27,7 @@ interface OrganizationProjectsArg {
 
 interface UpdateOrganizationArg {
   organizationId: EntityId;
-  payload: OrganizationSettingsFormValues;
+  payload: UpdateOrganizationPayload;
 }
 
 interface OrganizationUserArg {

@@ -26,7 +26,7 @@ export interface ProfilePageData {
 }
 
 export interface ProfileSectionPayload {
-  name: string;
+  name?: string;
   avatar?: File | string | null;
   avatarFile?: File | null;
 }

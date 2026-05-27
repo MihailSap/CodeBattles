@@ -47,13 +47,19 @@ import {
 } from '@/entities/project';
 import { detailLayoutStyles as projectPageStyles } from '@/widgets/detail-layout';
 type AccessErrorShape = {
-  status?: number;
-  code?: string;
+  status: number;
+  code: string;
   projectId?: string;
   projectPrivacy?: string;
 };
 
-const isAccessErrorShape = (value: unknown): value is AccessErrorShape => typeof value === 'object' && value !== null;
+const isAccessErrorShape = (value: unknown): value is AccessErrorShape =>
+  typeof value === 'object' &&
+  value !== null &&
+  'status' in value &&
+  typeof value.status === 'number' &&
+  'code' in value &&
+  typeof value.code === 'string';
 
 const InviteLinkModal = lazy(() =>
   import('@/features/generate-invite-link').then(({ InviteLinkModal }) => ({ default: InviteLinkModal }))
@@ -384,6 +390,12 @@ const ProjectPage = () => {
 
       if (form.aiReviewEnabled !== Boolean(project.aiReviewEnabled)) {
         payload.aiReviewEnabled = form.aiReviewEnabled;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        resetSettings(getProjectSettingsDefaults(project));
+
+        return;
       }
 
       await updateProject({

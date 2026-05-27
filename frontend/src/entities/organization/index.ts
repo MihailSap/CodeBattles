@@ -8,4 +8,5 @@ export type {
   OrganizationInviteResult,
   OrganizationMutationResult,
   OrganizationsResult,
+  UpdateOrganizationPayload,
 } from './api/organization-api';

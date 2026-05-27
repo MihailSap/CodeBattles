@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const gitUploadFormSchema = z.object({
-  repository: z.string().min(1, 'Выберите репозиторий'),
-  targetBranch: z.string().min(1, 'Выберите целевую ветку'),
-  pullRequest: z.string().min(1, 'Выберите Pull Request'),
+  sourceBranch: z.string().min(1, 'Укажите исходную ветку'),
+  targetBranch: z.string().min(1, 'Укажите целевую ветку'),
+  repositoryName: z.string().url('Укажите корректную ссылку на репозиторий'),
 });
 
 export type GitUploadFormValues = z.infer<typeof gitUploadFormSchema>;
@@ -70,11 +70,13 @@ export interface FileSolutionUploadPayload {
 
 export interface GitSolutionUploadPayload {
   type: 'git';
-  platform: 'github' | 'gitlab';
-  repository: string;
-  targetBranch: string;
-  pullRequest: string;
-  files: UploadedFileSummary[];
+  uploadType: 'GIT_PULL_REQUEST';
+  git: {
+    provider: 'GITHUB' | 'GITLAB';
+    sourceBranch: string;
+    targetBranch: string;
+    repositoryName: string;
+  };
 }
 
 export type SolutionUploadPayload = ManualSolutionUploadPayload | FileSolutionUploadPayload | GitSolutionUploadPayload;

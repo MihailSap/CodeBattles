@@ -1,56 +1,87 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { DomainError } from './types';
 
-interface QueryErrorLike {
-  message?: string;
-  code?: string;
-  status?: number;
-  response?: {
-    status?: number;
-    data?: {
-      message?: string;
-    };
-  };
-}
+const DEFAULT_ERROR_MESSAGE = 'Request failed';
+const DEFAULT_ERROR_STATUS = 500;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-const toQueryErrorLike = (value: unknown): QueryErrorLike => {
-  if (!isRecord(value)) {
-    return {};
+const getFiniteNumber = (value: unknown): number | undefined =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+
+const getString = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
+
+const getResponseData = (error: unknown): unknown => {
+  if (!isRecord(error) || !isRecord(error['response'])) {
+    return undefined;
   }
 
-  const responseData =
-    isRecord(value['response']) && isRecord(value['response']['data']) ? value['response']['data'] : undefined;
+  return error['response']['data'];
+};
 
-  const responseStatus = isRecord(value['response']) ? value['response']['status'] : undefined;
+const getResponseStatus = (error: unknown): number | undefined => {
+  if (!isRecord(error) || !isRecord(error['response'])) {
+    return undefined;
+  }
 
-  return {
-    ...(typeof value['message'] === 'string' ? { message: value['message'] } : {}),
-    ...(typeof value['code'] === 'string' ? { code: value['code'] } : {}),
-    ...(typeof value['status'] === 'number' ? { status: value['status'] } : {}),
-    ...(typeof responseStatus === 'number' || (responseData && typeof responseData['message'] === 'string')
-      ? {
-          response: {
-            ...(typeof responseStatus === 'number' ? { status: responseStatus } : {}),
-            ...(responseData && typeof responseData['message'] === 'string'
-              ? { data: { message: responseData['message'] } }
-              : {}),
-          },
-        }
-      : {}),
-  };
+  return getFiniteNumber(error['response']['status']);
+};
+
+const getPayloadMessage = (payload: unknown): string | undefined => {
+  if (!isRecord(payload)) {
+    return undefined;
+  }
+
+  const message = payload['message'];
+
+  if (typeof message === 'string') {
+    return message;
+  }
+
+  if (Array.isArray(message) && message.every((item): item is string => typeof item === 'string')) {
+    return message.join(', ');
+  }
+
+  return undefined;
+};
+
+const getPayloadCode = (payload: unknown): string | undefined => {
+  if (!isRecord(payload)) {
+    return undefined;
+  }
+
+  return getString(payload['code']) ?? getString(payload['status']);
+};
+
+const getRawValue = (error: unknown): unknown => {
+  if (isRecord(error) && 'raw' in error) {
+    return error['raw'];
+  }
+
+  return error;
 };
 
 export const getQueryError = (error: unknown): DomainError => {
-  const errorLike = toQueryErrorLike(error);
+  const responseData = getResponseData(error) ?? getResponseData(getRawValue(error));
+
+  const message =
+    getPayloadMessage(responseData) ??
+    (isRecord(error) ? getString(error['message']) : undefined) ??
+    (typeof error === 'string' ? error : DEFAULT_ERROR_MESSAGE);
+
+  const status =
+    getResponseStatus(error) ??
+    (isRecord(error) ? getFiniteNumber(error['status']) : undefined) ??
+    DEFAULT_ERROR_STATUS;
+
+  const code = (isRecord(error) ? getString(error['code']) : undefined) ?? getPayloadCode(responseData);
 
   return {
     name: 'DomainError',
-    message: errorLike.response?.data?.message ?? errorLike.message ?? 'Request failed',
-    status: errorLike.status ?? errorLike.response?.status ?? 500,
-    raw: errorLike.response?.data ?? errorLike.message ?? error,
-    ...(errorLike.code ? { code: errorLike.code } : {}),
+    message,
+    status,
+    raw: responseData ?? message,
+    ...(code ? { code } : {}),
   };
 };
 
@@ -68,7 +99,7 @@ export const toQueryResult = async <T>(request: () => Promise<T>) => {
 
 export const baseApi = createApi({
   reducerPath: 'api',
-  baseQuery: fakeBaseQuery(),
+  baseQuery: fakeBaseQuery<DomainError>(),
   keepUnusedDataFor: 120,
   refetchOnFocus: true,
   refetchOnReconnect: true,

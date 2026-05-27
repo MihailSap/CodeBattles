@@ -6,6 +6,7 @@ import {
   useGetProfilePageDataQuery,
   useUpdateProfileSectionMutation,
   useUpdateSkillsSectionMutation,
+  type ProfileSectionPayload,
   type ProfileSkills,
   type ProfileStatistics,
 } from '@/entities/profile';
@@ -386,10 +387,18 @@ const ProfilePage = () => {
         await deleteAvatar(undefined).unwrap();
       }
 
-      const savedProfile = await updateProfileSection({
-        name: profileDraft.name.trim(),
-        avatar: pendingAvatarFile,
-      }).unwrap();
+      const payload: ProfileSectionPayload = {};
+      const name = profileDraft.name.trim();
+
+      if (name !== profileData.name) {
+        payload.name = name;
+      }
+
+      if (pendingAvatarFile) {
+        payload.avatar = pendingAvatarFile;
+      }
+
+      const savedProfile = Object.keys(payload).length > 0 ? await updateProfileSection(payload).unwrap() : profileData;
 
       const nextProfile = {
         ...profileData,
