@@ -50,7 +50,6 @@ export const SKILL_GROUPS = [
       'Kubernetes',
       'Git',
       'GitHub Actions',
-      'GitLab CI',
       'Jenkins',
       'Terraform',
       'Ansible',

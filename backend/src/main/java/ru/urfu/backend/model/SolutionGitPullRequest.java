@@ -2,14 +2,10 @@ package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
 import ru.urfu.backend.model.base.BaseEntity;
-import ru.urfu.backend.model.enums.GitProvider;
 
 @Entity
 @Table(name = "solution_git_pull_request")
 public class SolutionGitPullRequest extends BaseEntity {
-
-    @Enumerated(EnumType.STRING)
-    private GitProvider provider;
 
     private String repositoryId;
 
@@ -28,14 +24,6 @@ public class SolutionGitPullRequest extends BaseEntity {
     @OneToOne
     @JoinColumn(name = "solution_id", nullable = false, unique = true)
     private Solution solution;
-
-    public GitProvider getProvider() {
-        return provider;
-    }
-
-    public void setProvider(GitProvider provider) {
-        this.provider = provider;
-    }
 
     public String getRepositoryId() {
         return repositoryId;

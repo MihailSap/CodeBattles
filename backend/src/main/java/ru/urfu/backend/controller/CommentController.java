@@ -24,8 +24,6 @@ import ru.urfu.backend.service.ReviewService;
 import ru.urfu.backend.service.TaskService;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-
 @Tag(name = "Управление комментариями")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
@@ -184,7 +182,7 @@ public class CommentController {
         return commentMapper.mapToReviewCommentDto(updatedComment);
     }
 
-    @Operation(description = "Создание реакции на комментарий")
+    @Operation(description = "Переключение реакции на комментарий")
     @PutMapping("/{commentId}/reaction")
     public ReviewCommentResponse updateReaction(
             @PathVariable("commentId") Long commentId,
@@ -196,12 +194,7 @@ public class CommentController {
         if(comment.getParentComment() != null && rootComment.getClosedAt() != null){
             throw new ForbiddenException("Запрещено ставить реакцию на ответ в закрытом треде");
         }
-        Optional<CommentReaction> commentReaction = commentService.getCommentReaction(user, comment);
-        if(commentReaction.isPresent()){
-            commentService.updateReaction(request, commentReaction.get());
-        } else {
-            commentService.createReaction(request, user, comment);
-        }
+        commentService.toggleReaction(request, user, comment);
         return commentMapper.mapToReviewCommentDto(comment);
     }
 

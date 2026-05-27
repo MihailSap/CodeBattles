@@ -3,6 +3,7 @@ export type Styles = {
   commentLine: string;
   commentWidget: string;
   container: string;
+  editor: string;
   isAi: string;
 };
 

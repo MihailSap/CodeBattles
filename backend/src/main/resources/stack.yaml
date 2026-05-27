@@ -54,7 +54,6 @@ stack:
       - "Kubernetes"
       - "Git"
       - "GitHub Actions"
-      - "GitLab CI"
       - "Jenkins"
       - "Terraform"
       - "Ansible"

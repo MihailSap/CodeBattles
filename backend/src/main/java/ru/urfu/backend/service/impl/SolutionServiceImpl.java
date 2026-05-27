@@ -74,7 +74,6 @@ public class SolutionServiceImpl implements SolutionService {
             solution.setSolutionGitPullRequest(pr);
         }
 
-        pr.setProvider(dto.provider());
         pr.setRepositoryId(dto.repositoryId());
         pr.setRepositoryName(dto.repositoryName());
         pr.setPullRequestId(dto.pullRequestId());
@@ -93,7 +92,6 @@ public class SolutionServiceImpl implements SolutionService {
         SolutionGitPullRequestDto solutionGitPullRequestDto = request.git();
 
         SolutionGitPullRequest solutionGitPullRequest = new SolutionGitPullRequest();
-        solutionGitPullRequest.setProvider(solutionGitPullRequestDto.provider());
         solutionGitPullRequest.setRepositoryId(solutionGitPullRequestDto.repositoryId());
         solutionGitPullRequest.setRepositoryName(solutionGitPullRequestDto.repositoryName());
         solutionGitPullRequest.setPullRequestId(solutionGitPullRequestDto.pullRequestId());

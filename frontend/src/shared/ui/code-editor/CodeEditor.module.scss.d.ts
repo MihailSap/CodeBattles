@@ -1,6 +1,6 @@
 export type Styles = {
   container: string;
-  header: string;
+  controls: string;
   wrapper: string;
 };
 

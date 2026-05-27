@@ -72,6 +72,33 @@ interface LoadedReviewFile {
   error?: boolean;
 }
 
+const sortReviewFilesByName = (nodes: readonly ReviewFile[]): ReviewFile[] =>
+  [...nodes]
+    .sort((a, b) => {
+      if (a.isDirectory === b.isDirectory) {
+        return a.name.localeCompare(b.name);
+      }
+
+      return a.isDirectory ? -1 : 1;
+    })
+    .map((node) => ({
+      ...node,
+      ...(node.children ? { children: sortReviewFilesByName(node.children) } : {}),
+    }));
+
+const findFirstFileInSortedTree = (nodes: readonly ReviewFile[]): ReviewFile | null => {
+  for (const node of sortReviewFilesByName(nodes)) {
+    if (!node.isDirectory) return node;
+
+    if (node.children) {
+      const found = findFirstFileInSortedTree(node.children);
+      if (found) return found;
+    }
+  }
+
+  return null;
+};
+
 const ReviewPage = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
@@ -95,33 +122,7 @@ const ReviewPage = () => {
   const numericUserId = Number(userId ?? 0);
   const isAdmin = user?.role === 'ADMIN';
 
-  const findFileByPath = useCallback((nodes: readonly ReviewFile[], path: string): ReviewFile | null => {
-    for (const node of nodes) {
-      if (node.path === path) return node;
-
-      if (node.children) {
-        const found = findFileByPath(node.children, path);
-        if (found) return found;
-      }
-    }
-
-    return null;
-  }, []);
-
   const loadData = useCallback(async () => {
-    const findFirstFileInternal = (nodes: readonly ReviewFile[]): ReviewFile | null => {
-      for (const node of nodes) {
-        if (!node.isDirectory) return node;
-
-        if (node.children) {
-          const found = findFirstFileInternal(node.children);
-          if (found) return found;
-        }
-      }
-
-      return null;
-    };
-
     if (!reviewId) {
       navigate(ROUTES.reviews, { replace: true });
 
@@ -159,16 +160,10 @@ const ReviewPage = () => {
       }
 
       if (reviewData.files?.length > 0) {
-        setSelectedFile((prev) => {
-          if (prev) {
-            const stillExists = findFileByPath(reviewData.files, prev.path);
-            if (stillExists) return stillExists;
-          }
-
-          const firstFile = findFirstFileInternal(reviewData.files);
-
-          return firstFile ?? reviewData.files[0] ?? null;
-        });
+        const firstFile = findFirstFileInSortedTree(reviewData.files);
+        setSelectedFile(firstFile ?? null);
+      } else {
+        setSelectedFile(null);
       }
     } catch (err: unknown) {
       console.error('Review data load error:', err);
@@ -176,7 +171,7 @@ const ReviewPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [reviewId, navigate, findFileByPath, isAdmin, numericUserId, showSnackbar]);
+  }, [reviewId, navigate, isAdmin, numericUserId, showSnackbar]);
 
   useEffect(() => {
     loadData();
@@ -689,6 +684,7 @@ const ReviewPage = () => {
               <CodeViewer
                 key={selectedFile?.path}
                 value={currentFileContent?.content ?? ''}
+                filePath={selectedFile?.path ?? ''}
                 language={getLanguageByFileName(selectedFile?.name)}
                 isDiff={currentFileContent?.isDiff === true}
                 originalValue={currentFileContent?.originalContent ?? ''}
@@ -771,6 +767,7 @@ const ReviewPage = () => {
             onClose={() => setIsReportModalOpen(false)}
             onSubmit={handleReportSubmit}
             isSubmitting={isSubmitting}
+            allowIncorrectTechnicalReason={task?.organizationId != null}
           />
         )}
 

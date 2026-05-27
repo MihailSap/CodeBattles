@@ -131,20 +131,6 @@
   justify-content: center;
 }
 
-.gitButton {
-  padding: 0.1875rem 1.75rem;
-  border-radius: 7px;
-  border: 2px solid var(--color-success);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-text-inverse);
-  background-color: var(--color-success);
-  cursor: pointer;
-  --transition-extra:
-    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
-    filter var(--transition-fast);
-}
-
 .manualButton {
   display: inline-flex;
   align-items: center;
@@ -364,7 +350,6 @@
     gap: 0.625rem;
   }
 
-  .gitButton,
   .manualButton {
     font-size: 0.875rem;
     padding: 0.1875rem 1.125rem;
@@ -423,10 +408,6 @@
     gap: 0.625rem;
   }
 
-  .gitButton {
-    font-size: 0.875rem;
-  }
-
   .manualButton {
     font-size: 0.875rem;
   }
@@ -482,13 +463,6 @@
 @media (hover: hover) and (pointer: fine) {
   .reviewerName:hover {
     background-color: var(--color-accent-hover-bg);
-  }
-
-  .gitButton {
-    &:hover {
-      background-color: transparent;
-      color: var(--color-success);
-    }
   }
 
   .manualButton {

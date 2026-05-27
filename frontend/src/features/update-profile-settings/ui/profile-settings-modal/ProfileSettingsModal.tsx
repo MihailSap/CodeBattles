@@ -30,7 +30,6 @@ const initialNotifications = {
 
 const initialLinkedAccounts = {
   githubLogin: '',
-  gitlabLogin: '',
 } satisfies LinkedAccounts;
 
 interface ProfileSettingsModalProps {
@@ -219,7 +218,6 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: ProfileSettingsModalP
 
   const isFormDisabled = isPasswordSubmitting || isLinkedAccountsLoading;
   const isGithubLinked = Boolean(linkedAccounts.githubLogin);
-  const isGitlabLinked = Boolean(linkedAccounts.gitlabLogin);
 
   return (
     <ModalShell
@@ -352,7 +350,7 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: ProfileSettingsModalP
           <section className={[profileSettingsModalStyles.section, profileSettingsModalStyles.isAccounts].join(' ')}>
             <h3 className={profileSettingsModalStyles.sectionTitle}>Связанные аккаунты</h3>
 
-            <div className={profileSettingsModalStyles.accountsGrid}>
+            <div className={profileSettingsModalStyles.accounts}>
               <article className={[profileSettingsModalStyles.account, profileSettingsModalStyles.isGithub].join(' ')}>
                 <h4 className={profileSettingsModalStyles.accountTitle}>GitHub</h4>
                 {isGithubLinked ? (
@@ -373,33 +371,6 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: ProfileSettingsModalP
                     className={[profileSettingsModalStyles.actionButton, profileSettingsModalStyles.isLink].join(' ')}
                     type="button"
                     onClick={() => handleLinkAccount('github')}
-                    disabled={isLinkActionLoading || isLinkedAccountsLoading}
-                  >
-                    Привязать аккаунт
-                  </button>
-                )}
-              </article>
-
-              <article className={[profileSettingsModalStyles.account, profileSettingsModalStyles.isGitlab].join(' ')}>
-                <h4 className={profileSettingsModalStyles.accountTitle}>GitLab</h4>
-                {isGitlabLinked ? (
-                  <div className={profileSettingsModalStyles.accountRow}>
-                    <span className={profileSettingsModalStyles.accountLogin}>{linkedAccounts.gitlabLogin}</span>
-                    <button
-                      className={profileSettingsModalStyles.unlinkButton}
-                      type="button"
-                      onClick={() => handleUnlinkAccount('gitlab')}
-                      disabled={isLinkActionLoading || isLinkedAccountsLoading}
-                      aria-label="Отвязать GitLab аккаунт"
-                    >
-                      <CrossIcon />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className={[profileSettingsModalStyles.actionButton, profileSettingsModalStyles.isLink].join(' ')}
-                    type="button"
-                    onClick={() => handleLinkAccount('gitlab')}
                     disabled={isLinkActionLoading || isLinkedAccountsLoading}
                   >
                     Привязать аккаунт

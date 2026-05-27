@@ -1,20 +1,15 @@
 import { z } from 'zod';
 
-export const gitUploadFormSchema = z.object({
-  sourceBranch: z.string().min(1, 'Укажите исходную ветку'),
-  targetBranch: z.string().min(1, 'Укажите целевую ветку'),
-  repositoryName: z.string().url('Укажите корректную ссылку на репозиторий'),
-});
-
-export type GitUploadFormValues = z.infer<typeof gitUploadFormSchema>;
-
 export const solutionUploadFormSchema = z
   .object({
-    activeTab: z.enum(['manual', 'files', 'archive']),
+    activeTab: z.enum(['manual', 'files', 'archive', 'github']),
     code: z.string().default(''),
     language: z.string().min(1, 'Выберите язык'),
     files: z.array(z.instanceof(File)).default([]),
     archive: z.instanceof(File).nullable().default(null),
+    sourceBranch: z.string().default(''),
+    targetBranch: z.string().default(''),
+    repositoryName: z.string().default(''),
   })
   .superRefine((values, context) => {
     if (values.activeTab === 'manual' && values.code.trim() === '') {
@@ -39,6 +34,32 @@ export const solutionUploadFormSchema = z
         path: ['archive'],
         message: 'Добавьте архив',
       });
+    }
+
+    if (values.activeTab === 'github') {
+      if (!z.string().url().safeParse(values.repositoryName).success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['repositoryName'],
+          message: 'Укажите корректную ссылку на репозиторий',
+        });
+      }
+
+      if (!values.sourceBranch.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['sourceBranch'],
+          message: 'Укажите исходную ветку',
+        });
+      }
+
+      if (!values.targetBranch.trim()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['targetBranch'],
+          message: 'Укажите целевую ветку',
+        });
+      }
     }
   });
 
@@ -72,7 +93,6 @@ export interface GitSolutionUploadPayload {
   type: 'git';
   uploadType: 'GIT_PULL_REQUEST';
   git: {
-    provider: 'GITHUB' | 'GITLAB';
     sourceBranch: string;
     targetBranch: string;
     repositoryName: string;

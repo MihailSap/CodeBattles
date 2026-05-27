@@ -147,27 +147,31 @@ public class CommentServiceImpl implements CommentService {
         return commentReport;
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Optional<CommentReaction> getCommentReaction(User user, Comment comment) {
-        return commentReactionRepository.findByUserAndComment(user, comment);
-    }
-
     @Transactional
     @Override
-    public CommentReaction updateReaction(ToggleReactionRequest request, CommentReaction reaction) {
-        reaction.setReaction(request.reaction());
-        return commentReactionRepository.save(reaction);
-    }
+    public void toggleReaction(ToggleReactionRequest request, User user, Comment comment) {
+        Optional<CommentReaction> existingReaction = commentReactionRepository.findByUserAndComment(user, comment);
 
-    @Transactional
-    @Override
-    public CommentReaction createReaction(ToggleReactionRequest request, User user, Comment comment) {
+        if (existingReaction.isPresent()) {
+            CommentReaction reaction = existingReaction.get();
+
+            if (reaction.getReaction().equals(request.reaction())) {
+                comment.getReactions().remove(reaction);
+                commentReactionRepository.delete(reaction);
+                return;
+            }
+
+            reaction.setReaction(request.reaction());
+            commentReactionRepository.save(reaction);
+            return;
+        }
+
         CommentReaction reaction = new CommentReaction();
         reaction.setUser(user);
         reaction.setComment(comment);
         reaction.setReaction(request.reaction());
-        return commentReactionRepository.save(reaction);
+        commentReactionRepository.save(reaction);
+        comment.getReactions().add(reaction);
     }
 
     @Transactional

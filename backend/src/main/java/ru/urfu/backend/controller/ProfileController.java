@@ -81,11 +81,11 @@ public class ProfileController {
         User user = authService.getAuthenticatedUser();
         String githubId = user.getGithubId();
         if (githubId == null) {
-            return new LinkedAccountsResponse("", "");
+            return new LinkedAccountsResponse("");
         }
 
         String githubLogin = githubClient.fetchLoginByGithubId(githubId);
-        return new LinkedAccountsResponse(githubLogin, "");
+        return new LinkedAccountsResponse(githubLogin);
     }
 
     @Operation(description = "Обновление аватара текущего пользователя")

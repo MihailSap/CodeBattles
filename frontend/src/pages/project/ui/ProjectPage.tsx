@@ -46,6 +46,7 @@ import {
   truncateText,
 } from '@/entities/project';
 import { detailLayoutStyles as projectPageStyles } from '@/widgets/detail-layout';
+
 type AccessErrorShape = {
   status: number;
   code: string;

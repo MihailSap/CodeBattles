@@ -236,9 +236,8 @@
 
 .authSocial {
   width: min(23.75rem, calc(100% - 3.75rem));
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  display: flex;
+  justify-content: center;
 }
 
 .button {
@@ -266,13 +265,6 @@
   &.isGithub {
     color: var(--color-text-primary);
     border-color: var(--color-text-primary);
-  }
-}
-
-.button {
-  &.isGitlab {
-    color: var(--color-brand-gitlab);
-    border-color: var(--color-brand-gitlab);
   }
 }
 
@@ -349,10 +341,6 @@
     }
   }
 
-  .button.isGitlab:hover {
-    background-color: rgba(252, 109, 38, 0.1);
-  }
-
   .submit:hover:enabled {
     background-color: var(--color-surface);
     color: var(--color-accent);
@@ -403,10 +391,6 @@
 
   .toggle {
     justify-self: center;
-  }
-
-  .authSocial {
-    grid-template-columns: 1fr;
   }
 }
 

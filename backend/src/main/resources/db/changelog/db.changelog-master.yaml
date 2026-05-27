@@ -91,3 +91,5 @@ databaseChangeLog:
       file: db/changelog/changeset/045-create-solution-git-pull-request.yaml
   - include:
       file: db/changelog/changeset/046-recreate-solution-git-pull-request.yaml
+  - include:
+      file: db/changelog/changeset/047-drop-solution-git-provider.yaml

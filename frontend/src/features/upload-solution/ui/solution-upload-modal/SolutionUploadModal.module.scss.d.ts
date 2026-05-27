@@ -4,9 +4,12 @@ export type Styles = {
   archiveItem: string;
   archiveName: string;
   backdrop: string;
+  centeredTabs: string;
   close: string;
   content: string;
   emptyState: string;
+  error: string;
+  field: string;
   fileIcon: string;
   fileInfo: string;
   fileItem: string;
@@ -15,8 +18,11 @@ export type Styles = {
   files: string;
   filesList: string;
   footer: string;
+  gitFields: string;
   head: string;
+  input: string;
   isBottom: string;
+  isError: string;
   manual: string;
   menu: string;
   root: string;

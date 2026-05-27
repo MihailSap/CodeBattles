@@ -239,14 +239,14 @@
   color: var(--color-text-primary);
 }
 
-.accountsGrid {
+.accounts {
   margin-top: 1.25rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  display: flex;
+  justify-content: center;
 }
 
 .account {
+  width: 50%;
   border: 2px solid;
   border-radius: 10px;
   padding: 1.25rem;
@@ -259,23 +259,12 @@
   }
 }
 
-.account {
-  &.isGitlab {
-    background: var(--color-surface);
-    border-color: var(--color-brand-gitlab);
-  }
-}
-
 .accountTitle {
   margin: 0;
   font-weight: 600;
   font-size: 1.5rem;
   text-align: center;
   color: var(--color-text-inverse);
-}
-
-.account.isGitlab .accountTitle {
-  color: var(--color-brand-gitlab);
 }
 
 .accountRow {
@@ -292,10 +281,6 @@
   color: var(--color-text-inverse);
   min-width: 0;
   overflow-wrap: anywhere;
-}
-
-.account.isGitlab .accountLogin {
-  color: var(--color-text-primary);
 }
 
 .unlinkButton {
@@ -340,8 +325,8 @@
     }
   }
 
-  .accountsGrid {
-    grid-template-columns: 1fr;
+  .account {
+    width: 100%;
   }
 }
 
@@ -423,9 +408,8 @@
     font-size: 0.875rem;
   }
 
-  .accountsGrid {
+  .accounts {
     margin-top: 0.9375rem;
-    gap: 0.9375rem;
   }
 
   .account {

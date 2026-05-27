@@ -228,7 +228,6 @@
 }
 
 .modeSwitch {
-  width: 18.75rem;
   border-radius: 7px;
   background: var(--color-surface);
   position: relative;
@@ -258,6 +257,7 @@
   color: var(--color-accent);
   font-size: 1rem;
   font-weight: 600;
+  white-space: nowrap;
   padding: 0.3125rem 0.9375rem;
   cursor: pointer;
   position: relative;

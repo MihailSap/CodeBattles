@@ -10,7 +10,6 @@ export type Styles = {
   content: string;
   fileTreeCard: string;
   finishButton: string;
-  gitButton: string;
   isError: string;
   isSuccess: string;
   label: string;

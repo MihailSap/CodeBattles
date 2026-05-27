@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 047-drop-solution-git-provider
+      author: Codex
+      changes:
+        - dropColumn:
+            tableName: solution_git_pull_request
+            columnName: provider
+      rollback:
+        - addColumn:
+            tableName: solution_git_pull_request
+            columns:
+              - column:
+                  name: provider
+                  type: VARCHAR(50)

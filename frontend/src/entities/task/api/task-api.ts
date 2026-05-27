@@ -102,7 +102,6 @@ export interface ManualSubmitSolutionPayload {
 }
 
 export interface GitPullRequestPayload {
-  provider: 'GITHUB' | 'GITLAB';
   sourceBranch: string;
   targetBranch: string;
   repositoryName: string;
@@ -287,7 +286,6 @@ const toGitSolutionFormData = (taskId: EntityId, payload: GitSubmitSolutionPaylo
   formData.append('taskId', String(taskId));
   formData.append('uploadType', payload.uploadType);
   formData.append('revealAuthorAfterReview', String(Boolean(payload.revealAuthorAfterReview)));
-  formData.append('git.provider', payload.git.provider);
   formData.append('git.repositoryId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
   formData.append('git.repositoryName', payload.git.repositoryName);
   formData.append('git.pullRequestId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);

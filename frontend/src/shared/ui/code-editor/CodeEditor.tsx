@@ -1,4 +1,6 @@
 import Editor, { type OnChange } from '@monaco-editor/react';
+import { useCodeEditorTheme } from '@/shared/lib/theme';
+import { CodeThemeSwitch } from '@/shared/ui/code-toolbar';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import codeEditorStyles from './CodeEditor.module.scss';
 
@@ -97,9 +99,12 @@ interface CodeEditorProps {
 }
 
 const CodeEditor = ({ value, onChange, language, onLanguageChange }: CodeEditorProps) => {
+  const { preference, monacoTheme, setPreference } = useCodeEditorTheme();
+
   return (
     <div className={codeEditorStyles.container}>
-      <div className={codeEditorStyles.header}>
+      <div className={codeEditorStyles.controls}>
+        <CodeThemeSwitch value={preference} onChange={setPreference} />
         <ReviewDropdown label="Язык:" options={LANGUAGES} value={language} onChange={onLanguageChange} />
       </div>
       <div className={codeEditorStyles.wrapper}>
@@ -108,7 +113,7 @@ const CodeEditor = ({ value, onChange, language, onLanguageChange }: CodeEditorP
           language={language}
           value={value}
           onChange={onChange}
-          theme="vs-dark"
+          theme={monacoTheme}
           options={{
             minimap: {
               enabled: false,

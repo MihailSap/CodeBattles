@@ -1,4 +1,4 @@
 package ru.urfu.backend.dto;
 
-public record LinkedAccountsResponse(String githubLogin, String gitlabLogin) {
+public record LinkedAccountsResponse(String githubLogin) {
 }

@@ -5,7 +5,6 @@ import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CommentService {
 
@@ -19,9 +18,7 @@ public interface CommentService {
 
     int getReplyDepth(Comment comment);
 
-    Optional<CommentReaction> getCommentReaction(User user, Comment comment);
-
-    CommentReaction updateReaction(ToggleReactionRequest request, CommentReaction reaction);
+    void toggleReaction(ToggleReactionRequest request, User user, Comment comment);
 
     Comment createComment(CreateReviewCommentRequest request, User user, Review review);
 
@@ -35,8 +32,6 @@ public interface CommentService {
     );
 
     CommentReport createReport(ReportCommentRequestDto request, User user, Comment comment);
-
-    CommentReaction createReaction(ToggleReactionRequest request, User user, Comment comment);
 
     Comment updateState(UpdateThreadStateRequest request, User user, Comment comment);
 

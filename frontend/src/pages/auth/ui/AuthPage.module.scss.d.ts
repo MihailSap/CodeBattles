@@ -14,7 +14,6 @@ export type Styles = {
   isActive: string;
   isError: string;
   isGithub: string;
-  isGitlab: string;
   isLogin: string;
   left: string;
   link: string;

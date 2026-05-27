@@ -6,7 +6,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '@/shared/lib/theme';
 import GitHubIconLight from '@/shared/assets/GitHub-icon-light.svg';
 import GitHubIconDark from '@/shared/assets/GitHub-icon-dark.svg';
-import GitLabIcon from '@/shared/assets/GitLab-icon.svg';
 import logoLight from '@/shared/assets/logo-light.svg';
 import logoDark from '@/shared/assets/logo-dark.svg';
 import { ThemeToggle } from '@/shared/ui/theme-toggle';
@@ -342,10 +341,6 @@ const AuthPage = () => {
                       >
                         <span>Продолжить с GitHub</span>
                         <img src={isDark ? GitHubIconDark : GitHubIconLight} alt="GitHub" />
-                      </button>
-                      <button className={[authPageStyles.button, authPageStyles.isGitlab].join(' ')} type="button">
-                        <span>Продолжить с GitLab</span>
-                        <img src={GitLabIcon} alt="GitLab" />
                       </button>
                     </div>
 

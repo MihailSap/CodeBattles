@@ -1,6 +1,8 @@
 import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import Editor, { DiffEditor, type Monaco, type MonacoDiffEditor } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import { useCodeEditorTheme } from '@/shared/lib/theme';
+import CodeToolbar from '@/shared/ui/code-toolbar';
 import codeViewerStyles from './CodeViewer.module.scss';
 
 const RANGE_COLORS = [
@@ -48,6 +50,7 @@ interface CodeViewerProps {
   value: string;
   originalValue?: string;
   language?: string;
+  filePath?: string;
   isDiff?: boolean;
   comments?: CodeCommentRange[];
   onLineClick?: (range: SelectedLineRange) => void;
@@ -55,24 +58,40 @@ interface CodeViewerProps {
   canComment?: boolean;
 }
 
-const getMostSpecificRangeAtLine = (ranges: readonly DecoratedLineRange[], lineNumber: number) =>
-  ranges.reduce<DecoratedLineRange | null>((closestRange, range) => {
-    if (lineNumber < range.startLine || lineNumber > range.endLine) {
-      return closestRange;
-    }
+const isSameRange = (left: SelectedLineRange | null, right: SelectedLineRange): boolean =>
+  left?.startLine === right.startLine && left.endLine === right.endLine;
 
-    if (!closestRange || range.endLine - range.startLine < closestRange.endLine - closestRange.startLine) {
-      return range;
-    }
+const getSelectableRangesAtLine = (ranges: readonly DecoratedLineRange[], lineNumber: number) =>
+  ranges
+    .filter((range) => lineNumber >= range.startLine && lineNumber <= range.endLine)
+    .sort((left, right) => {
+      const lengthDifference = left.endLine - left.startLine - (right.endLine - right.startLine);
 
-    return closestRange;
-  }, null);
+      return lengthDifference || left.startLine - right.startLine || left.endLine - right.endLine;
+    });
+
+const getNextRangeAtLine = (
+  ranges: readonly DecoratedLineRange[],
+  lineNumber: number,
+  selectedRange: SelectedLineRange | null
+): DecoratedLineRange | null => {
+  const selectableRanges = getSelectableRangesAtLine(ranges, lineNumber);
+
+  if (selectableRanges.length === 0) {
+    return null;
+  }
+
+  const selectedIndex = selectableRanges.findIndex((range) => isSameRange(selectedRange, range));
+
+  return selectableRanges[(selectedIndex + 1) % selectableRanges.length] ?? null;
+};
 
 const CodeViewer = memo(
   ({
     value,
     originalValue,
     language,
+    filePath = 'solution',
     isDiff = false,
     comments = [],
     onLineClick,
@@ -84,6 +103,8 @@ const CodeViewer = memo(
     const decorationsRef = useRef<editor.IEditorDecorationsCollection | string[] | null>(null);
     const widgetRef = useRef<editor.IContentWidget | null>(null);
     const [selectedRange, setSelectedRange] = useState<SelectedLineRange | null>(null);
+    const selectedRangeRef = useRef<SelectedLineRange | null>(null);
+    const { preference, monacoTheme, setPreference } = useCodeEditorTheme();
 
     const [isNarrowScreen, setIsNarrowScreen] = useState(() =>
       typeof window !== 'undefined' ? window.innerWidth <= 500 : false
@@ -234,26 +255,23 @@ const CodeViewer = memo(
       }
 
       let css = '';
+      let selectedCss = '';
 
       ranges.forEach((range, index) => {
         const isAI = range.isAI;
-        const isSelected = selected && selected.startLine === range.startLine && selected.endLine === range.endLine;
-        let color;
+        let color = isAI ? AI_RANGE_COLOR : (RANGE_COLORS[index % RANGE_COLORS.length] ?? AI_RANGE_COLOR);
 
-        if (isAI) {
-          color = isSelected ? AI_RANGE_COLOR_SELECTED : AI_RANGE_COLOR;
-        } else {
+        if (isSameRange(selected, range)) {
           const colorIdx = index % RANGE_COLORS.length;
 
-          color = isSelected
-            ? (RANGE_COLORS_SELECTED[colorIdx] ?? AI_RANGE_COLOR_SELECTED)
-            : (RANGE_COLORS[colorIdx] ?? AI_RANGE_COLOR);
+          color = isAI ? AI_RANGE_COLOR_SELECTED : (RANGE_COLORS_SELECTED[colorIdx] ?? AI_RANGE_COLOR_SELECTED);
+          selectedCss = `.range-idx-${index} { background-color: ${color} !important; }\n`;
+        } else {
+          css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
         }
-
-        css += `.range-idx-${index} { background-color: ${color} !important; }\n`;
       });
 
-      styleEl.textContent = css;
+      styleEl.textContent = css + selectedCss;
     }, []);
 
     const updateDecorations = useCallback(() => {
@@ -337,7 +355,7 @@ const CodeViewer = memo(
 
         if ((isGutter || isContent) && e.target.position) {
           const lineNum = e.target.position.lineNumber;
-          const range = getMostSpecificRangeAtLine(getUniqueRanges(), lineNum);
+          const range = getNextRangeAtLine(getUniqueRanges(), lineNum, selectedRangeRef.current);
 
           if (range && latestProps.current.onLineClick) {
             const newRange = {
@@ -345,6 +363,7 @@ const CodeViewer = memo(
               endLine: range.endLine,
             };
 
+            selectedRangeRef.current = newRange;
             setSelectedRange(newRange);
             latestProps.current.onLineClick(newRange);
           }
@@ -431,27 +450,30 @@ const CodeViewer = memo(
       <div
         className={codeViewerStyles.container}
         style={{
-          height: `${calculatedHeight}px`,
+          height: `${calculatedHeight + 52}px`,
         }}
       >
-        {isDiff ? (
-          <DiffEditor
-            {...(language !== undefined ? { language } : {})}
-            {...(originalValue !== undefined ? { original: originalValue } : {})}
-            modified={value}
-            theme="vs-dark"
-            options={editorOptions}
-            onMount={handleEditorDidMount}
-          />
-        ) : (
-          <Editor
-            {...(language !== undefined ? { language } : {})}
-            value={value}
-            theme="vs-dark"
-            options={editorOptions}
-            onMount={handleEditorDidMount}
-          />
-        )}
+        <CodeToolbar filePath={filePath} themePreference={preference} onThemePreferenceChange={setPreference} />
+        <div className={codeViewerStyles.editor}>
+          {isDiff ? (
+            <DiffEditor
+              {...(language !== undefined ? { language } : {})}
+              {...(originalValue !== undefined ? { original: originalValue } : {})}
+              modified={value}
+              theme={monacoTheme}
+              options={editorOptions}
+              onMount={handleEditorDidMount}
+            />
+          ) : (
+            <Editor
+              {...(language !== undefined ? { language } : {})}
+              value={value}
+              theme={monacoTheme}
+              options={editorOptions}
+              onMount={handleEditorDidMount}
+            />
+          )}
+        </div>
       </div>
     );
   }

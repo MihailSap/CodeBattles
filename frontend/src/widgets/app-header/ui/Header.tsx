@@ -376,6 +376,7 @@ const Header = () => {
                   title="Личный кабинет"
                 >
                   <AvatarIcon />
+                  <span>Личный кабинет</span>
                 </Link>
 
                 {isAdmin && (
@@ -383,9 +384,10 @@ const Header = () => {
                     className={headerStyles.menuLink}
                     to={ROUTES.admin}
                     onClick={() => setIsMenuOpen(false)}
-                    title="Админ панель"
+                    title="Админ-панель"
                   >
                     <AdminIcon />
+                    <span>Админ-панель</span>
                   </Link>
                 )}
 
@@ -396,6 +398,7 @@ const Header = () => {
                   disabled={isLoading}
                 >
                   <ExitIcon />
+                  <span>Выход</span>
                 </button>
               </div>
             </div>

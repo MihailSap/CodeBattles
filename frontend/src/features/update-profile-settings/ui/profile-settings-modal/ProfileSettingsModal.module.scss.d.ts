@@ -2,7 +2,7 @@ export type Styles = {
   account: string;
   accountLogin: string;
   accountRow: string;
-  accountsGrid: string;
+  accounts: string;
   accountTitle: string;
   actionButton: string;
   checkboxRow: string;
@@ -16,7 +16,6 @@ export type Styles = {
   isAccounts: string;
   isError: string;
   isGithub: string;
-  isGitlab: string;
   isLink: string;
   isNotifications: string;
   isReset: string;

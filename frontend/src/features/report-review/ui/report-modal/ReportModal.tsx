@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
-import { REPORT_REASON_LABEL, REPORT_REASONS, type ReportReason } from '@/entities/review';
+import { REPORT_REASON, REPORT_REASON_LABEL, REPORT_REASONS, type ReportReason } from '@/entities/review';
 import { CheckIcon } from '@/shared/ui/icons';
 import { reportFormSchema, type ReportFormInput, type ReportFormValues } from '../../model/report-schema';
 import reportModalStyles from './ReportModal.module.scss';
@@ -12,9 +12,16 @@ interface ReportModalProps {
   onClose: () => void;
   onSubmit: (reason: ReportReason, comment: string) => void | Promise<void>;
   isSubmitting: boolean;
+  allowIncorrectTechnicalReason?: boolean;
 }
 
-const ReportModal = ({ isOpen, onClose, onSubmit, isSubmitting }: ReportModalProps) => {
+const ReportModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  allowIncorrectTechnicalReason = true,
+}: ReportModalProps) => {
   const {
     register,
     handleSubmit,
@@ -31,6 +38,10 @@ const ReportModal = ({ isOpen, onClose, onSubmit, isSubmitting }: ReportModalPro
   useBodyScrollLock(isOpen);
   if (!isOpen) return null;
   const canSubmit = isValid && !isSubmitting;
+
+  const availableReasons = allowIncorrectTechnicalReason
+    ? REPORT_REASONS
+    : REPORT_REASONS.filter((reason) => reason !== REPORT_REASON.INCORRECT);
 
   const submit = async ({ selectedReason: reason }: ReportFormValues) => {
     if (!canSubmit) return;
@@ -57,7 +68,7 @@ const ReportModal = ({ isOpen, onClose, onSubmit, isSubmitting }: ReportModalPro
     >
       <form className={reportModalStyles.content} onSubmit={handleSubmit(submit)}>
         <div className={reportModalStyles.reasons}>
-          {REPORT_REASONS.map((reason) => (
+          {availableReasons.map((reason) => (
             <label key={reason} className={reportModalStyles.radioLabel}>
               <input
                 type="radio"

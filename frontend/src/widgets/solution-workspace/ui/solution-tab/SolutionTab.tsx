@@ -27,10 +27,6 @@ import Spinner from '@/shared/ui/spinner';
 import { getLanguageByFileName } from '@/shared/lib';
 import solutionTabStyles from './SolutionTab.module.scss';
 
-const GitUploadModal = lazy(() =>
-  import('@/features/upload-solution').then(({ GitUploadModal }) => ({ default: GitUploadModal }))
-);
-
 const ReportModal = lazy(() =>
   import('@/features/report-review').then(({ ReportModal }) => ({ default: ReportModal }))
 );
@@ -50,6 +46,33 @@ interface LoadedReviewFile {
   isDiff?: boolean;
   error?: boolean;
 }
+
+const sortReviewFilesByName = (nodes: readonly ReviewFile[]): ReviewFile[] =>
+  [...nodes]
+    .sort((a, b) => {
+      if (a.isDirectory === b.isDirectory) {
+        return a.name.localeCompare(b.name);
+      }
+
+      return a.isDirectory ? -1 : 1;
+    })
+    .map((node) => ({
+      ...node,
+      ...(node.children ? { children: sortReviewFilesByName(node.children) } : {}),
+    }));
+
+const findFirstFileInSortedTree = (nodes: readonly ReviewFile[]): ReviewFile | null => {
+  for (const node of sortReviewFilesByName(nodes)) {
+    if (!node.isDirectory) return node;
+
+    if (node.children) {
+      const found = findFirstFileInSortedTree(node.children);
+      if (found) return found;
+    }
+  }
+
+  return null;
+};
 
 interface SolutionTabProps {
   task: Task;
@@ -98,8 +121,7 @@ const SolutionTab = ({
 }: SolutionTabProps) => {
   const [review, setReview] = useState<ReviewDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-  const [isGitModalOpen, setIsGitModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileTreeItem | null>(null);
   const [selectedLineRange, setSelectedLineRange] = useState<SelectedLineRange | null>(null);
@@ -138,19 +160,6 @@ const SolutionTab = ({
   );
 
   const loadReview = useCallback(async () => {
-    const findFirstFileInternal = (nodes: readonly ReviewFile[]): ReviewFile | null => {
-      for (const node of nodes) {
-        if (!node.isDirectory) return node;
-
-        if (node.children) {
-          const found = findFirstFileInternal(node.children);
-          if (found) return found;
-        }
-      }
-
-      return null;
-    };
-
     if (task.isMock || isRealTaskReviewer || task.status === 'IN_PROGRESS') {
       setReview(null);
       setLoading(false);
@@ -164,12 +173,10 @@ const SolutionTab = ({
       setRevealName(Boolean(data?.revealAuthorAfterReview));
 
       if (data?.files?.length > 0) {
-        setSelectedFile((prev) => {
-          if (prev) return prev;
-          const firstFile = findFirstFileInternal(data.files);
-
-          return firstFile ?? data.files[0] ?? null;
-        });
+        const firstFile = findFirstFileInSortedTree(data.files);
+        setSelectedFile(firstFile ?? null);
+      } else {
+        setSelectedFile(null);
       }
     } catch (err: unknown) {
       console.error('Load review error:', err);
@@ -254,8 +261,7 @@ const SolutionTab = ({
 
       await onTaskUpdated?.();
 
-      setIsManualModalOpen(false);
-      setIsGitModalOpen(false);
+      setIsUploadModalOpen(false);
       showSnackbar('Решение успешно отправлено на ревью');
     } catch {
       showSnackbar('Возникла непредвиденная ошибка. Попробуйте еще раз.', solutionTabStyles.isError);
@@ -289,8 +295,7 @@ const SolutionTab = ({
 
       await onTaskUpdated?.();
 
-      setIsManualModalOpen(false);
-      setIsGitModalOpen(false);
+      setIsUploadModalOpen(false);
       showSnackbar('Решение переотправлено на ревью');
     } catch {
       showSnackbar('Ошибка при переотправке', solutionTabStyles.isError);
@@ -559,11 +564,8 @@ const SolutionTab = ({
         <div className={solutionTabStyles.uploadBlock}>
           <div className={solutionTabStyles.uploadText}>Загрузите решение задачи</div>
           <div className={solutionTabStyles.uploadActions}>
-            <button className={solutionTabStyles.gitButton} type="button" onClick={() => setIsGitModalOpen(true)}>
-              Git-репозиторий
-            </button>
-            <button className={solutionTabStyles.manualButton} type="button" onClick={() => setIsManualModalOpen(true)}>
-              Вручную
+            <button className={solutionTabStyles.manualButton} type="button" onClick={() => setIsUploadModalOpen(true)}>
+              Загрузить
             </button>
           </div>
         </div>
@@ -632,6 +634,7 @@ const SolutionTab = ({
                 <CodeViewer
                   key={selectedFile?.path}
                   value={codeContent}
+                  filePath={selectedFile?.path ?? ''}
                   language={getLanguageByFileName(selectedFile?.name)}
                   isDiff={currentFileContent?.isDiff === true}
                   originalValue={originalCodeContent}
@@ -659,18 +662,11 @@ const SolutionTab = ({
                     <h3 className={solutionTabStyles.cardTitle}>Отправить на проверку</h3>
                     <div className={solutionTabStyles.uploadActions}>
                       <button
-                        className={solutionTabStyles.gitButton}
-                        type="button"
-                        onClick={() => setIsGitModalOpen(true)}
-                      >
-                        Git-репозиторий
-                      </button>
-                      <button
                         className={solutionTabStyles.manualButton}
                         type="button"
-                        onClick={() => setIsManualModalOpen(true)}
+                        onClick={() => setIsUploadModalOpen(true)}
                       >
-                        Вручную
+                        Загрузить
                       </button>
                     </div>
                   </div>
@@ -793,19 +789,10 @@ const SolutionTab = ({
       )}
 
       <Suspense fallback={null}>
-        {isManualModalOpen && (
+        {isUploadModalOpen && (
           <SolutionUploadModal
-            isOpen={isManualModalOpen}
-            onClose={() => setIsManualModalOpen(false)}
-            onSubmit={isRework ? handleResubmit : handleUploadSubmit}
-            isSubmitting={isSubmitting}
-          />
-        )}
-
-        {isGitModalOpen && (
-          <GitUploadModal
-            isOpen={isGitModalOpen}
-            onClose={() => setIsGitModalOpen(false)}
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
             onSubmit={isRework ? handleResubmit : handleUploadSubmit}
             isSubmitting={isSubmitting}
           />
@@ -817,6 +804,7 @@ const SolutionTab = ({
             onClose={() => setIsReportModalOpen(false)}
             onSubmit={handleReportSubmit}
             isSubmitting={isSubmitting}
+            allowIncorrectTechnicalReason={task.organizationId != null}
           />
         )}
       </Suspense>

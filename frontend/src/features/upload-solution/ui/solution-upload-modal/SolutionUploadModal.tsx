@@ -27,6 +27,10 @@ const TABS = [
     key: 'archive',
     label: 'Загрузка архивом',
   },
+  {
+    key: 'github',
+    label: 'GitHub',
+  },
 ];
 
 const MAX_FILES = 100;
@@ -115,7 +119,8 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
     handleSubmit,
     reset,
     setValue,
-    formState: { isValid },
+    register,
+    formState: { errors, isValid },
   } = useForm<SolutionUploadFormInput, unknown, SolutionUploadFormValues>({
     resolver: zodResolver(solutionUploadFormSchema),
     defaultValues: {
@@ -124,6 +129,9 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
       language: 'javascript',
       files: [],
       archive: null,
+      sourceBranch: '',
+      targetBranch: '',
+      repositoryName: '',
     },
     mode: 'onChange',
   });
@@ -191,7 +199,16 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
     return isSubmitting || !isValid;
   };
 
-  const submit = async ({ activeTab, code, language, files, archive }: SolutionUploadFormValues) => {
+  const submit = async ({
+    activeTab,
+    code,
+    language,
+    files,
+    archive,
+    sourceBranch,
+    targetBranch,
+    repositoryName,
+  }: SolutionUploadFormValues) => {
     if (isSubmitDisabled()) return;
     let payload: SolutionUploadPayload;
 
@@ -221,7 +238,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
           isFileObj: true,
         })),
       };
-    } else if (archive) {
+    } else if (activeTab === 'archive' && archive) {
       payload = {
         type: 'archive',
         files: [
@@ -230,6 +247,16 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
             isFileObj: true,
           },
         ],
+      };
+    } else if (activeTab === 'github') {
+      payload = {
+        type: 'git',
+        uploadType: 'GIT_PULL_REQUEST',
+        git: {
+          sourceBranch,
+          targetBranch,
+          repositoryName,
+        },
       };
     } else {
       return;
@@ -256,7 +283,14 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
         <Controller
           control={control}
           name="activeTab"
-          render={({ field }) => <EntityTabs tabs={TABS} activeKey={field.value} onChange={field.onChange} />}
+          render={({ field }) => (
+            <EntityTabs
+              tabs={TABS}
+              activeKey={field.value}
+              onChange={field.onChange}
+              wrapClassName={solutionUploadModalStyles.centeredTabs}
+            />
+          )}
         />
       </div>
 
@@ -388,6 +422,67 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div
+            className={solutionUploadModalStyles.tabPane}
+            style={{
+              display: activeTab === 'github' ? 'flex' : 'none',
+            }}
+          >
+            <div className={solutionUploadModalStyles.gitFields}>
+              <div className={solutionUploadModalStyles.field}>
+                <input
+                  className={[
+                    solutionUploadModalStyles.input,
+                    errors.repositoryName ? solutionUploadModalStyles.isError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  type="url"
+                  placeholder="Ссылка на GitHub-репозиторий*"
+                  aria-label="Ссылка на GitHub-репозиторий"
+                  {...register('repositoryName')}
+                />
+                {errors.repositoryName && (
+                  <p className={solutionUploadModalStyles.error}>{errors.repositoryName.message}</p>
+                )}
+              </div>
+              <div className={solutionUploadModalStyles.field}>
+                <input
+                  className={[
+                    solutionUploadModalStyles.input,
+                    errors.sourceBranch ? solutionUploadModalStyles.isError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  type="text"
+                  placeholder="Исходная ветка*"
+                  aria-label="Исходная ветка"
+                  {...register('sourceBranch')}
+                />
+                {errors.sourceBranch && (
+                  <p className={solutionUploadModalStyles.error}>{errors.sourceBranch.message}</p>
+                )}
+              </div>
+              <div className={solutionUploadModalStyles.field}>
+                <input
+                  className={[
+                    solutionUploadModalStyles.input,
+                    errors.targetBranch ? solutionUploadModalStyles.isError : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  type="text"
+                  placeholder="Целевая ветка*"
+                  aria-label="Целевая ветка"
+                  {...register('targetBranch')}
+                />
+                {errors.targetBranch && (
+                  <p className={solutionUploadModalStyles.error}>{errors.targetBranch.message}</p>
+                )}
+              </div>
             </div>
           </div>
         </div>

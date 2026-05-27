@@ -8,10 +8,9 @@ export interface NotificationSettings {
 
 export interface LinkedAccounts {
   githubLogin: string;
-  gitlabLogin: string;
 }
 
-export type LinkedAccountProvider = 'github' | 'gitlab';
+export type LinkedAccountProvider = 'github';
 
 interface PasswordUpdateResult {
   updated?: boolean;
