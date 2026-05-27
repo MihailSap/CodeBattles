@@ -55,6 +55,12 @@ public interface UserService {
 
     void processGithubUser(String githubId, String login, String email, String avatar);
 
+    String createGithubLinkIntent(User user);
+
+    User completeGithubLink(String intentToken, String githubId, String githubLogin);
+
+    User unlinkGithub(User user);
+
     void setNullPasswordResetToken(User user);
 
     String setPasswordResetToken(User user);

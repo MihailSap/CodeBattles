@@ -29,6 +29,9 @@ public class Solution extends BaseEntity {
     private SolutionGitPullRequest solutionGitPullRequest;
 
     @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SolutionFile> solutionFiles = new HashSet<>();
+
+    @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
     public Task getTask() {
@@ -85,5 +88,13 @@ public class Solution extends BaseEntity {
 
     public void setSolutionGitPullRequest(SolutionGitPullRequest solutionGitPullRequest) {
         this.solutionGitPullRequest = solutionGitPullRequest;
+    }
+
+    public Set<SolutionFile> getSolutionFiles() {
+        return solutionFiles;
+    }
+
+    public void setSolutionFiles(Set<SolutionFile> solutionFiles) {
+        this.solutionFiles = solutionFiles;
     }
 }

@@ -1,6 +1,6 @@
 import { type ChangeEvent, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch } from '@/app/providers/store';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   useDeleteAvatarMutation,
   useGetProfilePageDataQuery,
@@ -123,6 +123,8 @@ const getPercentClass = (percent: number): string => {
 
 const ProfilePage = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, userId } = useAuth();
   const { userId: routeUserId } = useParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -208,6 +210,25 @@ const ProfilePage = () => {
       showSnackbar('Не удалось загрузить данные личного кабинета', 'error');
     }
   }, [isProfileLoadError, showSnackbar]);
+
+  useEffect(() => {
+    const status = new URLSearchParams(location.search).get('githubLinked');
+
+    if (!status) {
+      return;
+    }
+
+    queueMicrotask(() => {
+      setIsSettingsModalOpen(true);
+
+      showSnackbar(
+        status === 'success' ? 'GitHub аккаунт успешно привязан' : 'Не удалось привязать GitHub аккаунт',
+        status === 'success' ? 'success' : 'error'
+      );
+    });
+
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.search, navigate, showSnackbar]);
 
   useEffect(() => {
     if (!profilePayload) {

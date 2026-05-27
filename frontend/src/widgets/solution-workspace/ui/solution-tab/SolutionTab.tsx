@@ -86,7 +86,7 @@ interface SolutionTabProps {
 const toSubmitSolutionPayload = (
   payload: SolutionUploadPayload,
   revealAuthorAfterReview: boolean
-): SubmitSolutionPayload | null => {
+): SubmitSolutionPayload => {
   if (payload.type === 'manual') {
     return {
       uploadType: payload.uploadType,
@@ -103,7 +103,19 @@ const toSubmitSolutionPayload = (
     };
   }
 
-  return null;
+  if (payload.type === 'files') {
+    return {
+      uploadType: payload.uploadType,
+      files: payload.files,
+      revealAuthorAfterReview,
+    };
+  }
+
+  return {
+    uploadType: payload.uploadType,
+    archive: payload.archive,
+    revealAuthorAfterReview,
+  };
 };
 
 const hasLineLocation = (
@@ -239,12 +251,6 @@ const SolutionTab = ({
   const handleUploadSubmit = async (payload: SolutionUploadPayload) => {
     const requestPayload = toSubmitSolutionPayload(payload, revealName);
 
-    if (requestPayload === null) {
-      showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
-
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
@@ -272,12 +278,6 @@ const SolutionTab = ({
 
   const handleResubmit = async (payload: SolutionUploadPayload) => {
     const requestPayload = toSubmitSolutionPayload(payload, revealName);
-
-    if (requestPayload === null) {
-      showSnackbar('Этот способ отправки пока не поддерживается API', solutionTabStyles.isError);
-
-      return;
-    }
 
     setIsSubmitting(true);
 

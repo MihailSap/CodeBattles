@@ -7,6 +7,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,8 @@ import java.util.stream.Stream;
 
 @Service
 public class PullRequestFileServiceImpl implements PullRequestFileService {
+
+    private static final String GITHUB_PULL_REF_PREFIX = "refs/pull/";
 
     @Override
     public List<PullRequestFileData> getFiles(
@@ -43,10 +46,18 @@ public class PullRequestFileServiceImpl implements PullRequestFileService {
 
                 Repository repository = git.getRepository();
 
-                ObjectId sourceCommitId =
-                        repository.resolve(
-                                "refs/remotes/origin/" + sourceBranch
-                        );
+                ObjectId sourceCommitId;
+                if (sourceBranch.startsWith(GITHUB_PULL_REF_PREFIX)) {
+                    String localSourceBranch = sourceBranch.substring("refs/".length());
+                    git.fetch()
+                            .setRefSpecs(new RefSpec(
+                                    "+" + sourceBranch + ":refs/remotes/origin/" + localSourceBranch
+                            ))
+                            .call();
+                    sourceCommitId = repository.resolve("refs/remotes/origin/" + localSourceBranch);
+                } else {
+                    sourceCommitId = repository.resolve("refs/remotes/origin/" + sourceBranch);
+                }
 
                 if (sourceCommitId == null) {
                     throw new IllegalArgumentException(

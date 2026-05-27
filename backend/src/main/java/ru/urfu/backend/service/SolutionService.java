@@ -15,9 +15,13 @@ public interface SolutionService {
 
     Solution createManualTextSolution(SolutionSubmitRequest request, Task task);
 
-    Solution createSolutionForGitPullRequest(SolutionSubmitRequest request, Task task);
+    Solution createSolutionForGitPullRequest(SolutionSubmitRequest request, Task task) throws Exception;
+
+    Solution createStoredFilesSolution(SolutionSubmitRequest request, Task task) throws Exception;
 
     Solution updateManualTextSolution(SolutionSubmitRequest request, Solution solution);
 
-    Solution updateSolutionGitPullRequest(SolutionSubmitRequest request, Solution solution);
+    Solution updateSolutionGitPullRequest(SolutionSubmitRequest request, Solution solution) throws Exception;
+
+    Solution updateStoredFilesSolution(SolutionSubmitRequest request, Solution solution) throws Exception;
 }

@@ -19,6 +19,7 @@ import ru.urfu.backend.service.ReviewService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -186,6 +187,9 @@ public class ReviewServiceImpl implements ReviewService {
             createReviewFileContent(reviewIteration, solution.getSolutionManualText());
         } else if(SolutionUploadType.GIT_PULL_REQUEST.equals(solutionUploadType)){
             createReviewFileContent(reviewIteration, solution.getSolutionGitPullRequest());
+        } else if (SolutionUploadType.FILES.equals(solutionUploadType)
+                || SolutionUploadType.ARCHIVE.equals(solutionUploadType)) {
+            createReviewFileContents(reviewIteration, solution.getSolutionFiles());
         }
 
         return review;
@@ -232,6 +236,22 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
+    public void createReviewFileContents(ReviewIteration reviewIteration, Set<SolutionFile> solutionFiles) {
+        for (SolutionFile solutionFile : solutionFiles) {
+            ReviewFileContent reviewFileContent = new ReviewFileContent();
+            reviewFileContent.setLanguage(solutionFile.getLanguage());
+            reviewFileContent.setContent(solutionFile.getContent());
+            reviewFileContent.setPath(solutionFile.getPath());
+            reviewFileContent.setReviewIteration(reviewIteration);
+            reviewFileContent.setUnsupportedPreview(false);
+            reviewFileContent.setDiff(false);
+            reviewFileContent.setOldContent(null);
+            reviewFileContentRepository.save(reviewFileContent);
+        }
+    }
+
+    @Transactional
+    @Override
     public ReviewFileContent updateReviewFileContent(
             ReviewIteration previousIteration, ReviewIteration currentIteration, SolutionManualText solutionManualText){
         ReviewFileContent reviewFileContent = new ReviewFileContent();
@@ -257,6 +277,32 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         return reviewFileContentRepository.save(reviewFileContent);
+    }
+
+    @Transactional
+    @Override
+    public void updateReviewFileContents(
+            ReviewIteration previousIteration,
+            ReviewIteration currentIteration,
+            Set<SolutionFile> solutionFiles
+    ) {
+        for (SolutionFile solutionFile : solutionFiles) {
+            ReviewFileContent reviewFileContent = new ReviewFileContent();
+            reviewFileContent.setLanguage(solutionFile.getLanguage());
+            reviewFileContent.setContent(solutionFile.getContent());
+            reviewFileContent.setPath(solutionFile.getPath());
+            reviewFileContent.setReviewIteration(currentIteration);
+            reviewFileContent.setUnsupportedPreview(false);
+
+            ReviewFileContent previousFile = previousIteration.getReviewFileContents()
+                    .stream()
+                    .filter(file -> solutionFile.getPath().equals(file.getPath()))
+                    .findFirst()
+                    .orElse(null);
+            reviewFileContent.setDiff(previousFile != null);
+            reviewFileContent.setOldContent(previousFile == null ? null : previousFile.getContent());
+            reviewFileContentRepository.save(reviewFileContent);
+        }
     }
 
 //    @Transactional

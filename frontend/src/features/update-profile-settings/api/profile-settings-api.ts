@@ -1,4 +1,5 @@
 import { httpClient } from '@/shared/api';
+import { API_BASE_URL } from '@/shared/config/api';
 
 export interface NotificationSettings {
   reviewAssignments: boolean;
@@ -11,6 +12,10 @@ export interface LinkedAccounts {
 }
 
 export type LinkedAccountProvider = 'github';
+
+export interface LinkAccountStart {
+  authorizationUrl: string;
+}
 
 interface PasswordUpdateResult {
   updated?: boolean;
@@ -40,14 +45,22 @@ export const profileSettingsApi = {
 
     return response.data;
   },
-  async linkAccount(provider: LinkedAccountProvider): Promise<LinkedAccounts> {
-    console.warn(`Link account for ${provider} is not implemented on backend`);
+  async linkAccount(provider: LinkedAccountProvider): Promise<LinkAccountStart> {
+    const response = await httpClient.post<LinkAccountStart>(
+      `/api/v1/profile/me/linked-accounts/${provider}`,
+      undefined,
+      { withCredentials: true }
+    );
 
-    return this.getLinkedAccounts();
+    const authorizationUrl = response.data.authorizationUrl;
+
+    return {
+      authorizationUrl: authorizationUrl.startsWith('http') ? authorizationUrl : `${API_BASE_URL}${authorizationUrl}`,
+    };
   },
   async unlinkAccount(provider: LinkedAccountProvider): Promise<LinkedAccounts> {
-    console.warn(`Unlink account for ${provider} is not implemented on backend`);
+    const response = await httpClient.delete<LinkedAccounts>(`/api/v1/profile/me/linked-accounts/${provider}`);
 
-    return this.getLinkedAccounts();
+    return response.data;
   },
 };

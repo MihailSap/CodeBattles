@@ -3,9 +3,14 @@ package ru.urfu.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
+import ru.urfu.backend.dto.GithubLinkStartResponse;
 import ru.urfu.backend.dto.LinkedAccountsResponse;
 import ru.urfu.backend.dto.MessageResponse;
 import ru.urfu.backend.dto.NotificationSettingsDto;
@@ -22,11 +27,18 @@ import ru.urfu.backend.service.GithubClient;
 import ru.urfu.backend.service.NotificationSettingsService;
 import ru.urfu.backend.service.UserService;
 
+import java.time.Duration;
+
 @Tag(name = "Управление профилем")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping(PathsConstants.ROOT + PathsConstants.PROFILE)
 public class ProfileController {
+
+    public static final String GITHUB_LINK_COOKIE = "github_link_intent";
+
+    @Value("${app.public-url}")
+    private String publicUrl;
 
     private final AuthService authService;
     private final UserService userService;
@@ -84,8 +96,37 @@ public class ProfileController {
             return new LinkedAccountsResponse("");
         }
 
-        String githubLogin = githubClient.fetchLoginByGithubId(githubId);
+        String githubLogin = user.getGithubLogin();
+        if (githubLogin == null || githubLogin.isBlank()) {
+            githubLogin = githubClient.fetchLoginByGithubId(githubId);
+            user.setGithubLogin(githubLogin);
+            userService.save(user);
+        }
         return new LinkedAccountsResponse(githubLogin);
+    }
+
+    @Operation(description = "Запуск подтверждённой привязки GitHub к текущему пользователю")
+    @PostMapping("/me/linked-accounts/github")
+    public GithubLinkStartResponse startGithubLink(HttpServletResponse response) throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        String intentToken = userService.createGithubLinkIntent(user);
+        ResponseCookie cookie = ResponseCookie.from(GITHUB_LINK_COOKIE, intentToken)
+                .httpOnly(true)
+                .secure(publicUrl.startsWith("https://"))
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofMinutes(10))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return new GithubLinkStartResponse("/oauth2/authorization/github");
+    }
+
+    @Operation(description = "Отвязка GitHub от текущего пользователя")
+    @DeleteMapping("/me/linked-accounts/github")
+    public LinkedAccountsResponse unlinkGithub() throws UserNotFoundException {
+        User user = authService.getAuthenticatedUser();
+        userService.unlinkGithub(user);
+        return new LinkedAccountsResponse("");
     }
 
     @Operation(description = "Обновление аватара текущего пользователя")

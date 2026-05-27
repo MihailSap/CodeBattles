@@ -19,12 +19,18 @@ export type Styles = {
   filesList: string;
   footer: string;
   gitFields: string;
+  githubStatus: string;
   head: string;
   input: string;
   isBottom: string;
   isError: string;
   manual: string;
   menu: string;
+  pullRequest: string;
+  pullRequests: string;
+  pullRequestsHeader: string;
+  pullRequestsState: string;
+  refreshPullRequests: string;
   root: string;
   submitBtn: string;
   submitIcon: string;

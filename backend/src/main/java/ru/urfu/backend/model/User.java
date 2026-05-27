@@ -34,6 +34,8 @@ public class User extends BaseEntity {
 
     private String githubId;
 
+    private String githubLogin;
+
     private String avatarFileTitle;
 
     private LocalDateTime registeredAt = LocalDateTime.now();
@@ -167,6 +169,14 @@ public class User extends BaseEntity {
 
     public void setGithubId(String githubId) {
         this.githubId = githubId;
+    }
+
+    public String getGithubLogin() {
+        return githubLogin;
+    }
+
+    public void setGithubLogin(String githubLogin) {
+        this.githubLogin = githubLogin;
     }
 
     public String getAvatarFileTitle() {

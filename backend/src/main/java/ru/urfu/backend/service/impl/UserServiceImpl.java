@@ -16,6 +16,8 @@ import ru.urfu.backend.dto.user.profile.ProfilePassportUpdateRequest;
 import ru.urfu.backend.dto.user.profile.ProfileSkillsUpdateDto;
 import ru.urfu.backend.dto.user.profile.ProfileUpdateRequest;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
+import ru.urfu.backend.exception.globalEx.ForbiddenException;
+import ru.urfu.backend.model.GithubLinkIntent;
 import ru.urfu.backend.model.NotificationSettings;
 import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.UserStack;
@@ -24,6 +26,7 @@ import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.enums.StackType;
 import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.repository.UserStackRepository;
+import ru.urfu.backend.repository.GithubLinkIntentRepository;
 import ru.urfu.backend.service.FileService;
 import ru.urfu.backend.service.NotificationSettingsService;
 import ru.urfu.backend.service.StackService;
@@ -46,6 +49,7 @@ public class UserServiceImpl implements UserService {
     private final StackService stackService;
     private final FileService fileService;
     private final NotificationSettingsService notificationSettingsService;
+    private final GithubLinkIntentRepository githubLinkIntentRepository;
 
     @Autowired
     public UserServiceImpl(
@@ -55,7 +59,8 @@ public class UserServiceImpl implements UserService {
             StackService stackService,
             UserStackRepository userStackRepository,
             FileService fileService,
-            NotificationSettingsService notificationSettingsService
+            NotificationSettingsService notificationSettingsService,
+            GithubLinkIntentRepository githubLinkIntentRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -64,6 +69,7 @@ public class UserServiceImpl implements UserService {
         this.userStackRepository = userStackRepository;
         this.fileService = fileService;
         this.notificationSettingsService = notificationSettingsService;
+        this.githubLinkIntentRepository = githubLinkIntentRepository;
     }
 
     @Transactional(readOnly = true)
@@ -144,6 +150,7 @@ public class UserServiceImpl implements UserService {
     public void create(String githubId, String login, String email, String avatar){
         User newUser = new User();
         newUser.setGithubId(githubId);
+        newUser.setGithubLogin(login);
         newUser.setLogin(login);
         newUser.setEmail(email);
         newUser.setEnabled(true);
@@ -281,15 +288,72 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void processGithubUser(String githubId, String login, String email, String avatar){
-        if(isExistsByGithubId(githubId)) return;
+        if(isExistsByGithubId(githubId)) {
+            try {
+                User existingUser = getByGithubId(githubId);
+                existingUser.setGithubLogin(login);
+                userRepository.save(existingUser);
+            } catch (UserNotFoundException ignored) {
+                // The lookup immediately follows the presence check; a concurrent delete is harmless here.
+            }
+            return;
+        }
         User user;
         try {
             user = getByEmail(email);
             user.setGithubId(githubId);
+            user.setGithubLogin(login);
             userRepository.save(user);
         } catch (UserNotFoundException e) {
             create(githubId, login, email, avatar);
         }
+    }
+
+    @Transactional
+    @Override
+    public String createGithubLinkIntent(User user) {
+        GithubLinkIntent intent = new GithubLinkIntent();
+        intent.setToken(UUID.randomUUID().toString());
+        intent.setUser(user);
+        intent.setExpiresAt(LocalDateTime.now().plusMinutes(10));
+        githubLinkIntentRepository.save(intent);
+        return intent.getToken();
+    }
+
+    @Transactional
+    @Override
+    public User completeGithubLink(String intentToken, String githubId, String githubLogin) {
+        GithubLinkIntent intent = githubLinkIntentRepository.findByToken(intentToken)
+                .orElseThrow(() -> new ForbiddenException("Запрос на привязку GitHub недействителен"));
+
+        if (intent.getExpiresAt().isBefore(LocalDateTime.now())) {
+            githubLinkIntentRepository.delete(intent);
+            throw new ForbiddenException("Срок запроса на привязку GitHub истёк");
+        }
+
+        User targetUser = intent.getUser();
+        userRepository.findByGithubId(githubId)
+                .filter(existingUser -> !existingUser.getId().equals(targetUser.getId()))
+                .ifPresent(existingUser -> {
+                    throw new ForbiddenException("Этот GitHub аккаунт уже привязан к другому пользователю");
+                });
+
+        targetUser.setGithubId(githubId);
+        targetUser.setGithubLogin(githubLogin);
+        githubLinkIntentRepository.delete(intent);
+        return userRepository.save(targetUser);
+    }
+
+    @Transactional
+    @Override
+    public User unlinkGithub(User user) {
+        if ("oauth".equals(user.getPassword())) {
+            throw new ForbiddenException("Перед отвязкой GitHub установите пароль для входа");
+        }
+
+        user.setGithubId(null);
+        user.setGithubLogin(null);
+        return userRepository.save(user);
     }
 
     @Transactional

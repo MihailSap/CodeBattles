@@ -197,17 +197,10 @@ const ProfileSettingsModal = ({ isOpen = false, onClose }: ProfileSettingsModalP
     setIsLinkActionLoading(true);
 
     try {
-      const nextState = await profileSettingsApi.linkAccount(provider);
-
-      setLinkedAccounts({
-        ...initialLinkedAccounts,
-        ...nextState,
-      });
-
-      showSnackbar('Интеграция готова к подключению backend', 'success');
+      const { authorizationUrl } = await profileSettingsApi.linkAccount(provider);
+      window.location.assign(authorizationUrl);
     } catch {
       showSnackbar('Не удалось привязать аккаунт', 'error');
-    } finally {
       setIsLinkActionLoading(false);
     }
   };

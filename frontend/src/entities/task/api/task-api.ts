@@ -102,9 +102,7 @@ export interface ManualSubmitSolutionPayload {
 }
 
 export interface GitPullRequestPayload {
-  sourceBranch: string;
-  targetBranch: string;
-  repositoryName: string;
+  url: string;
 }
 
 export interface GitSubmitSolutionPayload {
@@ -113,7 +111,23 @@ export interface GitSubmitSolutionPayload {
   revealAuthorAfterReview?: boolean;
 }
 
-export type SubmitSolutionPayload = ManualSubmitSolutionPayload | GitSubmitSolutionPayload;
+export interface FileSubmitSolutionPayload {
+  uploadType: 'FILES';
+  files: File[];
+  revealAuthorAfterReview?: boolean;
+}
+
+export interface ArchiveSubmitSolutionPayload {
+  uploadType: 'ARCHIVE';
+  archive: File;
+  revealAuthorAfterReview?: boolean;
+}
+
+export type SubmitSolutionPayload =
+  | ManualSubmitSolutionPayload
+  | GitSubmitSolutionPayload
+  | FileSubmitSolutionPayload
+  | ArchiveSubmitSolutionPayload;
 
 export interface SolutionMutationResult {
   id?: EntityId;
@@ -287,22 +301,83 @@ const toGitSolutionFormData = (taskId: EntityId, payload: GitSubmitSolutionPaylo
   formData.append('uploadType', payload.uploadType);
   formData.append('revealAuthorAfterReview', String(Boolean(payload.revealAuthorAfterReview)));
   formData.append('git.repositoryId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
-  formData.append('git.repositoryName', payload.git.repositoryName);
+  formData.append('git.repositoryName', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
   formData.append('git.pullRequestId', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
   formData.append('git.pullRequestNumber', UNUSED_GIT_NUMBER_FIELD_PLACEHOLDER);
-  formData.append('git.sourceBranch', payload.git.sourceBranch);
-  formData.append('git.targetBranch', payload.git.targetBranch);
-  formData.append('git.url', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+  formData.append('git.sourceBranch', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+  formData.append('git.targetBranch', UNUSED_GIT_TEXT_FIELD_PLACEHOLDER);
+  formData.append('git.url', payload.git.url);
 
   return formData;
 };
 
-const toSolutionFormData = (taskId: EntityId, payload: SubmitSolutionPayload): FormData => {
+const readFileAsBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      const encodedContent = dataUrl.split(',')[1];
+
+      if (!encodedContent) {
+        reject(new Error('Не удалось прочитать файл'));
+
+        return;
+      }
+
+      resolve(encodedContent);
+    };
+
+    reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+    reader.readAsDataURL(file);
+  });
+
+const getFileLanguage = (fileName: string): string => {
+  const extension = fileName.split('.').pop();
+
+  return extension && extension !== fileName ? extension : 'plaintext';
+};
+
+const toFilesSolutionData = async (taskId: EntityId, payload: FileSubmitSolutionPayload) => ({
+  taskId: Number(taskId),
+  uploadType: payload.uploadType,
+  revealAuthorAfterReview: Boolean(payload.revealAuthorAfterReview),
+  files: await Promise.all(
+    payload.files.map(async (file) => ({
+      path: file.webkitRelativePath || file.name,
+      fileName: file.name,
+      language: getFileLanguage(file.name),
+      sizeBytes: file.size,
+      contentBase64: await readFileAsBase64(file),
+    }))
+  ),
+});
+
+const toArchiveSolutionData = async (taskId: EntityId, payload: ArchiveSubmitSolutionPayload) => ({
+  taskId: Number(taskId),
+  uploadType: payload.uploadType,
+  revealAuthorAfterReview: Boolean(payload.revealAuthorAfterReview),
+  archive: {
+    fileName: payload.archive.name,
+    sizeBytes: payload.archive.size,
+    contentBase64: await readFileAsBase64(payload.archive),
+  },
+});
+
+const toSolutionData = async (taskId: EntityId, payload: SubmitSolutionPayload): Promise<FormData | object> => {
   if (payload.uploadType === 'MANUAL_TEXT') {
     return toManualSolutionFormData(taskId, payload);
   }
 
-  return toGitSolutionFormData(taskId, payload);
+  if (payload.uploadType === 'GIT_PULL_REQUEST') {
+    return toGitSolutionFormData(taskId, payload);
+  }
+
+  if (payload.uploadType === 'FILES') {
+    return toFilesSolutionData(taskId, payload);
+  }
+
+  return toArchiveSolutionData(taskId, payload);
 };
 
 export const taskApi = {
@@ -358,7 +433,7 @@ export const taskApi = {
     return apiRequest<SolutionMutationResult>({
       method: 'POST',
       url: '/api/v1/solutions',
-      data: toSolutionFormData(taskId, payload),
+      data: await toSolutionData(taskId, payload),
     });
   },
 
@@ -366,7 +441,7 @@ export const taskApi = {
     return apiRequest<SolutionMutationResult>({
       method: 'POST',
       url: '/api/v1/solutions/resubmit',
-      data: toSolutionFormData(taskId, payload),
+      data: await toSolutionData(taskId, payload),
     });
   },
 

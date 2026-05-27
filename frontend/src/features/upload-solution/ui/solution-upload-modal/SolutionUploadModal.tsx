@@ -1,11 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ChangeEvent, useRef } from 'react';
+import { type ChangeEvent, useEffect, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '@/shared/config/routes';
 import { CrossIcon, CheckIcon, FileIcon } from '@/shared/ui/icons';
 import EntityTabs from '@/shared/ui/entity-tabs';
 import CodeEditor from '@/shared/ui/code-editor';
 import ModalShell from '@/shared/ui/modal-shell';
 import { useBodyScrollLock } from '@/shared/lib/hooks';
+import { githubLinkStatusApi, type GithubPullRequestOption } from '../../api/github-link-status-api';
 import {
   solutionUploadFormSchema,
   type SolutionUploadFormInput,
@@ -71,7 +74,7 @@ const ALLOWED_FILE_EXTENSIONS = [
   '.svelte',
 ];
 
-const ARCHIVE_EXTENSIONS = '.zip,.rar,.tar,.gz,.7z,.bz2,.xz';
+const ARCHIVE_EXTENSIONS = '.zip';
 
 const LANGUAGE_EXTENSION_MAP = {
   javascript: 'js',
@@ -129,9 +132,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
       language: 'javascript',
       files: [],
       archive: null,
-      sourceBranch: '',
-      targetBranch: '',
-      repositoryName: '',
+      pullRequestUrl: '',
     },
     mode: 'onChange',
   });
@@ -144,8 +145,72 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
   const activeTab = watchedActiveTab ?? 'manual';
   const files = watchedFiles ?? [];
   const archive = watchedArchive ?? null;
+  const [githubLogin, setGithubLogin] = useState('');
+  const [githubPullRequests, setGithubPullRequests] = useState<GithubPullRequestOption[]>([]);
+  const [isGithubStatusLoading, setIsGithubStatusLoading] = useState(false);
+  const [hasGithubPullRequestsError, setHasGithubPullRequestsError] = useState(false);
 
   useBodyScrollLock(isOpen);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    queueMicrotask(() => {
+      if (!isCancelled) {
+        setIsGithubStatusLoading(true);
+        setHasGithubPullRequestsError(false);
+      }
+    });
+
+    githubLinkStatusApi
+      .getLogin()
+      .then(async (login) => {
+        if (!isCancelled) {
+          setGithubLogin(login);
+          setGithubPullRequests([]);
+        }
+
+        if (!login) {
+          return [];
+        }
+
+        try {
+          return await githubLinkStatusApi.getOpenPullRequests();
+        } catch {
+          if (!isCancelled) {
+            setHasGithubPullRequestsError(true);
+          }
+
+          return [];
+        }
+      })
+      .then((pullRequests) => {
+        if (!isCancelled) {
+          setGithubPullRequests(pullRequests);
+        }
+      })
+      .catch(() => {
+        if (!isCancelled) {
+          setGithubLogin('');
+          setGithubPullRequests([]);
+          setHasGithubPullRequestsError(true);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsGithubStatusLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -165,7 +230,11 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
     if (!e.target.files) return;
     const incoming = Array.from(e.target.files);
 
-    setValue('files', [...files, ...incoming].slice(0, MAX_FILES), {
+    const deduplicatedFiles = new Map(
+      [...files, ...incoming].map((file) => [`${file.name}-${file.size}-${file.lastModified}`, file])
+    );
+
+    setValue('files', [...deduplicatedFiles.values()].slice(0, MAX_FILES), {
       shouldDirty: true,
       shouldValidate: true,
     });
@@ -199,16 +268,25 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
     return isSubmitting || !isValid;
   };
 
-  const submit = async ({
-    activeTab,
-    code,
-    language,
-    files,
-    archive,
-    sourceBranch,
-    targetBranch,
-    repositoryName,
-  }: SolutionUploadFormValues) => {
+  const refreshGithubPullRequests = async () => {
+    if (!githubLogin || isGithubStatusLoading) {
+      return;
+    }
+
+    setIsGithubStatusLoading(true);
+    setHasGithubPullRequestsError(false);
+
+    try {
+      setGithubPullRequests(await githubLinkStatusApi.getOpenPullRequests());
+    } catch {
+      setGithubPullRequests([]);
+      setHasGithubPullRequestsError(true);
+    } finally {
+      setIsGithubStatusLoading(false);
+    }
+  };
+
+  const submit = async ({ activeTab, code, language, files, archive, pullRequestUrl }: SolutionUploadFormValues) => {
     if (isSubmitDisabled()) return;
     let payload: SolutionUploadPayload;
 
@@ -223,39 +301,25 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
           language,
           content: code,
         },
-        files: [
-          {
-            name: fileName,
-            content: code,
-          },
-        ],
       };
     } else if (activeTab === 'files') {
       payload = {
         type: 'files',
-        files: files.map((file) => ({
-          name: file.name,
-          isFileObj: true,
-        })),
+        uploadType: 'FILES',
+        files,
       };
     } else if (activeTab === 'archive' && archive) {
       payload = {
         type: 'archive',
-        files: [
-          {
-            name: archive.name,
-            isFileObj: true,
-          },
-        ],
+        uploadType: 'ARCHIVE',
+        archive,
       };
     } else if (activeTab === 'github') {
       payload = {
         type: 'git',
         uploadType: 'GIT_PULL_REQUEST',
         git: {
-          sourceBranch,
-          targetBranch,
-          repositoryName,
+          url: pullRequestUrl.trim(),
         },
       };
     } else {
@@ -347,7 +411,10 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
                 <>
                   <div className={solutionUploadModalStyles.filesList}>
                     {files.map((file, idx) => (
-                      <div key={`${file.name}-${idx}`} className={solutionUploadModalStyles.fileItem}>
+                      <div
+                        key={`${file.name}-${file.size}-${file.lastModified}`}
+                        className={solutionUploadModalStyles.fileItem}
+                      >
                         <div className={solutionUploadModalStyles.fileInfo}>
                           <span className={solutionUploadModalStyles.fileIcon}>
                             <FileIcon />
@@ -375,6 +442,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
                   )}
                 </>
               )}
+              {errors.files && <p className={solutionUploadModalStyles.error}>{errors.files.message}</p>}
             </div>
           </div>
 
@@ -422,6 +490,7 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
                   </div>
                 </div>
               )}
+              {errors.archive && <p className={solutionUploadModalStyles.error}>{errors.archive.message}</p>}
             </div>
           </div>
 
@@ -432,55 +501,79 @@ const SolutionUploadModal = ({ isOpen, onClose, onSubmit, isSubmitting }: Soluti
             }}
           >
             <div className={solutionUploadModalStyles.gitFields}>
+              <div className={solutionUploadModalStyles.githubStatus}>
+                {isGithubStatusLoading ? (
+                  <span>Проверяем привязку GitHub...</span>
+                ) : githubLogin ? (
+                  <span>
+                    Подключён аккаунт <strong>@{githubLogin}</strong>. Выберите открытый public PR или вставьте ссылку
+                    вручную.
+                  </span>
+                ) : (
+                  <span>
+                    GitHub не привязан. Public PR можно отправить сейчас или сначала{' '}
+                    <Link to={ROUTES.profile}>привязать аккаунт в профиле</Link>.
+                  </span>
+                )}
+              </div>
+              {githubLogin && !isGithubStatusLoading && (
+                <>
+                  <div className={solutionUploadModalStyles.pullRequestsHeader}>
+                    <span>Ваши открытые public pull request</span>
+                    <button
+                      className={solutionUploadModalStyles.refreshPullRequests}
+                      type="button"
+                      onClick={() => void refreshGithubPullRequests()}
+                    >
+                      Обновить
+                    </button>
+                  </div>
+                  {hasGithubPullRequestsError ? (
+                    <p className={solutionUploadModalStyles.pullRequestsState}>
+                      Не удалось загрузить PR с GitHub. Проверьте соединение или вставьте ссылку вручную.
+                    </p>
+                  ) : githubPullRequests.length === 0 ? (
+                    <p className={solutionUploadModalStyles.pullRequestsState}>
+                      Не найдено открытых public PR, созданных аккаунтом @{githubLogin}. Private, закрытые и уже
+                      смерженные PR в этом списке не показываются.
+                    </p>
+                  ) : (
+                    <div className={solutionUploadModalStyles.pullRequests} aria-label="Ваши открытые pull request">
+                      {githubPullRequests.map((pullRequest) => (
+                        <button
+                          key={pullRequest.url}
+                          className={solutionUploadModalStyles.pullRequest}
+                          type="button"
+                          onClick={() =>
+                            setValue('pullRequestUrl', pullRequest.url, {
+                              shouldDirty: true,
+                              shouldValidate: true,
+                            })
+                          }
+                        >
+                          <span>{pullRequest.title}</span>
+                          <small>#{pullRequest.number}</small>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
               <div className={solutionUploadModalStyles.field}>
                 <input
                   className={[
                     solutionUploadModalStyles.input,
-                    errors.repositoryName ? solutionUploadModalStyles.isError : '',
+                    errors.pullRequestUrl ? solutionUploadModalStyles.isError : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
                   type="url"
-                  placeholder="Ссылка на GitHub-репозиторий*"
-                  aria-label="Ссылка на GitHub-репозиторий"
-                  {...register('repositoryName')}
+                  placeholder="https://github.com/owner/repository/pull/123"
+                  aria-label="Ссылка на GitHub pull request"
+                  {...register('pullRequestUrl')}
                 />
-                {errors.repositoryName && (
-                  <p className={solutionUploadModalStyles.error}>{errors.repositoryName.message}</p>
-                )}
-              </div>
-              <div className={solutionUploadModalStyles.field}>
-                <input
-                  className={[
-                    solutionUploadModalStyles.input,
-                    errors.sourceBranch ? solutionUploadModalStyles.isError : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  type="text"
-                  placeholder="Исходная ветка*"
-                  aria-label="Исходная ветка"
-                  {...register('sourceBranch')}
-                />
-                {errors.sourceBranch && (
-                  <p className={solutionUploadModalStyles.error}>{errors.sourceBranch.message}</p>
-                )}
-              </div>
-              <div className={solutionUploadModalStyles.field}>
-                <input
-                  className={[
-                    solutionUploadModalStyles.input,
-                    errors.targetBranch ? solutionUploadModalStyles.isError : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  type="text"
-                  placeholder="Целевая ветка*"
-                  aria-label="Целевая ветка"
-                  {...register('targetBranch')}
-                />
-                {errors.targetBranch && (
-                  <p className={solutionUploadModalStyles.error}>{errors.targetBranch.message}</p>
+                {errors.pullRequestUrl && (
+                  <p className={solutionUploadModalStyles.error}>{errors.pullRequestUrl.message}</p>
                 )}
               </div>
             </div>

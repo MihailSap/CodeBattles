@@ -5,6 +5,7 @@ import ru.urfu.backend.dto.review.SubmitFinalReviewRequest;
 import ru.urfu.backend.model.*;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ReviewService {
 
@@ -31,8 +32,13 @@ public interface ReviewService {
             ReviewIteration reviewIteration, SolutionGitPullRequest solutionGitPullRequest
     ) throws Exception;
 
+    void createReviewFileContents(ReviewIteration reviewIteration, Set<SolutionFile> solutionFiles);
+
     ReviewFileContent updateReviewFileContent(
             ReviewIteration previousIteration, ReviewIteration currentIteration, SolutionManualText solutionManualText);
+
+    void updateReviewFileContents(
+            ReviewIteration previousIteration, ReviewIteration currentIteration, Set<SolutionFile> solutionFiles);
 
     void completeExpiredReviews(List<Review> reviews);
 

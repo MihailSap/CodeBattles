@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+
+BACKEND_STRUCTURE.md
