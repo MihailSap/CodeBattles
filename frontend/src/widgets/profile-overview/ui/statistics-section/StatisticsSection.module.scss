@@ -1,0 +1,124 @@
+.isStatistics {
+  grid-area: statistics;
+}
+
+.body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13.125rem, 1fr));
+  gap: clamp(0.3125rem, 1.3vw, 1.5rem);
+}
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 0.3125rem;
+}
+
+.statTitle {
+  text-align: center;
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 120%;
+}
+
+.starsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  padding: 0.3125rem;
+}
+
+.starsRow svg {
+  width: 1.875rem;
+  height: 1.875rem;
+  color: var(--color-rating-star);
+}
+
+.acceptedBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+}
+
+.acceptedPercent {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 120%;
+}
+
+.acceptedPercent {
+  &.isError {
+    color: var(--color-danger);
+  }
+}
+
+.acceptedPercent {
+  &.isWarning {
+    color: var(--color-metric-warning);
+  }
+}
+
+.acceptedPercent {
+  &.isSuccess {
+    color: var(--color-success);
+  }
+}
+
+@media (max-width: 90rem) {
+  .body {
+    padding: 0;
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .body {
+    gap: 0.625rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+  }
+
+  .statCard {
+    gap: 0.3125rem;
+    padding: 0.15625rem;
+  }
+
+  .statTitle {
+    font-size: 0.875rem;
+  }
+
+  .starsRow {
+    gap: 0.3125rem;
+    padding: 0.15625rem;
+  }
+
+  .starsRow svg {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+
+  .acceptedBlock {
+    gap: 0.46875rem;
+  }
+
+  .acceptedPercent {
+    font-size: 1.125rem;
+  }
+}

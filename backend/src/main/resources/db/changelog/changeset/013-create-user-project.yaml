@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 16-user-project
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: user_project
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_user_project
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: project_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: project_member_role
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - addForeignKeyConstraint:
+                  baseTableName: user_project
+                  baseColumnNames: user_id
+                  referencedTableName: users
+                  referencedColumnNames: id
+                  constraintName: fk_user_project_user
+
+              - addForeignKeyConstraint:
+                  baseTableName: user_project
+                  baseColumnNames: project_id
+                  referencedTableName: project
+                  referencedColumnNames: id
+                  constraintName: fk_user_project_project

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 039-update-enabled
+      author: SapeginMihail
+      changes:
+        - update:
+            tableName: users
+            columns:
+              - column:
+                  name: enabled
+                  valueBoolean: false
+            where: enabled IS NULL

@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 15-foreign-keys
+      author: SapeginMihail
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: user_stack
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_user_stack_user
+
+        - addForeignKeyConstraint:
+            baseTableName: user_stack
+            baseColumnNames: stack_id
+            referencedTableName: stack
+            referencedColumnNames: id
+            constraintName: fk_user_stack_stack
+

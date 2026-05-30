@@ -4,21 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import ru.urfu.backend.service.GithubClient;
-import ru.urfu.backend.service.UserService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class GithubOauth2UserService extends DefaultOAuth2UserService {
 
     private final GithubClient githubClient;
-    private final UserService userService;
-
     @Autowired
-    public GithubOauth2UserService(GithubClient githubClient, UserService userService) {
+    public GithubOauth2UserService(GithubClient githubClient) {
         this.githubClient = githubClient;
-        this.userService = userService;
     }
 
     @Override
@@ -27,12 +27,10 @@ public class GithubOauth2UserService extends DefaultOAuth2UserService {
         OAuth2User oauthUser = super.loadUser(userRequest);
         String accessToken = userRequest.getAccessToken().getTokenValue();
         String githubId = oauthUser.getAttribute("id").toString();
-        String login = oauthUser.getAttribute("login");
         String email = githubClient.fetchEmail(accessToken);
-        String avatar = oauthUser.getAttribute("avatar_url");
-
-        userService.processGithubUser(githubId, login, email, avatar);
-
-        return oauthUser;
+        Map<String, Object> attributes = new HashMap<>(oauthUser.getAttributes());
+        attributes.put("id", githubId);
+        attributes.put("verified_email", email);
+        return new DefaultOAuth2User(oauthUser.getAuthorities(), attributes, "login");
     }
 }

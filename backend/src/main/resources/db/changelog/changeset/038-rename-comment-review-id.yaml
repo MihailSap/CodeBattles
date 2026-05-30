@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 038-rename-comment-review-id
+      author: SapeginMihail
+      changes:
+        - renameColumn:
+            tableName: comment
+            oldColumnName: review_id
+            newColumnName: review_iteration_id
+            columnDataType: BIGINT

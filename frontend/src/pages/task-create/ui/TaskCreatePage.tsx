@@ -1,0 +1,364 @@
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useMemo } from 'react';
+import { Controller, type FieldErrors, useForm, useWatch } from 'react-hook-form';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useGetProjectByIdQuery } from '@/entities/project';
+import { isInsufficientAutoReviewersError, useCreateTaskMutation } from '@/entities/task';
+import { useGetOrganizationByIdQuery } from '@/entities/organization';
+import { AssigneesSelector } from '@/features/manage-task';
+import DateTimePicker from '@/shared/ui/date-time-picker';
+import { CheckIcon } from '@/shared/ui/icons';
+import Snackbar from '@/shared/ui/snackbar';
+import Spinner from '@/shared/ui/spinner';
+import {
+  PROJECT_PRIVACY,
+  TASK_REVIEW_TYPE,
+  TASK_REVIEW_TYPE_LABELS,
+  taskCreateFormSchema,
+  type TaskCreateFormInput,
+  type TaskCreateFormValues,
+  type EntityId,
+} from '@/entities/project';
+import { ROUTES } from '@/shared/config/routes';
+import { useSnackbar } from '@/shared/lib/hooks';
+import taskCreatePageStyles from './TaskCreatePage.module.scss';
+
+const initialState = {
+  name: '',
+  description: '',
+  requirements: '',
+  evaluationCriteria: '',
+  deadline: '',
+  reviewType: TASK_REVIEW_TYPE.MANUAL_ASSIGNEES,
+  assigneeIds: [],
+  reviewerIds: [],
+} satisfies TaskCreateFormInput;
+
+const TaskCreatePage = () => {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitted, isValid, touchedFields },
+  } = useForm<TaskCreateFormInput, unknown, TaskCreateFormValues>({
+    resolver: zodResolver(taskCreateFormSchema),
+    defaultValues: initialState,
+    mode: 'onChange',
+  });
+
+  const [watchedReviewType, watchedAssigneeIds, watchedReviewerIds] = useWatch({
+    control,
+    name: ['reviewType', 'assigneeIds', 'reviewerIds'],
+  });
+
+  const reviewType = watchedReviewType ?? TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+  const assigneeIds = useMemo(() => watchedAssigneeIds ?? [], [watchedAssigneeIds]);
+  const reviewerIds = useMemo(() => watchedReviewerIds ?? [], [watchedReviewerIds]);
+
+  const {
+    data: project,
+    error: projectError,
+    isLoading: isProjectLoading,
+  } = useGetProjectByIdQuery(projectId ?? '', {
+    skip: !projectId,
+    refetchOnMountOrArgChange: 30,
+  });
+
+  const shouldLoadOrganization = Boolean(project?.organizationId && project.privacy === PROJECT_PRIVACY.PUBLIC);
+
+  const { data: organization, isLoading: isOrganizationLoading } = useGetOrganizationByIdQuery(
+    project?.organizationId ?? '',
+    {
+      skip: !shouldLoadOrganization,
+      refetchOnMountOrArgChange: 60,
+    }
+  );
+
+  const [createTask, { isLoading: isSubmitting }] = useCreateTaskMutation();
+  const organizationParticipants = useMemo(() => organization?.participants || [], [organization?.participants]);
+  const isLoading = isProjectLoading || (shouldLoadOrganization && isOrganizationLoading);
+
+  useEffect(() => {
+    if (projectError) {
+      navigate(ROUTES.projects, {
+        replace: true,
+      });
+    }
+  }, [navigate, projectError]);
+
+  useEffect(() => {
+    if (project && project.viewerRole !== 'OWNER') {
+      navigate(`${ROUTES.projects}/${projectId}`, {
+        replace: true,
+      });
+    }
+  }, [navigate, project, projectId]);
+
+  const nowMin = useMemo(() => new Date(), []);
+  const isManualReviewers = reviewType === TASK_REVIEW_TYPE.MANUAL_ASSIGNEES;
+
+  const reviewersSource = useMemo(() => {
+    if (!project) {
+      return [];
+    }
+
+    if (!project.organizationId) {
+      return project.participants ?? [];
+    }
+
+    if (project.privacy === PROJECT_PRIVACY.PUBLIC) {
+      return organizationParticipants;
+    }
+
+    return project.participants ?? [];
+  }, [organizationParticipants, project]);
+
+  const availableAssignees = useMemo(
+    () => (project?.participants ?? []).filter((participant) => !reviewerIds.includes(participant.id)),
+    [reviewerIds, project]
+  );
+
+  const availableReviewers = useMemo(
+    () => reviewersSource.filter((participant) => !assigneeIds.includes(participant.id)),
+    [assigneeIds, reviewersSource]
+  );
+
+  const reviewTypes = useMemo(() => {
+    return Object.values(TASK_REVIEW_TYPE).filter(
+      (type) =>
+        (project?.aiReviewEnabled || type !== TASK_REVIEW_TYPE.AI_ONLY) &&
+        (project?.organizationId || type !== TASK_REVIEW_TYPE.AUTO_ORGANIZATION)
+    );
+  }, [project?.aiReviewEnabled, project?.organizationId]);
+
+  useEffect(() => {
+    if (!isManualReviewers) {
+      if (reviewerIds.length > 0) {
+        queueMicrotask(() =>
+          setValue('reviewerIds', [], {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        );
+      }
+
+      return;
+    }
+
+    const availableReviewerIds = new Set<EntityId>(availableReviewers.map((participant) => participant.id));
+    const nextReviewerIds = reviewerIds.filter((id) => availableReviewerIds.has(id));
+
+    if (nextReviewerIds.length !== reviewerIds.length) {
+      queueMicrotask(() =>
+        setValue('reviewerIds', nextReviewerIds, {
+          shouldDirty: true,
+          shouldValidate: true,
+        })
+      );
+    }
+  }, [availableReviewers, isManualReviewers, reviewerIds, setValue]);
+
+  const submit = async (form: TaskCreateFormValues) => {
+    if (!project) {
+      return;
+    }
+
+    try {
+      const result = await createTask({
+        projectId: project.id,
+        payload: {
+          ...form,
+          name: form.name.trim(),
+          description: form.description.trim(),
+          requirements: form.requirements.trim(),
+          evaluationCriteria: form.evaluationCriteria.trim(),
+        },
+      }).unwrap();
+
+      if (result?.accepted && result?.taskId) {
+        navigate(`${ROUTES.projects}/${project.id}/tasks/${result.taskId}`, {
+          replace: true,
+        });
+      }
+    } catch (error: unknown) {
+      if (isInsufficientAutoReviewersError(error)) {
+        showSnackbar('Для автоматического распределения нужны минимум два свободных ревьюера', 'error');
+      } else {
+        showSnackbar('Не удалось создать задачу. Попробуйте позже', 'error');
+      }
+    }
+  };
+
+  const onInvalid = (formErrors: FieldErrors<TaskCreateFormInput>) => {
+    const firstError = formErrors.deadline || formErrors.assigneeIds || formErrors.reviewerIds || formErrors.name;
+
+    if (firstError?.message) {
+      showSnackbar(firstError.message, 'error');
+    }
+  };
+
+  const getError = (fieldName: keyof TaskCreateFormInput): string => {
+    if (!(touchedFields[fieldName] || isSubmitted)) {
+      return '';
+    }
+
+    return String(errors[fieldName]?.message || '');
+  };
+
+  const nameError = getError('name');
+  const deadlineError = getError('deadline');
+
+  if (isLoading) {
+    return (
+      <div className={taskCreatePageStyles.root}>
+        <div className={taskCreatePageStyles.loader}>
+          <Spinner />
+        </div>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return null;
+  }
+
+  return (
+    <div className={taskCreatePageStyles.root}>
+      <Snackbar message={snackbar.message} type={snackbar.type} onClose={closeSnackbar} />
+
+      <main className={taskCreatePageStyles.content}>
+        <button
+          className={taskCreatePageStyles.back}
+          type="button"
+          onClick={() => navigate(`${ROUTES.projects}/${projectId}`)}
+        >
+          ← Назад
+        </button>
+        <h1 className={taskCreatePageStyles.title}>Создание задачи</h1>
+
+        <form className={taskCreatePageStyles.form} onSubmit={handleSubmit(submit, onInvalid)}>
+          <div className={taskCreatePageStyles.fields}>
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Название</h3>
+              <input
+                className={[taskCreatePageStyles.input, nameError ? taskCreatePageStyles.isError : '']
+                  .filter(Boolean)
+                  .join(' ')}
+                type="text"
+                placeholder="Название"
+                maxLength={100}
+                {...register('name')}
+              />
+              {nameError && <p className={taskCreatePageStyles.error}>{nameError}</p>}
+            </div>
+
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Описание задачи</h3>
+              <textarea
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
+                placeholder="Описание задачи"
+                maxLength={4000}
+                {...register('description')}
+              />
+            </div>
+
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Требования</h3>
+              <textarea
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
+                placeholder="Требования"
+                maxLength={4000}
+                {...register('requirements')}
+              />
+            </div>
+
+            <div className={taskCreatePageStyles.field}>
+              <h3 className={taskCreatePageStyles.fieldTitle}>Критерии оценки</h3>
+              <textarea
+                className={[taskCreatePageStyles.input, taskCreatePageStyles.textarea].join(' ')}
+                placeholder="Критерии оценки"
+                maxLength={4000}
+                {...register('evaluationCriteria')}
+              />
+            </div>
+          </div>
+
+          <div className={taskCreatePageStyles.block}>
+            <h3 className={taskCreatePageStyles.blockTitle}>Дедлайн</h3>
+            <Controller
+              control={control}
+              name="deadline"
+              render={({ field }) => (
+                <DateTimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  minDateTime={nowMin}
+                  placeholder="Выберите дату и время"
+                  hasError={Boolean(deadlineError)}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
+            {deadlineError && <p className={taskCreatePageStyles.error}>{deadlineError}</p>}
+          </div>
+
+          <div className={taskCreatePageStyles.block}>
+            <h3 className={taskCreatePageStyles.blockTitle}>Тип ревью</h3>
+            <div className={taskCreatePageStyles.radioList}>
+              {reviewTypes.map((type) => (
+                <label key={type} className={taskCreatePageStyles.radioItem}>
+                  <input className={taskCreatePageStyles.radio} type="radio" value={type} {...register('reviewType')} />
+                  <span>{TASK_REVIEW_TYPE_LABELS[type]}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {isManualReviewers && (
+            <div className={taskCreatePageStyles.block}>
+              <Controller
+                control={control}
+                name="reviewerIds"
+                render={({ field }) => (
+                  <AssigneesSelector
+                    title="Ревьюеры"
+                    users={availableReviewers}
+                    selectedUserIds={field.value ?? []}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
+              />
+            </div>
+          )}
+
+          <div className={taskCreatePageStyles.block}>
+            <Controller
+              control={control}
+              name="assigneeIds"
+              render={({ field }) => (
+                <AssigneesSelector
+                  users={availableAssignees}
+                  selectedUserIds={field.value ?? []}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                />
+              )}
+            />
+          </div>
+
+          <button className={taskCreatePageStyles.submit} type="submit" disabled={!isValid || isSubmitting}>
+            <CheckIcon />
+          </button>
+        </form>
+      </main>
+    </div>
+  );
+};
+
+export default TaskCreatePage;

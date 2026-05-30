@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 15-update-data
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: organization
+            columns:
+              - column:
+                  name: project_member_role
+                  type: VARCHAR(50)
+        - addColumn:
+            tableName: task
+            columns:
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+        - addColumn:
+            tableName: project
+            columns:
+              - column:
+                  name: repositoryUrl
+                  type: VARCHAR(500)
+              - column:
+                  name: ai_review_enabled
+                  type: BOOLEAN

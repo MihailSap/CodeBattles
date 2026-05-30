@@ -1,0 +1,203 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 0.9375rem;
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  width: min(31.25rem, 100%);
+  max-height: calc(100vh - 1.875rem);
+  overflow-y: auto;
+  background-color: var(--color-page-bg);
+  border: 2px solid var(--color-accent);
+  border-radius: 25px;
+  box-shadow: var(--shadow-accent-strong);
+  padding: 1.875rem 2.5rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 1.5625rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.close {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+}
+
+.radioInput {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  margin: 0;
+}
+
+.radioText {
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 4.375rem;
+  max-height: 8.75rem;
+  resize: vertical;
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-muted);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.textarea {
+  &:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.submitBtn {
+  padding: 0.03125rem 1.75rem;
+  border-radius: 7px;
+  color: var(--color-text-inverse);
+  background-color: var(--color-success);
+  border: 2px solid var(--color-success);
+  cursor: pointer;
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.submitBtn svg {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+
+.submitBtn {
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .root {
+    padding: 1.25rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .close {
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  .submitBtn:hover:not(:disabled) {
+    background-color: var(--color-surface);
+    color: var(--color-success);
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .backdrop {
+    padding: 0.625rem;
+  }
+
+  .root {
+    padding: 0.9375rem 1.25rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .content {
+    gap: 0.625rem;
+  }
+
+  .radioLabel {
+    gap: 0.3125rem;
+  }
+
+  .radioText {
+    font-size: 0.875rem;
+  }
+
+  .textarea {
+    padding: 0.3125rem;
+    font-size: 0.75rem;
+  }
+
+  .submitBtn svg {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+
+  .close {
+    width: 1.5625rem;
+    height: 1.5625rem;
+  }
+}

@@ -1,6 +1,7 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
 
 @Entity
 @Table(name = "refresh_token")

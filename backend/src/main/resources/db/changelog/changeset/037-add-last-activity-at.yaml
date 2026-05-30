@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037-add-last-activity-at
+      author: SapeginMihail
+      changes:
+        - addColumn:
+            tableName: organization
+            columns:
+              - column:
+                  name: last_activity_at
+                  type: TIMESTAMP

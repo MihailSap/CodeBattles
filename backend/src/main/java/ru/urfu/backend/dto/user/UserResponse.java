@@ -1,14 +1,24 @@
 package ru.urfu.backend.dto.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ru.urfu.backend.model.Role;
+import ru.urfu.backend.model.enums.Role;
+
+import java.util.List;
 
 @Schema(name = "Запрос с данными пользователя")
 public record UserResponse(
-        long id,
+        Long id,
         String email,
         String login,
+        String fullName,
+        String avatar,
+        String registeredAt,
         Role role,
-        boolean enabled
+        Boolean enabled,
+        List<String> clouds,
+        List<String> databases,
+        List<String> frameworks,
+        List<String> languages,
+        List<String> tools
 ) {
 }

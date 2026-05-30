@@ -2,7 +2,7 @@ package ru.urfu.backend.utils;
 
 import io.jsonwebtoken.Claims;
 import ru.urfu.backend.model.JwtAuthentication;
-import ru.urfu.backend.model.Role;
+import ru.urfu.backend.model.enums.Role;
 
 public class JwtUtils {
 

@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 043-add-task-ai-review-enabled-at-creation
+      author: Codex
+      changes:
+        - addColumn:
+            tableName: task
+            columns:
+              - column:
+                  name: ai_review_enabled_at_creation
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: >
+              UPDATE task
+              SET ai_review_enabled_at_creation = COALESCE(project.ai_review_enabled, false)
+              FROM project
+              WHERE task.project_id = project.id
+      rollback:
+        - dropColumn:
+            tableName: task
+            columnName: ai_review_enabled_at_creation

@@ -9,14 +9,18 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.PagedResponse;
+import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.dto.user.UpdatePasswordRequest;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.dto.user.UpdateLoginRequest;
+import ru.urfu.backend.dto.user.UserRoleResponse;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.PageMapper;
 import ru.urfu.backend.mapper.UserMapper;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.UserService;
+
+import java.util.List;
 
 @Tag(name = "Управление пользователями")
 @SecurityRequirement(name = "bearerAuth")
@@ -25,39 +29,18 @@ import ru.urfu.backend.service.UserService;
 public class UserController {
 
     private final UserService userService;
-
     private final UserMapper userMapper;
-
     private final PageMapper pageMapper;
 
     @Autowired
     public UserController(
             UserService userService,
-            UserMapper userMapper, PageMapper pageMapper
+            UserMapper userMapper,
+            PageMapper pageMapper
     ) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.pageMapper = pageMapper;
-    }
-
-    @Operation(description = "Смена логина пользователя")
-    @PatchMapping("/{userId}/login")
-    public UserResponse updateLogin(
-            @PathVariable("userId") long userId, @RequestBody UpdateLoginRequest updateLoginRequest)
-            throws UserNotFoundException {
-        User user = userService.getById(userId);
-        User updatedUser = userService.updateLogin(user, updateLoginRequest.newLogin());
-        return userMapper.mapToUserResponse(updatedUser);
-    }
-
-    @Operation(description = "Смена пароля пользователя")
-    @PatchMapping("/{userId}/password")
-    public String updatePassword(
-            @PathVariable("userId") long userId, @RequestBody UpdatePasswordRequest updatePasswordRequest)
-            throws UserNotFoundException {
-        User user = userService.getById(userId);
-        userService.updatePassword(user, updatePasswordRequest.newPassword());
-        return "Пароль успешно обновлён";
     }
 
     @Operation(description = "Получение всех пользователей с пагинацией")
@@ -82,6 +65,63 @@ public class UserController {
         return userMapper.mapToUserResponse(user);
     }
 
+    @Operation(description = "Обновление навыков пользователя по его id")
+    @PatchMapping("/stack/{userId}")
+    public void updateStack(
+            @PathVariable("userId") Long userId, @RequestBody List<StackRequest> stackRequests) throws UserNotFoundException {
+        User user = userService.getById(userId);
+        userService.updateStack(user, stackRequests);
+    }
+
+    @Operation(description = "Смена логина пользователя")
+    @PatchMapping("/{userId}/login")
+    public UserResponse updateLogin(
+            @PathVariable("userId") long userId, @RequestBody UpdateLoginRequest updateLoginRequest)
+            throws UserNotFoundException {
+        User user = userService.getById(userId);
+        User updatedUser = userService.updateLogin(user, updateLoginRequest.newLogin());
+        return userMapper.mapToUserResponse(updatedUser);
+    }
+
+    @Operation(description = "Смена пароля пользователя")
+    @PatchMapping("/{userId}/password")
+    public String updatePassword(
+            @PathVariable("userId") long userId, @RequestBody UpdatePasswordRequest updatePasswordRequest)
+            throws UserNotFoundException {
+        User user = userService.getById(userId);
+        userService.updatePassword(user, updatePasswordRequest.newPassword());
+        return "Пароль успешно обновлён";
+    }
+
+    @Operation(description = "Добавление пользователю роли 'ADMIN'")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{userId}/admin")
+    public UserRoleResponse makeAdmin(@PathVariable("userId") long userId)
+            throws UserNotFoundException {
+        User user = userService.getById(userId);
+        User updatedUser = userService.makeAdmin(user);
+        return userMapper.mapToUserRoleResponse(updatedUser);
+    }
+
+    @Operation(description = "Удаление у пользователя роли 'ADMIN'")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{userId}/not-admin")
+    public UserRoleResponse makeNotAdmin(@PathVariable("userId") long userId)
+            throws UserNotFoundException {
+        User user = userService.getById(userId);
+        User updatedUser = userService.makeNotAdmin(user);
+        return userMapper.mapToUserRoleResponse(updatedUser);
+    }
+
+    @Operation(description = "Подтверждение аккаунта нового пользователя")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PatchMapping("/{userId}/enable")
+    public UserResponse enable(@PathVariable("userId") Long userId) throws UserNotFoundException {
+        User user = userService.getById(userId);
+        User enabledUser = userService.enableUser(user);
+        return userMapper.mapToUserResponse(enabledUser);
+    }
+
     @Operation(description = "Удаление пользователя")
     @PreAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{userId}")
@@ -90,25 +130,5 @@ public class UserController {
         User user = userService.getById(userId);
         userService.delete(user);
         return "Пользователь удален";
-    }
-
-    @Operation(description = "Добавление пользователю роли 'ADMIN'")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/{userId}/admin")
-    public UserResponse makeAdmin(@PathVariable("userId") long userId)
-            throws UserNotFoundException {
-        User user = userService.getById(userId);
-        User updatedUser = userService.makeAdmin(user);
-        return userMapper.mapToUserResponse(updatedUser);
-    }
-
-    @Operation(description = "Удаление у пользователя роли 'ADMIN'")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @PatchMapping("/{userId}/not-admin")
-    public UserResponse makeNotAdmin(@PathVariable("userId") long userId)
-            throws UserNotFoundException {
-        User user = userService.getById(userId);
-        User updatedUser = userService.makeNotAdmin(user);
-        return userMapper.mapToUserResponse(updatedUser);
     }
 }

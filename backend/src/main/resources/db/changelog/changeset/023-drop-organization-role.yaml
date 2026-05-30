@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-drop-organization-role-column
+      author: SapeginMihail
+      changes:
+        - dropColumn:
+            tableName: user_organization
+            columnName: organization_role

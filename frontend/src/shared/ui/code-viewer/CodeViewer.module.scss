@@ -1,0 +1,82 @@
+.container {
+  width: 100%;
+  height: 37.5rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-muted);
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor {
+  min-height: 0;
+  flex: 1;
+}
+
+.commentLine {
+  background-color: rgba(234, 179, 8, 0.15);
+  --color-transition: var(--transition-fast);
+}
+
+.commentGlyph {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7.2 8.9c0-1.49 1.2-2.7 2.7-2.7h4.2c1.49 0 2.7 1.21 2.7 2.7v2.7c0 1.49-1.21 2.7-2.7 2.7h-2.56l-2.74 2.2v-2.2H9.9c-1.5 0-2.7-1.21-2.7-2.7V8.9z" fill="%236366f1"/></svg>');
+  background-size: 2.1875rem;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 7px;
+  cursor: pointer;
+  --transition-extra:
+    transform var(--transition-fast), opacity var(--transition-fast), visibility var(--transition-fast),
+    filter var(--transition-fast);
+}
+
+.commentGlyph {
+  &.isAi {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"><path d="M7.2 8.9c0-1.49 1.2-2.7 2.7-2.7h4.2c1.49 0 2.7 1.21 2.7 2.7v2.7c0 1.49-1.21 2.7-2.7 2.7h-2.56l-2.74 2.2v-2.2H9.9c-1.5 0-2.7-1.21-2.7-2.7V8.9z" fill="%238b5cf6"/></svg>');
+  }
+}
+
+.commentWidget {
+  padding: 0.25rem 0.75rem;
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-radius: 7px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: var(--z-raised);
+  --transition-extra: opacity 0.15s;
+}
+
+[data-theme='dark'] .container {
+  border-color: color-mix(in srgb, var(--color-accent) 24%, transparent);
+  background-color: color-mix(in srgb, var(--color-surface) 94%, #000 6%);
+}
+
+[data-theme='dark'] .commentWidget {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .commentWidget {
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+@media (max-width: 31.25rem) {
+  .commentWidget {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.875rem;
+  }
+
+  .container :global(.monaco-editor),
+  .container :global(.monaco-editor .overflow-guard),
+  .container :global(.monaco-editor .monaco-scrollable-element) {
+    touch-action: pan-y !important;
+  }
+}

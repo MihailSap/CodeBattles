@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 13-create-task
+      author: SapeginMihail
+      changes:
+        - createTable:
+            tableName: task
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  name: deadline
+                  type: TIMESTAMP
+              - column:
+                  name: review_type
+                  type: VARCHAR(50)
+              - column:
+                  name: evaluation_criteria
+                  type: TEXT

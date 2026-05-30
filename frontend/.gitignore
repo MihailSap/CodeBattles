@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 FRONTEND_STRUCTURE.md
+AGENTS.md
+PLANS.md

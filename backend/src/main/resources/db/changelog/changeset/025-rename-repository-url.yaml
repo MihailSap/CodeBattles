@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-rename-repository-url-column
+      author: SapeginMihail
+      preConditions:
+        - columnExists:
+            tableName: project
+            columnName: repositoryUrl
+      changes:
+        - renameColumn:
+            tableName: project
+            oldColumnName: repositoryUrl
+            newColumnName: repository_url
+            columnDataType: varchar(500)

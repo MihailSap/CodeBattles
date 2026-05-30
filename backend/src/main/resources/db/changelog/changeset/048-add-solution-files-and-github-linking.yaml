@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 048-add-github-login-to-users
+      author: Codex
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: github_login
+                  type: VARCHAR(255)
+
+  - changeSet:
+      id: 048-create-github-link-intent
+      author: Codex
+      changes:
+        - createTable:
+            tableName: github_link_intent
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_github_link_intent
+                    nullable: false
+              - column:
+                  name: token
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: github_link_intent
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_github_link_intent_user
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 048-create-solution-file
+      author: Codex
+      changes:
+        - createTable:
+            tableName: solution_file
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_solution_file
+                    nullable: false
+              - column:
+                  name: path
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: VARCHAR(255)
+              - column:
+                  name: size_bytes
+                  type: BIGINT
+              - column:
+                  name: content
+                  type: TEXT
+              - column:
+                  name: solution_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: solution_file
+            baseColumnNames: solution_id
+            referencedTableName: solution
+            referencedColumnNames: id
+            constraintName: fk_solution_file_solution
+            onDelete: CASCADE

@@ -1,10 +1,16 @@
 package ru.urfu.backend.model;
 
 import jakarta.persistence.*;
+import ru.urfu.backend.model.base.BaseEntity;
+import ru.urfu.backend.model.enums.Role;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity{
+public class User extends BaseEntity {
 
     private String login;
 
@@ -12,20 +18,60 @@ public class User extends BaseEntity{
 
     private String password;
 
+    private String fullName;
+
     private Role role;
 
-    private boolean enabled;
+    private Boolean enabled = false;
 
     private String verificationToken;
 
+    private LocalDateTime verificationTokenExpiresAt;
+
     private String passwordResetToken;
+
+    private LocalDateTime passwordResetTokenExpiresAt;
 
     private String githubId;
 
-    private String avatarUrl;
+    private String githubLogin;
+
+    private String avatarFileTitle;
+
+    private LocalDateTime registeredAt = LocalDateTime.now();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private RefreshToken refreshToken;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private NotificationSettings notificationSettings;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Review> reviews = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReport> commentReports = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReportData> commentReportsData = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReaction> commentReactions = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserOrganization> organizations = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserProject> projects = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserStack> stacks = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserTask> tasks = new HashSet<>();
 
     public User(String login, String email, String password, Role roles) {
         this.login = login;
@@ -93,12 +139,28 @@ public class User extends BaseEntity{
         this.verificationToken = verificationToken;
     }
 
+    public LocalDateTime getVerificationTokenExpiresAt() {
+        return verificationTokenExpiresAt;
+    }
+
+    public void setVerificationTokenExpiresAt(LocalDateTime verificationTokenExpiresAt) {
+        this.verificationTokenExpiresAt = verificationTokenExpiresAt;
+    }
+
     public String getPasswordResetToken() {
         return passwordResetToken;
     }
 
     public void setPasswordResetToken(String passwordResetToken) {
         this.passwordResetToken = passwordResetToken;
+    }
+
+    public LocalDateTime getPasswordResetTokenExpiresAt() {
+        return passwordResetTokenExpiresAt;
+    }
+
+    public void setPasswordResetTokenExpiresAt(LocalDateTime passwordResetTokenExpiresAt) {
+        this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt;
     }
 
     public String getGithubId() {
@@ -109,11 +171,123 @@ public class User extends BaseEntity{
         this.githubId = githubId;
     }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
+    public String getGithubLogin() {
+        return githubLogin;
     }
 
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+    public void setGithubLogin(String githubLogin) {
+        this.githubLogin = githubLogin;
+    }
+
+    public String getAvatarFileTitle() {
+        return avatarFileTitle;
+    }
+
+    public void setAvatarFileTitle(String avatarUrl) {
+        this.avatarFileTitle = avatarUrl;
+    }
+
+    public Set<UserOrganization> getOrganizations() {
+        return organizations;
+    }
+
+    public void setOrganizations(Set<UserOrganization> organizations) {
+        this.organizations = organizations;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public Set<UserProject> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<UserProject> projects) {
+        this.projects = projects;
+    }
+
+    public Set<Review> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(Set<Review> reviews) {
+        this.reviews = reviews;
+    }
+
+    public Set<UserStack> getStacks() {
+        return stacks;
+    }
+
+    public void setStacks(Set<UserStack> stacks) {
+        this.stacks = stacks;
+    }
+
+    public Set<UserTask> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(Set<UserTask> tasks) {
+        this.tasks = tasks;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public LocalDateTime getRegisteredAt() {
+        return registeredAt;
+    }
+
+    public void setRegisteredAt(LocalDateTime registeredAt) {
+        this.registeredAt = registeredAt;
+    }
+
+    public NotificationSettings getNotificationSettings() {
+        return notificationSettings;
+    }
+
+    public void setNotificationSettings(NotificationSettings notificationSettings) {
+        this.notificationSettings = notificationSettings;
+    }
+
+    public Set<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(Set<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public Set<CommentReport> getCommentReports() {
+        return commentReports;
+    }
+
+    public void setCommentReports(Set<CommentReport> commentReports) {
+        this.commentReports = commentReports;
+    }
+
+    public Set<CommentReaction> getCommentReactions() {
+        return commentReactions;
+    }
+
+    public void setCommentReactions(Set<CommentReaction> commentReactions) {
+        this.commentReactions = commentReactions;
+    }
+
+    public Set<CommentReportData> getCommentReportsData() {
+        return commentReportsData;
+    }
+
+    public void setCommentReportsData(Set<CommentReportData> commentReportsData) {
+        this.commentReportsData = commentReportsData;
     }
 }
