@@ -70,13 +70,16 @@ const STAT_CARDS = [
   },
   {
     key: 'usefulnessIndex',
-    title: 'Индекс полезности',
+    title: 'Оценка ревью от ИИ',
   },
   {
     key: 'reviewDepth',
     title: 'Глубина ревью',
   },
-] satisfies readonly { key: keyof Omit<ProfileStatistics, 'acceptedDecisionsPercent'>; title: string }[];
+] satisfies readonly {
+  key: keyof Omit<ProfileStatistics, 'acceptedDecisionsPercent'>;
+  title: string;
+}[];
 
 const sortByAlphabet = (values: readonly string[] = []): string[] =>
   [...values].sort((a, b) =>

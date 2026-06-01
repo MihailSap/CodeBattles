@@ -32,18 +32,24 @@ public class TasksController {
     private final ProjectService projectService;
     private final TaskService taskService;
     private final TaskMapper taskMapper;
+    private final NotificationService notificationService;
+    private final AchievementService achievementService;
 
     @Autowired
     public TasksController(
             TaskService taskService,
             AuthService authService,
             ProjectService projectService,
-            TaskMapper taskMapper
+            TaskMapper taskMapper,
+            NotificationService notificationService,
+            AchievementService achievementService
     ) {
         this.taskService = taskService;
         this.authService = authService;
         this.projectService = projectService;
         this.taskMapper = taskMapper;
+        this.notificationService = notificationService;
+        this.achievementService = achievementService;
     }
 
     @Operation(description = "Создание задачи")
@@ -53,6 +59,9 @@ public class TasksController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Project project = projectService.getById(requestDto.projectId());
+        if (Role.ADMIN.equals(user.getRole()) && !projectService.isUserOwnerInProject(project, user)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
         if(!projectService.isUserOwnerInProject(project, user)){
             throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
@@ -108,6 +117,9 @@ public class TasksController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);
         Project project = task.getProject();
+        if (isAdminReadOnlyForTask(user, task)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
         if(!projectService.isUserOwnerInProject(project, user)){
             throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
@@ -124,6 +136,9 @@ public class TasksController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);
         Project project = task.getProject();
+        if (isAdminReadOnlyForTask(user, task)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
         if(!projectService.isUserOwnerInProject(project, user)){
             throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
@@ -138,6 +153,9 @@ public class TasksController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);
+        if (Role.ADMIN.equals(user.getRole()) && !taskService.isUserAssigneeInTask(user, task)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new ForbiddenException("Только исполнитель может завершать задачу");
         }
@@ -150,12 +168,25 @@ public class TasksController {
             throw new ForbiddenException("Задача ещё не прошла все ревью");
         }
 
+        List<Long> achievementIdsBeforeAction = achievementService.getReceivedAchievementIds(user);
         List<Long> reviewIds = task.getReviews().stream().map(Review::getId).toList();
         Task updatedTask = taskService.updateStatusDone(task);
+        notificationService.notifyTaskCompleted(updatedTask);
+        notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
         return taskMapper.mapToTaskDoneResponse(updatedTask, reviewIds);
     }
 
     private PermissionsResponse getPermissions(User user, Task task) {
+        boolean isAdminReadOnly = isAdminReadOnlyForTask(user, task);
+        if (isAdminReadOnly) {
+            return new PermissionsResponse(
+                    true,
+                    false,
+                    false,
+                    false,
+                    "ADMIN"
+            );
+        }
         boolean isAssignee = taskService.isUserAssigneeInTask(user, task);
         boolean canUploadSolution = isAssignee
                 && (TaskStatus.IN_PROGRESS.equals(task.getStatus())
@@ -168,5 +199,12 @@ public class TasksController {
                 isAssignee && taskService.canFinishReview(task),
                 projectService.getProjectMemberRole(user, task.getProject()).name()
         );
+    }
+
+    private boolean isAdminReadOnlyForTask(User user, Task task) {
+        return Role.ADMIN.equals(user.getRole())
+                && !projectService.isUserOwnerInProject(task.getProject(), user)
+                && !taskService.isUserReviewerInTask(user, task)
+                && !taskService.isUserAssigneeInTask(user, task);
     }
 }

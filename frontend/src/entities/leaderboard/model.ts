@@ -5,16 +5,16 @@ export const LEADERBOARD_SCOPE = {
 } as const;
 export type LeaderboardScope = (typeof LEADERBOARD_SCOPE)[keyof typeof LEADERBOARD_SCOPE];
 export const LEADERBOARD_PERIOD = {
-  ALL_TIME: 'allTime',
-  DAYS_30: 'days30',
-  DAYS_7: 'days7',
+  ALL_TIME: 'ALL_TIME',
+  DAYS_30: 'DAYS_30',
+  DAYS_7: 'DAYS_7',
 } as const;
 export type LeaderboardPeriod = (typeof LEADERBOARD_PERIOD)[keyof typeof LEADERBOARD_PERIOD];
 export const LEADERBOARD_CATEGORY = {
-  OVERALL: 'overall',
-  SOLUTIONS: 'solutions',
-  REVIEWS: 'reviews',
-  ACTIVITY: 'activity',
+  OVERALL: 'OVERALL',
+  SOLUTIONS: 'SOLUTIONS',
+  REVIEWS: 'REVIEWS',
+  ACTIVITY: 'ACTIVITY',
 } as const;
 export type LeaderboardCategory = (typeof LEADERBOARD_CATEGORY)[keyof typeof LEADERBOARD_CATEGORY];
 export const LEADERBOARD_TABS = [

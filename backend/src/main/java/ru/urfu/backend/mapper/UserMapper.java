@@ -2,6 +2,7 @@ package ru.urfu.backend.mapper;
 
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.auth.CurrentUserResponse;
+import ru.urfu.backend.dto.leaderboard.LeaderboardMetricsDto;
 import ru.urfu.backend.dto.user.UserResponse;
 import ru.urfu.backend.dto.user.UserRoleResponse;
 import ru.urfu.backend.dto.user.profile.ProfileSkillsUpdateDto;
@@ -9,6 +10,8 @@ import ru.urfu.backend.model.Stack;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserStack;
 import ru.urfu.backend.model.enums.StackType;
+import ru.urfu.backend.service.AchievementService;
+import ru.urfu.backend.service.LeaderboardService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,14 @@ import java.util.Set;
 
 @Component
 public class UserMapper {
+
+    private final LeaderboardService leaderboardService;
+    private final AchievementService achievementService;
+
+    public UserMapper(LeaderboardService leaderboardService, AchievementService achievementService) {
+        this.leaderboardService = leaderboardService;
+        this.achievementService = achievementService;
+    }
 
     public UserRoleResponse mapToUserRoleResponse(User user) {
         return new UserRoleResponse(user.getId(), user.getRole());
@@ -56,6 +67,10 @@ public class UserMapper {
     }
 
     public UserResponse mapToUserResponse(User user) {
+        return mapToUserResponse(user, false);
+    }
+
+    public UserResponse mapToUserResponse(User user, boolean includeHiddenAchievements) {
         List<String> clouds = new ArrayList<>();
         List<String> databases = new ArrayList<>();
         List<String> frameworks = new ArrayList<>();
@@ -81,6 +96,8 @@ public class UserMapper {
             }
         }
 
+        LeaderboardMetricsDto metrics = leaderboardService.getUserGlobalMetrics(user);
+
         return new UserResponse(
                 user.getId(),
                 user.getEmail(),
@@ -94,7 +111,14 @@ public class UserMapper {
                 databases,
                 frameworks,
                 languages,
-                tools
+                tools,
+                metrics.codeQuality(),
+                null,
+                null,
+                metrics.reviewDepthPercent(),
+                leaderboardService.getFirstTryAcceptedSolutionsPercent(user),
+                achievementService.getReceivedAchievementIds(user),
+                achievementService.getAchievements(user, includeHiddenAchievements)
         );
     }
 }

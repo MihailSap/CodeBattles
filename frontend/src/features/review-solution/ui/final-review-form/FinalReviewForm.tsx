@@ -241,15 +241,15 @@ const FinalReviewForm = ({
           </div>
 
           <div className={finalReviewFormStyles.fieldVertical}>
-            <span className={finalReviewFormStyles.label}>Общие замечания (мин. 20 символов):</span>
+            <span className={finalReviewFormStyles.label}>Общие замечания (мин. 10 символов):</span>
             <textarea
               className={finalReviewFormStyles.textarea}
               placeholder="Оставьте ваш комментарий к решению..."
               disabled={isReadOnly}
               {...register('comment')}
             />
-            {form.comment.length > 0 && form.comment.trim().length < 20 && (
-              <span className={finalReviewFormStyles.charCount}>{form.comment.trim().length}/20</span>
+            {form.comment.length > 0 && form.comment.trim().length < 10 && (
+              <span className={finalReviewFormStyles.charCount}>{form.comment.trim().length}/10</span>
             )}
           </div>
 

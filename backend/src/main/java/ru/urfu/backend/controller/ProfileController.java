@@ -68,7 +68,7 @@ public class ProfileController {
     @GetMapping("/me")
     public UserResponse getCurrentUserProfile() throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
-        return userMapper.mapToUserResponse(user);
+        return userMapper.mapToUserResponse(user, true);
     }
 
     @Operation(description = "Получение профиля пользователя по id")

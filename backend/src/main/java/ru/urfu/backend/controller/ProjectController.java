@@ -38,6 +38,8 @@ public class ProjectController {
     private final AuthService authService;
     private final ProjectInviteService projectInviteService;
     private final ProjectInviteMapper projectInviteMapper;
+    private final AchievementService achievementService;
+    private final NotificationService notificationService;
 
     @Autowired
     public ProjectController(
@@ -46,13 +48,17 @@ public class ProjectController {
             OrganizationService organizationService,
             AuthService authService,
             ProjectInviteService projectInviteService,
-            ProjectInviteMapper projectInviteMapper) {
+            ProjectInviteMapper projectInviteMapper,
+            AchievementService achievementService,
+            NotificationService notificationService) {
         this.projectMapper = projectMapper;
         this.projectService = projectService;
         this.organizationService = organizationService;
         this.authService = authService;
         this.projectInviteService = projectInviteService;
         this.projectInviteMapper = projectInviteMapper;
+        this.achievementService = achievementService;
+        this.notificationService = notificationService;
     }
 
     @Operation(description = "Получение проектов пользователя")
@@ -86,11 +92,13 @@ public class ProjectController {
     @PostMapping
     public ResponseEntity<CreatedResponse> create(@RequestBody ProjectCreateRequest projectCreateRequest) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
+        List<Long> achievementIdsBeforeAction = achievementService.getReceivedAchievementIds(user);
         if(projectCreateRequest.organizationId() == null){
             if(projectService.isProjectExist(projectCreateRequest.name(), user)){
                 throw new ProjectNameConflictException("409 PROJECT_NAME_CONFLICT");
             }
             Project project = projectService.create(projectCreateRequest, user);
+            notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
             return ResponseEntity.status(201).body(new CreatedResponse(project.getId()));
         }
 
@@ -102,6 +110,7 @@ public class ProjectController {
             throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
         Project project = projectService.create(projectCreateRequest, user, organization);
+        notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
         return ResponseEntity.status(201).body(new CreatedResponse(project.getId()));
     }
 

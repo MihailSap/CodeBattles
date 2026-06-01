@@ -47,6 +47,9 @@ public class User extends BaseEntity {
     private NotificationSettings notificationSettings;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Notification> notifications = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Review> reviews = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -257,6 +260,14 @@ public class User extends BaseEntity {
 
     public void setNotificationSettings(NotificationSettings notificationSettings) {
         this.notificationSettings = notificationSettings;
+    }
+
+    public Set<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(Set<Notification> notifications) {
+        this.notifications = notifications;
     }
 
     public Set<Comment> getComments() {

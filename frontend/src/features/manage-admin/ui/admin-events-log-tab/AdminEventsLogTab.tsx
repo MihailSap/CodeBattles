@@ -121,9 +121,6 @@ const renderTypedEventFields = (event: AdminEvent): ReactNode => {
         <EventField label="Область">
           {event.scope?.url ? <Link to={event.scope.url}>{event.scope.name}</Link> : event.scope?.name}
         </EventField>
-        <EventField label="Последствия" wide>
-          {event.details}
-        </EventField>
       </>
     );
   }
@@ -165,6 +162,8 @@ const AdminEventsLogTab = ({ isActive }: AdminEventsLogTabProps) => {
 
   const eventsQuery = useGetAdminEventsQuery(
     {
+      page,
+      size: PAGE_SIZE,
       ...(type ? { type } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),
@@ -175,9 +174,8 @@ const AdminEventsLogTab = ({ isActive }: AdminEventsLogTabProps) => {
     }
   );
 
-  const allEvents = eventsQuery.data ?? [];
-  const totalPages = Math.ceil(allEvents.length / PAGE_SIZE);
-  const events = allEvents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const events = eventsQuery.data?.content ?? [];
+  const totalPages = Number.isFinite(eventsQuery.data?.totalPages) ? (eventsQuery.data?.totalPages ?? 0) : 0;
   const isLoading = eventsQuery.isLoading || eventsQuery.isFetching;
 
   useEffect(() => {

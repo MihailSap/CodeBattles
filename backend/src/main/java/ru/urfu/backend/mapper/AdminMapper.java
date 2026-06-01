@@ -56,6 +56,7 @@ public class AdminMapper {
         return new AdminComplaintTargetDto(
                 "review",
                 review.getTask().getTitle(),
+                "/reviews/" + review.getId(),
                 review.getTask().getProject().getId(),
                 review.getTask().getId(),
                 review.getId()

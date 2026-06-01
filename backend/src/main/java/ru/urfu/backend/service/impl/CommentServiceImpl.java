@@ -13,6 +13,7 @@ import ru.urfu.backend.repository.CommentReactionRepository;
 import ru.urfu.backend.repository.CommentReportDataRepository;
 import ru.urfu.backend.repository.CommentReportRepository;
 import ru.urfu.backend.repository.CommentRepository;
+import ru.urfu.backend.service.AdminEventService;
 import ru.urfu.backend.service.CommentService;
 
 import java.time.LocalDateTime;
@@ -26,18 +27,21 @@ public class CommentServiceImpl implements CommentService {
     private final CommentReportRepository commentReportRepository;
     private final CommentReactionRepository commentReactionRepository;
     private final CommentReportDataRepository commentReportDataRepository;
+    private final AdminEventService adminEventService;
 
     @Autowired
     public CommentServiceImpl(
             CommentRepository commentRepository,
             CommentReportRepository commentReportRepository,
             CommentReactionRepository commentReactionRepository,
-            CommentReportDataRepository commentReportDataRepository
+            CommentReportDataRepository commentReportDataRepository,
+            AdminEventService adminEventService
     ) {
         this.commentRepository = commentRepository;
         this.commentReportRepository = commentReportRepository;
         this.commentReactionRepository = commentReactionRepository;
         this.commentReportDataRepository = commentReportDataRepository;
+        this.adminEventService = adminEventService;
     }
 
     @Transactional(readOnly = true)
@@ -143,6 +147,15 @@ public class CommentServiceImpl implements CommentService {
         commentReportDataRepository.save(commentReportData);
 
         commentReport.setCommentReportData(commentReportData);
+
+        adminEventService.logCommentComplaintCreated(
+                user,
+                comment.getUser(),
+                comment.getReviewIteration().getReview(),
+                comment.getId(),
+                comment.getText(),
+                request.reason() != null ? request.reason().name() : null
+        );
 
         return commentReport;
     }

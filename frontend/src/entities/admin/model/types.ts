@@ -70,18 +70,36 @@ export interface AdminEvent {
   targetUser?: AdminUserBrief;
   target?: Partial<AdminComplaintTarget>;
   reason?: string;
+  decision?: string;
   consequence?: string;
+  commentId?: number;
+  commentTextPreview?: string;
+  removedCommentId?: number;
+  penaltyPoints?: number;
   details?: string;
   scope?: {
+    type?: 'GLOBAL' | 'ORGANIZATION' | 'PROJECT';
     name: string;
     url: string;
+    organizationId?: number;
+    projectId?: number;
   };
   previousValue?: string;
   newValue?: string;
 }
 
 export interface AdminEventsFilter {
+  page?: number;
+  size?: number;
   type?: AdminEventType;
   dateFrom?: string;
   dateTo?: string;
+}
+
+export interface AdminEventsPage {
+  content: AdminEvent[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }

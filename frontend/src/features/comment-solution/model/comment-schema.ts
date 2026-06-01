@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { COMMENT_CATEGORY, COMMENT_SEVERITY } from '@/entities/review';
 
 export const commentFormSchema = z.object({
-  text: z.string().trim().min(15, 'Комментарий должен быть не короче 15 символов'),
+  text: z.string().trim().min(1, 'Введите текст комментария'),
   category: z
     .enum([
       '',

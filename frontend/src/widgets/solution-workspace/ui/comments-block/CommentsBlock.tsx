@@ -80,9 +80,11 @@ const CommentThread = memo(
     const isThreadClosed = threadClosed || Boolean(comment.isClosed);
 
     const handleReplySubmit = async () => {
-      if (replyText.length >= 15 && onReply && !isReplySubmitting) {
+      const normalizedReplyText = replyText.trim();
+
+      if (normalizedReplyText.length > 0 && onReply && !isReplySubmitting) {
         setIsReplySubmitting(true);
-        await onReply(comment.id, replyText);
+        await onReply(comment.id, normalizedReplyText);
         setIsReplying(false);
         setReplyText('');
         setIsExpanded(true);
@@ -285,7 +287,7 @@ const CommentThread = memo(
             <div className={commentsBlockStyles.form}>
               <textarea
                 className={commentsBlockStyles.textarea}
-                placeholder="Ваш ответ (минимум 15 символов)..."
+                placeholder="Ваш ответ..."
                 value={replyText}
                 onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setReplyText(event.target.value)}
               />
@@ -296,7 +298,7 @@ const CommentThread = memo(
                 <button
                   className={commentsBlockStyles.submitButton}
                   type="button"
-                  disabled={replyText.length < 15 || isReplySubmitting}
+                  disabled={replyText.trim().length === 0 || isReplySubmitting}
                   onClick={handleReplySubmit}
                 >
                   Отправить

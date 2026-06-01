@@ -11,8 +11,8 @@ export interface ProfileSkills {
 
 export interface ProfileStatistics {
   qualityScore: number;
-  aiQualityScore: number;
-  usefulnessIndex: number;
+  aiQualityScore: number | null;
+  usefulnessIndex: number | null;
   reviewDepth: number;
   acceptedDecisionsPercent: number;
 }

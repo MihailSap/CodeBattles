@@ -9,6 +9,7 @@ export type {
   AdminCommentComplaint,
   AdminComplaintDecision,
   AdminEvent,
+  AdminEventsPage,
   AdminEventType,
   AdminEventsFilter,
   AdminUserBrief,
