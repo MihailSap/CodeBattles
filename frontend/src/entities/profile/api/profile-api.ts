@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, MOCK_RECEIVED_ACHIEVEMENT_IDS, type Achievement } from '@/entities/achievement/@x/profile';
+import { resolveAchievementImage, type Achievement } from '@/entities/achievement/@x/profile';
 import { httpClient } from '@/shared/api';
 import { getImageUrl } from '@/shared/lib';
 
@@ -26,8 +26,8 @@ interface ProfileDto {
   frameworks?: string[];
   tools?: string[];
   qualityScore?: number;
-  aiQualityScore?: number;
-  usefulnessIndex?: number;
+  aiQualityScore?: number | null;
+  usefulnessIndex?: number | null;
   reviewDepth?: number;
   acceptedDecisionsPercent?: number;
   receivedAchievementIds?: number[];
@@ -39,14 +39,6 @@ interface StackRequest {
   type: 'LANGUAGES' | 'FRAMEWORKS' | 'TOOLS';
 }
 
-const fallbackStatistics = {
-  qualityScore: 4,
-  aiQualityScore: 5,
-  usefulnessIndex: 4,
-  reviewDepth: 3,
-  acceptedDecisionsPercent: 81,
-} satisfies ProfilePageData['statistics'];
-
 const mapProfileUser = (user: ProfileDto): ProfilePageData['user'] => ({
   id: user.id,
   login: user.login,
@@ -57,6 +49,11 @@ const mapProfileUser = (user: ProfileDto): ProfilePageData['user'] => ({
   ...(user.registeredAt !== undefined ? { registeredAt: user.registeredAt } : {}),
   ...(user.enabled !== undefined ? { enabled: user.enabled } : {}),
   avatarPath: getImageUrl(user.avatarPath ?? user.avatar ?? user.avatarFileTitle),
+});
+
+const mapAchievement = (achievement: Achievement): Achievement => ({
+  ...achievement,
+  image: resolveAchievementImage(achievement.image),
 });
 
 export const profileApi = {
@@ -73,16 +70,14 @@ export const profileApi = {
         tools: user.tools ?? [],
       },
       statistics: {
-        qualityScore: user.qualityScore ?? fallbackStatistics.qualityScore,
-        aiQualityScore: user.aiQualityScore ?? fallbackStatistics.aiQualityScore,
-        usefulnessIndex: user.usefulnessIndex ?? fallbackStatistics.usefulnessIndex,
-        reviewDepth: user.reviewDepth ?? fallbackStatistics.reviewDepth,
-        acceptedDecisionsPercent: user.acceptedDecisionsPercent ?? fallbackStatistics.acceptedDecisionsPercent,
+        qualityScore: user.qualityScore ?? 0,
+        aiQualityScore: user.aiQualityScore ?? 0,
+        usefulnessIndex: user.usefulnessIndex ?? 0,
+        reviewDepth: user.reviewDepth ?? 0,
+        acceptedDecisionsPercent: user.acceptedDecisionsPercent ?? 0,
       },
-      receivedAchievementIds: user.receivedAchievementIds?.length
-        ? user.receivedAchievementIds
-        : MOCK_RECEIVED_ACHIEVEMENT_IDS,
-      achievements: user.achievements?.length ? user.achievements : ACHIEVEMENTS,
+      receivedAchievementIds: user.receivedAchievementIds ?? [],
+      achievements: user.achievements?.map(mapAchievement) ?? [],
     };
   },
 

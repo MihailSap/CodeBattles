@@ -15,6 +15,7 @@ import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.model.enums.UserTaskType;
 import ru.urfu.backend.repository.TaskRepository;
 import ru.urfu.backend.repository.UserTaskRepository;
+import ru.urfu.backend.service.NotificationService;
 import ru.urfu.backend.service.TaskService;
 import ru.urfu.backend.service.UserService;
 
@@ -27,16 +28,19 @@ public class TaskServiceImpl implements TaskService {
     private final UserTaskRepository userTaskRepository;
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Autowired
     public TaskServiceImpl(
             UserTaskRepository userTaskRepository,
             TaskRepository taskRepository,
-            UserService userService
+            UserService userService,
+            NotificationService notificationService
     ) {
         this.userTaskRepository = userTaskRepository;
         this.taskRepository = taskRepository;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -119,7 +123,9 @@ public class TaskServiceImpl implements TaskService {
             addReviewersToTaskByOrganization(task, request.assigneeIds(), project);
         }
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        notificationService.notifyTaskAssigned(savedTask);
+        return savedTask;
     }
 
     @Transactional
@@ -344,6 +350,7 @@ public class TaskServiceImpl implements TaskService {
         }
         LocalDateTime now = LocalDateTime.now();
         boolean hasCountedRework = false;
+        boolean hasCountedVerdict = false;
         for (Review review : task.getReviews()) {
             ReviewIteration reviewIteration = review.getLastIteration();
             if (reviewIteration == null) {
@@ -358,12 +365,18 @@ public class TaskServiceImpl implements TaskService {
             }
             boolean expiredVerdict = reviewIteration.getCompletedAt() != null
                     && reviewIteration.getCompletedAt().isAfter(reviewIteration.getDeadline());
+            if (reviewVerdict != null && !expiredVerdict) {
+                hasCountedVerdict = true;
+            }
             if (!expiredVerdict && ReviewVerdictType.REWORK.equals(reviewVerdict.getVerdict())) {
                 hasCountedRework = true;
             }
         }
         if (hasCountedRework) {
             return updateStatusRework(task);
+        }
+        if (!hasCountedVerdict && ReviewType.MANUAL_ASSIGNEES.equals(task.getReviewType())) {
+            notificationService.notifyReviewExpiredWithoutDecision(task);
         }
         return task;
     }
@@ -378,9 +391,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task updateStatusRework(Task task) {
+        boolean statusChanged = !TaskStatus.REWORK.equals(task.getStatus());
         task.setUpdatedAt(LocalDateTime.now());
         task.setStatus(TaskStatus.REWORK);
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        if (statusChanged) {
+            notificationService.notifyReviewReworkRequired(savedTask);
+        }
+        return savedTask;
     }
 
     @Transactional

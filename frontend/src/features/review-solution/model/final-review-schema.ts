@@ -6,7 +6,7 @@ export const finalReviewFormSchema = z.object({
   readability: scoreSchema,
   testability: scoreSchema,
   scalability: scoreSchema,
-  comment: z.string().trim().min(20, 'Комментарий должен быть не короче 20 символов'),
+  comment: z.string().trim().min(10, 'Комментарий должен быть не короче 10 символов'),
   verdict: z.enum(['APPROVED', 'REWORK'], {
     message: 'Выберите вердикт',
   }),

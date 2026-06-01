@@ -28,6 +28,7 @@ import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.model.enums.OrganizationJoinStatus;
 import ru.urfu.backend.service.AuthService;
+import ru.urfu.backend.service.NotificationService;
 import ru.urfu.backend.service.OrganizationInviteService;
 import ru.urfu.backend.service.OrganizationService;
 import ru.urfu.backend.service.UserService;
@@ -48,6 +49,7 @@ public class OrganizationController {
     private final OrganizationMapper organizationMapper;
     private final AuthService authService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     @Autowired
     public OrganizationController(
@@ -56,7 +58,8 @@ public class OrganizationController {
             OrganizationService organizationService,
             OrganizationMapper organizationMapper,
             AuthService authService,
-            UserService userService
+            UserService userService,
+            NotificationService notificationService
     ) {
         this.organizationInviteService = organizationInviteService;
         this.organizationInviteMapper = organizationInviteMapper;
@@ -64,6 +67,7 @@ public class OrganizationController {
         this.organizationMapper = organizationMapper;
         this.authService = authService;
         this.userService = userService;
+        this.notificationService = notificationService;
     }
 
     @Operation(description = "Получение организации по id")
@@ -184,6 +188,7 @@ public class OrganizationController {
         }
 
         UserOrganization userOrganization = organizationService.createOrganizationJoinRequest(organization, user);
+        notificationService.notifyOrganizationJoinRequest(organization, user);
         OrganizationJoinResponse response = new OrganizationJoinResponse(true, userOrganization.getId(), OrganizationJoinStatus.PENDING);
         return ResponseEntity.status(201).body(response);
     }
@@ -219,6 +224,7 @@ public class OrganizationController {
         }
 
         organizationService.approveJoinRequest(organization, user);
+        notificationService.notifyOrganizationJoinApproved(organization, user);
         return new OrganizationJoinApprovedResponse(true);
     }
 
@@ -238,6 +244,7 @@ public class OrganizationController {
         }
 
         organizationService.removeUserOrganization(organization, user);
+        notificationService.notifyOrganizationJoinRejected(organization, user);
         return new OrganizationJoinRejectedResponse(true);
     }
 
@@ -280,6 +287,7 @@ public class OrganizationController {
         }
         organizationService.createOrganizationJoinRequest(organization, user);
         organizationService.approveJoinRequest(organization, user);
+        notificationService.notifyOrganizationJoinApproved(organization, user);
         organizationInviteService.deleteOrganizationInvite(token);
         return new OrganizationInviteJoinResponseDto(true, organization.getId());
     }

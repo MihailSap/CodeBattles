@@ -16,7 +16,9 @@ import ru.urfu.backend.exception.globalEx.ForbiddenException;
 import ru.urfu.backend.mapper.ReviewMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.*;
+import ru.urfu.backend.service.AchievementService;
 import ru.urfu.backend.service.AuthService;
+import ru.urfu.backend.service.NotificationService;
 import ru.urfu.backend.service.ProjectService;
 import ru.urfu.backend.service.ReviewService;
 import ru.urfu.backend.service.TaskService;
@@ -36,6 +38,8 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final TaskService taskService;
     private final ReviewMapper reviewMapper;
+    private final NotificationService notificationService;
+    private final AchievementService achievementService;
 
     @Autowired
     public ReviewController(
@@ -43,13 +47,17 @@ public class ReviewController {
             ProjectService projectService,
             ReviewService reviewService,
             TaskService taskService,
-            ReviewMapper reviewMapper
+            ReviewMapper reviewMapper,
+            NotificationService notificationService,
+            AchievementService achievementService
     ) {
         this.authService = authService;
         this.projectService = projectService;
         this.reviewService = reviewService;
         this.taskService = taskService;
         this.reviewMapper = reviewMapper;
+        this.notificationService = notificationService;
+        this.achievementService = achievementService;
     }
 
     @Operation(description = "Получение списка ревью текущего пользователя")
@@ -75,14 +83,7 @@ public class ReviewController {
             throw new ForbiddenException("Решение отсутствует");
         }
         task = taskService.resolveReviewOutcome(task);
-        PermissionsResponse permissionsResponse = new PermissionsResponse( //FIXME
-                true,
-                true,
-                true,
-                true,
-                true,
-                true
-        );
+        PermissionsResponse permissionsResponse = getPermissions(user, review);
         boolean canViewAggregated =
                 canViewAggregatedReview(task.getStatus(), true);
 
@@ -104,6 +105,9 @@ public class ReviewController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(reviewId);
+        if (Role.ADMIN.equals(user.getRole()) && !user.equals(review.getUser())) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
         if(!user.equals(review.getUser())){
             throw new ForbiddenException("Запрещено завершать чужие ревью");
         }
@@ -114,10 +118,13 @@ public class ReviewController {
             throw new ForbiddenException("Дедлайн данного ревью истёк, отправка невозможна");
         }
 
+        List<Long> achievementIdsBeforeAction = achievementService.getReceivedAchievementIds(user);
         reviewService.createVerdict(request, review);
         Review updatedReview = reviewService.updateStatusCompleted(review);
         Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
         taskService.resolveReviewOutcome(review.getTask());
+        notificationService.notifyReviewSubmitted(secondUpdatedReview);
+        notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
 
         return ResponseEntity.status(201).body(reviewMapper.mapToSubmitFinalReviewResponse(secondUpdatedReview));
     }
@@ -161,14 +168,7 @@ public class ReviewController {
         }
         Review review = reviews.iterator().next();
 
-        PermissionsResponse permissionsResponse = new PermissionsResponse(
-                true,
-                true,
-                true,
-                true,
-                true,
-                true
-        );
+        PermissionsResponse permissionsResponse = getPermissions(user, review);
 
         boolean canViewAggregated =
                 canViewAggregatedReview(task.getStatus(), false);
@@ -187,5 +187,23 @@ public class ReviewController {
 
         return TaskStatus.DONE.equals(status)
                 || TaskStatus.REWORK.equals(status);
+    }
+
+    private PermissionsResponse getPermissions(User user, Review review) {
+        boolean isReviewer = user.equals(review.getUser());
+        Task task = review.getTask();
+        boolean hasDomainAccess = isReviewer
+                || taskService.isUserAssigneeInTask(user, task)
+                || projectService.isUserOwnerInProject(task.getProject(), user);
+        boolean isAdminReadOnly = Role.ADMIN.equals(user.getRole()) && !hasDomainAccess;
+
+        return new PermissionsResponse(
+                !isAdminReadOnly,
+                !isAdminReadOnly && isReviewer,
+                !isAdminReadOnly,
+                !isAdminReadOnly,
+                !isAdminReadOnly,
+                !isAdminReadOnly
+        );
     }
 }

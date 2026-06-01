@@ -1,0 +1,116 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-notifications-table
+      author: Codex
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_notifications_user
+                    references: users(id)
+                    deleteCascade: true
+              - column:
+                  name: type
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: text
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_read
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deadline
+                  type: TIMESTAMP
+              - column:
+                  name: target_kind
+                  type: VARCHAR(32)
+              - column:
+                  name: organization_id
+                  type: BIGINT
+              - column:
+                  name: project_id
+                  type: BIGINT
+              - column:
+                  name: task_id
+                  type: BIGINT
+              - column:
+                  name: review_id
+                  type: BIGINT
+              - column:
+                  name: target_user_id
+                  type: BIGINT
+              - column:
+                  name: task_name
+                  type: VARCHAR(255)
+              - column:
+                  name: completion_action
+                  type: VARCHAR(64)
+              - column:
+                  name: thread_reply_count
+                  type: INT
+        - createIndex:
+            tableName: notifications
+            indexName: idx_notifications_user_active_created
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: expires_at
+              - column:
+                  name: created_at
+        - createIndex:
+            tableName: notifications
+            indexName: idx_notifications_completion
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: completion_action
+              - column:
+                  name: target_kind
+        - createIndex:
+            tableName: notifications
+            indexName: idx_notifications_thread_reply
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: type
+              - column:
+                  name: task_id
+              - column:
+                  name: review_id

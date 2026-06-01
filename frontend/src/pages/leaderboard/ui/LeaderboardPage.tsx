@@ -47,7 +47,7 @@ const getEntityConfig = (scope: Exclude<LeaderboardScope, 'global'>) => {
 
 const LeaderboardPage = () => {
   const { user, userId } = useAuth();
-  const currentUserId = userId || 57;
+  const currentUserId = userId ?? null;
   const [activeScope, setActiveScope] = useState<LeaderboardScope>(LEADERBOARD_SCOPE.GLOBAL);
   const [period, setPeriod] = useState<LeaderboardPeriod>(LEADERBOARD_PERIOD.ALL_TIME);
   const [category, setCategory] = useState<LeaderboardCategory>(LEADERBOARD_CATEGORY.OVERALL);
@@ -75,27 +75,28 @@ const LeaderboardPage = () => {
       period,
       category,
       query: debouncedUserSearch,
-      viewerId: currentUserId,
       page: 0,
       size: 100,
     }),
-    [activeScope, category, currentUserId, debouncedUserSearch, period, selectedEntity?.id]
+    [activeScope, category, debouncedUserSearch, period, selectedEntity?.id]
   );
 
   const entitySearchParams = useMemo(
     () => ({
-      viewerId: currentUserId,
       query: debouncedEntitySearch,
       limit: 5,
-      isAdmin: canResetRatings,
     }),
-    [canResetRatings, currentUserId, debouncedEntitySearch]
+    [debouncedEntitySearch]
   );
 
   const {
     data: leaderboard = {
       content: [],
       currentUserEntry: null,
+      page: 0,
+      size: 100,
+      totalElements: 0,
+      totalPages: 0,
     },
     isLoading: isLeaderboardInitialLoading,
     isFetching: isLeaderboardFetching,

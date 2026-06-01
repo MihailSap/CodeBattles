@@ -50,7 +50,7 @@ const StatisticsSection = ({
         </div>
 
         <div className={statisticsSectionStyles.acceptedBlock}>
-          <p className={statisticsSectionStyles.statTitle}>Принятые решения</p>
+          <p className={statisticsSectionStyles.statTitle}>Принятых решений с первой попытки</p>
           <p
             className={[statisticsSectionStyles.acceptedPercent, getPercentClass(acceptedDecisionsPercent)]
               .filter(Boolean)

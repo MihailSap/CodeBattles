@@ -40,6 +40,7 @@ public class SolutionController {
     private final ReviewService reviewService;
     private final SolutionMapper solutionMapper;
     private final GithubClient githubClient;
+    private final NotificationService notificationService;
 
     @Autowired
     public SolutionController(
@@ -49,7 +50,8 @@ public class SolutionController {
             SolutionService solutionService,
             ReviewService reviewService,
             SolutionMapper solutionMapper,
-            GithubClient githubClient
+            GithubClient githubClient,
+            NotificationService notificationService
     ) {
         this.authService = authService;
         this.userService = userService;
@@ -58,6 +60,7 @@ public class SolutionController {
         this.reviewService = reviewService;
         this.solutionMapper = solutionMapper;
         this.githubClient = githubClient;
+        this.notificationService = notificationService;
     }
 
     @Operation(description = "Открытые public pull request привязанного GitHub аккаунта")
@@ -99,6 +102,7 @@ public class SolutionController {
     ) throws Exception {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
+        forbidAdminReadOnlyMutation(user, task);
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
@@ -118,6 +122,7 @@ public class SolutionController {
                 }
             }
             taskService.updateStatusInReview(task);
+            notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
                     solutionMapper.mapToSolutionSubmitResponse(
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
@@ -131,6 +136,7 @@ public class SolutionController {
                 }
             }
             taskService.updateStatusInReview(task);
+            notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
                     solutionMapper.mapToSolutionSubmitResponse(
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
@@ -145,6 +151,7 @@ public class SolutionController {
                 }
             }
             taskService.updateStatusInReview(task);
+            notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
                     solutionMapper.mapToSolutionSubmitResponse(
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
@@ -177,6 +184,7 @@ public class SolutionController {
     ) throws Exception {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(request.taskId());
+        forbidAdminReadOnlyMutation(user, task);
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
@@ -201,6 +209,7 @@ public class SolutionController {
                         currentIteration,
                         updatedSolution.getSolutionManualText());
             }
+            notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
                     updatedSolution, ReviewStatus.IN_PROGRESS,
                     updatedSolution.getUploadedAt().plusDays(14).toString());
@@ -217,6 +226,7 @@ public class SolutionController {
                         currentIteration,
                         updatedSolution.getSolutionGitPullRequest());
             }
+            notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
                     updatedSolution, ReviewStatus.IN_PROGRESS,
                     updatedSolution.getUploadedAt().plusDays(14).toString());
@@ -235,6 +245,7 @@ public class SolutionController {
                         currentIteration,
                         updatedSolution.getSolutionFiles());
             }
+            notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
                     updatedSolution, ReviewStatus.IN_PROGRESS,
                     updatedSolution.getUploadedAt().plusDays(14).toString());
@@ -251,6 +262,7 @@ public class SolutionController {
         User user = authService.getAuthenticatedUser();
         Solution solution = solutionService.getById(request.solutionId());
         Task task = solution.getTask();
+        forbidAdminReadOnlyMutation(user, task);
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new ForbiddenException("Пользователь не является исполнителем данной задачи");
         }
@@ -271,6 +283,7 @@ public class SolutionController {
         User user = authService.getAuthenticatedUser();
         Task task = taskService.getById(taskId);
         Solution solution = task.getSolution();
+        forbidAdminReadOnlyMutation(user, task);
         if(!taskService.isUserAssigneeInTask(user, task)){
             throw new ForbiddenTaskException("403 FORBIDDEN_TASK");
         }
@@ -303,9 +316,16 @@ public class SolutionController {
         }
 
         List<Review> reviews = reviewService.create(reviewers, solution);
+        notificationService.notifySolutionSubmitted(task);
 
         return ResponseEntity.status(201).body(
                 solutionMapper.mapToSolutionSubmitResponse(solution, ReviewStatus.NEW,
                         reviews.get(0).getLastIteration().getDeadline().toString()));
+    }
+
+    private void forbidAdminReadOnlyMutation(User user, Task task) {
+        if (Role.ADMIN.equals(user.getRole()) && !taskService.isUserAssigneeInTask(user, task)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
     }
 }

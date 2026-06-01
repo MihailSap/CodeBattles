@@ -95,3 +95,7 @@ databaseChangeLog:
       file: db/changelog/changeset/047-drop-solution-git-provider.yaml
   - include:
       file: db/changelog/changeset/048-add-solution-files-and-github-linking.yaml
+  - include:
+      file: db/changelog/changeset/049-create-admin-events.yaml
+  - include:
+      file: db/changelog/changeset/050-create-notifications.yaml

@@ -4,17 +4,27 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
+import ru.urfu.backend.dto.PagedResponse;
 import ru.urfu.backend.dto.admin.*;
+import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.AdminMapper;
 import ru.urfu.backend.model.Comment;
 import ru.urfu.backend.model.CommentReport;
+import ru.urfu.backend.model.CommentReportData;
 import ru.urfu.backend.model.SystemSettings;
+import ru.urfu.backend.model.User;
+import ru.urfu.backend.service.AdminEventService;
+import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.CommentService;
 import ru.urfu.backend.service.SystemSettingsService;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Tag(name = "Методы для администратора")
@@ -26,16 +36,22 @@ public class AdminController {
     private final CommentService commentService;
     private final SystemSettingsService systemSettingsService;
     private final AdminMapper adminMapper;
+    private final AuthService authService;
+    private final AdminEventService adminEventService;
 
     @Autowired
     public AdminController(
             CommentService commentService,
             SystemSettingsService systemSettingsService,
-            AdminMapper adminMapper
+            AdminMapper adminMapper,
+            AuthService authService,
+            AdminEventService adminEventService
     ) {
         this.commentService = commentService;
         this.systemSettingsService = systemSettingsService;
         this.adminMapper = adminMapper;
+        this.authService = authService;
+        this.adminEventService = adminEventService;
     }
 
     @Operation(description = "Получение жалоб на комментарии")
@@ -52,11 +68,21 @@ public class AdminController {
     public ResolveAdminCommentComplaintResponse commentReportDecision(
             @PathVariable("complaintId") Long complaintId,
             @RequestBody ResolveAdminCommentComplaintRequest request
-    ){
+    ) throws UserNotFoundException {
+        User admin = authService.getAuthenticatedUser();
         CommentReport commentReport = commentService.getReportById(complaintId);
+        CommentReportData reportData = commentReport.getCommentReportData();
+
         if(CommentReportDecision.REJECT.equals(request.decision())){
             commentService.deactivateCommentReport(commentReport);
-            //TODO: Запись в журнал
+            adminEventService.logCommentComplaintRejected(
+                    admin,
+                    reportData.getUser(),
+                    reportData.getReview(),
+                    reportData.getCommentId(),
+                    reportData.getCommentText(),
+                    commentReport.getReason() != null ? commentReport.getReason().name() : null
+            );
             return new ResolveAdminCommentComplaintResponse(
                     complaintId,
                     request.decision(),
@@ -65,18 +91,35 @@ public class AdminController {
                     null
             );
         } else {
-            Long removedCommentId = commentReport.getCommentReportData().getCommentId();
+            Long removedCommentId = reportData.getCommentId();
             Comment comment = commentService.getById(removedCommentId);
             commentService.delete(comment);
             commentService.deactivateCommentReport(commentReport);
-            //TODO: Снятие баллов автора комментария
-            //TODO: Запись в журнал
+            long previousApprovedComplaints = adminEventService.countApprovedComplaintsSince(
+                    reportData.getUser(),
+                    java.time.LocalDateTime.now().minusDays(14)
+            );
+            boolean shouldApplyPenalty = previousApprovedComplaints > 0;
+            String consequence = shouldApplyPenalty
+                    ? "Комментарий удалён, штраф -100 баллов"
+                    : "Комментарий удалён, предупреждение без штрафа";
+            adminEventService.logCommentComplaintApproved(
+                    admin,
+                    reportData.getUser(),
+                    reportData.getReview(),
+                    reportData.getCommentId(),
+                    reportData.getCommentText(),
+                    commentReport.getReason() != null ? commentReport.getReason().name() : null,
+                    consequence,
+                    removedCommentId,
+                    shouldApplyPenalty ? -100 : null
+            );
             return new ResolveAdminCommentComplaintResponse(
                     complaintId,
                     request.decision(),
-                    "Комментарий удалён, у пользователя снято 100 баллов",
+                    consequence,
                     removedCommentId,
-                    100
+                    shouldApplyPenalty ? -100 : null
             );
         }
     }
@@ -92,20 +135,46 @@ public class AdminController {
     @Operation(description = "Обновление сроков на выполнение ревью")
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/system-settings/review-deadline")
-    public AdminSystemSettingsDto updateReviewDeadline(@RequestBody UpdateReviewDeadlineRequest request){
+    public AdminSystemSettingsDto updateReviewDeadline(
+            @RequestBody UpdateReviewDeadlineRequest request
+    ) throws UserNotFoundException {
+        User admin = authService.getAuthenticatedUser();
         SystemSettings systemSettings = systemSettingsService.getSystemSettings();
+        String previousValue = systemSettings.getReviewDeadlineDays() + " дней";
         SystemSettings updatedSystemSettings = systemSettingsService.updateReviewDeadline(
                 systemSettings, request.reviewDeadlineDays());
+        String newValue = updatedSystemSettings.getReviewDeadlineDays() + " дней";
+        adminEventService.logSystemReviewDeadlineChanged(admin, previousValue, newValue);
         return adminMapper.mapToAdminSystemSettingsDto(updatedSystemSettings);
     }
 
     @Operation(description = "Обновление системного промпта ИИ модели")
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/system-settings/ai-system-prompt")
-    public AdminSystemSettingsDto updateAiSystemPrompt(@RequestBody UpdateAiSystemPromptRequest request){
+    public AdminSystemSettingsDto updateAiSystemPrompt(
+            @RequestBody UpdateAiSystemPromptRequest request
+    ) throws UserNotFoundException {
+        User admin = authService.getAuthenticatedUser();
         SystemSettings systemSettings = systemSettingsService.getSystemSettings();
+        String previousValue = systemSettings.getAiSystemPrompt();
         SystemSettings updatedSystemSettings = systemSettingsService.updateAiSystemPrompt(
                 systemSettings, request.aiSystemPrompt());
+        adminEventService.logSystemAiPromptChanged(admin, previousValue, request.aiSystemPrompt());
         return adminMapper.mapToAdminSystemSettingsDto(updatedSystemSettings);
+    }
+
+    @Operation(description = "Получение журнала событий администратора")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @GetMapping("/events")
+    public PagedResponse<AdminEventDto> getEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+    ){
+        LocalDateTime dateTimeFrom = dateFrom != null ? dateFrom.atStartOfDay() : null;
+        LocalDateTime dateTimeTo = dateTo != null ? dateTo.atTime(LocalTime.MAX) : null;
+        return adminEventService.getEvents(page, size, type, dateTimeFrom, dateTimeTo);
     }
 }

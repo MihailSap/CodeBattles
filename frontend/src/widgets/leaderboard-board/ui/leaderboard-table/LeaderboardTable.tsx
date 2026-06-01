@@ -10,7 +10,11 @@ import { ROUTES } from '@/shared/config/routes';
 import { AvatarIcon } from '@/shared/ui/icons';
 import leaderboardTableStyles from './LeaderboardTable.module.scss';
 
-const formatMetric = (value: number, type: LeaderboardMetricDisplayType): string => {
+const formatMetric = (value: number | null, type: LeaderboardMetricDisplayType): string => {
+  if (value === null) {
+    return '—';
+  }
+
   if (type === 'percent') {
     return `${Math.round(Number(value) || 0)}%`;
   }

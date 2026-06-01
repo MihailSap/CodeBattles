@@ -99,6 +99,28 @@ const findFirstFileInSortedTree = (nodes: readonly ReviewFile[]): ReviewFile | n
   return null;
 };
 
+const findFileByPath = (nodes: readonly ReviewFile[], filePath: string): ReviewFile | null => {
+  for (const node of nodes) {
+    if (!node.isDirectory && node.path === filePath) {
+      return node;
+    }
+
+    if (node.children) {
+      const found = findFileByPath(node.children, filePath);
+
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+};
+
+interface LoadDataOptions {
+  preserveSelectedFile?: boolean;
+}
+
 const ReviewPage = () => {
   const { reviewId } = useParams();
   const navigate = useNavigate();
@@ -122,7 +144,7 @@ const ReviewPage = () => {
   const numericUserId = Number(userId ?? 0);
   const isAdmin = user?.role === 'ADMIN';
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (options: LoadDataOptions = {}) => {
     if (!reviewId) {
       navigate(ROUTES.reviews, { replace: true });
 
@@ -161,7 +183,14 @@ const ReviewPage = () => {
 
       if (reviewData.files?.length > 0) {
         const firstFile = findFirstFileInSortedTree(reviewData.files);
-        setSelectedFile(firstFile ?? null);
+
+        setSelectedFile((currentFile) => {
+          if (options.preserveSelectedFile && currentFile) {
+            return findFileByPath(reviewData.files, currentFile.path) ?? firstFile ?? null;
+          }
+
+          return firstFile ?? null;
+        });
       } else {
         setSelectedFile(null);
       }
@@ -175,6 +204,26 @@ const ReviewPage = () => {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const refetchOnFocus = () => {
+      void loadData({ preserveSelectedFile: true });
+    };
+
+    const refetchOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refetchOnFocus();
+      }
+    };
+
+    window.addEventListener('focus', refetchOnFocus);
+    document.addEventListener('visibilitychange', refetchOnVisible);
+
+    return () => {
+      window.removeEventListener('focus', refetchOnFocus);
+      document.removeEventListener('visibilitychange', refetchOnVisible);
+    };
   }, [loadData]);
 
   const fetchFileContent = useCallback(

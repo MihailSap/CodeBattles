@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.urfu.backend.PathsConstants;
 import ru.urfu.backend.dto.PagedResponse;
+import ru.urfu.backend.dto.admin.ResetRatingResponse;
 import ru.urfu.backend.dto.stack.StackRequest;
 import ru.urfu.backend.dto.user.UpdatePasswordRequest;
 import ru.urfu.backend.dto.user.UserResponse;
@@ -18,6 +19,8 @@ import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.mapper.PageMapper;
 import ru.urfu.backend.mapper.UserMapper;
 import ru.urfu.backend.model.User;
+import ru.urfu.backend.service.AdminEventService;
+import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.UserService;
 
 import java.util.List;
@@ -31,16 +34,22 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final PageMapper pageMapper;
+    private final AuthService authService;
+    private final AdminEventService adminEventService;
 
     @Autowired
     public UserController(
             UserService userService,
             UserMapper userMapper,
-            PageMapper pageMapper
+            PageMapper pageMapper,
+            AuthService authService,
+            AdminEventService adminEventService
     ) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.pageMapper = pageMapper;
+        this.authService = authService;
+        this.adminEventService = adminEventService;
     }
 
     @Operation(description = "Получение всех пользователей с пагинацией")
@@ -130,5 +139,16 @@ public class UserController {
         User user = userService.getById(userId);
         userService.delete(user);
         return "Пользователь удален";
+    }
+
+    @Operation(description = "Обнуление рейтинга пользователя")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @PostMapping("/{userId}/reset-rating")
+    public ResetRatingResponse resetRating(@PathVariable("userId") long userId)
+            throws UserNotFoundException {
+        User admin = authService.getAuthenticatedUser();
+        User targetUser = userService.getById(userId);
+        adminEventService.logLeaderboardRatingReset(admin, targetUser, "Обнуление рейтинга администратором");
+        return new ResetRatingResponse(userId, "Рейтинг пользователя обнулен");
     }
 }

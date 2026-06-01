@@ -74,6 +74,28 @@ const findFirstFileInSortedTree = (nodes: readonly ReviewFile[]): ReviewFile | n
   return null;
 };
 
+const findFileByPath = (nodes: readonly ReviewFile[], filePath: string): ReviewFile | null => {
+  for (const node of nodes) {
+    if (!node.isDirectory && node.path === filePath) {
+      return node;
+    }
+
+    if (node.children) {
+      const found = findFileByPath(node.children, filePath);
+
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+};
+
+interface LoadReviewOptions {
+  preserveSelectedFile?: boolean;
+}
+
 interface SolutionTabProps {
   task: Task;
   currentUser: User;
@@ -171,35 +193,65 @@ const SolutionTab = ({
     [onSnackbar]
   );
 
-  const loadReview = useCallback(async () => {
-    if (task.isMock || isRealTaskReviewer || task.status === 'IN_PROGRESS') {
-      setReview(null);
-      setLoading(false);
+  const loadReview = useCallback(
+    async (options: LoadReviewOptions = {}) => {
+      if (task.isMock || isRealTaskReviewer || task.status === 'IN_PROGRESS') {
+        setReview(null);
+        setLoading(false);
 
-      return;
-    }
-
-    try {
-      const data = await reviewApi.getReviewByTaskId(task.id);
-      setReview(data);
-      setRevealName(Boolean(data?.revealAuthorAfterReview));
-
-      if (data?.files?.length > 0) {
-        const firstFile = findFirstFileInSortedTree(data.files);
-        setSelectedFile(firstFile ?? null);
-      } else {
-        setSelectedFile(null);
+        return;
       }
-    } catch (err: unknown) {
-      console.error('Load review error:', err);
-      showSnackbar('Ошибка загрузки данных решения', solutionTabStyles.isError);
-    } finally {
-      setLoading(false);
-    }
-  }, [task.id, task.isMock, task.status, isRealTaskReviewer, showSnackbar]);
+
+      try {
+        const data = await reviewApi.getReviewByTaskId(task.id);
+        setReview(data);
+        setRevealName(Boolean(data?.revealAuthorAfterReview));
+
+        if (data?.files?.length > 0) {
+          const firstFile = findFirstFileInSortedTree(data.files);
+
+          setSelectedFile((currentFile) => {
+            if (options.preserveSelectedFile && currentFile) {
+              return findFileByPath(data.files, currentFile.path) ?? firstFile ?? null;
+            }
+
+            return firstFile ?? null;
+          });
+        } else {
+          setSelectedFile(null);
+        }
+      } catch (err: unknown) {
+        console.error('Load review error:', err);
+        showSnackbar('Ошибка загрузки данных решения', solutionTabStyles.isError);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [task.id, task.isMock, task.status, isRealTaskReviewer, showSnackbar]
+  );
 
   useEffect(() => {
     loadReview();
+  }, [loadReview]);
+
+  useEffect(() => {
+    const refetchOnFocus = () => {
+      void loadReview({ preserveSelectedFile: true });
+    };
+
+    const refetchOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        refetchOnFocus();
+      }
+    };
+
+    window.addEventListener('focus', refetchOnFocus);
+    document.addEventListener('visibilitychange', refetchOnVisible);
+
+    return () => {
+      window.removeEventListener('focus', refetchOnFocus);
+      document.removeEventListener('visibilitychange', refetchOnVisible);
+    };
   }, [loadReview]);
 
   const fetchFileContent = useCallback(

@@ -3,7 +3,7 @@ import { baseApi, toQueryResult } from '@/shared/api';
 import { adminApi } from './admin-api';
 import type {
   AdminCommentComplaint,
-  AdminEvent,
+  AdminEventsPage,
   AdminEventsFilter,
   AdminSystemSettings,
   ResolveAdminComplaintRequest,
@@ -52,7 +52,7 @@ export const adminApiSlice = baseApi.injectEndpoints({
       queryFn: (payload) => toQueryResult(() => adminApi.updateAiSystemPrompt(payload)),
       invalidatesTags: [adminSettingsTag],
     }),
-    getAdminEvents: build.query<AdminEvent[], AdminEventsFilter | undefined>({
+    getAdminEvents: build.query<AdminEventsPage, AdminEventsFilter | undefined>({
       queryFn: (params = {}) => toQueryResult(() => adminApi.getEvents(params)),
       providesTags: [adminEventsListTag],
     }),

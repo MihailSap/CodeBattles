@@ -15,11 +15,14 @@ import ru.urfu.backend.exception.globalEx.MaxDepthExceedException;
 import ru.urfu.backend.mapper.CommentMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
+import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.model.enums.ThreadAction;
+import ru.urfu.backend.service.AchievementService;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.CommentService;
+import ru.urfu.backend.service.NotificationService;
 import ru.urfu.backend.service.ReviewService;
 import ru.urfu.backend.service.TaskService;
 
@@ -35,6 +38,8 @@ public class CommentController {
     private final ReviewService reviewService;
     private final CommentService commentService;
     private final CommentMapper commentMapper;
+    private final NotificationService notificationService;
+    private final AchievementService achievementService;
 
     @Autowired
     public CommentController(
@@ -42,13 +47,17 @@ public class CommentController {
             TaskService taskService,
             ReviewService reviewService,
             CommentService commentService,
-            CommentMapper commentMapper
+            CommentMapper commentMapper,
+            NotificationService notificationService,
+            AchievementService achievementService
     ) {
         this.authService = authService;
         this.taskService = taskService;
         this.reviewService = reviewService;
         this.commentService = commentService;
         this.commentMapper = commentMapper;
+        this.notificationService = notificationService;
+        this.achievementService = achievementService;
     }
 
     @Operation(description = "Создание комментария")
@@ -59,6 +68,7 @@ public class CommentController {
         User user = authService.getAuthenticatedUser();
         Review review = reviewService.getById(request.reviewId());
         Task task = review.getTask();
+        forbidAdminReadOnlyMutation(user, task);
         if(!user.equals(review.getUser())){
             throw new ForbiddenException("Комментировать могут только назначенные ревьюеры");
         }
@@ -85,6 +95,7 @@ public class CommentController {
         Comment comment = commentService.getById(commentId);
         Comment rootComment = commentService.getRootComment(comment);
         Task task = comment.getReviewIteration().getReview().getTask();
+        forbidAdminReadOnlyMutation(user, task);
 
         if(rootComment.getClosedAt() != null){
             throw new ForbiddenException("Тред закрыт");
@@ -131,6 +142,7 @@ public class CommentController {
                 revealName,
                 reviewerIndex
         );
+        notificationService.notifyThreadReply(comment, reply);
         return ResponseEntity.status(201).body(commentMapper.mapToReviewCommentDto(reply));
     }
 
@@ -142,7 +154,10 @@ public class CommentController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
+        forbidAdminReadOnlyMutation(user, comment.getReviewIteration().getReview().getTask());
+        java.util.List<Long> achievementIdsBeforeAction = achievementService.getReceivedAchievementIds(user);
         CommentReport report = commentService.createReport(request, user, comment);
+        notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
         return ResponseEntity.status(201).body(commentMapper.mapToReportCommentResponse(report));
     }
 
@@ -155,6 +170,7 @@ public class CommentController {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
         Task task = comment.getReviewIteration().getReview().getTask();
+        forbidAdminReadOnlyMutation(user, task);
 
         if(ThreadAction.CLOSE.equals(request.action())){
             if(!TaskStatus.DONE.equals(task.getStatus()) && !TaskStatus.REWORK.equals(task.getStatus())){
@@ -190,6 +206,7 @@ public class CommentController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
+        forbidAdminReadOnlyMutation(user, comment.getReviewIteration().getReview().getTask());
         Comment rootComment = commentService.getRootComment(comment);
         if(comment.getParentComment() != null && rootComment.getClosedAt() != null){
             throw new ForbiddenException("Запрещено ставить реакцию на ответ в закрытом треде");
@@ -205,6 +222,7 @@ public class CommentController {
     ) throws UserNotFoundException {
         User user = authService.getAuthenticatedUser();
         Comment comment = commentService.getById(commentId);
+        forbidAdminReadOnlyMutation(user, comment.getReviewIteration().getReview().getTask());
         if(!user.equals(comment.getUser())){
             throw new ForbiddenException("Запрещено удалять чужие комментарии");
         }
@@ -214,5 +232,13 @@ public class CommentController {
 
         commentService.delete(comment);
         return new DeletedResponse(true);
+    }
+
+    private void forbidAdminReadOnlyMutation(User user, Task task) {
+        if (Role.ADMIN.equals(user.getRole())
+                && !taskService.isUserReviewerInTask(user, task)
+                && !taskService.isUserAssigneeInTask(user, task)) {
+            throw new ForbiddenException("FORBIDDEN_ADMIN_READ_ONLY");
+        }
     }
 }

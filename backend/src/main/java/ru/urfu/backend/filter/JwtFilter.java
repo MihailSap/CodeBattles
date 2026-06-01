@@ -45,6 +45,10 @@ public class JwtFilter extends GenericFilterBean {
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
             return bearer.substring(7);
         }
+        String accessToken = request.getParameter("accessToken");
+        if (StringUtils.hasText(accessToken) && request.getRequestURI().endsWith("/notifications/stream")) {
+            return accessToken;
+        }
         return null;
     }
 }

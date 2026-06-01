@@ -1,25 +1,24 @@
+import { httpClient } from '@/shared/api';
+import { getImageUrl } from '@/shared/lib';
+
 import {
-  LEADERBOARD_CATEGORY,
-  LEADERBOARD_PERIOD,
   LEADERBOARD_SCOPE,
-  LEADERBOARD_SORT_METRIC,
   type LeaderboardCategory,
-  type LeaderboardMetricKey,
   type LeaderboardPeriod,
   type LeaderboardScope,
 } from '../model';
-import {
-  MOCK_LEADERBOARD_ORGANIZATIONS,
-  MOCK_LEADERBOARD_PROJECTS,
-  MOCK_LEADERBOARD_USERS,
-  type LeaderboardEntity,
-  type LeaderboardMetrics,
-  type LeaderboardMockUser,
-} from './mocks/leaderboard';
-export type { LeaderboardEntity } from './mocks/leaderboard';
 
-const DEFAULT_CURRENT_USER_ID = 57;
-const resetRatingUserIds = new Set<number>();
+export interface LeaderboardMetrics {
+  totalRating: number;
+  codeQuality: number;
+  aiCodeQuality: number | null;
+  fixedCommentsPercent: number;
+  aiReviewQuality: number | null;
+  likesCount: number;
+  reviewDepthPercent: number;
+  completedReviewsCount: number;
+  completedTasksCount: number;
+}
 
 export interface LeaderboardEntry {
   id: number;
@@ -30,13 +29,21 @@ export interface LeaderboardEntry {
   metrics: LeaderboardMetrics;
 }
 
+interface LeaderboardEntryDto {
+  id: number;
+  rank: number;
+  name: string | null;
+  login: string | null;
+  avatar: string | null;
+  metrics: LeaderboardMetrics;
+}
+
 export interface LeaderboardParams {
   scope?: LeaderboardScope;
   entityId?: number | null;
   period?: LeaderboardPeriod;
   category: LeaderboardCategory;
   query?: string;
-  viewerId?: number | string;
   page?: number;
   size?: number;
 }
@@ -50,147 +57,110 @@ export interface LeaderboardResult {
   totalPages: number;
 }
 
+interface LeaderboardPageDto {
+  content: LeaderboardEntryDto[];
+  currentUserEntry: LeaderboardEntryDto | null;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface LeaderboardEntity {
+  id: number;
+  name: string;
+  lastActivityAt: string | null;
+}
+
 export interface EntitySearchParams {
-  viewerId?: number | string;
   query?: string;
   limit?: number;
-  isAdmin?: boolean;
 }
 
 export interface ResetRatingResult {
   userId: number;
   ratingReset: boolean;
+  resetAt: string;
 }
 
-const clone = <T>(value: T): T => structuredClone(value);
-
-const wait = <T>(data: T, delay = 350): Promise<T> =>
-  new Promise((resolve) => {
-    window.setTimeout(() => resolve(clone(data)), delay);
-  });
-
-const normalizeQuery = (value = ''): string => value.trim().toLowerCase();
-const getViewerId = (viewerId?: number | string): number => Number(viewerId ?? DEFAULT_CURRENT_USER_ID);
-
-const emptyMetrics = (): LeaderboardMetrics => ({
-  totalRating: 0,
-  codeQuality: 0,
-  aiCodeQuality: 0,
-  fixedCommentsPercent: 0,
-  aiReviewQuality: 0,
-  likesCount: 0,
-  reviewDepthPercent: 0,
-  completedReviewsCount: 0,
-  completedTasksCount: 0,
-});
-
-const getPeriodStats = (user: LeaderboardMockUser, period: LeaderboardPeriod): LeaderboardMetrics =>
-  resetRatingUserIds.has(user.id) ? emptyMetrics() : user.stats[period];
-
-const mapLeaderboardEntry = (user: LeaderboardMockUser, rank: number, period: LeaderboardPeriod): LeaderboardEntry => ({
-  id: user.id,
-  rank,
-  name: user.name,
-  login: user.login,
-  ...(user.avatar !== undefined ? { avatar: user.avatar } : {}),
-  metrics: getPeriodStats(user, period),
-});
-
-const filterUsersByScope = (scope: LeaderboardScope, entityId: number | null): LeaderboardMockUser[] => {
-  if (scope === LEADERBOARD_SCOPE.ORGANIZATIONS) {
-    return MOCK_LEADERBOARD_USERS.filter((user) => user.organizationIds.includes(Number(entityId)));
-  }
-
-  if (scope === LEADERBOARD_SCOPE.PROJECTS) {
-    return MOCK_LEADERBOARD_USERS.filter((user) => user.projectIds.includes(Number(entityId)));
-  }
-
-  return MOCK_LEADERBOARD_USERS;
-};
-
-const makeLeaderboard = ({
-  scope = LEADERBOARD_SCOPE.GLOBAL,
-  entityId = null,
-  period = LEADERBOARD_PERIOD.ALL_TIME,
-  category = LEADERBOARD_CATEGORY.OVERALL,
-  query = '',
-  viewerId,
-  page = 0,
-  size = 100,
-}: LeaderboardParams): LeaderboardResult => {
-  const normalizedQuery = normalizeQuery(query);
-  const sortMetric: LeaderboardMetricKey = LEADERBOARD_SORT_METRIC[category];
-
-  const sortedUsers = [...filterUsersByScope(scope, entityId)].sort((left, right) => {
-    const rightValue = getPeriodStats(right, period)[sortMetric];
-    const leftValue = getPeriodStats(left, period)[sortMetric];
-
-    return rightValue === leftValue ? left.id - right.id : rightValue - leftValue;
-  });
-
-  const rankedEntries = sortedUsers.map((user, index) => mapLeaderboardEntry(user, index + 1, period));
-
-  const filteredEntries = rankedEntries.filter(
-    (entry) => !normalizedQuery || `${entry.name} ${entry.login}`.toLowerCase().includes(normalizedQuery)
-  );
-
-  const start = page * size;
-  const content = filteredEntries.slice(start, start + size);
-  const currentUserId = getViewerId(viewerId);
-  const currentEntry = rankedEntries.find((entry) => entry.id === currentUserId) ?? null;
-  const currentUserInContent = content.some((entry) => entry.id === currentUserId);
+const mapLeaderboardEntry = (entry: LeaderboardEntryDto): LeaderboardEntry => {
+  const avatarUrl = getImageUrl(entry.avatar ?? undefined);
 
   return {
-    content,
-    currentUserEntry: currentEntry && !currentUserInContent ? currentEntry : null,
-    page,
-    size,
-    totalElements: filteredEntries.length,
-    totalPages: Math.ceil(filteredEntries.length / size),
+    id: entry.id,
+    rank: entry.rank,
+    name: entry.name ?? '',
+    login: entry.login ?? '',
+    ...(avatarUrl ? { avatar: avatarUrl } : {}),
+    metrics: entry.metrics,
   };
 };
 
-const getAvailableEntities = (
-  type: typeof LEADERBOARD_SCOPE.ORGANIZATIONS | typeof LEADERBOARD_SCOPE.PROJECTS,
-  { viewerId, query = '', limit = 5, isAdmin = false }: EntitySearchParams
-): LeaderboardEntity[] => {
-  const currentUser = MOCK_LEADERBOARD_USERS.find((user) => user.id === getViewerId(viewerId));
-  const entityIds = type === LEADERBOARD_SCOPE.ORGANIZATIONS ? currentUser?.organizationIds : currentUser?.projectIds;
+const mapLeaderboardPage = (page: LeaderboardPageDto): LeaderboardResult => ({
+  content: page.content.map(mapLeaderboardEntry),
+  currentUserEntry: page.currentUserEntry ? mapLeaderboardEntry(page.currentUserEntry) : null,
+  page: page.page,
+  size: page.size,
+  totalElements: page.totalElements,
+  totalPages: page.totalPages,
+});
 
-  const entities =
-    type === LEADERBOARD_SCOPE.ORGANIZATIONS ? MOCK_LEADERBOARD_ORGANIZATIONS : MOCK_LEADERBOARD_PROJECTS;
-
-  const normalizedQuery = normalizeQuery(query);
-
-  if (!isAdmin && !entityIds?.length) {
-    return [];
+const getLeaderboardUrl = (params: LeaderboardParams): string => {
+  if (params.scope === LEADERBOARD_SCOPE.ORGANIZATIONS && params.entityId) {
+    return `/api/v1/leaderboard/organizations/${params.entityId}`;
   }
 
-  const allowedEntityIds = entityIds ?? [];
+  if (params.scope === LEADERBOARD_SCOPE.PROJECTS && params.entityId) {
+    return `/api/v1/leaderboard/projects/${params.entityId}`;
+  }
 
-  return entities
-    .filter((entity) => isAdmin || allowedEntityIds.includes(entity.id))
-    .filter((entity) => !normalizedQuery || entity.name.toLowerCase().includes(normalizedQuery))
-    .sort((left, right) => new Date(right.lastActivityAt).getTime() - new Date(left.lastActivityAt).getTime())
-    .slice(0, limit);
+  return '/api/v1/leaderboard';
 };
 
 export const leaderboardApi = {
   async getLeaderboard(params: LeaderboardParams): Promise<LeaderboardResult> {
-    return wait(makeLeaderboard(params));
+    const response = await httpClient.get<LeaderboardPageDto>(getLeaderboardUrl(params), {
+      params: {
+        period: params.period,
+        category: params.category,
+        query: params.query || undefined,
+        page: params.page ?? 0,
+        size: params.size ?? 100,
+      },
+    });
+
+    return mapLeaderboardPage(response.data);
   },
 
   async searchOrganizations(params: EntitySearchParams = {}): Promise<LeaderboardEntity[]> {
-    return wait(getAvailableEntities(LEADERBOARD_SCOPE.ORGANIZATIONS, params), 250);
+    const response = await httpClient.get<LeaderboardEntity[]>('/api/v1/leaderboard/organizations', {
+      params: {
+        query: params.query || undefined,
+        limit: params.limit ?? 5,
+      },
+    });
+
+    return response.data;
   },
 
   async searchProjects(params: EntitySearchParams = {}): Promise<LeaderboardEntity[]> {
-    return wait(getAvailableEntities(LEADERBOARD_SCOPE.PROJECTS, params), 250);
+    const response = await httpClient.get<LeaderboardEntity[]>('/api/v1/leaderboard/projects', {
+      params: {
+        query: params.query || undefined,
+        limit: params.limit ?? 5,
+      },
+    });
+
+    return response.data;
   },
 
   async resetUserRating(userId: number | string): Promise<ResetRatingResult> {
-    resetRatingUserIds.add(Number(userId));
+    const numericId = Number(userId);
 
-    return wait({ userId: Number(userId), ratingReset: true }, 250);
+    const response = await httpClient.post<ResetRatingResult>(`/api/v1/leaderboard/users/${numericId}/reset-rating`, {
+      reason: 'Обнуление рейтинга администратором',
+    });
+
+    return response.data;
   },
 };

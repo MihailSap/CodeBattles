@@ -17,4 +17,5 @@ public interface PathsConstants {
     String DASHBOARD = "/dashboard";
     String ADMIN = "/admin";
     String LEADERBOARD = "/leaderboard";
+    String NOTIFICATIONS = "/notifications";
 }

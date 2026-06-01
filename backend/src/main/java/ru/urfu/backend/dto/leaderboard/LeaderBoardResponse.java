@@ -4,6 +4,10 @@ import java.util.List;
 
 public record LeaderBoardResponse(
         List<LeaderboardEntryDto> content,
-        Integer currentUserEntry
+        LeaderboardEntryDto currentUserEntry,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages
 ) {
 }
