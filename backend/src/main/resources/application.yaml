@@ -47,6 +47,11 @@ spring:
           starttls:
             enable: true
 
+server:
+  forward-headers-strategy: framework
+  tomcat:
+    redirect-context-root: false
+
 app:
   public-url: ${APP_PUBLIC_URL}
 
