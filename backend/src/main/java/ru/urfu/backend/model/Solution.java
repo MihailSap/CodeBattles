@@ -14,6 +14,7 @@ public class Solution extends BaseEntity {
 
     private Boolean revealAuthorAfterReview;
 
+    @Enumerated(EnumType.STRING)
     private SolutionUploadType uploadType;
 
     private LocalDateTime uploadedAt;

@@ -197,6 +197,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     @Override
+    public Review createAiReview(Solution solution) throws Exception {
+        return create(null, solution, 0);
+    }
+
+    @Transactional
+    @Override
     public ReviewFileContent createReviewFileContent(
             ReviewIteration reviewIteration, SolutionManualText solutionManualText
     ){
@@ -351,7 +357,9 @@ public class ReviewServiceImpl implements ReviewService {
         } else {
             reviewIteration.setIterationNumber(lastReviewIteration.getIterationNumber() + 1);
         }
-        return reviewIterationRepository.save(reviewIteration);
+        ReviewIteration savedReviewIteration = reviewIterationRepository.save(reviewIteration);
+        review.getReviewIterations().add(savedReviewIteration);
+        return savedReviewIteration;
     }
 
     @Transactional

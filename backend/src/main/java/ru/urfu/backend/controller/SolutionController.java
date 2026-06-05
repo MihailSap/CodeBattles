@@ -41,6 +41,7 @@ public class SolutionController {
     private final SolutionMapper solutionMapper;
     private final GithubClient githubClient;
     private final NotificationService notificationService;
+    private final AiReviewService aiReviewService;
 
     @Autowired
     public SolutionController(
@@ -51,7 +52,8 @@ public class SolutionController {
             ReviewService reviewService,
             SolutionMapper solutionMapper,
             GithubClient githubClient,
-            NotificationService notificationService
+            NotificationService notificationService,
+            AiReviewService aiReviewService
     ) {
         this.authService = authService;
         this.userService = userService;
@@ -61,6 +63,7 @@ public class SolutionController {
         this.solutionMapper = solutionMapper;
         this.githubClient = githubClient;
         this.notificationService = notificationService;
+        this.aiReviewService = aiReviewService;
     }
 
     @Operation(description = "Открытые public pull request привязанного GitHub аккаунта")
@@ -114,13 +117,7 @@ public class SolutionController {
         }
         if(SolutionUploadType.MANUAL_TEXT.equals(request.uploadType())){
             Solution solution = solutionService.createManualTextSolution(request, task);
-            int reviewerIndex = 1;
-            for(UserTask userTask : task.getUsers()){
-                if(UserTaskType.REVIEWER.equals(userTask.getUserTaskType())){
-                    reviewService.create(userTask.getUser(), solution, reviewerIndex);
-                    reviewerIndex++;
-                }
-            }
+            createInitialReviews(task, solution);
             taskService.updateStatusInReview(task);
             notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
@@ -128,13 +125,7 @@ public class SolutionController {
                             solution, ReviewStatus.NEW, solution.getUploadedAt().plusDays(14).toString()));
         } else if(SolutionUploadType.GIT_PULL_REQUEST.equals(request.uploadType())){
             Solution solution = solutionService.createSolutionForGitPullRequest(request, task);
-            int reviewerIndex = 1;
-            for(UserTask userTask : task.getUsers()){
-                if(UserTaskType.REVIEWER.equals(userTask.getUserTaskType())){
-                    reviewService.create(userTask.getUser(), solution, reviewerIndex);
-                    reviewerIndex++;
-                }
-            }
+            createInitialReviews(task, solution);
             taskService.updateStatusInReview(task);
             notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
@@ -143,13 +134,7 @@ public class SolutionController {
         } else if (SolutionUploadType.FILES.equals(request.uploadType())
                 || SolutionUploadType.ARCHIVE.equals(request.uploadType())) {
             Solution solution = solutionService.createStoredFilesSolution(request, task);
-            int reviewerIndex = 1;
-            for (UserTask userTask : task.getUsers()) {
-                if (UserTaskType.REVIEWER.equals(userTask.getUserTaskType())) {
-                    reviewService.create(userTask.getUser(), solution, reviewerIndex);
-                    reviewerIndex++;
-                }
-            }
+            createInitialReviews(task, solution);
             taskService.updateStatusInReview(task);
             notificationService.notifySolutionSubmitted(task);
             return ResponseEntity.status(201).body(
@@ -158,6 +143,23 @@ public class SolutionController {
         }
         else {
             throw new ForbiddenException("Этот тип данных не поддерживается");
+        }
+    }
+
+    private void createInitialReviews(Task task, Solution solution) throws Exception {
+        if (ReviewType.AI_ONLY.equals(task.getReviewType())) {
+            Review review = reviewService.createAiReview(solution);
+            aiReviewService.analyzeSolution(review.getLastIteration());
+            return;
+        }
+
+        int reviewerIndex = 1;
+        for (UserTask userTask : task.getUsers()) {
+            if (UserTaskType.REVIEWER.equals(userTask.getUserTaskType())) {
+                Review review = reviewService.create(userTask.getUser(), solution, reviewerIndex);
+                aiReviewService.analyzeSolution(review.getLastIteration());
+                reviewerIndex++;
+            }
         }
     }
 
@@ -208,6 +210,7 @@ public class SolutionController {
                         previousIteration,
                         currentIteration,
                         updatedSolution.getSolutionManualText());
+                aiReviewService.analyzeSolution(currentIteration);
             }
             notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
@@ -225,6 +228,7 @@ public class SolutionController {
                 reviewService.createReviewFileContent(
                         currentIteration,
                         updatedSolution.getSolutionGitPullRequest());
+                aiReviewService.analyzeSolution(currentIteration);
             }
             notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
@@ -244,6 +248,7 @@ public class SolutionController {
                         previousIteration,
                         currentIteration,
                         updatedSolution.getSolutionFiles());
+                aiReviewService.analyzeSolution(currentIteration);
             }
             notificationService.notifySolutionSubmitted(task);
             return solutionMapper.mapToSolutionSubmitResponse(
@@ -316,6 +321,9 @@ public class SolutionController {
         }
 
         List<Review> reviews = reviewService.create(reviewers, solution);
+        for (Review review : reviews) {
+            aiReviewService.analyzeSolution(review.getLastIteration());
+        }
         notificationService.notifySolutionSubmitted(task);
 
         return ResponseEntity.status(201).body(

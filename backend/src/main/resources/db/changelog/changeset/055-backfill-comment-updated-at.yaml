@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 055-backfill-comment-updated-at
+      author: Codex
+      changes:
+        - sql:
+            sql: |
+              UPDATE comment
+              SET updated_at = COALESCE(created_at, CURRENT_TIMESTAMP)
+              WHERE updated_at IS NULL;
+      rollback:
+        - sql:
+            sql: |
+              UPDATE comment
+              SET updated_at = NULL
+              WHERE updated_at = created_at;

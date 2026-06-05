@@ -14,6 +14,7 @@ public class Review extends BaseEntity {
 
     private Boolean revealAuthorAfterReview = false;
 
+    @Enumerated(EnumType.STRING)
     private ReviewStatus status;
 
     private Integer reviewerIndex;

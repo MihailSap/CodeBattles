@@ -3,6 +3,8 @@ package ru.urfu.backend.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,8 @@ import java.util.List;
 @RestController
 @RequestMapping(PathsConstants.ROOT + PathsConstants.TASKS)
 public class TasksController {
+
+    private static final Logger log = LoggerFactory.getLogger(TasksController.class);
 
     private final AuthService authService;
     private final ProjectService projectService;
@@ -77,7 +81,8 @@ public class TasksController {
         User user = authService.getAuthenticatedUser();
         Project project = projectService.getById(projectId);
         if(!projectService.isUserOwnerInProject(project, user)
-                && !projectService.isUserMemberInProject(project, user)){
+                && !projectService.isUserMemberInProject(project, user)
+                && !Role.ADMIN.equals(user.getRole())){
             throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
@@ -171,8 +176,12 @@ public class TasksController {
         List<Long> achievementIdsBeforeAction = achievementService.getReceivedAchievementIds(user);
         List<Long> reviewIds = task.getReviews().stream().map(Review::getId).toList();
         Task updatedTask = taskService.updateStatusDone(task);
-        notificationService.notifyTaskCompleted(updatedTask);
-        notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
+        try {
+            notificationService.notifyTaskCompleted(updatedTask);
+            notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
+        } catch (RuntimeException exception) {
+            log.warn("Task {} was completed, but completion side effects failed", taskId, exception);
+        }
         return taskMapper.mapToTaskDoneResponse(updatedTask, reviewIds);
     }
 

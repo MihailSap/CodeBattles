@@ -19,6 +19,7 @@ public class Task extends BaseEntity {
 
     private LocalDateTime deadline;
 
+    @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
     @Enumerated(EnumType.STRING)

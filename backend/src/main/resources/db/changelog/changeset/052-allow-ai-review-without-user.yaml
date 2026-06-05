@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 052-allow-ai-review-without-user
+      author: Codex
+      changes:
+        - dropNotNullConstraint:
+            tableName: review
+            columnName: user_id
+            columnDataType: BIGINT

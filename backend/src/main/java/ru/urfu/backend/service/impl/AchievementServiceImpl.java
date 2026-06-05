@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.urfu.backend.dto.achievement.AchievementDto;
 import ru.urfu.backend.dto.leaderboard.LeaderboardMetricsDto;
+import ru.urfu.backend.model.AiSolutionEvaluation;
 import ru.urfu.backend.model.Comment;
 import ru.urfu.backend.model.Review;
 import ru.urfu.backend.model.ReviewIteration;
@@ -12,6 +13,7 @@ import ru.urfu.backend.model.Task;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserProject;
 import ru.urfu.backend.model.UserTask;
+import ru.urfu.backend.model.enums.AiEvaluationStatus;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.ReviewType;
@@ -99,6 +101,13 @@ public class AchievementServiceImpl implements AchievementService {
                 .map(ReviewIteration::getReviewVerdict)
                 .filter(Objects::nonNull)
                 .toList();
+        List<AiSolutionEvaluation> aiSolutionEvaluations = assigneeTasks.stream()
+                .flatMap(task -> task.getReviews().stream())
+                .flatMap(review -> review.getReviewIterations().stream())
+                .map(ReviewIteration::getAiSolutionEvaluation)
+                .filter(Objects::nonNull)
+                .filter(evaluation -> AiEvaluationStatus.COMPLETED.equals(evaluation.getStatus()))
+                .toList();
         LeaderboardMetricsDto metrics = leaderboardService.getUserGlobalMetrics(user);
 
         return new AchievementStats(
@@ -108,6 +117,7 @@ public class AchievementServiceImpl implements AchievementService {
                 completedReviews,
                 solutionVerdicts,
                 reviewerVerdicts,
+                aiSolutionEvaluations,
                 metrics.totalRating()
         );
     }
@@ -122,7 +132,7 @@ public class AchievementServiceImpl implements AchievementService {
             case 6 -> hasTenOwnedProjectsInOneOrganization(stats.userProjects());
             case 7 -> stats.assigneeTasks().stream().anyMatch(this::isCompletedAtNight);
             case 8 -> stats.assigneeTasks().stream().anyMatch(this::hasPerfectAverageScore);
-            case 9 -> stats.solutionVerdicts().stream().anyMatch(this::hasAiReviewOnePointCriterion);
+            case 9 -> stats.aiSolutionEvaluations().stream().anyMatch(this::hasAiReviewOnePointScore);
             case 10 -> averageScore(stats.solutionVerdicts()) > 0 && averageScore(stats.solutionVerdicts()) < 3;
             case 11 -> stats.solutionVerdicts().stream().anyMatch(this::hasBadCriterion);
             case 12 -> stats.completedReviews().stream().anyMatch(this::isReviewWithoutInlineComment);
@@ -170,14 +180,8 @@ public class AchievementServiceImpl implements AchievementService {
         return !verdicts.isEmpty() && averageScore(verdicts) == 5;
     }
 
-    private boolean hasAiReviewOnePointCriterion(ReviewVerdict verdict) {
-        ReviewIteration iteration = verdict.getReviewIteration();
-        Review review = iteration == null ? null : iteration.getReview();
-        Task task = review == null ? null : review.getTask();
-        return task != null
-                && (ReviewType.AI_ONLY.equals(task.getReviewType())
-                || Boolean.TRUE.equals(task.getAiReviewEnabledAtCreation()))
-                && hasCriterion(verdict, score -> score == 1);
+    private boolean hasAiReviewOnePointScore(AiSolutionEvaluation evaluation) {
+        return Integer.valueOf(1).equals(evaluation.getQualityScore());
     }
 
     private boolean hasBadCriterion(ReviewVerdict verdict) {
@@ -236,6 +240,7 @@ public class AchievementServiceImpl implements AchievementService {
             List<Review> completedReviews,
             List<ReviewVerdict> solutionVerdicts,
             List<ReviewVerdict> reviewerVerdicts,
+            List<AiSolutionEvaluation> aiSolutionEvaluations,
             double totalRating
     ) {
 

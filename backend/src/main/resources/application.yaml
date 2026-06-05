@@ -12,12 +12,17 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
 
   jpa:
-    show-sql: true
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     hibernate:
       ddl-auto: none
 
   liquibase:
     enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:100MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:100MB}
 
   security:
     oauth2:
@@ -44,6 +49,15 @@ spring:
 
 app:
   public-url: ${APP_PUBLIC_URL}
+
+ai:
+  provider: ${AI_PROVIDER:openrouter}
+  openrouter:
+    api-key: ${OPENROUTER_API_KEY:}
+    model: ${OPENROUTER_MODEL:}
+    base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+    site-url: ${OPENROUTER_SITE_URL:}
+    site-name: ${OPENROUTER_SITE_NAME:CodeBattles}
 
 jwt:
   secret:

@@ -20,6 +20,7 @@ import ru.urfu.backend.mapper.ProjectMapper;
 import ru.urfu.backend.mapper.TaskMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
+import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.service.*;
 
 import java.util.ArrayList;
@@ -122,17 +123,19 @@ public class ProjectController {
 
         if(project.getIsPrivate()
                 && !projectService.isUserOwnerInProject(project, user)
-                && !projectService.isUserMemberInProject(project, user)){
+                && !projectService.isUserMemberInProject(project, user)
+                && !Role.ADMIN.equals(user.getRole())){
             throw new ForbiddenProjectException("403 FORBIDDEN_PROJECT");
         }
 
         Organization organization = project.getOrganization();
-        if(organization != null && !organizationService.isUserExistsInOrganization(organization, user)){
+        if(organization != null 
+                && !organizationService.isUserExistsInOrganization(organization, user)
+                && !Role.ADMIN.equals(user.getRole())){
             throw new ForbiddenOrganizationException("403 FORBIDDEN_ORGANIZATION");
         }
 
-        if(!project.getIsPrivate()
-                && !projectService.isUserOwnerInProject(project, user)
+        if(!projectService.isUserOwnerInProject(project, user)
                 && !projectService.isUserMemberInProject(project, user)){
             return projectMapper.mapToProjectDetailsDto(project, ProjectMemberRole.GUEST);
         }

@@ -31,7 +31,8 @@ const AdminSystemSettingsTab = ({ isActive }: AdminSystemSettingsTabProps) => {
 
   const settingsQuery = useGetAdminSystemSettingsQuery(undefined, {
     skip: !isActive,
-    refetchOnMountOrArgChange: 30,
+    pollingInterval: isActive ? 5000 : 0,
+    refetchOnMountOrArgChange: true,
   });
 
   const [updateDeadline, updateDeadlineState] = useUpdateAdminReviewDeadlineDaysMutation();
@@ -220,7 +221,9 @@ const AdminSystemSettingsTab = ({ isActive }: AdminSystemSettingsTabProps) => {
         <div className={adminComplaintsTabStyles.top}>
           <div>
             <h2 className={adminComplaintsTabStyles.title}>Реакции на AI-комментарии</h2>
-            <p className={adminComplaintsTabStyles.subtitle}>Последние {stats?.periodDays ?? 0} дней</p>
+            <p className={adminComplaintsTabStyles.subtitle}>
+              {stats?.periodDays ? `Последние ${stats.periodDays} дней` : 'За все время'}
+            </p>
           </div>
         </div>
 

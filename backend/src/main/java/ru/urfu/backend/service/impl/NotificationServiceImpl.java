@@ -198,6 +198,9 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifySolutionSubmitted(Task task) {
         deleteActiveByCompletion(task, NotificationCompletionAction.SUBMIT_TASK_SOLUTION);
         for (Review review : task.getReviews()) {
+            if (review.getUser() == null) {
+                continue;
+            }
             ReviewIteration iteration = review.getLastIteration();
             LocalDateTime deadline = iteration == null ? null : iteration.getDeadline();
             create(
@@ -356,6 +359,9 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyTaskCompleted(Task task) {
         deleteActiveByCompletion(task, NotificationCompletionAction.ACCEPT_REVIEW_RESULT);
         for (Review review : task.getReviews()) {
+            if (review.getUser() == null) {
+                continue;
+            }
             create(
                     review.getUser(),
                     NotificationType.TASK_COMPLETED_REVIEWER,
@@ -405,7 +411,7 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @Override
     public void notifyNewAchievements(User user, List<Long> achievementIdsBeforeAction) {
         List<Long> safeBefore = achievementIdsBeforeAction == null ? List.of() : achievementIdsBeforeAction;

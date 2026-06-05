@@ -110,6 +110,9 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.save(task);
 
         ReviewType reviewType = request.reviewType();
+        if (ReviewType.AI_ONLY.equals(reviewType) && !Boolean.TRUE.equals(project.getAiReviewEnabled())) {
+            throw new RuntimeException("AI_ONLY доступен только при включенном AI-review в проекте");
+        }
         addUsersToTask(task, request.assigneeIds(), UserTaskType.ASSIGNEE);
         if(ReviewType.MANUAL_ASSIGNEES.equals(reviewType)){
             List<Long> reviewerIds = request.reviewerIds();
@@ -225,6 +228,10 @@ public class TaskServiceImpl implements TaskService {
         ReviewType newReviewType = request.reviewType();
         boolean reviewTypeChanged = newReviewType != null && !newReviewType.equals(currentReviewType);
         if(reviewTypeChanged){
+            if (ReviewType.AI_ONLY.equals(newReviewType)
+                    && !Boolean.TRUE.equals(task.getProject().getAiReviewEnabled())) {
+                throw new RuntimeException("AI_ONLY доступен только при включенном AI-review в проекте");
+            }
             task.setReviewType(newReviewType);
         }
         task.setUpdatedAt(LocalDateTime.now());
@@ -286,6 +293,11 @@ public class TaskServiceImpl implements TaskService {
                 );
                 Project project = task.getProject();
                 addReviewersToTaskByOrganization(task, effectiveAssigneeIds, project);
+            } else if(ReviewType.AI_ONLY.equals(effectiveReviewType)){
+                userTaskRepository.deleteByTaskAndUserTaskType(task, UserTaskType.REVIEWER);
+                task.getUsers().removeIf(
+                        ut -> ut.getUserTaskType() == UserTaskType.REVIEWER
+                );
             }
         }
         return taskRepository.save(task);

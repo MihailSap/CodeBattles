@@ -35,6 +35,21 @@ const SolutionUploadModal = lazy(() =>
   import('@/features/upload-solution').then(({ SolutionUploadModal }) => ({ default: SolutionUploadModal }))
 );
 
+const AI_REVIEW_POLL_INTERVAL_MS = 4500;
+
+const AI_EVALUATION_STATUS = {
+  FAILED: 'FAILED',
+  COMPLETED: 'COMPLETED',
+} as const;
+
+const isSettledAiEvaluation = (evaluation?: { status?: string } | null): boolean =>
+  Boolean(
+    evaluation &&
+      (!evaluation.status ||
+        evaluation.status === AI_EVALUATION_STATUS.COMPLETED ||
+        evaluation.status === AI_EVALUATION_STATUS.FAILED)
+  );
+
 interface SelectedLineRange {
   startLine: number;
   endLine: number;
@@ -518,6 +533,8 @@ const SolutionTab = ({
   const isWaiting = task.status === 'IN_REVIEW';
   const isCompleted = task.status === 'DONE';
   const isRework = task.status === 'REWORK';
+  const isAiOnlyReview = review?.reviewType === 'AI_ONLY' || task.reviewType === 'AI_ONLY';
+  const isReviewCompleted = review?.status === 'COMPLETED';
 
   const isExpiredWithoutReview = useMemo(
     () =>
@@ -536,11 +553,13 @@ const SolutionTab = ({
     [aiReviewEnabled, allComments]
   );
 
-  const hasReviewResults = isCompleted || isRework;
+  const hasReviewResults =
+    isCompleted || isRework || isReviewCompleted || (isAiOnlyReview && Boolean(review?.aiEvaluation));
+
   const showExpiredAiResults = isExpiredWithoutReview && aiReviewEnabled;
   const showCodeComments = hasReviewResults || showExpiredAiResults;
   const shouldShowFinishReview = isWaiting && Boolean(task.canFinishReview);
-  const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !task.canFinishReview;
+  const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !task.canFinishReview && !isAiOnlyReview;
 
   const fileComments = useMemo(
     () => visibleComments.filter((comment) => hasLineLocation(comment) && comment.file === selectedFile?.path),
@@ -567,6 +586,40 @@ const SolutionTab = ({
     () => review?.history?.flatMap((historyItem) => historyItem.comments) ?? [],
     [review?.history]
   );
+
+  const isAiResultsStage = isRework || isCompleted;
+
+  const hasRequiredAiEvaluations = isAiOnlyReview
+    ? isSettledAiEvaluation(review?.aiEvaluation)
+    : isSettledAiEvaluation(review?.aiEvaluation) && isSettledAiEvaluation(review?.aiReviewEvaluation);
+
+  const shouldPollAiEvaluations = Boolean(
+    aiReviewEnabled &&
+      review &&
+      ((isWaiting && !isSettledAiEvaluation(review.aiEvaluation)) || (isAiResultsStage && !hasRequiredAiEvaluations))
+  );
+
+  const showAiGenerationStatus = Boolean(
+    aiReviewEnabled &&
+      review &&
+      ((isAiOnlyReview && isWaiting && !isSettledAiEvaluation(review.aiEvaluation)) ||
+        (isAiResultsStage && !hasRequiredAiEvaluations))
+  );
+
+  useEffect(() => {
+    if (!shouldPollAiEvaluations) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void loadReview({ preserveSelectedFile: true });
+      void onTaskUpdated?.();
+    }, AI_REVIEW_POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [shouldPollAiEvaluations, loadReview, onTaskUpdated]);
 
   if (loading) {
     return (
@@ -701,7 +754,7 @@ const SolutionTab = ({
                   <ReviewResultsSidebar
                     review={review}
                     aiReviewEnabled={Boolean(aiReviewEnabled)}
-                    canRevealReviewerNames={isCompleted}
+                    canRevealReviewerNames={isCompleted || isReviewCompleted}
                   />
                 </div>
               )}
@@ -709,6 +762,22 @@ const SolutionTab = ({
 
             <div className={solutionTabStyles.colRight}>
               <>
+                {showAiGenerationStatus && (
+                  <div className={solutionTabStyles.aiStatusCard} role="status" aria-live="polite">
+                    <div className={solutionTabStyles.aiStatusPulse} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                    <div>
+                      <h3 className={solutionTabStyles.aiStatusTitle}>AI анализирует решение</h3>
+                      <p className={solutionTabStyles.aiStatusText}>
+                        Оценка и комментарии к коду появятся здесь автоматически, как только проверка завершится.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {isRework && isAssignee && (
                   <div className={solutionTabStyles.card}>
                     <h3 className={solutionTabStyles.cardTitle}>Отправить на проверку</h3>

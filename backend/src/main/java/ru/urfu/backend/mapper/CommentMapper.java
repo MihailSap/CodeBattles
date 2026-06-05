@@ -10,8 +10,10 @@ import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.ReactionType;
 import ru.urfu.backend.model.enums.TaskStatus;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Component
@@ -49,13 +51,13 @@ public class CommentMapper {
                 comment.getText(),
                 comment.getCategory(),
                 comment.getSeverity(),
-                comment.getUser().getId(),
+                comment.getUser() == null ? null : comment.getUser().getId(),
                 revealName ? getVisibleAuthorName(comment) : null,
                 comment.getCommentAuthorRole(),
                 revealName,
                 getReviewerIndex(comment),
-                comment.getCreatedAt().toString(),
-                comment.getUpdatedAt().toString(),
+                formatDateTime(comment.getCreatedAt()),
+                formatDateTime(comment.getUpdatedAt(), comment.getCreatedAt()),
                 comment.getClosedAt() != null,
                 comment.getClosedAt() == null ? "" : comment.getClosedAt().toString(),
                 likedBy,
@@ -70,6 +72,14 @@ public class CommentMapper {
             replyDtos.add(mapToReviewCommentDto(reply));
         }
         return replyDtos;
+    }
+
+    private String formatDateTime(LocalDateTime dateTime) {
+        return dateTime == null ? "" : dateTime.toString();
+    }
+
+    private String formatDateTime(LocalDateTime dateTime, LocalDateTime fallback) {
+        return formatDateTime(dateTime == null ? fallback : dateTime);
     }
 
     private Integer getReviewerIndex(Comment comment) {
@@ -98,13 +108,19 @@ public class CommentMapper {
         }
         if (CommentAuthorRole.REVIEWER.equals(comment.getCommentAuthorRole())) {
             return task.getReviews().stream()
-                    .anyMatch(review -> review.getUser().equals(comment.getUser())
+                    .anyMatch(review -> Objects.equals(review.getUser(), comment.getUser())
                             && Boolean.TRUE.equals(review.getRevealAuthorAfterReview()));
         }
         return false;
     }
 
     private String getVisibleAuthorName(Comment comment) {
+        if (CommentAuthorRole.AI.equals(comment.getCommentAuthorRole())) {
+            return "AI";
+        }
+        if (CommentAuthorRole.SYSTEM.equals(comment.getCommentAuthorRole())) {
+            return "Система";
+        }
         String fullName = comment.getUser().getFullName();
         if (fullName != null && !fullName.isBlank()) {
             return fullName;

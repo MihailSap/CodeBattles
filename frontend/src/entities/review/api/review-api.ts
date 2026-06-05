@@ -34,7 +34,7 @@ interface BackendFinalReviewDto extends Omit<FinalReview, 'revealName'> {
 interface BackendCommentDto {
   id: EntityId;
   parentId: EntityId | null;
-  authorId?: EntityId;
+  authorId?: EntityId | null;
   authorName?: string;
   authorRole: string;
   reviewerIndex?: number;
@@ -66,6 +66,13 @@ interface BackendReviewDto {
   id: EntityId;
   projectId: EntityId;
   taskId: EntityId;
+  taskName?: string;
+  project?: {
+    id?: EntityId;
+    name?: string;
+    isPrivate?: boolean;
+    aiReviewEnabled?: boolean;
+  } | null;
   solutionId?: EntityId;
   reviewType?: string;
   status?: ReviewDetail['status'];
@@ -210,7 +217,9 @@ const mapBackendComment = (
 
   const revealedReviewerName =
     canRevealReviewerNames && authorRole === AUTHOR_ROLE.REVIEWER
-      ? ((comment.authorId !== undefined ? revealedReviewerNames.byId.get(Number(comment.authorId)) : undefined) ??
+      ? ((comment.authorId !== undefined && comment.authorId !== null
+          ? revealedReviewerNames.byId.get(Number(comment.authorId))
+          : undefined) ??
         (comment.reviewerIndex !== undefined
           ? revealedReviewerNames.byIndex.get(Number(comment.reviewerIndex))
           : undefined))
@@ -225,7 +234,7 @@ const mapBackendComment = (
     replies: (comment.replies ?? []).map((reply) =>
       mapBackendComment(reply, canRevealReviewerNames, canRevealAssigneeNames, revealedReviewerNames)
     ),
-    ...(comment.authorId !== undefined ? { authorId: comment.authorId } : {}),
+    ...(comment.authorId !== undefined && comment.authorId !== null ? { authorId: comment.authorId } : {}),
     ...(comment.file !== undefined ? { file: comment.file } : {}),
     ...(comment.startLine !== undefined ? { startLine: comment.startLine } : {}),
     ...(comment.endLine !== undefined ? { endLine: comment.endLine } : {}),
@@ -277,7 +286,9 @@ const mapBackendDetails = (review: BackendReviewDto): ReviewDetail => {
   const revealedReviewerNames = finalReviews.reduce<RevealedReviewerNames>(
     (names, finalReview) => {
       if (canRevealReviewerNames && finalReview.revealName && finalReview.reviewerName) {
-        names.byId.set(Number(finalReview.reviewerId), finalReview.reviewerName);
+        if (finalReview.reviewerId !== undefined && finalReview.reviewerId !== null) {
+          names.byId.set(Number(finalReview.reviewerId), finalReview.reviewerName);
+        }
 
         if (finalReview.reviewerIndex !== undefined) {
           names.byIndex.set(Number(finalReview.reviewerIndex), finalReview.reviewerName);
@@ -293,6 +304,8 @@ const mapBackendDetails = (review: BackendReviewDto): ReviewDetail => {
     id: review.id,
     projectId: review.projectId,
     taskId: review.taskId,
+    taskName: review.taskName,
+    projectName: review.project?.name,
     status: review.status ?? REVIEW_STATUS.NEW,
     uploadedAt: review.uploadedAt ?? '',
     deadline: review.deadline ?? '',

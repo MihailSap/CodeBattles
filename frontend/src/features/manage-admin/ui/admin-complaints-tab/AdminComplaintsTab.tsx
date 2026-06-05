@@ -60,7 +60,7 @@ const AdminComplaintsTab = ({ isActive }: AdminComplaintsTabProps) => {
 
   const complaintsQuery = useGetAdminComplaintsQuery(undefined, {
     skip: !isActive,
-    refetchOnMountOrArgChange: 30,
+    refetchOnMountOrArgChange: true,
   });
 
   const [resolveComplaint, resolveComplaintState] = useResolveAdminComplaintMutation();

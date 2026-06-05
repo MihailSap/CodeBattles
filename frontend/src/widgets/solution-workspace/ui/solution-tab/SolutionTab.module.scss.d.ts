@@ -1,4 +1,8 @@
 export type Styles = {
+  aiStatusCard: string;
+  aiStatusPulse: string;
+  aiStatusText: string;
+  aiStatusTitle: string;
   card: string;
   cardText: string;
   cardTextError: string;

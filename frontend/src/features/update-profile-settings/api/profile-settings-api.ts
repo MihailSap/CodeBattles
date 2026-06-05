@@ -53,9 +53,11 @@ export const profileSettingsApi = {
     );
 
     const authorizationUrl = response.data.authorizationUrl;
+    const url = new URL(API_BASE_URL.startsWith('http') ? API_BASE_URL : window.location.origin);
+    const hostUrl = `${url.protocol}//${url.host}`;
 
     return {
-      authorizationUrl: authorizationUrl.startsWith('http') ? authorizationUrl : `${API_BASE_URL}${authorizationUrl}`,
+      authorizationUrl: authorizationUrl.startsWith('http') ? authorizationUrl : `${hostUrl}${authorizationUrl}`,
     };
   },
   async unlinkAccount(provider: LinkedAccountProvider): Promise<LinkedAccounts> {

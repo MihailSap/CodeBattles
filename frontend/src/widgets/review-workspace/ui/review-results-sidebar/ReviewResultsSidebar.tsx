@@ -5,6 +5,13 @@ import { StarIcon } from '@/shared/ui/icons';
 import ReviewDropdown from '@/shared/ui/review-dropdown';
 import reviewResultsSidebarStyles from './ReviewResultsSidebar.module.scss';
 
+type ReviewOptionValue = string | number;
+
+const AI_EVALUATION_STATUS = {
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+} as const;
+
 interface StarRatingProps {
   value: number;
   max?: number;
@@ -47,8 +54,11 @@ const ReviewResultsSidebar = ({
   showReviewerSummary = true,
   showAiSolutionEvaluation = true,
 }: ReviewResultsSidebarProps) => {
-  const [selectedReviewerId, setSelectedReviewerId] = useState<EntityId | null>(
-    review.finalReviews[0]?.reviewerId ?? null
+  const getReviewOptionValue = (finalReview: ReviewDetail['finalReviews'][number]): ReviewOptionValue =>
+    finalReview.reviewerId ?? `review-${String(finalReview.id)}`;
+
+  const [selectedReviewOptionValue, setSelectedReviewOptionValue] = useState<ReviewOptionValue | null>(
+    review.finalReviews[0] ? getReviewOptionValue(review.finalReviews[0]) : null
   );
 
   const averageScore =
@@ -66,12 +76,16 @@ const ReviewResultsSidebar = ({
     const isCurrentReviewer =
       currentReviewerId !== null &&
       currentReviewerId !== undefined &&
+      finalReview.reviewerId !== null &&
+      finalReview.reviewerId !== undefined &&
       Number(finalReview.reviewerId) === Number(currentReviewerId);
 
     return {
-      value: finalReview.reviewerId,
+      value: getReviewOptionValue(finalReview),
       label: isCurrentReviewer
         ? 'Вы'
+        : finalReview.reviewerId === null || finalReview.reviewerId === undefined
+          ? finalReview.reviewerName || 'AI'
         : canRevealReviewerNames && finalReview.revealName
           ? finalReview.reviewerName
           : `Ревьюер ${index + 1}`,
@@ -79,21 +93,51 @@ const ReviewResultsSidebar = ({
   });
 
   const hasFinalReviews = review.finalReviews && review.finalReviews.length > 0;
+  const isAiOnlyReview = review.reviewType === 'AI_ONLY';
 
   const selectedReviewerExists = review.finalReviews.some(
-    (finalReview) => Number(finalReview.reviewerId) === Number(selectedReviewerId)
+    (finalReview) => getReviewOptionValue(finalReview) === selectedReviewOptionValue
   );
 
-  const effectiveSelectedReviewerId = selectedReviewerExists
-    ? selectedReviewerId
-    : (review.finalReviews[0]?.reviewerId ?? null);
+  const effectiveSelectedReviewOptionValue = selectedReviewerExists
+    ? selectedReviewOptionValue
+    : (review.finalReviews[0] ? getReviewOptionValue(review.finalReviews[0]) : null);
 
   const selectedReviewData = review.finalReviews.find(
-    (finalReview) => Number(finalReview.reviewerId) === Number(effectiveSelectedReviewerId)
+    (finalReview) => getReviewOptionValue(finalReview) === effectiveSelectedReviewOptionValue
   );
 
-  const showAiEvaluations =
-    showAiSolutionEvaluation && aiReviewEnabled && (hasFinalReviews || Boolean(review.aiEvaluation));
+  const showAiSolutionBlock = showAiSolutionEvaluation && aiReviewEnabled && Boolean(review.aiEvaluation);
+
+  const showAiReviewEvaluation = aiReviewEnabled && review.reviewType !== 'AI_ONLY' && Boolean(review.aiReviewEvaluation);
+  const aiSolutionFailed = review.aiEvaluation?.status === AI_EVALUATION_STATUS.FAILED;
+  const aiReviewFailed = review.aiReviewEvaluation?.status === AI_EVALUATION_STATUS.FAILED;
+
+  const getAiErrorText = (message?: string | null): string => {
+    const normalizedMessage = message?.trim();
+
+    if (!normalizedMessage) {
+      return 'Недостаточно данных для оценки';
+    }
+
+    if (normalizedMessage.includes('OpenRouter returned an empty response')) {
+      return 'OpenRouter не вернул вариантов ответа. Провайдер мог временно не сгенерировать оценку.';
+    }
+
+    if (normalizedMessage.includes('OpenRouter returned an empty message')) {
+      return 'OpenRouter вернул пустое сообщение. Попробуйте повторить проверку позже.';
+    }
+
+    if (normalizedMessage.includes('AI response does not contain a JSON object')) {
+      return 'Ответ AI не содержит корректный JSON. Попробуйте повторить проверку позже.';
+    }
+
+    if (normalizedMessage.includes('429 Too Many Requests')) {
+      return 'OpenRouter временно ограничил количество запросов. Попробуйте позже или выберите другую модель.';
+    }
+
+    return 'AI не смогла сформировать оценку. Попробуйте повторить проверку позже.';
+  };
 
   return (
     <div className={reviewResultsSidebarStyles.root}>
@@ -106,7 +150,7 @@ const ReviewResultsSidebar = ({
         </div>
       )}
 
-      {reviewerOptions.length > 0 && selectedReviewData && effectiveSelectedReviewerId !== null && (
+      {!isAiOnlyReview && reviewerOptions.length > 0 && selectedReviewData && effectiveSelectedReviewOptionValue !== null && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Детальная оценка от ревьюеров</h3>
           <div className={reviewResultsSidebarStyles.content}>
@@ -114,8 +158,8 @@ const ReviewResultsSidebar = ({
               <ReviewDropdown
                 label="Ревьюер:"
                 options={reviewerOptions}
-                value={effectiveSelectedReviewerId}
-                onChange={setSelectedReviewerId}
+                value={effectiveSelectedReviewOptionValue}
+                onChange={setSelectedReviewOptionValue}
               />
             </div>
 
@@ -158,29 +202,31 @@ const ReviewResultsSidebar = ({
         </div>
       )}
 
-      {showAiEvaluations && (
+      {showAiSolutionBlock && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Оценка решения от AI</h3>
           <div className={reviewResultsSidebarStyles.content}>
-            {review.aiEvaluation ? (
+            {aiSolutionFailed ? (
+              <div className={reviewResultsSidebarStyles.text}>{getAiErrorText(review.aiEvaluation?.errorMessage)}</div>
+            ) : (
               <>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Общая оценка качества решения:</div>
-                  <StarRating value={review.aiEvaluation.qualityScore} />
+                  <StarRating value={review.aiEvaluation?.qualityScore ?? 0} />
                 </div>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Цикломатическая сложность:</div>
-                  <div className={reviewResultsSidebarStyles.textBold}>{review.aiEvaluation.cyclomaticComplexity}</div>
+                  <div className={reviewResultsSidebarStyles.textBold}>{review.aiEvaluation?.cyclomaticComplexity}</div>
                 </div>
                 <div className={[reviewResultsSidebarStyles.field, reviewResultsSidebarStyles.isCompact].join(' ')}>
                   <div className={reviewResultsSidebarStyles.label}>Нарушения SOLID:</div>
                   <div className={reviewResultsSidebarStyles.subField}>
                     <span className={reviewResultsSidebarStyles.labelSmall}>Количество:</span>
                     <span className={reviewResultsSidebarStyles.textBold}>
-                      {review.aiEvaluation.solidViolations?.count || 0}
+                      {review.aiEvaluation?.solidViolations?.count || 0}
                     </span>
                   </div>
-                  {review.aiEvaluation.solidViolations && (
+                  {review.aiEvaluation?.solidViolations && (
                     <div className={reviewResultsSidebarStyles.subField}>
                       <span className={reviewResultsSidebarStyles.labelSmall}>Критичность:</span>
                       <div
@@ -203,49 +249,49 @@ const ReviewResultsSidebar = ({
                     </div>
                   )}
                 </div>
-                {review.aiEvaluation.overallComment && (
+                {review.aiEvaluation?.overallComment && (
                   <div className={reviewResultsSidebarStyles.field}>
                     <div className={reviewResultsSidebarStyles.label}>Общие замечания:</div>
                     <div className={reviewResultsSidebarStyles.text}>{review.aiEvaluation.overallComment}</div>
                   </div>
                 )}
               </>
-            ) : (
-              <div className={reviewResultsSidebarStyles.text}>Недостаточно данных для оценки</div>
             )}
           </div>
         </div>
       )}
 
-      {showAiEvaluations && (
+      {showAiReviewEvaluation && (
         <div className={reviewResultsSidebarStyles.block}>
           <h3 className={reviewResultsSidebarStyles.title}>Оценка ревью от AI</h3>
           <div className={reviewResultsSidebarStyles.content}>
-            {review.aiReviewEvaluation ? (
+            {aiReviewFailed ? (
+              <div className={reviewResultsSidebarStyles.text}>
+                {getAiErrorText(review.aiReviewEvaluation?.errorMessage)}
+              </div>
+            ) : (
               <>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Общая оценка качества:</div>
-                  <StarRating value={review.aiReviewEvaluation.qualityScore} />
+                  <StarRating value={review.aiReviewEvaluation?.qualityScore ?? 0} />
                 </div>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Конкретность:</div>
-                  <StarRating value={review.aiReviewEvaluation.specificity} />
+                  <StarRating value={review.aiReviewEvaluation?.specificity ?? 0} />
                 </div>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Техническая глубина:</div>
-                  <StarRating value={review.aiReviewEvaluation.techDepth} />
+                  <StarRating value={review.aiReviewEvaluation?.techDepth ?? 0} />
                 </div>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Корректность:</div>
-                  <StarRating value={review.aiReviewEvaluation.correctness} />
+                  <StarRating value={review.aiReviewEvaluation?.correctness ?? 0} />
                 </div>
                 <div className={reviewResultsSidebarStyles.field}>
                   <div className={reviewResultsSidebarStyles.label}>Отсутствие токсичности:</div>
-                  <StarRating value={review.aiReviewEvaluation.nonToxicity} />
+                  <StarRating value={review.aiReviewEvaluation?.nonToxicity ?? 0} />
                 </div>
               </>
-            ) : (
-              <div className={reviewResultsSidebarStyles.text}>Недостаточно данных для оценки</div>
             )}
           </div>
         </div>
