@@ -3,7 +3,7 @@ services:
     image: nginx:1.25-alpine
     container_name: code_battles_nginx
     ports:
-      - "80:80"
+      - "${NGINX_PUBLISHED_PORT:-80:80}"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
