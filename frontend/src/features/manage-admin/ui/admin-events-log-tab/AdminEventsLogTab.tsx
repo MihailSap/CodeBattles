@@ -170,7 +170,7 @@ const AdminEventsLogTab = ({ isActive }: AdminEventsLogTabProps) => {
     },
     {
       skip: !isActive,
-      refetchOnMountOrArgChange: 30,
+      refetchOnMountOrArgChange: true,
     }
   );
 

@@ -1,0 +1,127 @@
+databaseChangeLog:
+  - changeSet:
+      id: 054-fix-demo-project-owners-and-complaints
+      author: Codex
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DO $$
+              DECLARE
+                report_id bigint;
+                reporter_id bigint;
+                complaint record;
+                messages text[] := ARRAY[
+                  'Комментарий кажется некорректным: предлагается изменение, которое не связано с задачей.',
+                  'Формулировка слишком резкая и может демотивировать исполнителя.',
+                  'Комментарий раскрывает слишком много деталей реализации без необходимости.',
+                  'Нужна проверка модератором: совет выглядит спорным и может ухудшить решение.',
+                  'Похоже на нерелевантную рекомендацию для текущего файла.',
+                  'Комментарий стоит перепроверить, потому что он противоречит критериям задачи.'
+                ];
+                reasons text[] := ARRAY[
+                  'INCORRECT',
+                  'OFFENSIVE',
+                  'DISCLOSES_IDENTITY',
+                  'OTHER',
+                  'IRRELEVANT',
+                  'INCORRECT'
+                ];
+              BEGIN
+                WITH ranked_project_owners AS (
+                  SELECT
+                    up.id,
+                    row_number() OVER (
+                      PARTITION BY up.project_id
+                      ORDER BY
+                        CASE WHEN u.login = 'imimorgo5' THEN 0 ELSE 1 END,
+                        up.id
+                    ) AS owner_rank
+                  FROM user_project up
+                  JOIN users u ON u.id = up.user_id
+                  WHERE up.project_member_role = 'OWNER'
+                )
+                UPDATE user_project up
+                SET project_member_role = 'MEMBER'
+                FROM ranked_project_owners owners
+                WHERE up.id = owners.id
+                  AND owners.owner_rank > 1;
+
+                DELETE FROM comment_report
+                WHERE message = ANY(messages);
+
+                FOR complaint IN
+                  SELECT
+                    c.id AS comment_id,
+                    c.text AS comment_text,
+                    c.user_id AS comment_author_id,
+                    r.id AS review_id,
+                    row_number() OVER (ORDER BY r.id, c.id) AS complaint_index
+                  FROM comment c
+                  JOIN review_iteration ri ON ri.id = c.review_iteration_id
+                  JOIN review r ON r.id = ri.review_id
+                  WHERE c.comment_author_role = 'REVIEWER'
+                    AND c.user_id IS NOT NULL
+                    AND r.solution_id IS NOT NULL
+                  ORDER BY r.id, c.id
+                  LIMIT 6
+                LOOP
+                  SELECT u.id
+                  INTO reporter_id
+                  FROM users u
+                  WHERE u.login = 'demo' || lpad(((complaint.complaint_index::int % 20) + 1)::text, 2, '0')
+                  LIMIT 1;
+
+                  IF reporter_id IS NULL THEN
+                    SELECT u.id
+                    INTO reporter_id
+                    FROM users u
+                    WHERE u.login = 'imimorgo5'
+                    LIMIT 1;
+                  END IF;
+
+                  INSERT INTO comment_report (
+                    message,
+                    reason,
+                    comment_id,
+                    user_id,
+                    is_active,
+                    created_at
+                  )
+                  VALUES (
+                    messages[((complaint.complaint_index::int - 1) % array_length(messages, 1)) + 1],
+                    reasons[((complaint.complaint_index::int - 1) % array_length(reasons, 1)) + 1],
+                    complaint.comment_id,
+                    reporter_id,
+                    true,
+                    CURRENT_TIMESTAMP - ((complaint.complaint_index::int % 9) || ' hours')::interval
+                  )
+                  RETURNING id INTO report_id;
+
+                  INSERT INTO comment_report_data (
+                    comment_id,
+                    comment_text,
+                    user_id,
+                    review_id,
+                    comment_report_id
+                  )
+                  VALUES (
+                    complaint.comment_id,
+                    complaint.comment_text,
+                    complaint.comment_author_id,
+                    complaint.review_id,
+                    report_id
+                  );
+                END LOOP;
+              END $$;
+
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX IF NOT EXISTS ux_user_project_one_owner_per_project
+              ON user_project (project_id)
+              WHERE project_member_role = 'OWNER';
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS ux_user_project_one_owner_per_project;

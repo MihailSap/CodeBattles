@@ -9,6 +9,7 @@ import { CommentsBlock } from '@/widgets/solution-workspace';
 import { ReviewResultsSidebar } from '@/widgets/review-workspace';
 import ScrollToTopButton from '@/shared/ui/scroll-to-top-button';
 import { taskApi, type Task } from '@/entities/task';
+import type { TaskReviewType } from '@/entities/project';
 import {
   REVIEW_STATUS,
   reviewApi,
@@ -22,6 +23,7 @@ import type { CommentPayload } from '@/features/comment-solution';
 import type { FinalReviewSubmitPayload } from '@/features/review-solution';
 import { ROUTES } from '@/shared/config/routes';
 import { REVIEW_STATUS_LABEL, getDeadlineInfo } from '@/entities/review';
+import { PROJECT_MEMBER_ROLE, PROJECT_PRIVACY, TASK_STATUS } from '@/entities/project';
 import {
   NOTIFICATION_COMPLETION_ACTION,
   NOTIFICATION_TARGET_KIND,
@@ -164,7 +166,42 @@ const ReviewPage = () => {
 
       setReview(reviewData);
 
-      const taskData = await taskApi.getTaskById(reviewData.projectId, reviewData.taskId);
+      const taskData = await taskApi.getTaskById(reviewData.projectId, reviewData.taskId).catch((error: unknown) => {
+        console.error('Task data load error:', error);
+
+        if (!isAdmin) {
+          throw error;
+        }
+
+        const fallbackTask: Task = {
+          id: reviewData.taskId,
+          projectId: reviewData.projectId,
+          projectName: reviewData.projectName ?? '',
+          projectPrivacy: PROJECT_PRIVACY.PRIVATE,
+          name: reviewData.taskName ?? 'Ревью',
+          status: TASK_STATUS.IN_REVIEW,
+          deadline: reviewData.deadline,
+          assigneeIds: [],
+          reviewerIds: [],
+          viewerRole: PROJECT_MEMBER_ROLE.GUEST,
+          canViewTask: true,
+          canManageSettings: false,
+          canUploadSolution: false,
+          canFinishReview: false,
+          availableAssignees: [],
+          availableReviewers: [],
+        };
+
+        if (reviewData.solutionId !== undefined) {
+          fallbackTask.solutionId = reviewData.solutionId;
+        }
+
+        if (reviewData.reviewType !== undefined) {
+          fallbackTask.reviewType = reviewData.reviewType as TaskReviewType;
+        }
+
+        return fallbackTask;
+      });
 
       setTask(taskData);
       const isUserReviewer = taskData.reviewerIds?.includes(numericUserId);

@@ -1,0 +1,750 @@
+databaseChangeLog:
+  - changeSet:
+      id: 053-seed-production-demo-data
+      author: Codex
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DO $$
+              DECLARE
+                demo_password_hash CONSTANT text := '$2a$10$toGNohHzycAuQn5maujoWOHZKOm2xrmnd50whfw83mfvcFgy3En.S';
+                admin_password_hash CONSTANT text := '$2a$10$JUfRprhr3RvmxaSYfbchmu6dVqD30ZPP63IIR3BCgiVAzppwf9UlK';
+                demo_user_ids bigint[] := ARRAY[]::bigint[];
+                demo_org_ids bigint[] := ARRAY[]::bigint[];
+                admin_org_ids bigint[] := ARRAY[]::bigint[];
+                demo_project_ids bigint[] := ARRAY[]::bigint[];
+                standalone_project_ids bigint[] := ARRAY[]::bigint[];
+                admin_user_id bigint;
+                task_id bigint;
+                solution_id bigint;
+                review_id bigint;
+                iteration_id bigint;
+                comment_id bigint;
+                report_id bigint;
+                ai_comment_id bigint;
+                i integer;
+                j integer;
+                project_id bigint;
+                assignee_id bigint;
+                reviewer_id bigint;
+                second_reviewer_id bigint;
+                task_status text;
+                review_type text;
+                verdict text;
+                task_titles text[] := ARRAY[
+                  'Реализовать фильтрацию задач на дашборде',
+                  'Добавить пагинацию публичных проектов',
+                  'Оптимизировать загрузку дерева файлов',
+                  'Покрыть API профиля валидацией',
+                  'Исправить состояние кнопки завершения ревью',
+                  'Добавить аудит действий администратора',
+                  'Улучшить обработку GitHub pull request',
+                  'Собрать виджет статистики команды',
+                  'Добавить экспорт отчета по ревью',
+                  'Настроить уведомления о дедлайнах',
+                  'Реализовать поиск по стеку проекта',
+                  'Улучшить AI-подсказки по комментариям'
+                ];
+              BEGIN
+                IF EXISTS (SELECT 1 FROM users WHERE login = 'demo01') THEN
+                  RETURN;
+                END IF;
+
+                FOR i IN 1..20 LOOP
+                  INSERT INTO users (
+                    email,
+                    login,
+                    password,
+                    role,
+                    enabled,
+                    registered_at,
+                    full_name,
+                    avatar_file_title
+                  )
+                  VALUES (
+                    'demo' || lpad(i::text, 2, '0') || '@codebattles.local',
+                    'demo' || lpad(i::text, 2, '0'),
+                    demo_password_hash,
+                    '0',
+                    true,
+                    CURRENT_TIMESTAMP - ((30 - i) || ' days')::interval,
+                    (ARRAY[
+                      'Алексей Волков', 'Мария Соколова', 'Дмитрий Морозов', 'Анна Кузнецова',
+                      'Илья Орлов', 'Екатерина Смирнова', 'Никита Федоров', 'Ольга Васильева',
+                      'Павел Новиков', 'Дарья Белова', 'Сергей Егоров', 'Полина Захарова',
+                      'Роман Павлов', 'Виктория Лебедева', 'Артем Крылов', 'София Макарова',
+                      'Кирилл Андреев', 'Елена Тихонова', 'Максим Громов', 'Алина Романова'
+                    ])[i],
+                    CASE WHEN i % 2 = 1 THEN 'https://randomuser.me/api/portraits/men/' || ((i + 1) / 2) || '.jpg'
+                         ELSE 'https://randomuser.me/api/portraits/women/' || (i / 2) || '.jpg'
+                    END
+                  )
+                  RETURNING id INTO assignee_id;
+
+                  demo_user_ids := array_append(demo_user_ids, assignee_id);
+
+                  INSERT INTO notification_settings (review_assignments, new_comments, achievements, user_id)
+                  VALUES (true, true, true, assignee_id);
+                END LOOP;
+
+                SELECT id
+                INTO admin_user_id
+                FROM users
+                WHERE email = 'ilyamuravyov@mail.ru' OR login = 'imimorgo5'
+                ORDER BY id
+                LIMIT 1;
+
+                IF admin_user_id IS NULL THEN
+                  INSERT INTO users (
+                    email,
+                    login,
+                    password,
+                    role,
+                    enabled,
+                    registered_at,
+                    full_name,
+                    avatar_file_title
+                  )
+                  VALUES (
+                    'ilyamuravyov@mail.ru',
+                    'imimorgo5',
+                    admin_password_hash,
+                    '1',
+                    true,
+                    CURRENT_TIMESTAMP - '35 days'::interval,
+                    'Илья Муравьев',
+                    'https://randomuser.me/api/portraits/men/85.jpg'
+                  )
+                  RETURNING id INTO admin_user_id;
+                ELSE
+                  UPDATE users
+                  SET email = 'ilyamuravyov@mail.ru',
+                      login = 'imimorgo5',
+                      password = admin_password_hash,
+                      role = '1',
+                      enabled = true,
+                      full_name = 'Илья Муравьев',
+                      avatar_file_title = 'https://randomuser.me/api/portraits/men/85.jpg'
+                  WHERE id = admin_user_id;
+                END IF;
+
+                INSERT INTO notification_settings (review_assignments, new_comments, achievements, user_id)
+                VALUES (true, true, true, admin_user_id)
+                ON CONFLICT DO NOTHING;
+
+                FOR i IN 1..4 LOOP
+                  INSERT INTO organization (title, description, avatar_file_title, link, last_activity_at)
+                  VALUES (
+                    (ARRAY['Frontend Guild', 'Backend Core', 'Platform Lab', 'Product Crew'])[i],
+                    (ARRAY[
+                      'Команда развивает интерфейсы, дизайн-систему и клиентскую производительность.',
+                      'Команда отвечает за API, доменную модель, миграции и интеграции.',
+                      'Команда занимается инфраструктурой, CI/CD, наблюдаемостью и безопасностью.',
+                      'Команда собирает продуктовые фичи, аналитику и пользовательские сценарии.'
+                    ])[i],
+                    (ARRAY[
+                      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150',
+                      'https://images.unsplash.com/photo-1618005198143-d3667c134e5d?w=150',
+                      'https://images.unsplash.com/photo-1618005158179-023f9ec367eb?w=150',
+                      'https://images.unsplash.com/photo-1618005131379-67ace422a9cf?w=150'
+                    ])[i],
+                    format('https://codebattles.local/orgs/%s', i),
+                    CURRENT_TIMESTAMP - (i || ' hours')::interval
+                  )
+                  RETURNING id INTO task_id;
+
+                  demo_org_ids := array_append(demo_org_ids, task_id);
+                END LOOP;
+
+                FOR i IN 1..20 LOOP
+                  project_id := demo_org_ids[((i - 1) % 4) + 1];
+                  INSERT INTO user_organization (user_id, organization_id, is_admin, is_enabled, created_at)
+                  VALUES (
+                    demo_user_ids[i],
+                    project_id,
+                    ((i - 1) % 5) = 0,
+                    true,
+                    CURRENT_TIMESTAMP - ((21 - i) || ' days')::interval
+                  );
+                END LOOP;
+
+                INSERT INTO user_organization (user_id, organization_id, is_admin, is_enabled, created_at)
+                VALUES
+                  (admin_user_id, demo_org_ids[1], false, true, CURRENT_TIMESTAMP - '18 days'::interval),
+                  (admin_user_id, demo_org_ids[2], false, true, CURRENT_TIMESTAMP - '17 days'::interval);
+
+                FOR i IN 1..4 LOOP
+                  INSERT INTO organization (title, description, avatar_file_title, link, last_activity_at)
+                  VALUES (
+                    (ARRAY['IMI Studio', 'Muravyov Labs', 'Review Ops', 'AI Quality Hub'])[i],
+                    (ARRAY[
+                      'Продуктовая команда Ильи: быстрые прототипы, UI и проверка гипотез.',
+                      'Лаборатория backend-интеграций, аналитики и внутренних инструментов.',
+                      'Команда процессов ревью, качества обратной связи и модерации.',
+                      'Группа экспериментов с AI-оценкой решений и комментариев.'
+                    ])[i],
+                    (ARRAY[
+                      'https://images.unsplash.com/photo-1618005160304-18cb3906a4b8?w=150',
+                      'https://images.unsplash.com/photo-1618005175313-7aecfec9a49f?w=150',
+                      'https://images.unsplash.com/photo-1618005135113-d36ecb4fecb8?w=150',
+                      'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=150'
+                    ])[i],
+                    format('https://codebattles.local/admin-orgs/%s', i),
+                    CURRENT_TIMESTAMP - (i || ' minutes')::interval
+                  )
+                  RETURNING id INTO task_id;
+
+                  admin_org_ids := array_append(admin_org_ids, task_id);
+
+                  INSERT INTO user_organization (user_id, organization_id, is_admin, is_enabled, created_at)
+                  VALUES (admin_user_id, task_id, true, true, CURRENT_TIMESTAMP - ((12 - i) || ' days')::interval);
+
+                  FOR j IN 1..20 LOOP
+                    IF ((j + i) % 2) = 0 OR j IN (1, 5, 9, 13, 17) THEN
+                      INSERT INTO user_organization (user_id, organization_id, is_admin, is_enabled, created_at)
+                      VALUES (
+                        demo_user_ids[j],
+                        task_id,
+                        false,
+                        true,
+                        CURRENT_TIMESTAMP - ((10 + ((j + i) % 7)) || ' days')::interval
+                      )
+                      ON CONFLICT DO NOTHING;
+                    END IF;
+                  END LOOP;
+                END LOOP;
+
+                FOR i IN 1..8 LOOP
+                  INSERT INTO project (
+                    title,
+                    description,
+                    is_private,
+                    organization_id,
+                    repository_url,
+                    ai_review_enabled,
+                    last_activity_at
+                  )
+                  VALUES (
+                    (ARRAY[
+                      'CodeBattles Web', 'Review Engine', 'Leaderboard Service', 'Notification Center',
+                      'GitHub Integration', 'Admin Console', 'AI Review Lab', 'Project Templates'
+                    ])[i],
+                    (ARRAY[
+                      'Основной пользовательский интерфейс с задачами, ревью и профилями.',
+                      'Сервис распределения ревьюеров, вердиктов и итераций проверки.',
+                      'Рейтинги участников, команд и проектов по активности.',
+                      'Уведомления о задачах, комментариях, дедлайнах и достижениях.',
+                      'Загрузка решений из pull request и синхронизация файлов.',
+                      'Модерация, системные настройки и аналитика активности.',
+                      'Эксперименты с AI-оценкой решений и качества ревью.',
+                      'Готовые проектные шаблоны для быстрого старта команд.'
+                    ])[i],
+                    i IN (2, 6),
+                    demo_org_ids[((i - 1) % 4) + 1],
+                    format('https://github.com/codebattles/demo-project-%s', i),
+                    i IN (1, 2, 5, 7),
+                    CURRENT_TIMESTAMP - (i || ' hours')::interval
+                  )
+                  RETURNING id INTO project_id;
+
+                  demo_project_ids := array_append(demo_project_ids, project_id);
+
+                  FOR j IN 1..20 LOOP
+                    IF ((j + i) % 3) <> 0 THEN
+                      INSERT INTO user_project (user_id, project_id, project_member_role)
+                      VALUES (
+                        demo_user_ids[j],
+                        project_id,
+                        CASE WHEN j = i OR j = i + 8 THEN 'OWNER' ELSE 'MEMBER' END
+                      );
+                    END IF;
+                  END LOOP;
+                END LOOP;
+
+                FOR i IN 1..4 LOOP
+                  FOR j IN 1..(i - 1) LOOP
+                    INSERT INTO project (
+                      title,
+                      description,
+                      is_private,
+                      organization_id,
+                      repository_url,
+                      ai_review_enabled,
+                      last_activity_at
+                    )
+                    VALUES (
+                      format('%s Project %s', (ARRAY['IMI Studio', 'Muravyov Labs', 'Review Ops', 'AI Quality Hub'])[i], j),
+                      'Проект из организации администратора с участниками из демо-команд и живой активностью.',
+                      (j % 2) = 0,
+                      admin_org_ids[i],
+                      format('https://github.com/codebattles/admin-org-%s-project-%s', i, j),
+                      (j % 2) = 1,
+                      CURRENT_TIMESTAMP - ((i + j) || ' hours')::interval
+                    )
+                    RETURNING id INTO project_id;
+
+                    INSERT INTO user_project (user_id, project_id, project_member_role)
+                    VALUES (admin_user_id, project_id, 'OWNER');
+
+                    FOR assignee_id IN
+                      SELECT unnest(ARRAY[
+                        demo_user_ids[((i + j - 1) % 20) + 1],
+                        demo_user_ids[((i + j + 4) % 20) + 1],
+                        demo_user_ids[((i + j + 9) % 20) + 1],
+                        demo_user_ids[((i + j + 14) % 20) + 1]
+                      ])
+                    LOOP
+                      INSERT INTO user_project (user_id, project_id, project_member_role)
+                      VALUES (assignee_id, project_id, 'MEMBER');
+                    END LOOP;
+                  END LOOP;
+                END LOOP;
+
+                FOR i IN 1..3 LOOP
+                  INSERT INTO project (
+                    title,
+                    description,
+                    is_private,
+                    organization_id,
+                    repository_url,
+                    ai_review_enabled,
+                    last_activity_at
+                  )
+                  VALUES (
+                    (ARRAY['Personal Battleboard', 'Solo Review Toolkit', 'AI Comment Sandbox'])[i],
+                    'Личный проект администратора без организации, наполненный участниками для демонстрации доступа.',
+                    i = 2,
+                    null,
+                    format('https://github.com/codebattles/imimorgo5-standalone-%s', i),
+                    true,
+                    CURRENT_TIMESTAMP - ((i * 3) || ' hours')::interval
+                  )
+                  RETURNING id INTO project_id;
+
+                  standalone_project_ids := array_append(standalone_project_ids, project_id);
+
+                  INSERT INTO user_project (user_id, project_id, project_member_role)
+                  VALUES (admin_user_id, project_id, 'OWNER');
+
+                  FOR assignee_id IN
+                    SELECT unnest(ARRAY[
+                      demo_user_ids[i],
+                      demo_user_ids[i + 4],
+                      demo_user_ids[i + 8],
+                      demo_user_ids[i + 12]
+                    ])
+                  LOOP
+                    INSERT INTO user_project (user_id, project_id, project_member_role)
+                    VALUES (assignee_id, project_id, 'MEMBER');
+                  END LOOP;
+                END LOOP;
+
+                FOR i IN 1..2 LOOP
+                  INSERT INTO project (
+                    title,
+                    description,
+                    is_private,
+                    organization_id,
+                    repository_url,
+                    ai_review_enabled,
+                    last_activity_at
+                  )
+                  VALUES (
+                    (ARRAY['Community API Bench', 'Open Review Playground'])[i],
+                    'Проект без организации, которым владеют демо-пользователи; админ участвует как обычный участник.',
+                    false,
+                    null,
+                    format('https://github.com/codebattles/community-standalone-%s', i),
+                    i = 2,
+                    CURRENT_TIMESTAMP - ((i * 5) || ' hours')::interval
+                  )
+                  RETURNING id INTO project_id;
+
+                  INSERT INTO user_project (user_id, project_id, project_member_role)
+                  VALUES
+                    (demo_user_ids[i + 2], project_id, 'OWNER'),
+                    (admin_user_id, project_id, 'MEMBER'),
+                    (demo_user_ids[i + 6], project_id, 'MEMBER'),
+                    (demo_user_ids[i + 10], project_id, 'MEMBER');
+                END LOOP;
+
+                FOR i IN 1..12 LOOP
+                  project_id := demo_project_ids[((i - 1) % 8) + 1];
+                  assignee_id := demo_user_ids[((i - 1) % 20) + 1];
+                  reviewer_id := demo_user_ids[(i % 20) + 1];
+                  second_reviewer_id := demo_user_ids[((i + 5) % 20) + 1];
+                  task_status := (ARRAY[
+                    'DONE', 'REWORK', 'IN_REVIEW', 'DONE', 'IN_PROGRESS', 'DONE',
+                    'IN_REVIEW', 'REWORK', 'DONE', 'IN_PROGRESS', 'DONE', 'IN_REVIEW'
+                  ])[i];
+                  review_type := CASE WHEN i IN (7, 12) THEN 'AI_ONLY' ELSE 'AUTO_PROJECT' END;
+
+                  INSERT INTO task (
+                    title,
+                    description,
+                    deadline,
+                    review_type,
+                    evaluation_criteria,
+                    status,
+                    project_id,
+                    requirements,
+                    created_at,
+                    updated_at,
+                    completed_at,
+                    ai_review_enabled_at_creation
+                  )
+                  VALUES (
+                    task_titles[i],
+                    'Демо-задача с реалистичным описанием, критериями приемки и историей проверки.',
+                    CURRENT_TIMESTAMP + ((i - 5) || ' days')::interval,
+                    review_type,
+                    'Корректность, читаемость, устойчивость к ошибкам, покрытие граничных случаев.',
+                    task_status,
+                    project_id,
+                    'Сохранить существующие API-контракты, добавить обработку ошибок, не ухудшить UX.',
+                    CURRENT_TIMESTAMP - ((20 - i) || ' days')::interval,
+                    CURRENT_TIMESTAMP - (i || ' hours')::interval,
+                    CASE WHEN task_status = 'DONE' THEN CURRENT_TIMESTAMP - (i || ' hours')::interval ELSE null END,
+                    i IN (1, 2, 7, 8, 12)
+                  )
+                  RETURNING id INTO task_id;
+
+                  INSERT INTO user_task (user_id, task_id, user_task_type)
+                  VALUES (assignee_id, task_id, 'ASSIGNEE');
+
+                  IF review_type <> 'AI_ONLY' THEN
+                    INSERT INTO user_task (user_id, task_id, user_task_type)
+                    VALUES (reviewer_id, task_id, 'REVIEWER');
+                    INSERT INTO user_task (user_id, task_id, user_task_type)
+                    VALUES (second_reviewer_id, task_id, 'REVIEWER');
+                  END IF;
+
+                  IF task_status <> 'IN_PROGRESS' THEN
+                    INSERT INTO solution (reveal_author_after_review, upload_type, uploaded_at, task_id)
+                    VALUES (review_type <> 'AI_ONLY', 'MANUAL_TEXT', CURRENT_TIMESTAMP - ((13 - i) || ' days')::interval, task_id)
+                    RETURNING id INTO solution_id;
+
+                    INSERT INTO solution_manual_text (solution_id, file_name, language, content)
+                    VALUES (
+                      solution_id,
+                      'src/main.ts',
+                      'typescript',
+                      format(
+                        'export function solveTask%s(input: string): string {%s  const normalized = input.trim();%s  return normalized.length > 0 ? normalized : "empty";%s}%s',
+                        i,
+                        chr(10),
+                        chr(10),
+                        chr(10),
+                        chr(10)
+                      )
+                    );
+
+                    IF review_type = 'AI_ONLY' THEN
+                      INSERT INTO review (task_id, user_id, reveal_author_after_review, status, solution_id, reviewer_index)
+                      VALUES (task_id, null, false, CASE WHEN task_status = 'IN_REVIEW' THEN 'IN_PROGRESS' ELSE 'COMPLETED' END, solution_id, 0)
+                      RETURNING id INTO review_id;
+
+                      INSERT INTO review_iteration (
+                        uploaded_at,
+                        completed_at,
+                        deadline,
+                        iteration_number,
+                        task_status_after_iteration,
+                        review_id
+                      )
+                      VALUES (
+                        CURRENT_TIMESTAMP - ((13 - i) || ' days')::interval,
+                        CASE WHEN task_status = 'IN_REVIEW' THEN null ELSE CURRENT_TIMESTAMP - (i || ' hours')::interval END,
+                        CURRENT_TIMESTAMP + '2 days'::interval,
+                        1,
+                        task_status,
+                        review_id
+                      )
+                      RETURNING id INTO iteration_id;
+
+                      INSERT INTO ai_solution_evaluation (
+                        review_iteration_id,
+                        status,
+                        quality_score,
+                        cyclomatic_complexity,
+                        solid_violations_count,
+                        solid_violations_severity,
+                        overall_comment,
+                        created_at,
+                        updated_at
+                      )
+                      VALUES (
+                        iteration_id,
+                        CASE WHEN task_status = 'IN_REVIEW' THEN 'PENDING' ELSE 'COMPLETED' END,
+                        CASE WHEN task_status = 'REWORK' THEN 63 ELSE 86 END,
+                        CASE WHEN task_status = 'REWORK' THEN 'Средняя' ELSE 'Низкая' END,
+                        CASE WHEN task_status = 'REWORK' THEN 3 ELSE 0 END,
+                        CASE WHEN task_status = 'REWORK' THEN 'MEDIUM' ELSE 'NONE' END,
+                        CASE WHEN task_status = 'REWORK'
+                          THEN 'Решение рабочее, но требуется выделить валидацию и упростить обработку ошибок.'
+                          ELSE 'Решение аккуратное, понятное и соответствует основным критериям задачи.'
+                        END,
+                        CURRENT_TIMESTAMP - (i || ' hours')::interval,
+                        CURRENT_TIMESTAMP - (i || ' hours')::interval
+                      );
+
+                      INSERT INTO comment (
+                        file,
+                        start_line,
+                        end_line,
+                        text,
+                        reveal_name,
+                        created_at,
+                        comment_author_role,
+                        category,
+                        severity,
+                        review_iteration_id,
+                        user_id
+                      )
+                      VALUES (
+                        'src/main.ts',
+                        2,
+                        4,
+                        'AI предлагает добавить явную обработку пустого ввода и тест на граничный случай.',
+                        false,
+                        CURRENT_TIMESTAMP - (i || ' hours')::interval,
+                        'AI',
+                        'BEST_PRACTICES',
+                        'LOW',
+                        iteration_id,
+                        null
+                      )
+                      RETURNING id INTO comment_id;
+
+                      INSERT INTO comment_reaction (reaction, comment_id, user_id)
+                      VALUES ('LIKE', comment_id, assignee_id);
+                    ELSE
+                      FOR j IN 1..2 LOOP
+                        INSERT INTO review (task_id, user_id, reveal_author_after_review, status, solution_id, reviewer_index)
+                        VALUES (
+                          task_id,
+                          CASE WHEN j = 1 THEN reviewer_id ELSE second_reviewer_id END,
+                          true,
+                          CASE WHEN task_status = 'IN_REVIEW' AND j = 2 THEN 'IN_PROGRESS' ELSE 'COMPLETED' END,
+                          solution_id,
+                          j - 1
+                        )
+                        RETURNING id INTO review_id;
+
+                        INSERT INTO review_iteration (
+                          uploaded_at,
+                          completed_at,
+                          deadline,
+                          iteration_number,
+                          task_status_after_iteration,
+                          review_id
+                        )
+                        VALUES (
+                          CURRENT_TIMESTAMP - ((13 - i) || ' days')::interval,
+                          CASE WHEN task_status = 'IN_REVIEW' AND j = 2 THEN null ELSE CURRENT_TIMESTAMP - ((i + j) || ' hours')::interval END,
+                          CURRENT_TIMESTAMP + '2 days'::interval,
+                          1,
+                          task_status,
+                          review_id
+                        )
+                        RETURNING id INTO iteration_id;
+
+                        verdict := CASE WHEN task_status = 'REWORK' THEN 'REWORK' ELSE 'APPROVED' END;
+
+                        IF NOT (task_status = 'IN_REVIEW' AND j = 2) THEN
+                          INSERT INTO review_verdict (
+                            architecture,
+                            readability,
+                            testability,
+                            scalability,
+                            overall_score,
+                            comment,
+                            created_at,
+                            verdict,
+                            review_iteration_id
+                          )
+                          VALUES (
+                            CASE WHEN verdict = 'REWORK' THEN 6 ELSE 9 END,
+                            CASE WHEN verdict = 'REWORK' THEN 7 ELSE 8 END,
+                            CASE WHEN verdict = 'REWORK' THEN 5 ELSE 8 END,
+                            CASE WHEN verdict = 'REWORK' THEN 6 ELSE 8 END,
+                            CASE WHEN verdict = 'REWORK' THEN 61 ELSE 84 END,
+                            CASE WHEN verdict = 'REWORK'
+                              THEN 'Нужно доработать тесты и упростить ветвление в основной функции.'
+                              ELSE 'Решение выглядит готовым: структура понятная, риски небольшие.'
+                            END,
+                            CURRENT_TIMESTAMP - ((i + j) || ' hours')::interval,
+                            verdict,
+                            iteration_id
+                          );
+                        END IF;
+
+                        INSERT INTO comment (
+                          file,
+                          start_line,
+                          end_line,
+                          text,
+                          reveal_name,
+                          created_at,
+                          comment_author_role,
+                          category,
+                          severity,
+                          review_iteration_id,
+                          user_id
+                        )
+                        VALUES (
+                          'src/main.ts',
+                          2 + j,
+                          3 + j,
+                          CASE WHEN verdict = 'REWORK'
+                            THEN 'Здесь стоит вынести проверку входных данных в отдельную функцию и добавить тест.'
+                            ELSE 'Хорошее место: код читается линейно, поведение легко проверить тестом.'
+                          END,
+                          true,
+                          CURRENT_TIMESTAMP - ((i + j) || ' hours')::interval,
+                          'REVIEWER',
+                          CASE WHEN verdict = 'REWORK' THEN 'REFACTORING' ELSE 'BEST_PRACTICES' END,
+                          CASE WHEN verdict = 'REWORK' THEN 'MEDIUM' ELSE 'LOW' END,
+                          iteration_id,
+                          CASE WHEN j = 1 THEN reviewer_id ELSE second_reviewer_id END
+                        )
+                        RETURNING id INTO comment_id;
+
+                        INSERT INTO comment_reaction (reaction, comment_id, user_id)
+                        VALUES (
+                          CASE WHEN verdict = 'REWORK' THEN 'LIKE' ELSE CASE WHEN (i + j) % 4 = 0 THEN 'DISLIKE' ELSE 'LIKE' END END,
+                          comment_id,
+                          assignee_id
+                        );
+
+                        IF i IN (1, 2, 8) AND j = 1 THEN
+                          INSERT INTO ai_solution_evaluation (
+                            review_iteration_id,
+                            status,
+                            quality_score,
+                            cyclomatic_complexity,
+                            solid_violations_count,
+                            solid_violations_severity,
+                            overall_comment,
+                            created_at,
+                            updated_at
+                          )
+                          VALUES (
+                            iteration_id,
+                            'COMPLETED',
+                            CASE WHEN verdict = 'REWORK' THEN 64 ELSE 88 END,
+                            CASE WHEN verdict = 'REWORK' THEN 'Средняя' ELSE 'Низкая' END,
+                            CASE WHEN verdict = 'REWORK' THEN 2 ELSE 0 END,
+                            CASE WHEN verdict = 'REWORK' THEN 'MEDIUM' ELSE 'NONE' END,
+                            CASE WHEN verdict = 'REWORK'
+                              THEN 'AI согласен с ревьюером: нужно добавить тесты и снизить связанность.'
+                              ELSE 'AI оценивает решение как стабильное и готовое к приемке.'
+                            END,
+                            CURRENT_TIMESTAMP - (i || ' hours')::interval,
+                            CURRENT_TIMESTAMP - (i || ' hours')::interval
+                          );
+
+                          INSERT INTO ai_review_evaluation (
+                            review_iteration_id,
+                            status,
+                            quality_score,
+                            specificity,
+                            tech_depth,
+                            correctness,
+                            non_toxicity,
+                            summary,
+                            created_at,
+                            updated_at
+                          )
+                          VALUES (
+                            iteration_id,
+                            'COMPLETED',
+                            CASE WHEN verdict = 'REWORK' THEN 79 ELSE 91 END,
+                            8,
+                            CASE WHEN verdict = 'REWORK' THEN 7 ELSE 9 END,
+                            9,
+                            10,
+                            'Ревью конкретное, корректное и помогает исполнителю понять следующий шаг.',
+                            CURRENT_TIMESTAMP - (i || ' hours')::interval,
+                            CURRENT_TIMESTAMP - (i || ' hours')::interval
+                          );
+                        END IF;
+                      END LOOP;
+                    END IF;
+                  END IF;
+                END LOOP;
+
+                FOR ai_comment_id IN
+                  SELECT id
+                  FROM comment
+                  WHERE comment_author_role = 'AI'
+                  ORDER BY id
+                  LIMIT 4
+                LOOP
+                  INSERT INTO comment_reaction (reaction, comment_id, user_id)
+                  VALUES
+                    ('LIKE', ai_comment_id, admin_user_id),
+                    ('LIKE', ai_comment_id, demo_user_ids[3]),
+                    ('DISLIKE', ai_comment_id, demo_user_ids[7]),
+                    ('LIKE', ai_comment_id, demo_user_ids[11]);
+                END LOOP;
+
+                FOR comment_id, review_id, assignee_id IN
+                  SELECT c.id, r.id, demo_user_ids[((row_number() OVER (ORDER BY c.id))::int % 20) + 1]
+                  FROM comment c
+                  JOIN review_iteration ri ON ri.id = c.review_iteration_id
+                  JOIN review r ON r.id = ri.review_id
+                  WHERE c.comment_author_role IN ('AI', 'REVIEWER')
+                  ORDER BY c.id
+                  LIMIT 6
+                LOOP
+                  INSERT INTO comment_report (
+                    message,
+                    reason,
+                    comment_id,
+                    user_id,
+                    is_active,
+                    created_at
+                  )
+                  VALUES (
+                    (ARRAY[
+                      'Комментарий кажется некорректным: предлагается изменение, которое не связано с задачей.',
+                      'Формулировка слишком резкая и может демотивировать исполнителя.',
+                      'Комментарий раскрывает слишком много деталей реализации без необходимости.',
+                      'Нужна проверка модератором: совет выглядит спорным и может ухудшить решение.',
+                      'Похоже на нерелевантную рекомендацию для текущего файла.',
+                      'Комментарий стоит перепроверить, потому что он противоречит критериям задачи.'
+                    ])[((comment_id % 6) + 1)],
+                    (ARRAY['INCORRECT', 'OFFENSIVE', 'DISCLOSES_IDENTITY', 'OTHER', 'IRRELEVANT', 'INCORRECT'])[((comment_id % 6) + 1)],
+                    comment_id,
+                    assignee_id,
+                    true,
+                    CURRENT_TIMESTAMP - ((comment_id % 9) || ' hours')::interval
+                  )
+                  RETURNING id INTO report_id;
+
+                  INSERT INTO comment_report_data (
+                    comment_id,
+                    comment_text,
+                    user_id,
+                    review_id,
+                    comment_report_id
+                  )
+                  SELECT
+                    c.id,
+                    c.text,
+                    assignee_id,
+                    review_id,
+                    report_id
+                  FROM comment c
+                  WHERE c.id = comment_id;
+                END LOOP;
+              END $$;
+      rollback:
+        - sql:
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DELETE FROM users WHERE login LIKE 'demo__';

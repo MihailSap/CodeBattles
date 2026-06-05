@@ -39,7 +39,7 @@ export interface ReviewComment {
 
 export interface FinalReview {
   id: EntityId;
-  reviewerId: EntityId;
+  reviewerId?: EntityId | null;
   reviewerName: string;
   architecture: number;
   readability: number;
@@ -65,27 +65,34 @@ export interface ReviewHistory {
 }
 
 export interface AIEvaluation {
-  qualityScore: number;
-  cyclomaticComplexity: string;
-  solidViolations: {
+  status?: 'PENDING' | 'COMPLETED' | 'FAILED' | string;
+  qualityScore?: number | null;
+  cyclomaticComplexity?: string | null;
+  solidViolations?: {
     count: number;
     severity: string;
-  };
-  overallComment: string;
+  } | null;
+  overallComment?: string | null;
+  errorMessage?: string | null;
 }
 
 export interface AIReviewEvaluation {
-  qualityScore: number;
-  specificity: number;
-  techDepth: number;
-  correctness: number;
-  nonToxicity: number;
+  status?: 'PENDING' | 'COMPLETED' | 'FAILED' | string;
+  qualityScore?: number | null;
+  specificity?: number | null;
+  techDepth?: number | null;
+  correctness?: number | null;
+  nonToxicity?: number | null;
+  summary?: string | null;
+  errorMessage?: string | null;
 }
 
 export interface ReviewDetail {
   id: EntityId;
   projectId: EntityId;
   taskId: EntityId;
+  taskName?: string | undefined;
+  projectName?: string | undefined;
   solutionId?: EntityId;
   reviewType?: string;
   status: ReviewStatus;

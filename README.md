@@ -168,6 +168,12 @@ EMAIL_ADDRESS=
 EMAIL_APP_PASSWORD=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+AI_PROVIDER=openrouter
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_SITE_URL=
+OPENROUTER_SITE_NAME=CodeBattles
 POSTGRES_DB=
 POSTGRES_USER=
 POSTGRES_PASSWORD=
@@ -219,7 +225,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-Backend читает настройки из `backend/src/main/resources/application.yaml` и ожидает переменные окружения для подключения к PostgreSQL, JWT, email и GitHub OAuth2.
+Backend читает настройки из `backend/src/main/resources/application.yaml` и ожидает переменные окружения для подключения к PostgreSQL, JWT, email, GitHub OAuth2 и AI-провайдеру.
 
 ## API и данные
 
@@ -239,6 +245,20 @@ Frontend обращается к API через общий HTTP-клиент `fr
 В личном кабинете в модальном окне настроек GitHub связывается с текущим аккаунтом через подтвержденный OAuth flow и там же отвязывается. Если GitHub привязан, вкладка загрузки PR предлагает до десяти открытых public PR этого пользователя для выбора одним кликом. Если аккаунт не привязан, public PR по ссылке всё равно можно отправить вручную.
 
 Backend не сохраняет GitHub OAuth access token. Это намеренное ограничение безопасности: public PR, включая PR из fork, импортируются через read-only GitHub pull ref, а private repositories пока следует загружать файлами или ZIP, пока не будет добавлено шифрованное хранилище внешних токенов и revoke flow.
+
+### AI-review через OpenRouter
+
+Если у проекта включен AI-review, backend после создания review snapshot вызывает OpenRouter и сохраняет:
+
+- inline-комментарии с ролью `AI`;
+- оценку решения в `ai_solution_evaluation`;
+- оценку качества человеческого ревью в `ai_review_evaluation` после отправки итогового verdict.
+
+AI-запуск выполняется асинхронно после commit основной транзакции, поэтому отправка решения и отправка человеческого ревью не ждут ответа модели. Ключ OpenRouter хранится только на backend. Free-модели могут возвращать rate-limit ошибки; в этом случае основная отправка решения/ревью не отменяется, а AI-оценка сохраняется со статусом `FAILED`.
+
+Для задач с типом `AI_ONLY` backend создает системное ревью без пользователя. После успешного AI-анализа backend сам сохраняет итоговый verdict: оценка 4-5 переводит задачу в `DONE`, оценка 1-3 — в `REWORK`.
+
+AI-оценки используются в блоках ревью, профиле и лидерборде: `aiCodeQuality` считается по `AiSolutionEvaluation.qualityScore`, `aiReviewQuality` — по `AiReviewEvaluation.qualityScore`.
 
 ## Качество и разработка
 

@@ -17,6 +17,7 @@ import ru.urfu.backend.mapper.ReviewMapper;
 import ru.urfu.backend.model.*;
 import ru.urfu.backend.model.enums.*;
 import ru.urfu.backend.service.AchievementService;
+import ru.urfu.backend.service.AiReviewService;
 import ru.urfu.backend.service.AuthService;
 import ru.urfu.backend.service.NotificationService;
 import ru.urfu.backend.service.ProjectService;
@@ -40,6 +41,7 @@ public class ReviewController {
     private final ReviewMapper reviewMapper;
     private final NotificationService notificationService;
     private final AchievementService achievementService;
+    private final AiReviewService aiReviewService;
 
     @Autowired
     public ReviewController(
@@ -49,7 +51,8 @@ public class ReviewController {
             TaskService taskService,
             ReviewMapper reviewMapper,
             NotificationService notificationService,
-            AchievementService achievementService
+            AchievementService achievementService,
+            AiReviewService aiReviewService
     ) {
         this.authService = authService;
         this.projectService = projectService;
@@ -58,6 +61,7 @@ public class ReviewController {
         this.reviewMapper = reviewMapper;
         this.notificationService = notificationService;
         this.achievementService = achievementService;
+        this.aiReviewService = aiReviewService;
     }
 
     @Operation(description = "Получение списка ревью текущего пользователя")
@@ -122,6 +126,7 @@ public class ReviewController {
         reviewService.createVerdict(request, review);
         Review updatedReview = reviewService.updateStatusCompleted(review);
         Review secondUpdatedReview = reviewService.updateRevealName(request.revealName(), updatedReview);
+        aiReviewService.evaluateReview(secondUpdatedReview);
         taskService.resolveReviewOutcome(review.getTask());
         notificationService.notifyReviewSubmitted(secondUpdatedReview);
         notificationService.notifyNewAchievements(user, achievementIdsBeforeAction);
@@ -138,6 +143,7 @@ public class ReviewController {
         Project project = review.getTask().getProject();
         if(!user.equals(review.getUser())
                 && !Role.ADMIN.equals(user.getRole())
+                && !taskService.isUserAssigneeInTask(user, review.getTask())
                 && !projectService.isUserOwnerInProject(project, user)) {
             throw new ForbiddenReviewException("403 FORBIDDEN_REVIEW");
         }

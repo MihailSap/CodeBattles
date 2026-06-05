@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.urfu.backend.dto.review.*;
 import ru.urfu.backend.model.*;
+import ru.urfu.backend.model.enums.AiEvaluationStatus;
+import ru.urfu.backend.model.enums.ReviewType;
 import ru.urfu.backend.model.enums.UserTaskType;
 
 import java.time.LocalDateTime;
@@ -49,7 +51,7 @@ public class ReviewMapper {
         Set<Comment> currentComments = new HashSet<>();
         for (Review taskReview : task.getReviews()) {
             ReviewIteration currentIteration = taskReview.getLastIteration();
-            if (currentIteration != null && isCountedIteration(currentIteration)) {
+            if (currentIteration != null) {
                 currentIterations.add(currentIteration);
                 currentComments.addAll(currentIteration.getComments());
             }
@@ -88,8 +90,8 @@ public class ReviewMapper {
                 commentMapper.mapToReviewCommentResponses(currentComments),
                 mapToHistoryResponses(historyIterations),
                 mapToFinalReviewResponses(currentIterations),
-                null,
-                null,
+                mapAiSolutionEvaluation(currentIterations),
+                mapAiReviewEvaluation(currentIterations),
                 permissionsResponse
         );
     }
@@ -197,9 +199,82 @@ public class ReviewMapper {
                 mapToHistoryEventResponse(review),
                 mapToCurrentFinalReviewResponses(review),
 //                mapToFinalReviewResponses(review.getReviewIterations()),
-                null, //TODO: Доработать, когда появится ИИ ревью
-                null, //TODO: Доработать, когда появится ИИ ревью
+                mapAiSolutionEvaluation(reviewIteration),
+                mapAiReviewEvaluation(reviewIteration),
                 permissionsResponse
+        );
+    }
+
+    private AiEvaluationDto mapAiSolutionEvaluation(Set<ReviewIteration> reviewIterations) {
+        return reviewIterations.stream()
+                .map(this::mapAiSolutionEvaluation)
+                .filter(evaluation -> evaluation != null)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private AiReviewEvaluationDto mapAiReviewEvaluation(Set<ReviewIteration> reviewIterations) {
+        return reviewIterations.stream()
+                .map(this::mapAiReviewEvaluation)
+                .filter(evaluation -> evaluation != null)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private AiEvaluationDto mapAiSolutionEvaluation(ReviewIteration reviewIteration) {
+        AiSolutionEvaluation evaluation = reviewIteration.getAiSolutionEvaluation();
+        if (evaluation == null || AiEvaluationStatus.PENDING.equals(evaluation.getStatus())) {
+            return null;
+        }
+        if (AiEvaluationStatus.FAILED.equals(evaluation.getStatus())) {
+            return new AiEvaluationDto(
+                    evaluation.getStatus().name(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    evaluation.getErrorMessage()
+            );
+        }
+        return new AiEvaluationDto(
+                evaluation.getStatus().name(),
+                evaluation.getQualityScore(),
+                evaluation.getCyclomaticComplexity(),
+                new AiSolidViolationsDto(
+                        evaluation.getSolidViolationsCount(),
+                        evaluation.getSolidViolationsSeverity()
+                ),
+                evaluation.getOverallComment(),
+                null
+        );
+    }
+
+    private AiReviewEvaluationDto mapAiReviewEvaluation(ReviewIteration reviewIteration) {
+        AiReviewEvaluation evaluation = reviewIteration.getAiReviewEvaluation();
+        if (evaluation == null || AiEvaluationStatus.PENDING.equals(evaluation.getStatus())) {
+            return null;
+        }
+        if (AiEvaluationStatus.FAILED.equals(evaluation.getStatus())) {
+            return new AiReviewEvaluationDto(
+                    evaluation.getStatus().name(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    evaluation.getErrorMessage()
+            );
+        }
+        return new AiReviewEvaluationDto(
+                evaluation.getStatus().name(),
+                evaluation.getQualityScore(),
+                evaluation.getSpecificity(),
+                evaluation.getTechDepth(),
+                evaluation.getCorrectness(),
+                evaluation.getNonToxicity(),
+                evaluation.getSummary(),
+                null
         );
     }
 
@@ -207,6 +282,7 @@ public class ReviewMapper {
         List<FinalReviewResponse> responses = new ArrayList<>();
         ReviewIteration currentIteration = review.getLastIteration();
         if (currentIteration != null
+                && isHumanReviewIteration(currentIteration)
                 && currentIteration.getReviewVerdict() != null) {
             responses.add(mapToFinalReviewResponse(currentIteration));
         }
@@ -234,7 +310,9 @@ public class ReviewMapper {
                 reviewIteration.getTaskStatusAfterIteration(),
                 mapToReviewFileContentResponses(reviewIteration),
                 commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
-                reviewIteration.getReviewVerdict() == null ? null : mapToFinalReviewResponse(reviewIteration)
+                reviewIteration.getReviewVerdict() == null || !isHumanReviewIteration(reviewIteration)
+                        ? null
+                        : mapToFinalReviewResponse(reviewIteration)
         );
     }
 
@@ -252,7 +330,14 @@ public class ReviewMapper {
 
     private boolean isCountedIteration(ReviewIteration reviewIteration) {
         return reviewIteration.getReviewVerdict() != null
+                && isHumanReviewIteration(reviewIteration)
                 && !Boolean.TRUE.equals(isExpired(reviewIteration));
+    }
+
+    private boolean isHumanReviewIteration(ReviewIteration reviewIteration) {
+        Review review = reviewIteration.getReview();
+        return review.getUser() != null
+                && !ReviewType.AI_ONLY.equals(review.getTask().getReviewType());
     }
 
     private FinalReviewResponse mapToFinalReviewResponse(ReviewIteration reviewIteration){
@@ -261,9 +346,9 @@ public class ReviewMapper {
         User reviewer = review.getUser();
         return new FinalReviewResponse(
                 review.getId(),
-                reviewer.getId(),
+                reviewer == null ? null : reviewer.getId(),
                 review.getReviewerIndex(),
-                reviewer.getFullName(),
+                reviewer == null ? "AI" : reviewer.getFullName(),
                 review.getRevealAuthorAfterReview(),
                 review.getSolution().getRevealAuthorAfterReview(),
                 reviewVerdict.getArchitecture(),
@@ -351,8 +436,9 @@ public class ReviewMapper {
 
     private ViewerAssignmentResponse mapToViewerAssignmentResponse(Review review){
         ReviewIteration reviewIteration = review.getLastIteration();
+        User reviewer = review.getUser();
         return new ViewerAssignmentResponse(
-                review.getUser().getId(),
+                reviewer == null ? null : reviewer.getId(),
                 review.getStatus(),
                 countComments(review),
                 reviewIteration.getReviewVerdict() != null,

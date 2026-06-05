@@ -53,7 +53,7 @@ const AdminUsersTab = ({ isActive, currentUserId, onSelfDemote, onSelfDelete }: 
 
   const usersQuery = useGetUsersQuery(usersQueryParams, {
     skip: !isActive,
-    refetchOnMountOrArgChange: 30,
+    refetchOnMountOrArgChange: true,
   });
 
   const [deleteUser, deleteUserState] = useDeleteUserMutation();

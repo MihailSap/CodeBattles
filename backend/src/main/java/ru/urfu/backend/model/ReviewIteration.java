@@ -30,6 +30,12 @@ public class ReviewIteration extends BaseEntity {
     @OneToOne(mappedBy = "reviewIteration", cascade = CascadeType.ALL, orphanRemoval = true)
     private ReviewVerdict reviewVerdict;
 
+    @OneToOne(mappedBy = "reviewIteration", cascade = CascadeType.ALL, orphanRemoval = true)
+    private AiSolutionEvaluation aiSolutionEvaluation;
+
+    @OneToOne(mappedBy = "reviewIteration", cascade = CascadeType.ALL, orphanRemoval = true)
+    private AiReviewEvaluation aiReviewEvaluation;
+
     @OneToMany(mappedBy = "reviewIteration", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Comment> comments = new HashSet<>();
 
@@ -58,6 +64,22 @@ public class ReviewIteration extends BaseEntity {
 
     public void setReviewVerdict(ReviewVerdict reviewVerdict) {
         this.reviewVerdict = reviewVerdict;
+    }
+
+    public AiSolutionEvaluation getAiSolutionEvaluation() {
+        return aiSolutionEvaluation;
+    }
+
+    public void setAiSolutionEvaluation(AiSolutionEvaluation aiSolutionEvaluation) {
+        this.aiSolutionEvaluation = aiSolutionEvaluation;
+    }
+
+    public AiReviewEvaluation getAiReviewEvaluation() {
+        return aiReviewEvaluation;
+    }
+
+    public void setAiReviewEvaluation(AiReviewEvaluation aiReviewEvaluation) {
+        this.aiReviewEvaluation = aiReviewEvaluation;
     }
 
     public Review getReview() {

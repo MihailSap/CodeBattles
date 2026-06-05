@@ -19,6 +19,8 @@ public interface ReviewService {
 
     Review create(User user, Solution solution, Integer reviewerIndex) throws Exception;
 
+    Review createAiReview(Solution solution) throws Exception;
+
     List<Review> create(List<User> users, Solution solution) throws Exception;
 
     ReviewVerdict createVerdict(SubmitFinalReviewRequest request, Review review);

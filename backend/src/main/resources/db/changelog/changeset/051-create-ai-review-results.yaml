@@ -1,0 +1,119 @@
+databaseChangeLog:
+  - changeSet:
+      id: 051-create-ai-solution-evaluation
+      author: Codex
+      changes:
+        - createTable:
+            tableName: ai_solution_evaluation
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_ai_solution_evaluation
+                    nullable: false
+              - column:
+                  name: review_iteration_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quality_score
+                  type: INTEGER
+              - column:
+                  name: cyclomatic_complexity
+                  type: VARCHAR(255)
+              - column:
+                  name: solid_violations_count
+                  type: INTEGER
+              - column:
+                  name: solid_violations_severity
+                  type: VARCHAR(100)
+              - column:
+                  name: overall_comment
+                  type: TEXT
+              - column:
+                  name: error_message
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: ai_solution_evaluation
+            baseColumnNames: review_iteration_id
+            referencedTableName: review_iteration
+            referencedColumnNames: id
+            constraintName: fk_ai_solution_evaluation_iteration
+            onDelete: CASCADE
+
+  - changeSet:
+      id: 051-create-ai-review-evaluation
+      author: Codex
+      changes:
+        - createTable:
+            tableName: ai_review_evaluation
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_ai_review_evaluation
+                    nullable: false
+              - column:
+                  name: review_iteration_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quality_score
+                  type: INTEGER
+              - column:
+                  name: specificity
+                  type: INTEGER
+              - column:
+                  name: tech_depth
+                  type: INTEGER
+              - column:
+                  name: correctness
+                  type: INTEGER
+              - column:
+                  name: non_toxicity
+                  type: INTEGER
+              - column:
+                  name: summary
+                  type: TEXT
+              - column:
+                  name: error_message
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: ai_review_evaluation
+            baseColumnNames: review_iteration_id
+            referencedTableName: review_iteration
+            referencedColumnNames: id
+            constraintName: fk_ai_review_evaluation_iteration
+            onDelete: CASCADE

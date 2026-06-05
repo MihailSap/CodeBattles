@@ -14,6 +14,8 @@ import ru.urfu.backend.exception.customEx.ForbiddenProjectException;
 import ru.urfu.backend.exception.customEx.UserNotFoundException;
 import ru.urfu.backend.model.Comment;
 import ru.urfu.backend.model.CommentReaction;
+import ru.urfu.backend.model.AiReviewEvaluation;
+import ru.urfu.backend.model.AiSolutionEvaluation;
 import ru.urfu.backend.model.Organization;
 import ru.urfu.backend.model.Project;
 import ru.urfu.backend.model.Review;
@@ -25,6 +27,7 @@ import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.model.UserTask;
 import ru.urfu.backend.model.enums.ReactionType;
+import ru.urfu.backend.model.enums.AiEvaluationStatus;
 import ru.urfu.backend.model.enums.ReviewStatus;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.enums.TaskStatus;
@@ -298,6 +301,24 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 .filter(verdict -> isInPeriod(verdict.getCreatedAt(), effectiveStart))
                 .toList();
 
+        List<AiSolutionEvaluation> aiSolutionEvaluations = assigneeTasks.stream()
+                .map(UserTask::getTask)
+                .flatMap(task -> task.getReviews().stream())
+                .flatMap(review -> review.getReviewIterations().stream())
+                .map(ReviewIteration::getAiSolutionEvaluation)
+                .filter(Objects::nonNull)
+                .filter(evaluation -> AiEvaluationStatus.COMPLETED.equals(evaluation.getStatus()))
+                .filter(evaluation -> isInPeriod(evaluation.getCreatedAt(), effectiveStart))
+                .toList();
+
+        List<AiReviewEvaluation> aiReviewEvaluations = completedReviews.stream()
+                .flatMap(review -> review.getReviewIterations().stream())
+                .map(ReviewIteration::getAiReviewEvaluation)
+                .filter(Objects::nonNull)
+                .filter(evaluation -> AiEvaluationStatus.COMPLETED.equals(evaluation.getStatus()))
+                .filter(evaluation -> isInPeriod(evaluation.getCreatedAt(), effectiveStart))
+                .toList();
+
         List<Comment> topLevelSolutionComments = assigneeTasks.stream()
                 .map(UserTask::getTask)
                 .flatMap(task -> task.getReviews().stream())
@@ -317,6 +338,8 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 .toList();
 
         double codeQuality = averageScore(solutionVerdicts);
+        double aiCodeQuality = averageAiSolutionScore(aiSolutionEvaluations);
+        double aiReviewQuality = averageAiReviewScore(aiReviewEvaluations);
         int likesCount = countLikes(reviewerComments);
         int completedReviewsCount = completedReviews.size();
         int completedTasksCount = (int) assigneeTasks.stream()
@@ -341,9 +364,9 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 new LeaderboardMetricsDto(
                         round(totalRating),
                         round(codeQuality),
-                        null,
+                        nullableRounded(aiCodeQuality),
                         fixedCommentsPercent,
-                        null,
+                        nullableRounded(aiReviewQuality),
                         likesCount,
                         reviewDepthPercent,
                         completedReviewsCount,
@@ -478,6 +501,24 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 .orElse(0);
     }
 
+    private double averageAiSolutionScore(List<AiSolutionEvaluation> evaluations) {
+        return evaluations.stream()
+                .map(AiSolutionEvaluation::getQualityScore)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0);
+    }
+
+    private double averageAiReviewScore(List<AiReviewEvaluation> evaluations) {
+        return evaluations.stream()
+                .map(AiReviewEvaluation::getQualityScore)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0);
+    }
+
     private boolean isAcceptedOnFirstTry(Task task) {
         List<ReviewVerdict> firstIterationVerdicts = task.getReviews().stream()
                 .flatMap(review -> review.getReviewIterations().stream())
@@ -553,6 +594,13 @@ public class LeaderboardServiceImpl implements LeaderboardService {
         return BigDecimal.valueOf(value)
                 .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
+    }
+
+    private Double nullableRounded(double value) {
+        if (value <= 0) {
+            return null;
+        }
+        return round(value);
     }
 
     private record UserLeaderboardStats(User user, LeaderboardMetricsDto metrics) {

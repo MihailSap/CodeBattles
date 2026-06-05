@@ -99,3 +99,13 @@ databaseChangeLog:
       file: db/changelog/changeset/049-create-admin-events.yaml
   - include:
       file: db/changelog/changeset/050-create-notifications.yaml
+  - include:
+      file: db/changelog/changeset/051-create-ai-review-results.yaml
+  - include:
+      file: db/changelog/changeset/052-allow-ai-review-without-user.yaml
+  - include:
+      file: db/changelog/changeset/053-seed-production-demo-data.yaml
+  - include:
+      file: db/changelog/changeset/054-fix-demo-project-owners-and-complaints.yaml
+  - include:
+      file: db/changelog/changeset/055-backfill-comment-updated-at.yaml
