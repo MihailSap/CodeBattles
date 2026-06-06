@@ -62,4 +62,4 @@ jobs:
       - name: Pull latest code and restart containers
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-            "cd '${{ secrets.VPS_APP_DIR }}' && git pull origin '${{ github.ref_name }}' && docker compose up -d --build --force-recreate --remove-orphans"
+            "cd '${{ secrets.VPS_APP_DIR }}' && git pull origin '${{ github.ref_name }}' && docker compose up -d --build --force-recreate --remove-orphans && docker compose restart nginx"
