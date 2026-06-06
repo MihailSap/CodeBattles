@@ -309,10 +309,7 @@ public class ReviewMapper {
                 reviewIteration.getCompletedAt() == null ? null : reviewIteration.getCompletedAt().toString(),
                 reviewIteration.getTaskStatusAfterIteration(),
                 mapToReviewFileContentResponses(reviewIteration),
-                commentMapper.mapToReviewCommentResponses(
-                        reviewIteration.getComments(),
-                        reviewIteration.getReview().getTask().getStatus()
-                ),
+                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
                 reviewIteration.getReviewVerdict() == null || !isHumanReviewIteration(reviewIteration)
                         ? null
                         : mapToFinalReviewResponse(reviewIteration)
