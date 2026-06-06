@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authApi } from '../api/auth-api';
 import { userApi } from '@/entities/user';
+import { baseApi } from '@/shared/api';
 import { getApiErrorMessage } from '@/shared/lib';
 import { tokenStorage } from '@/shared/lib';
 
@@ -176,7 +177,7 @@ export const resetPasswordByToken = createAppAsyncThunk<string, ResetPasswordPay
   }
 );
 
-export const logoutUser = createAppAsyncThunk<null, void>('auth/logoutUser', async () => {
+export const logoutUser = createAppAsyncThunk<null, void>('auth/logoutUser', async (_, { dispatch }) => {
   const refreshToken = tokenStorage.getRefreshToken();
   const accessToken = tokenStorage.getAccessToken();
 
@@ -186,6 +187,7 @@ export const logoutUser = createAppAsyncThunk<null, void>('auth/logoutUser', asy
     }
   } finally {
     tokenStorage.clearTokens();
+    dispatch(baseApi.util.resetApiState());
   }
 
   return null;
