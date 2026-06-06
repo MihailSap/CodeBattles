@@ -50,8 +50,9 @@ public class ProjectServiceImpl implements ProjectService {
         return userProjectRepository.findAllByUser(user)
                 .stream()
                 .map(UserProject::getProject)
+                .filter(java.util.Objects::nonNull)
                 .distinct()
-                .toList();
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
     }
 
     @Transactional(readOnly = true)
