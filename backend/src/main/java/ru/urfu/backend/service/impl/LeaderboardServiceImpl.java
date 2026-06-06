@@ -133,7 +133,9 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 page,
                 size,
                 task -> task.getProject() != null
-                        && organization.equals(task.getProject().getOrganization())
+                        && Objects.equals(organization.getId(), task.getProject().getOrganization() == null
+                        ? null
+                        : task.getProject().getOrganization().getId())
         );
     }
 
@@ -167,7 +169,8 @@ public class LeaderboardServiceImpl implements LeaderboardService {
                 query,
                 page,
                 size,
-                task -> project.equals(task.getProject())
+                task -> task.getProject() != null
+                        && Objects.equals(project.getId(), task.getProject().getId())
         );
     }
 
