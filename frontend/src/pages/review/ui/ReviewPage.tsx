@@ -545,11 +545,14 @@ const ReviewPage = () => {
   };
 
   const allComments = useMemo(() => review?.comments ?? [], [review?.comments]);
+  const canShowAiComments = task?.status === 'DONE' || task?.status === 'REWORK';
 
   const visibleComments = useMemo(
     () =>
-      task?.aiReviewEnabledAtCreation ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI'),
-    [allComments, task?.aiReviewEnabledAtCreation]
+      canShowAiComments && task?.aiReviewEnabledAtCreation
+        ? allComments
+        : allComments.filter((comment) => comment.authorRole !== 'AI'),
+    [allComments, canShowAiComments, task?.aiReviewEnabledAtCreation]
   );
 
   const fileComments = visibleComments.filter((comment) => comment.file === selectedFile?.path);

@@ -87,7 +87,7 @@ public class ReviewMapper {
                 mapToReviewers(task.getUsers()),
                 mapToViewerAssignmentResponse(review),
                 mapToReviewFileContentResponses(viewerIteration),
-                commentMapper.mapToReviewCommentResponses(currentComments),
+                commentMapper.mapToReviewCommentResponses(currentComments, task.getStatus()),
                 mapToHistoryResponses(historyIterations),
                 mapToFinalReviewResponses(currentIterations),
                 mapAiSolutionEvaluation(currentIterations),
@@ -195,7 +195,7 @@ public class ReviewMapper {
                 mapToReviewers(userTasks),
                 mapToViewerAssignmentResponse(review),
                 mapToReviewFileContentResponses(reviewIteration),
-                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
+                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments(), task.getStatus()),
                 mapToHistoryEventResponse(review),
                 mapToCurrentFinalReviewResponses(review),
 //                mapToFinalReviewResponses(review.getReviewIterations()),
@@ -309,7 +309,10 @@ public class ReviewMapper {
                 reviewIteration.getCompletedAt() == null ? null : reviewIteration.getCompletedAt().toString(),
                 reviewIteration.getTaskStatusAfterIteration(),
                 mapToReviewFileContentResponses(reviewIteration),
-                commentMapper.mapToReviewCommentResponses(reviewIteration.getComments()),
+                commentMapper.mapToReviewCommentResponses(
+                        reviewIteration.getComments(),
+                        reviewIteration.getReview().getTask().getStatus()
+                ),
                 reviewIteration.getReviewVerdict() == null || !isHumanReviewIteration(reviewIteration)
                         ? null
                         : mapToFinalReviewResponse(reviewIteration)

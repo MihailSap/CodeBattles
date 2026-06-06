@@ -20,16 +20,32 @@ import java.util.Set;
 public class CommentMapper {
 
     public List<ReviewCommentResponse> mapToReviewCommentResponses(Set<Comment> comments) {
+        return mapToReviewCommentResponses(comments, null);
+    }
+
+    public List<ReviewCommentResponse> mapToReviewCommentResponses(Set<Comment> comments, TaskStatus taskStatus) {
         List<ReviewCommentResponse> reviewCommentResponses = new ArrayList<>();
+        boolean includeAiComments = taskStatus == null || isAiCommentsVisible(taskStatus);
         for (Comment comment : comments) {
             if (comment.getParentComment() == null) {
-                reviewCommentResponses.add(mapToReviewCommentDto(comment));
+                ReviewCommentResponse mappedComment = mapToReviewCommentDto(comment, includeAiComments);
+                if (mappedComment != null) {
+                    reviewCommentResponses.add(mappedComment);
+                }
             }
         }
         return reviewCommentResponses;
     }
 
     public ReviewCommentResponse mapToReviewCommentDto(Comment comment){
+        return mapToReviewCommentDto(comment, true);
+    }
+
+    private ReviewCommentResponse mapToReviewCommentDto(Comment comment, boolean includeAiComments){
+        if (!includeAiComments && CommentAuthorRole.AI.equals(comment.getCommentAuthorRole())) {
+            return null;
+        }
+
         List<Long> likedBy = new ArrayList<>();
         List<Long> dislikedBy = new ArrayList<>();
         boolean revealName = isAuthorNameVisible(comment);
@@ -62,14 +78,17 @@ public class CommentMapper {
                 comment.getClosedAt() == null ? "" : comment.getClosedAt().toString(),
                 likedBy,
                 dislikedBy,
-                mapReplies(comment.getReplies())
+                mapReplies(comment.getReplies(), includeAiComments)
         );
     }
 
-    private List<ReviewCommentResponse> mapReplies(Set<Comment> replies) {
+    private List<ReviewCommentResponse> mapReplies(Set<Comment> replies, boolean includeAiComments) {
         List<ReviewCommentResponse> replyDtos = new ArrayList<>();
         for (Comment reply : replies) {
-            replyDtos.add(mapToReviewCommentDto(reply));
+            ReviewCommentResponse mappedReply = mapToReviewCommentDto(reply, includeAiComments);
+            if (mappedReply != null) {
+                replyDtos.add(mappedReply);
+            }
         }
         return replyDtos;
     }
@@ -126,6 +145,10 @@ public class CommentMapper {
             return fullName;
         }
         return comment.getUser().getLogin();
+    }
+
+    private boolean isAiCommentsVisible(TaskStatus taskStatus) {
+        return TaskStatus.DONE.equals(taskStatus) || TaskStatus.REWORK.equals(taskStatus);
     }
 
     public ReportCommentResponse mapToReportCommentResponse(CommentReport commentReport){

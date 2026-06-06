@@ -535,6 +535,7 @@ const SolutionTab = ({
   const isRework = task.status === 'REWORK';
   const isAiOnlyReview = review?.reviewType === 'AI_ONLY' || task.reviewType === 'AI_ONLY';
   const isReviewCompleted = review?.status === 'COMPLETED';
+  const canShowAiComments = isCompleted || isRework;
 
   const isExpiredWithoutReview = useMemo(
     () =>
@@ -549,15 +550,15 @@ const SolutionTab = ({
   const allComments = useMemo(() => review?.comments || [], [review?.comments]);
 
   const visibleComments = useMemo(
-    () => (aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI')),
-    [aiReviewEnabled, allComments]
+    () =>
+      canShowAiComments && aiReviewEnabled ? allComments : allComments.filter((comment) => comment.authorRole !== 'AI'),
+    [allComments, aiReviewEnabled, canShowAiComments]
   );
 
-  const hasReviewResults =
-    isCompleted || isRework || isReviewCompleted || (isAiOnlyReview && Boolean(review?.aiEvaluation));
+  const hasReviewResults = isCompleted || isRework || (isAiOnlyReview && Boolean(review?.aiEvaluation));
 
   const showExpiredAiResults = isExpiredWithoutReview && aiReviewEnabled;
-  const showCodeComments = hasReviewResults || showExpiredAiResults;
+  const showCodeComments = canShowAiComments || showExpiredAiResults;
   const shouldShowFinishReview = isWaiting && Boolean(task.canFinishReview);
   const shouldShowWaitingState = isWaiting && !isExpiredWithoutReview && !task.canFinishReview && !isAiOnlyReview;
 
