@@ -377,12 +377,12 @@ const OrganizationPage = () => {
       return;
     }
 
-    setRequestActionUserId(request.id);
+    setRequestActionUserId(request.userId);
 
     try {
       await rejectOrganizationJoinRequest({
         organizationId: organization.id,
-        userId: request.id,
+        userId: request.userId,
       }).unwrap();
 
       completeNotification({
@@ -390,7 +390,7 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.id,
+          userId: request.userId,
         },
       });
 
@@ -408,12 +408,12 @@ const OrganizationPage = () => {
       return;
     }
 
-    setRequestActionUserId(request.id);
+    setRequestActionUserId(request.userId);
 
     try {
       await approveOrganizationJoinRequest({
         organizationId: organization.id,
-        userId: request.id,
+        userId: request.userId,
       }).unwrap();
 
       completeNotification({
@@ -421,7 +421,7 @@ const OrganizationPage = () => {
         target: {
           kind: NOTIFICATION_TARGET_KIND.ORGANIZATION,
           organizationId: organization.id,
-          userId: request.id,
+          userId: request.userId,
         },
       });
 
@@ -754,7 +754,7 @@ const OrganizationPage = () => {
                           className={[organizationPageStyles.requestButton, organizationPageStyles.isReject].join(' ')}
                           type="button"
                           onClick={() => handleRejectRequest(request)}
-                          disabled={requestActionUserId === request.id}
+                          disabled={requestActionUserId === request.userId}
                           aria-label={`Отклонить заявку @${request.login}`}
                         >
                           <CrossIcon />
@@ -763,7 +763,7 @@ const OrganizationPage = () => {
                           className={[organizationPageStyles.requestButton, organizationPageStyles.isAccept].join(' ')}
                           type="button"
                           onClick={() => handleApproveRequest(request)}
-                          disabled={requestActionUserId === request.id}
+                          disabled={requestActionUserId === request.userId}
                           aria-label={`Принять заявку @${request.login}`}
                         >
                           <CheckIcon />

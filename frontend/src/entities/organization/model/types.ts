@@ -27,6 +27,7 @@ export interface OrganizationProject {
 
 export interface OrganizationJoinRequest {
   id: EntityId;
+  userId: EntityId;
   login: string;
   fullName?: string;
   avatar?: string;

@@ -58,6 +58,7 @@ interface BackendOrganizationDto {
 
 interface BackendJoinRequestDto {
   id: EntityId;
+  userId: EntityId;
   login: string;
   fullName?: string;
   avatar?: string | null;
@@ -206,6 +207,7 @@ export const organizationApi = {
       joinRequests: sortJoinRequests(
         (organization.joinRequests ?? []).map((request) => ({
           id: request.id,
+          userId: request.userId,
           login: request.login,
           ...(request.fullName !== undefined ? { fullName: request.fullName } : {}),
           avatar: getImageUrl(request.avatar),
