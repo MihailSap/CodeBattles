@@ -36,16 +36,20 @@ spring:
               - read:user
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${EMAIL_ADDRESS}
-    password: ${EMAIL_APP_PASSWORD}
+    host: ${SPRING_MAIL_HOST:host.docker.internal}
+    port: ${SPRING_MAIL_PORT:25}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${SPRING_MAIL_SMTP_AUTH:false}
           starttls:
-            enable: true
+            enable: ${SPRING_MAIL_STARTTLS_ENABLE:false}
+            required: ${SPRING_MAIL_STARTTLS_REQUIRED:false}
+          connectiontimeout: ${SPRING_MAIL_CONNECTION_TIMEOUT:5000}
+          timeout: ${SPRING_MAIL_TIMEOUT:5000}
+          writetimeout: ${SPRING_MAIL_WRITE_TIMEOUT:5000}
 
 server:
   forward-headers-strategy: framework
@@ -54,6 +58,10 @@ server:
 
 app:
   public-url: ${APP_PUBLIC_URL}
+  mail:
+    from-address: ${APP_MAIL_FROM_ADDRESS:${EMAIL_ADDRESS:noreply@codemasters.mooo.com}}
+    from-name: ${APP_MAIL_FROM_NAME:CodeMasters}
+    send-timeout-ms: ${APP_MAIL_SEND_TIMEOUT_MS:10000}
 
 ai:
   provider: ${AI_PROVIDER:openrouter}

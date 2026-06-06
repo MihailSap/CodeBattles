@@ -74,6 +74,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    @ExceptionHandler(ru.urfu.backend.exception.customEx.EmailSendTimeoutException.class)
+    public ResponseEntity<ErrorResponse> handleEmailSendTimeout(ru.urfu.backend.exception.customEx.EmailSendTimeoutException ex) {
+        logger.error("EmailSendTimeoutException: {}", ex.getMessage(), ex);
+        ErrorResponse response = ExceptionUtils.create("EMAIL_SEND_TIMEOUT", 504, ex.getMessage(), "path");
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(response);
+    }
+
     @ExceptionHandler(MaxDepthExceedException.class)
     public ResponseEntity<ErrorResponse> handleForbiddenEx(MaxDepthExceedException ex) {
         logger.error("ForbiddenException: {}", ex.getMessage(), ex);
