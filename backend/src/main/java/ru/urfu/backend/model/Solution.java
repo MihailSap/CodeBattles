@@ -32,23 +32,12 @@ public class Solution extends BaseEntity {
     @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SolutionFile> solutionFiles = new HashSet<>();
 
-    @OneToMany(mappedBy = "solution")
-    private Set<Review> reviews = new HashSet<>();
-
     public Task getTask() {
         return task;
     }
 
     public void setTask(Task task) {
         this.task = task;
-    }
-
-    public Set<Review> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(Set<Review> reviews) {
-        this.reviews = reviews;
     }
 
     public Boolean getRevealAuthorAfterReview() {
