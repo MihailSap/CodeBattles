@@ -15,6 +15,7 @@ import ru.urfu.backend.mapper.AdminMapper;
 import ru.urfu.backend.model.Comment;
 import ru.urfu.backend.model.CommentReport;
 import ru.urfu.backend.model.CommentReportData;
+import ru.urfu.backend.model.Review;
 import ru.urfu.backend.model.SystemSettings;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.service.AdminEventService;
@@ -71,16 +72,16 @@ public class AdminController {
     ) throws UserNotFoundException {
         User admin = authService.getAuthenticatedUser();
         CommentReport commentReport = commentService.getReportById(complaintId);
-        CommentReportData reportData = commentReport.getCommentReportData();
+        CommentReportContext reportContext = resolveCommentReportContext(commentReport);
 
         if(CommentReportDecision.REJECT.equals(request.decision())){
             commentService.deactivateCommentReport(commentReport);
             adminEventService.logCommentComplaintRejected(
                     admin,
-                    reportData.getUser(),
-                    reportData.getReview(),
-                    reportData.getCommentId(),
-                    reportData.getCommentText(),
+                    reportContext.commentAuthor(),
+                    reportContext.review(),
+                    reportContext.commentId(),
+                    reportContext.commentText(),
                     commentReport.getReason() != null ? commentReport.getReason().name() : null
             );
             return new ResolveAdminCommentComplaintResponse(
@@ -91,12 +92,22 @@ public class AdminController {
                     null
             );
         } else {
-            Long removedCommentId = reportData.getCommentId();
+            Long removedCommentId = reportContext.commentId();
+            if (removedCommentId == null) {
+                commentService.deactivateCommentReport(commentReport);
+                return new ResolveAdminCommentComplaintResponse(
+                        complaintId,
+                        request.decision(),
+                        "Комментарий уже недоступен, жалоба закрыта без штрафа",
+                        null,
+                        null
+                );
+            }
             Comment comment = commentService.getById(removedCommentId);
             commentService.delete(comment);
             commentService.deactivateCommentReport(commentReport);
             long previousApprovedComplaints = adminEventService.countApprovedComplaintsSince(
-                    reportData.getUser(),
+                    reportContext.commentAuthor(),
                     java.time.LocalDateTime.now().minusDays(14)
             );
             boolean shouldApplyPenalty = previousApprovedComplaints > 0;
@@ -105,10 +116,10 @@ public class AdminController {
                     : "Комментарий удалён, предупреждение без штрафа";
             adminEventService.logCommentComplaintApproved(
                     admin,
-                    reportData.getUser(),
-                    reportData.getReview(),
-                    reportData.getCommentId(),
-                    reportData.getCommentText(),
+                    reportContext.commentAuthor(),
+                    reportContext.review(),
+                    reportContext.commentId(),
+                    reportContext.commentText(),
                     commentReport.getReason() != null ? commentReport.getReason().name() : null,
                     consequence,
                     removedCommentId,
@@ -122,6 +133,46 @@ public class AdminController {
                     shouldApplyPenalty ? -100 : null
             );
         }
+    }
+
+    private CommentReportContext resolveCommentReportContext(CommentReport commentReport) {
+        CommentReportData reportData = commentReport.getCommentReportData();
+        if (reportData != null) {
+            return new CommentReportContext(
+                    reportData.getCommentId(),
+                    reportData.getCommentText(),
+                    reportData.getUser(),
+                    reportData.getReview()
+            );
+        }
+
+        Comment comment = commentReport.getComment();
+        if (comment == null) {
+            return new CommentReportContext(
+                    null,
+                    "Комментарий недоступен",
+                    null,
+                    null
+            );
+        }
+
+        Review review = comment.getReviewIteration() != null
+                ? comment.getReviewIteration().getReview()
+                : null;
+        return new CommentReportContext(
+                comment.getId(),
+                comment.getText(),
+                comment.getUser(),
+                review
+        );
+    }
+
+    private record CommentReportContext(
+            Long commentId,
+            String commentText,
+            User commentAuthor,
+            Review review
+    ) {
     }
 
     @Operation(description = "Получение системных настроек")

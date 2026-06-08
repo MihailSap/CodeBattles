@@ -50,12 +50,18 @@ public class AdminMapper {
 
     private AdminCommentComplaintDto mapToAdminCommentComplaintDto(CommentReport commentReport){
         CommentReportData commentReportData = commentReport.getCommentReportData();
+        Comment comment = commentReport.getComment();
+        Long commentId = commentReportData != null ? commentReportData.getCommentId() : getCommentId(comment);
+        String commentText = commentReportData != null ? commentReportData.getCommentText() : getCommentText(comment);
+        User commentAuthor = commentReportData != null ? commentReportData.getUser() : getCommentAuthor(comment);
+        Review review = commentReportData != null ? commentReportData.getReview() : getCommentReview(comment);
+
         return new AdminCommentComplaintDto(
                 commentReport.getId(),
-                commentReportData.getCommentId(),
-                commentReportData.getCommentText(),
-                mapToAdminUserBriefDto(commentReportData.getUser()),
-                mapToAdminComplaintTargetDto(commentReportData.getReview()),
+                commentId,
+                commentText,
+                mapToAdminUserBriefDto(commentAuthor),
+                mapToAdminComplaintTargetDto(review),
                 commentReport.getReason(),
                 mapToAdminUserBriefDto(commentReport.getUser()),
                 commentReport.getCreatedAt()
@@ -63,6 +69,14 @@ public class AdminMapper {
     }
 
     private AdminUserBriefDto mapToAdminUserBriefDto(User user){
+        if (user == null) {
+            return new AdminUserBriefDto(
+                    0L,
+                    "deleted-user",
+                    "Пользователь недоступен"
+            );
+        }
+
         return new AdminUserBriefDto(
                 user.getId(),
                 user.getLogin(),
@@ -75,13 +89,45 @@ public class AdminMapper {
     }
 
     private AdminComplaintTargetDto mapToAdminComplaintTargetDto(Review review){
+        if (review == null || review.getTask() == null) {
+            return new AdminComplaintTargetDto(
+                    "unknown",
+                    "Контекст недоступен",
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
+
+        Task task = review.getTask();
+        Project project = task.getProject();
         return new AdminComplaintTargetDto(
                 "review",
-                review.getTask().getTitle(),
+                task.getTitle(),
                 "/reviews/" + review.getId(),
-                review.getTask().getProject().getId(),
-                review.getTask().getId(),
+                project != null ? project.getId() : null,
+                task.getId(),
                 review.getId()
         );
+    }
+
+    private Long getCommentId(Comment comment) {
+        return comment != null ? comment.getId() : null;
+    }
+
+    private String getCommentText(Comment comment) {
+        return comment != null ? comment.getText() : "Комментарий недоступен";
+    }
+
+    private User getCommentAuthor(Comment comment) {
+        return comment != null ? comment.getUser() : null;
+    }
+
+    private Review getCommentReview(Comment comment) {
+        if (comment == null || comment.getReviewIteration() == null) {
+            return null;
+        }
+        return comment.getReviewIteration().getReview();
     }
 }
