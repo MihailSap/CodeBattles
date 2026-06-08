@@ -306,7 +306,23 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @Override
     public void delete(Task task){
+        detachReviews(task);
         taskRepository.delete(task);
+    }
+
+    private void detachReviews(Task task) {
+        Solution solution = task.getSolution();
+        for (Review review : new HashSet<>(task.getReviews())) {
+            User reviewer = review.getUser();
+            if (reviewer != null) {
+                reviewer.getReviews().remove(review);
+            }
+            if (solution != null) {
+                solution.getReviews().remove(review);
+            }
+            review.setUser(null);
+            review.setSolution(null);
+        }
     }
 
     @Transactional(readOnly = true)
