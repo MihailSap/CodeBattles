@@ -1,5 +1,7 @@
 package ru.urfu.backend.service.impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,9 @@ public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Autowired
     public TaskServiceImpl(
@@ -306,23 +311,13 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     @Override
     public void delete(Task task){
-        detachReviews(task);
-        taskRepository.delete(task);
-    }
-
-    private void detachReviews(Task task) {
-        Solution solution = task.getSolution();
-        for (Review review : new HashSet<>(task.getReviews())) {
-            User reviewer = review.getUser();
-            if (reviewer != null) {
-                reviewer.getReviews().remove(review);
-            }
-            if (solution != null) {
-                solution.getReviews().remove(review);
-            }
-            review.setUser(null);
-            review.setSolution(null);
-        }
+        Long taskId = task.getId();
+        entityManager.clear();
+        taskRepository.detachReviewsFromSolution(taskId);
+        taskRepository.deleteSolutionManualTextByTaskId(taskId);
+        taskRepository.deleteSolutionByTaskId(taskId);
+        taskRepository.deleteUserTasksByTaskId(taskId);
+        taskRepository.deleteTaskByIdDirectly(taskId);
     }
 
     @Transactional(readOnly = true)

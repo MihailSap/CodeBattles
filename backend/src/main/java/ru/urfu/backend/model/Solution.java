@@ -32,9 +32,6 @@ public class Solution extends BaseEntity {
     @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SolutionFile> solutionFiles = new HashSet<>();
 
-    @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Review> reviews = new HashSet<>();
-
     public Task getTask() {
         return task;
     }
@@ -91,11 +88,4 @@ public class Solution extends BaseEntity {
         this.solutionFiles = solutionFiles;
     }
 
-    public Set<Review> getReviews() {
-        return reviews;
-    }
-
-    public void setReviews(Set<Review> reviews) {
-        this.reviews = reviews;
-    }
 }

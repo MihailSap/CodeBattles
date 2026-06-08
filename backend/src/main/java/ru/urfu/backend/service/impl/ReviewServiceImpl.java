@@ -180,7 +180,6 @@ public class ReviewServiceImpl implements ReviewService {
         review.setStatus(ReviewStatus.NEW);
         reviewRepository.save(review);
         solution.getTask().getReviews().add(review);
-        solution.getReviews().add(review);
         if (user != null) {
             user.getReviews().add(review);
         }
