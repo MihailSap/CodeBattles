@@ -201,7 +201,7 @@ public class SolutionController {
             if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
                 taskService.updateStatusInReview(task);
             }
-            for(Review review : updatedSolution.getReviews()){
+            for(Review review : task.getReviews()){
                 Review updatedReview = reviewService.updateStatusInProgress(review);
                 ReviewIteration previousIteration = updatedReview.getLastIteration();
                 ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
@@ -221,7 +221,7 @@ public class SolutionController {
             if(!TaskStatus.IN_REVIEW.equals(task.getStatus())){
                 taskService.updateStatusInReview(task);
             }
-            for(Review review : updatedSolution.getReviews()){
+            for(Review review : task.getReviews()){
                 Review updatedReview = reviewService.updateStatusInProgress(review);
                 ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
 
@@ -240,7 +240,7 @@ public class SolutionController {
             if (!TaskStatus.IN_REVIEW.equals(task.getStatus())) {
                 taskService.updateStatusInReview(task);
             }
-            for (Review review : updatedSolution.getReviews()) {
+            for (Review review : task.getReviews()) {
                 Review updatedReview = reviewService.updateStatusInProgress(review);
                 ReviewIteration previousIteration = updatedReview.getLastIteration();
                 ReviewIteration currentIteration = reviewService.createReviewIteration(updatedReview);
