@@ -403,7 +403,7 @@ const SolutionTab = ({
           authorRole: 'Assignee',
         });
 
-        await loadReview();
+        await loadReview({ preserveSelectedFile: true });
         showSnackbar('Ответ отправлен');
       } catch {
         showSnackbar('Ошибка отправки ответа. Попробуйте позже.', solutionTabStyles.isError);
@@ -415,7 +415,7 @@ const SolutionTab = ({
   const handleLike = async (commentId: EntityId) => {
     try {
       await reviewApi.toggleCommentLike(review?.id || task.id, commentId, currentUser.id, false);
-      await loadReview();
+      await loadReview({ preserveSelectedFile: true });
     } catch (err: unknown) {
       console.error('Like error:', err);
     }
@@ -425,7 +425,7 @@ const SolutionTab = ({
     async (commentId: EntityId) => {
       try {
         await reviewApi.toggleCommentLike(review?.id || task.id, commentId, currentUser.id, true);
-        await loadReview();
+        await loadReview({ preserveSelectedFile: true });
       } catch (err: unknown) {
         console.error('Dislike error:', err);
       }
@@ -436,7 +436,7 @@ const SolutionTab = ({
   const handleDeleteComment = async (commentId: EntityId) => {
     try {
       await reviewApi.deleteReviewComment(review?.id || task.id, commentId);
-      await loadReview();
+      await loadReview({ preserveSelectedFile: true });
       showSnackbar('Комментарий удалён');
     } catch {
       showSnackbar('Ошибка удаления', solutionTabStyles.isError);
@@ -446,7 +446,7 @@ const SolutionTab = ({
   const handleCloseThread = async (commentId: EntityId) => {
     try {
       await reviewApi.closeCommentThread(review?.id || task.id, commentId, 'close');
-      await loadReview();
+      await loadReview({ preserveSelectedFile: true });
       showSnackbar('Тред закрыт');
     } catch {
       showSnackbar('Ошибка закрытия треда', solutionTabStyles.isError);

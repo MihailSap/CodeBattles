@@ -372,7 +372,7 @@ const ReviewPage = () => {
         severity,
       });
 
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       setIsCommentModalOpen(false);
       showSnackbar('Комментарий добавлен', reviewPageStyles.success);
@@ -397,7 +397,7 @@ const ReviewPage = () => {
         createdAt: new Date().toISOString(),
       });
 
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       showSnackbar('Ответ отправлен', reviewPageStyles.success);
     } catch {
@@ -413,7 +413,7 @@ const ReviewPage = () => {
     try {
       await reviewApi.toggleCommentLike(review.id, commentId, numericUserId, false);
 
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
     } catch (err: unknown) {
       console.error('Like error:', err);
@@ -429,7 +429,7 @@ const ReviewPage = () => {
       try {
         await reviewApi.toggleCommentLike(review.id, commentId, numericUserId, true);
 
-        await loadData();
+        await loadData({ preserveSelectedFile: true });
         await invalidateAssignedReviews().unwrap();
       } catch (err: unknown) {
         console.error('Dislike error:', err);
@@ -445,7 +445,7 @@ const ReviewPage = () => {
 
     try {
       await reviewApi.deleteReviewComment(review.id, commentId);
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       showSnackbar('Комментарий удален', reviewPageStyles.success);
     } catch {
@@ -461,7 +461,7 @@ const ReviewPage = () => {
     try {
       await reviewApi.closeCommentThread(review.id, commentId, 'close');
 
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       showSnackbar('Тред закрыт', reviewPageStyles.success);
     } catch {
@@ -476,7 +476,7 @@ const ReviewPage = () => {
 
     try {
       await reviewApi.closeCommentThread(review.id, commentId, 'reopen');
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       showSnackbar('Тред переоткрыт', reviewPageStyles.success);
     } catch {
@@ -507,7 +507,7 @@ const ReviewPage = () => {
         },
       });
 
-      await loadData();
+      await loadData({ preserveSelectedFile: true });
       await invalidateAssignedReviews().unwrap();
       showSnackbar('Результаты ревью успешно сохранены', reviewPageStyles.success);
     } catch {

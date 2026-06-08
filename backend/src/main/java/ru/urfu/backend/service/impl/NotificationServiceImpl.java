@@ -24,12 +24,15 @@ import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.UserOrganization;
 import ru.urfu.backend.model.UserProject;
 import ru.urfu.backend.model.UserTask;
+import ru.urfu.backend.model.enums.AiEvaluationStatus;
 import ru.urfu.backend.model.enums.CommentAuthorRole;
 import ru.urfu.backend.model.enums.NotificationCompletionAction;
 import ru.urfu.backend.model.enums.NotificationTargetKind;
 import ru.urfu.backend.model.enums.NotificationType;
 import ru.urfu.backend.model.enums.ProjectMemberRole;
 import ru.urfu.backend.model.enums.ReviewVerdictType;
+import ru.urfu.backend.model.enums.ReviewType;
+import ru.urfu.backend.model.enums.TaskStatus;
 import ru.urfu.backend.model.enums.UserTaskType;
 import ru.urfu.backend.repository.NotificationRepository;
 import ru.urfu.backend.service.AchievementService;
@@ -274,6 +277,22 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     @Override
     public void notifyAiReviewCompleted(Task task) {
+        if (!TaskStatus.DONE.equals(task.getStatus()) && !TaskStatus.REWORK.equals(task.getStatus())) {
+            return;
+        }
+
+        boolean aiReviewFinished = ReviewType.AI_ONLY.equals(task.getReviewType())
+                || task.getReviews().stream()
+                .map(Review::getLastIteration)
+                .filter(Objects::nonNull)
+                .map(ReviewIteration::getAiReviewEvaluation)
+                .filter(Objects::nonNull)
+                .anyMatch(evaluation -> AiEvaluationStatus.COMPLETED.equals(evaluation.getStatus()));
+
+        if (!aiReviewFinished) {
+            return;
+        }
+
         for (UserTask userTask : task.getUsers()) {
             if (UserTaskType.ASSIGNEE.equals(userTask.getUserTaskType())) {
                 createOncePerTask(

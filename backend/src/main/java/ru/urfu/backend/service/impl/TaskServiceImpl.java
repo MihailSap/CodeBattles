@@ -410,6 +410,7 @@ public class TaskServiceImpl implements TaskService {
         if (statusChanged) {
             notificationService.notifyReviewReworkRequired(savedTask);
         }
+        notificationService.notifyAiReviewCompleted(savedTask);
         return savedTask;
     }
 
@@ -420,7 +421,9 @@ public class TaskServiceImpl implements TaskService {
         task.setUpdatedAt(now);
         task.setCompletedAt(now);
         task.setStatus(TaskStatus.DONE);
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        notificationService.notifyAiReviewCompleted(savedTask);
+        return savedTask;
     }
 
     private List<User> getPotentialReviewers(List<Long> assigneesIds, Project project){

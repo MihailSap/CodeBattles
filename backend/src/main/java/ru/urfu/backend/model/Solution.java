@@ -32,7 +32,7 @@ public class Solution extends BaseEntity {
     @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<SolutionFile> solutionFiles = new HashSet<>();
 
-    @OneToMany(mappedBy = "solution", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "solution")
     private Set<Review> reviews = new HashSet<>();
 
     public Task getTask() {

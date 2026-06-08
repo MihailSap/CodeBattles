@@ -184,6 +184,7 @@ public class AiReviewServiceImpl implements AiReviewService {
             evaluation.setErrorMessage(null);
             evaluation.setUpdatedAt(LocalDateTime.now());
             aiReviewEvaluationRepository.save(evaluation);
+            notificationService.notifyAiReviewCompleted(review.getTask());
         } catch (Exception exception) {
             markReviewEvaluationFailed(evaluation, exception);
         }
@@ -446,7 +447,6 @@ public class AiReviewServiceImpl implements AiReviewService {
         Review review = reviewIteration.getReview();
         Task task = review.getTask();
         if (!ReviewType.AI_ONLY.equals(task.getReviewType()) || reviewIteration.getReviewVerdict() != null) {
-            notificationService.notifyAiReviewCompleted(task);
             return;
         }
 
@@ -473,7 +473,6 @@ public class AiReviewServiceImpl implements AiReviewService {
         } else {
             taskService.updateStatusRework(task);
         }
-        notificationService.notifyAiReviewCompleted(task);
     }
 
     private ReviewCommentCategory parseCategory(String category) {
