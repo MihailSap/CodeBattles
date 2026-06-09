@@ -24,6 +24,7 @@ import ru.urfu.backend.model.UserStack;
 import ru.urfu.backend.model.enums.Role;
 import ru.urfu.backend.model.User;
 import ru.urfu.backend.model.enums.StackType;
+import ru.urfu.backend.repository.AdminEventRepository;
 import ru.urfu.backend.repository.UserRepository;
 import ru.urfu.backend.repository.UserStackRepository;
 import ru.urfu.backend.repository.GithubLinkIntentRepository;
@@ -50,6 +51,7 @@ public class UserServiceImpl implements UserService {
     private final FileService fileService;
     private final NotificationSettingsService notificationSettingsService;
     private final GithubLinkIntentRepository githubLinkIntentRepository;
+    private final AdminEventRepository adminEventRepository;
 
     @Autowired
     public UserServiceImpl(
@@ -60,7 +62,8 @@ public class UserServiceImpl implements UserService {
             UserStackRepository userStackRepository,
             FileService fileService,
             NotificationSettingsService notificationSettingsService,
-            GithubLinkIntentRepository githubLinkIntentRepository
+            GithubLinkIntentRepository githubLinkIntentRepository,
+            AdminEventRepository adminEventRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -70,6 +73,7 @@ public class UserServiceImpl implements UserService {
         this.fileService = fileService;
         this.notificationSettingsService = notificationSettingsService;
         this.githubLinkIntentRepository = githubLinkIntentRepository;
+        this.adminEventRepository = adminEventRepository;
     }
 
     @Transactional(readOnly = true)
@@ -205,6 +209,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void delete(User user) {
+        adminEventRepository.detachActor(user);
+        adminEventRepository.detachTargetUser(user);
         userRepository.delete(user);
     }
 

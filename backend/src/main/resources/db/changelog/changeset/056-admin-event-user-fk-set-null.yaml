@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 056-admin-event-user-fk-set-null
+      author: Codex
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: admin_event
+            constraintName: fk_admin_event_actor
+        - dropForeignKeyConstraint:
+            baseTableName: admin_event
+            constraintName: fk_admin_event_target_user
+        - addForeignKeyConstraint:
+            baseTableName: admin_event
+            baseColumnNames: actor_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_admin_event_actor
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: admin_event
+            baseColumnNames: target_user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_admin_event_target_user
+            onDelete: SET NULL

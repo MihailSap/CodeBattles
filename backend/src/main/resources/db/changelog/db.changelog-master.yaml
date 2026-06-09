@@ -109,3 +109,5 @@ databaseChangeLog:
       file: db/changelog/changeset/054-fix-demo-project-owners-and-complaints.yaml
   - include:
       file: db/changelog/changeset/055-backfill-comment-updated-at.yaml
+  - include:
+      file: db/changelog/changeset/056-admin-event-user-fk-set-null.yaml
