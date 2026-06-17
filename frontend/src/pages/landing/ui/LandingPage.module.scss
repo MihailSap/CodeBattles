@@ -346,9 +346,10 @@
   min-width: 0;
 }
 
-.landingSection.isAbout,
 .landingSection {
-  &.isBenefits {
+
+  &.isBenefits,
+  &.isAbout {
     display: grid;
     grid-template-columns: minmax(8rem, 0.24fr) minmax(0, 1fr);
     align-items: start;
@@ -404,7 +405,9 @@
 }
 
 .landingSection {
-  &.isWorkflow, &.isStacked {
+
+  &.isWorkflow,
+  &.isStacked {
     display: flex;
     flex-direction: column;
     gap: clamp(1.5rem, 4vw, 2.625rem);
@@ -561,12 +564,11 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+
   .link:hover,
-  .landingButton {
-    &:hover {
-      border-color: var(--color-accent);
-      box-shadow: var(--shadow-accent-strong);
-    }
+  .landingButton:hover {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-accent-strong);
   }
 
   .link.isPrimary:hover,
@@ -614,9 +616,8 @@
     padding-top: 1.75rem;
   }
 
-  .landingSection.isAbout,
   .landingSection {
-    &.isBenefits {
+    &.isBenefits, &.isAbout {
       grid-template-columns: 1fr;
     }
   }
